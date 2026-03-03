@@ -1,14 +1,14 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import {
-  MessageCircle,
-  X,
-  Send,
   Bot,
   Loader2,
   AlertCircle,
   Sparkles,
   Trash2,
+  Send,
   Download,
+  Cpu,
+  Square,
 } from 'lucide-react';
 import { cn } from '@lib/utils/cn';
 import {
@@ -16,9 +16,12 @@ import {
   MODEL_DOWNLOAD_SIZE_LABEL,
   GENERATION_CONFIG,
   SUGGESTED_QUESTIONS,
+  WELCOME_MESSAGE,
   isWebGPUSupported,
+  trimHistory,
 } from '@lib/ai/config';
 import type { MLCEngineInterface } from '@mlc-ai/web-llm';
+import { renderMarkdown } from '@lib/ai/markdown';
 
 /* ─── Types ─── */
 
@@ -28,20 +31,17 @@ interface ChatMessage {
   content: string;
 }
 
-type EngineState = 'idle' | 'loading' | 'ready' | 'error';
+type EngineState = 'checking' | 'unsupported' | 'idle' | 'loading' | 'ready' | 'error';
 
 interface Props {
-  /** System prompt built at build time from site data. */
   systemPrompt: string;
+  fullPage?: boolean;
 }
 
 /* ─── Component ─── */
 
 export default function AiChat({ systemPrompt }: Props) {
-  /* State */
-  const [supported, setSupported] = useState<boolean | null>(null);
-  const [panelOpen, setPanelOpen] = useState(false);
-  const [engineState, setEngineState] = useState<EngineState>('idle');
+  const [engineState, setEngineState] = useState<EngineState>('checking');
   const [loadProgress, setLoadProgress] = useState({ text: '', progress: 0 });
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
@@ -49,70 +49,44 @@ export default function AiChat({ systemPrompt }: Props) {
   const [errorMsg, setErrorMsg] = useState('');
   const [isCached, setIsCached] = useState(false);
 
-  /* Refs */
   const engineRef = useRef<MLCEngineInterface | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const abortRef = useRef(false);
 
-  /* ─── Effects ─── */
-
-  // Check WebGPU support on mount
   useEffect(() => {
-    isWebGPUSupported().then(setSupported);
+    isWebGPUSupported().then(async (supported) => {
+      if (!supported) {
+        setEngineState('unsupported');
+        return;
+      }
+      const { hasModelInCache } = await import('@mlc-ai/web-llm');
+      setIsCached(await hasModelInCache(DEFAULT_MODEL_ID));
+      setEngineState('idle');
+    });
   }, []);
 
-  // Check if model is cached
-  useEffect(() => {
-    if (supported) {
-      import('@mlc-ai/web-llm').then(({ hasModelInCache }) => {
-        hasModelInCache(DEFAULT_MODEL_ID).then(setIsCached);
-      });
-    }
-  }, [supported]);
-
-  // Auto-scroll to bottom on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Focus input when chat becomes ready
   useEffect(() => {
-    if (engineState === 'ready' && panelOpen) {
-      inputRef.current?.focus();
-    }
-  }, [engineState, panelOpen]);
-
-  // Keyboard: Escape to close
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && panelOpen) setPanelOpen(false);
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [panelOpen]);
-
-  /* ─── Engine lifecycle ─── */
+    if (engineState === 'ready') inputRef.current?.focus();
+  }, [engineState]);
 
   const initEngine = useCallback(async () => {
     setEngineState('loading');
     setErrorMsg('');
     setLoadProgress({ text: 'Initializing…', progress: 0 });
-
     try {
       const webllm = await import('@mlc-ai/web-llm');
-
       const engine = await webllm.CreateWebWorkerMLCEngine(
         new Worker(new URL('../../lib/ai/worker.ts', import.meta.url), { type: 'module' }),
         DEFAULT_MODEL_ID,
-        {
-          initProgressCallback: (report) => {
-            setLoadProgress({ text: report.text, progress: report.progress });
-          },
-        },
+        { initProgressCallback: (r) => setLoadProgress({ text: r.text, progress: r.progress }) },
       );
-
       engineRef.current = engine;
+      setMessages([{ id: crypto.randomUUID(), role: 'assistant', content: WELCOME_MESSAGE }]);
       setEngineState('ready');
       setIsCached(true);
     } catch (err) {
@@ -122,56 +96,40 @@ export default function AiChat({ systemPrompt }: Props) {
     }
   }, []);
 
-  /* ─── Chat logic ─── */
-
   const sendMessage = useCallback(
     async (text: string) => {
       const engine = engineRef.current;
       if (!engine || !text.trim() || isGenerating) return;
-
-      const userMsg: ChatMessage = {
-        id: crypto.randomUUID(),
-        role: 'user',
-        content: text.trim(),
-      };
-
-      const assistantMsg: ChatMessage = {
-        id: crypto.randomUUID(),
-        role: 'assistant',
-        content: '',
-      };
-
-      setMessages((prev) => [...prev, userMsg, assistantMsg]);
+      const userMsg: ChatMessage = { id: crypto.randomUUID(), role: 'user', content: text.trim() };
+      const asstMsg: ChatMessage = { id: crypto.randomUUID(), role: 'assistant', content: '' };
+      setMessages((prev) => [...prev, userMsg, asstMsg]);
       setInput('');
+      if (inputRef.current) inputRef.current.style.height = 'auto';
       setIsGenerating(true);
       abortRef.current = false;
-
       try {
-        const history = [...messages, userMsg].map((m) => ({
+        const fullHistory = [...messages, userMsg].map((m) => ({
           role: m.role as 'user' | 'assistant',
           content: m.content,
         }));
-
+        const history = trimHistory(fullHistory);
         const chunks = await engine.chat.completions.create({
           messages: [{ role: 'system', content: systemPrompt }, ...history],
           stream: true,
           ...GENERATION_CONFIG,
         });
-
-        let fullContent = '';
+        let full = '';
         for await (const chunk of chunks) {
           if (abortRef.current) break;
-          const delta = chunk.choices[0]?.delta?.content ?? '';
-          fullContent += delta;
-          setMessages((prev) =>
-            prev.map((m) => (m.id === assistantMsg.id ? { ...m, content: fullContent } : m)),
-          );
+          full += chunk.choices[0]?.delta?.content ?? '';
+          const content = full;
+          setMessages((prev) => prev.map((m) => (m.id === asstMsg.id ? { ...m, content } : m)));
         }
       } catch (err) {
         console.error('[AiChat] Generation error:', err);
         setMessages((prev) =>
           prev.map((m) =>
-            m.id === assistantMsg.id
+            m.id === asstMsg.id
               ? { ...m, content: 'Sorry, something went wrong. Please try again.' }
               : m,
           ),
@@ -189,326 +147,261 @@ export default function AiChat({ systemPrompt }: Props) {
       sendMessage(input);
     }
   };
-
   const clearChat = () => {
     setMessages([]);
     abortRef.current = true;
     setIsGenerating(false);
   };
 
-  /* ─── Unsupported browser: show subtle hint ─── */
+  /* ─── Render ─── */
+  const pct = Math.round(loadProgress.progress * 100);
 
-  if (supported === null) return null;
-
-  if (supported === false) {
+  if (engineState === 'checking') {
     return (
-      <div className="fixed right-6 bottom-6 z-50">
-        <div className="bg-bg-surface/90 border-border flex items-center gap-2 rounded-full border px-3 py-2 shadow-lg backdrop-blur-sm">
-          <MessageCircle className="text-text-muted h-4 w-4" />
-          <span className="text-text-muted text-[11px]">AI Chat available on Chrome / Edge</span>
-        </div>
-      </div>
+      <CenterCard>
+        <Loader2 className="text-accent h-8 w-8 animate-spin" />
+      </CenterCard>
     );
   }
 
-  /* ─── FAB (Floating Action Button) ─── */
+  if (engineState === 'unsupported') {
+    return (
+      <CenterCard>
+        <AlertCircle className="text-text-muted mb-3 h-10 w-10" />
+        <h2 className="text-text-primary mb-2 text-lg font-semibold">WebGPU Not Available</h2>
+        <p className="text-text-secondary text-sm">
+          AI Chat requires WebGPU, which is supported in Chrome and Edge.
+          <br />
+          Please switch to a supported browser to use this feature.
+        </p>
+      </CenterCard>
+    );
+  }
 
+  if (engineState === 'idle') {
+    return (
+      <CenterCard>
+        <div className="bg-accent/10 mb-5 flex h-16 w-16 items-center justify-center rounded-2xl">
+          <Sparkles className="text-accent h-8 w-8" />
+        </div>
+        <h2 className="text-text-primary mb-2 text-xl font-bold">Ask AI about Tomer</h2>
+        <p className="text-text-secondary mb-6 max-w-md text-sm leading-relaxed">
+          Chat with an AI assistant that knows about Tomer&apos;s work, open source contributions,
+          and projects. The model runs entirely in your browser — no data leaves your device.
+        </p>
+        {!isCached && (
+          <div className="bg-bg-surface border-border mb-4 flex items-center gap-2 rounded-lg border px-4 py-2.5 text-xs">
+            <Download className="text-text-muted h-4 w-4 shrink-0" />
+            <span className="text-text-secondary">
+              First use downloads {MODEL_DOWNLOAD_SIZE_LABEL} (cached for future visits)
+            </span>
+          </div>
+        )}
+        {isCached && (
+          <div className="bg-status-active/10 mb-4 flex items-center gap-2 rounded-lg px-4 py-2.5 text-xs">
+            <span className="bg-status-active h-2 w-2 rounded-full" />
+            <span className="text-status-active font-medium">Model cached — instant start</span>
+          </div>
+        )}
+        <button
+          onClick={initEngine}
+          className="bg-accent text-bg-base hover:bg-accent-hover rounded-xl px-8 py-3 text-sm font-semibold transition-colors"
+        >
+          {isCached ? 'Start Chat' : 'Download & Start'}
+        </button>
+        <p className="text-text-muted mt-5 max-w-sm text-center text-[10px] leading-relaxed">
+          Powered by WebLLM · Qwen2.5-7B running via WebGPU · No server required
+        </p>
+      </CenterCard>
+    );
+  }
+
+  if (engineState === 'loading') {
+    return (
+      <CenterCard>
+        <Cpu className="text-accent mb-4 h-10 w-10 animate-pulse" />
+        <h2 className="text-text-primary mb-1 text-lg font-semibold">Loading AI Model</h2>
+        <p className="text-text-muted mb-4 text-xs">
+          {isCached ? 'Initializing from cache…' : 'Downloading and compiling…'}
+        </p>
+        <div className="bg-bg-elevated mb-2 h-2.5 w-full max-w-xs overflow-hidden rounded-full">
+          <div
+            className="bg-accent h-full rounded-full transition-all duration-300 ease-out"
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+        <p className="text-text-muted font-mono text-xs">{pct}%</p>
+        <p className="text-text-muted mt-2 max-w-xs text-center text-[10px] leading-relaxed">
+          {loadProgress.text}
+        </p>
+      </CenterCard>
+    );
+  }
+
+  if (engineState === 'error') {
+    return (
+      <CenterCard>
+        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-red-500/10">
+          <AlertCircle className="h-7 w-7 text-red-400" />
+        </div>
+        <h2 className="text-text-primary mb-2 text-lg font-semibold">Failed to Load</h2>
+        <p className="text-text-secondary mb-4 max-w-sm text-center text-xs leading-relaxed">
+          {errorMsg}
+        </p>
+        <button
+          onClick={initEngine}
+          className="bg-accent text-bg-base hover:bg-accent-hover rounded-xl px-6 py-2.5 text-sm font-semibold transition-colors"
+        >
+          Try Again
+        </button>
+      </CenterCard>
+    );
+  }
+
+  /* ─── Chat UI (engineState === 'ready') ─── */
   return (
-    <>
-      {/* Backdrop */}
-      {panelOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm transition-opacity md:hidden"
-          onClick={() => setPanelOpen(false)}
-          aria-hidden="true"
-        />
-      )}
+    <div className="flex h-full flex-col">
+      {/* Status bar */}
+      <div className="border-border flex items-center justify-between border-b px-4 py-2">
+        <div className="flex items-center gap-2">
+          <span className="bg-status-active h-2 w-2 rounded-full" />
+          <span className="text-text-muted text-xs">Qwen2.5-7B · Running in browser</span>
+        </div>
+        {messages.length > 0 && (
+          <button
+            onClick={clearChat}
+            className="text-text-muted hover:text-text-secondary flex items-center gap-1 text-xs transition-colors"
+            aria-label="Clear chat"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            Clear
+          </button>
+        )}
+      </div>
 
-      {/* FAB */}
-      <button
-        onClick={() => setPanelOpen((o) => !o)}
-        className={cn(
-          'fixed right-6 bottom-6 z-50 flex h-14 w-14 items-center justify-center',
-          'rounded-full shadow-lg transition-all duration-300',
-          'bg-accent text-bg-base hover:bg-accent-hover',
-          'focus-visible:ring-accent focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
-          panelOpen && 'scale-0 opacity-0',
-        )}
-        aria-label={panelOpen ? 'Close AI chat' : 'Open AI chat'}
-        aria-expanded={panelOpen}
-      >
-        <MessageCircle className="h-6 w-6" />
-        {isCached && engineState === 'idle' && (
-          <span className="bg-status-active absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white" />
-        )}
-      </button>
-
-      {/* Chat Panel */}
-      <div
-        className={cn(
-          'fixed z-50 flex flex-col overflow-hidden',
-          'bg-bg-base/95 border-border border backdrop-blur-xl',
-          'shadow-2xl transition-all duration-300 ease-out',
-          // Desktop: bottom-right floating panel
-          'right-6 bottom-6 max-h-[min(600px,calc(100vh-3rem))] w-[400px] rounded-2xl',
-          // Mobile: full-screen
-          'max-md:inset-0 max-md:right-0 max-md:bottom-0 max-md:max-h-full max-md:w-full max-md:rounded-none',
-          panelOpen
-            ? 'pointer-events-auto scale-100 opacity-100'
-            : 'pointer-events-none scale-95 opacity-0',
-        )}
-        role="dialog"
-        aria-label="AI Chat"
-        aria-hidden={!panelOpen}
-      >
-        {/* Header */}
-        <div className="border-border flex items-center justify-between border-b px-4 py-3">
-          <div className="flex items-center gap-2">
-            <Bot className="text-accent h-5 w-5" />
-            <span className="text-text-primary text-sm font-semibold">Ask AI about Tomer</span>
-            {engineState === 'ready' && (
-              <span className="bg-status-active/20 text-status-active rounded-full px-2 py-0.5 text-[10px] font-medium">
-                Online
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-1">
-            {engineState === 'ready' && messages.length > 0 && (
-              <button
-                onClick={clearChat}
-                className="text-text-muted hover:text-text-secondary rounded-lg p-1.5 transition-colors"
-                aria-label="Clear chat"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
-            )}
-            <button
-              onClick={() => setPanelOpen(false)}
-              className="text-text-muted hover:text-text-secondary rounded-lg p-1.5 transition-colors"
-              aria-label="Close chat"
+      {/* Messages area */}
+      <div className="scrollbar-thin flex-1 overflow-y-auto px-4 py-6">
+        <div className="mx-auto max-w-2xl space-y-4">
+          {messages.map((msg) => (
+            <div
+              key={msg.id}
+              className={cn('flex gap-3', msg.role === 'user' ? 'flex-row-reverse' : 'flex-row')}
             >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
+              <div
+                className={cn(
+                  'flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-medium',
+                  msg.role === 'user'
+                    ? 'bg-accent/20 text-accent'
+                    : 'bg-bg-elevated text-text-secondary',
+                )}
+              >
+                {msg.role === 'user' ? 'You' : <Bot className="h-4 w-4" />}
+              </div>
+              <div
+                className={cn(
+                  'max-w-[75%] rounded-2xl px-4 py-3 text-sm leading-relaxed',
+                  msg.role === 'user'
+                    ? 'bg-accent text-bg-base rounded-br-md'
+                    : 'bg-bg-surface text-text-primary rounded-bl-md',
+                )}
+              >
+                {!msg.content ? (
+                  <span className="inline-flex items-center gap-1">
+                    <span className="bg-text-muted inline-block h-1.5 w-1.5 animate-pulse rounded-full" />
+                    <span className="bg-text-muted inline-block h-1.5 w-1.5 animate-pulse rounded-full [animation-delay:150ms]" />
+                    <span className="bg-text-muted inline-block h-1.5 w-1.5 animate-pulse rounded-full [animation-delay:300ms]" />
+                  </span>
+                ) : msg.role === 'assistant' ? (
+                  renderMarkdown(msg.content)
+                ) : (
+                  msg.content
+                )}
+              </div>
+            </div>
+          ))}
 
-        {/* Body */}
-        <div className="scrollbar-thin flex-1 overflow-y-auto">
-          {engineState === 'idle' && <WelcomeScreen onStart={initEngine} isCached={isCached} />}
-          {engineState === 'loading' && <LoadingScreen progress={loadProgress} />}
-          {engineState === 'error' && <ErrorScreen message={errorMsg} onRetry={initEngine} />}
-          {engineState === 'ready' && (
-            <ChatView
-              messages={messages}
-              isGenerating={isGenerating}
-              onSuggestedClick={(q) => sendMessage(q)}
-              messagesEndRef={messagesEndRef}
-            />
+          {/* Suggested questions — shown after welcome message only */}
+          {messages.length === 1 && messages[0]?.role === 'assistant' && (
+            <div className="mx-auto grid max-w-lg gap-2 pt-2 sm:grid-cols-2">
+              {SUGGESTED_QUESTIONS.map((q) => (
+                <button
+                  key={q}
+                  onClick={() => sendMessage(q)}
+                  disabled={isGenerating}
+                  className="bg-bg-surface hover:bg-bg-elevated border-border text-text-secondary hover:text-text-primary rounded-xl border px-4 py-3 text-left text-xs leading-relaxed transition-colors"
+                >
+                  {q}
+                </button>
+              ))}
+            </div>
           )}
-        </div>
 
-        {/* Input */}
-        {engineState === 'ready' && (
-          <div className="border-border border-t p-3">
-            <div className="bg-bg-surface border-border flex items-end gap-2 rounded-xl border px-3 py-2">
-              <textarea
-                ref={inputRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Ask about Tomer…"
-                rows={1}
-                className="text-text-primary placeholder:text-text-muted max-h-24 flex-1 resize-none bg-transparent text-sm outline-none"
-                disabled={isGenerating}
-                aria-label="Chat message input"
-              />
+          <div ref={messagesEndRef} />
+        </div>
+      </div>
+
+      {/* Input area */}
+      <div className="border-border border-t px-4 py-3">
+        <div className="mx-auto max-w-2xl">
+          <div className="bg-bg-surface border-border flex items-end gap-2 rounded-xl border px-4 py-3">
+            <textarea
+              ref={inputRef}
+              value={input}
+              onChange={(e) => {
+                setInput(e.target.value);
+                // Auto-resize
+                e.target.style.height = 'auto';
+                e.target.style.height = `${Math.min(e.target.scrollHeight, 128)}px`;
+              }}
+              onKeyDown={handleKeyDown}
+              placeholder="Ask about Tomer…"
+              rows={1}
+              className="text-text-primary placeholder:text-text-muted max-h-32 flex-1 resize-none bg-transparent text-sm leading-relaxed outline-none"
+              disabled={isGenerating}
+              aria-label="Chat message input"
+            />
+            {isGenerating ? (
+              <button
+                onClick={() => {
+                  abortRef.current = true;
+                  setIsGenerating(false);
+                }}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-500/10 text-red-400 transition-colors hover:bg-red-500/20"
+                aria-label="Stop generating"
+              >
+                <Square className="h-4 w-4 fill-current" />
+              </button>
+            ) : (
               <button
                 onClick={() => sendMessage(input)}
-                disabled={!input.trim() || isGenerating}
+                disabled={!input.trim()}
                 className={cn(
-                  'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors',
-                  input.trim() && !isGenerating
+                  'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors',
+                  input.trim()
                     ? 'bg-accent text-bg-base hover:bg-accent-hover'
                     : 'text-text-muted cursor-not-allowed',
                 )}
                 aria-label="Send message"
               >
-                {isGenerating ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Send className="h-4 w-4" />
-                )}
+                <Send className="h-4 w-4" />
               </button>
-            </div>
-            <p className="text-text-muted mt-1.5 px-1 text-[10px]">
-              AI runs in your browser via WebGPU · Responses may be inaccurate
-            </p>
+            )}
           </div>
-        )}
-      </div>
-    </>
-  );
-}
-
-/* ─── Sub-components ─── */
-
-function WelcomeScreen({ onStart, isCached }: { onStart: () => void; isCached: boolean }) {
-  return (
-    <div className="flex flex-col items-center px-6 py-10 text-center">
-      <div className="bg-accent-muted mb-4 flex h-14 w-14 items-center justify-center rounded-2xl">
-        <Sparkles className="text-accent h-7 w-7" />
-      </div>
-      <h3 className="text-text-primary mb-2 text-lg font-semibold">AI Chat</h3>
-      <p className="text-text-secondary mb-6 text-sm leading-relaxed">
-        Chat with an AI assistant that knows about Tomer's work, open source contributions, and
-        projects. Powered by a language model running entirely in your browser.
-      </p>
-
-      {!isCached && (
-        <div className="bg-bg-surface border-border mb-4 flex items-center gap-2 rounded-lg border px-3 py-2 text-xs">
-          <Download className="text-text-muted h-3.5 w-3.5 shrink-0" />
-          <span className="text-text-secondary">
-            First use requires a one-time download of {MODEL_DOWNLOAD_SIZE_LABEL}
-          </span>
+          <p className="text-text-muted mt-2 px-1 text-[10px]">
+            AI runs locally in your browser via WebGPU · Responses may be inaccurate
+          </p>
         </div>
-      )}
-
-      {isCached && (
-        <div className="bg-status-active/10 mb-4 flex items-center gap-2 rounded-lg px-3 py-2 text-xs">
-          <span className="bg-status-active h-2 w-2 rounded-full" />
-          <span className="text-status-active">Model cached — instant start</span>
-        </div>
-      )}
-
-      <button
-        onClick={onStart}
-        className="bg-accent text-bg-base hover:bg-accent-hover w-full rounded-xl px-6 py-3 text-sm font-semibold transition-colors"
-      >
-        {isCached ? 'Start Chat' : 'Download & Start'}
-      </button>
-
-      <p className="text-text-muted mt-4 text-[10px] leading-relaxed">
-        No data is sent to any server. The AI model runs locally via WebGPU.
-      </p>
+      </div>
     </div>
   );
 }
 
-function LoadingScreen({ progress }: { progress: { text: string; progress: number } }) {
-  const pct = Math.round(progress.progress * 100);
+/* ─── Layout helper ─── */
+
+function CenterCard({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex flex-col items-center px-6 py-10 text-center">
-      <Loader2 className="text-accent mb-4 h-10 w-10 animate-spin" />
-      <h3 className="text-text-primary mb-2 text-sm font-semibold">Loading AI Model</h3>
-
-      {/* Progress bar */}
-      <div className="bg-bg-elevated mb-3 h-2 w-full overflow-hidden rounded-full">
-        <div
-          className="bg-accent h-full rounded-full transition-all duration-300 ease-out"
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-
-      <p className="text-text-muted text-xs">
-        {pct}% — {progress.text}
-      </p>
-      <p className="text-text-muted mt-4 text-[10px]">
-        This may take a moment on first load. The model will be cached for future visits.
-      </p>
-    </div>
-  );
-}
-
-function ErrorScreen({ message, onRetry }: { message: string; onRetry: () => void }) {
-  return (
-    <div className="flex flex-col items-center px-6 py-10 text-center">
-      <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-red-500/10">
-        <AlertCircle className="h-7 w-7 text-red-400" />
-      </div>
-      <h3 className="text-text-primary mb-2 text-sm font-semibold">Failed to Load</h3>
-      <p className="text-text-secondary mb-4 text-xs leading-relaxed">{message}</p>
-      <button
-        onClick={onRetry}
-        className="bg-accent text-bg-base hover:bg-accent-hover rounded-xl px-6 py-2.5 text-sm font-semibold transition-colors"
-      >
-        Try Again
-      </button>
-    </div>
-  );
-}
-
-function ChatView({
-  messages,
-  isGenerating,
-  onSuggestedClick,
-  messagesEndRef,
-}: {
-  messages: ChatMessage[];
-  isGenerating: boolean;
-  onSuggestedClick: (q: string) => void;
-  messagesEndRef: React.RefObject<HTMLDivElement | null>;
-}) {
-  return (
-    <div className="flex flex-col gap-3 px-4 py-4">
-      {/* Empty state: suggested questions */}
-      {messages.length === 0 && (
-        <div className="py-4">
-          <p className="text-text-muted mb-3 text-center text-xs">Try asking:</p>
-          <div className="flex flex-col gap-2">
-            {SUGGESTED_QUESTIONS.map((q) => (
-              <button
-                key={q}
-                onClick={() => onSuggestedClick(q)}
-                disabled={isGenerating}
-                className="bg-bg-surface hover:bg-bg-elevated border-border text-text-secondary hover:text-text-primary rounded-xl border px-3 py-2.5 text-left text-xs transition-colors"
-              >
-                {q}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Messages */}
-      {messages.map((msg) => (
-        <div
-          key={msg.id}
-          className={cn('flex gap-2.5', msg.role === 'user' ? 'flex-row-reverse' : 'flex-row')}
-        >
-          {/* Avatar */}
-          <div
-            className={cn(
-              'flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs',
-              msg.role === 'user'
-                ? 'bg-accent/20 text-accent'
-                : 'bg-bg-elevated text-text-secondary',
-            )}
-          >
-            {msg.role === 'user' ? 'You' : <Bot className="h-3.5 w-3.5" />}
-          </div>
-
-          {/* Bubble */}
-          <div
-            className={cn(
-              'max-w-[80%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed',
-              msg.role === 'user'
-                ? 'bg-accent text-bg-base rounded-br-md'
-                : 'bg-bg-surface text-text-primary rounded-bl-md',
-            )}
-          >
-            {msg.content || (
-              <span className="inline-flex items-center gap-1">
-                <span className="bg-text-muted inline-block h-1.5 w-1.5 animate-pulse rounded-full" />
-                <span className="bg-text-muted inline-block h-1.5 w-1.5 animate-pulse rounded-full [animation-delay:150ms]" />
-                <span className="bg-text-muted inline-block h-1.5 w-1.5 animate-pulse rounded-full [animation-delay:300ms]" />
-              </span>
-            )}
-          </div>
-        </div>
-      ))}
-
-      {/* Scroll anchor */}
-      <div ref={messagesEndRef} />
+    <div className="flex h-full items-center justify-center p-6">
+      <div className="flex max-w-lg flex-col items-center text-center">{children}</div>
     </div>
   );
 }
