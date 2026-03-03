@@ -1,10 +1,10 @@
 ---
 import Card from '@components/ui/Card.astro';
 import Badge from '@components/ui/Badge.astro';
-import { loadRepos } from '@lib/data/loader';
+import { loadCeleryOrgRepos } from '@lib/data/loader';
 import { formatCompactNumber, relativeTime } from '@lib/utils/date';
 
-const repos = loadRepos() ?? [];
+const repos = loadCeleryOrgRepos() ?? [];
 
 const roleBadgeVariant = {
   owner: 'accent' as const,
@@ -21,9 +21,19 @@ const roleLabel = {
 };
 ---
 
-<section id="projects" aria-label="Active projects">
-  <h2 class="mb-2 text-3xl font-bold tracking-tight">Active Projects</h2>
-  <p class="text-text-secondary mb-6">Open source projects I maintain and contribute to</p>
+<section id="celery-organization" aria-label="Celery Organization">
+  <h2 class="mb-2 text-3xl font-bold tracking-tight">Celery Organization</h2>
+  <p class="text-text-secondary mb-6">
+    Additional repositories I contribute to across the
+    <a
+      href="https://github.com/celery"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="text-accent hover:underline"
+    >
+      Celery organization
+    </a>
+  </p>
 
   <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
     {

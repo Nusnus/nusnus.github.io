@@ -4,10 +4,10 @@
     "fullName": "celery/celery",
     "description": "Distributed Task Queue (development branch)",
     "htmlUrl": "https://github.com/celery/celery",
-    "stars": 25000,
-    "forks": 4700,
-    "openIssues": 150,
-    "lastPush": "2026-03-03T12:00:00Z",
+    "stars": 28158,
+    "forks": 4973,
+    "openIssues": 764,
+    "lastPush": "2026-03-03T09:29:55Z",
     "language": "Python",
     "role": "owner",
     "contributorRank": 3
@@ -15,12 +15,12 @@
   {
     "name": "pytest-celery",
     "fullName": "celery/pytest-celery",
-    "description": "Official pytest plugin for Celery",
+    "description": "Official pytest plugin for Celery.",
     "htmlUrl": "https://github.com/celery/pytest-celery",
-    "stars": 200,
-    "forks": 30,
-    "openIssues": 10,
-    "lastPush": "2026-03-02T18:00:00Z",
+    "stars": 79,
+    "forks": 19,
+    "openIssues": 7,
+    "lastPush": "2026-03-02T19:54:48Z",
     "language": "Python",
     "role": "creator",
     "contributorRank": 1
@@ -28,37 +28,14 @@
   {
     "name": "kombu",
     "fullName": "celery/kombu",
-    "description": "Messaging library for Python",
+    "description": "Messaging library for Python.",
     "htmlUrl": "https://github.com/celery/kombu",
-    "stars": 2900,
-    "forks": 950,
-    "openIssues": 45,
-    "lastPush": "2026-03-01T10:00:00Z",
+    "stars": 3106,
+    "forks": 984,
+    "openIssues": 225,
+    "lastPush": "2026-03-03T11:12:58Z",
     "language": "Python",
-    "role": "owner"
-  },
-  {
-    "name": "billiard",
-    "fullName": "celery/billiard",
-    "description": "Python multiprocessing fork with improvements",
-    "htmlUrl": "https://github.com/celery/billiard",
-    "stars": 420,
-    "forks": 250,
-    "openIssues": 12,
-    "lastPush": "2026-02-28T08:00:00Z",
-    "language": "Python",
-    "role": "owner"
-  },
-  {
-    "name": "flower",
-    "fullName": "mher/flower",
-    "description": "Real-time monitor and web admin for Celery",
-    "htmlUrl": "https://github.com/mher/flower",
-    "stars": 6400,
-    "forks": 1100,
-    "openIssues": 80,
-    "lastPush": "2026-02-25T14:00:00Z",
-    "language": "Python",
-    "role": "contributor"
+    "role": "owner",
+    "contributorRank": 6
   }
 ]

@@ -4,12 +4,16 @@ export const SITE_URL = 'https://nusnus.github.io';
 
 export const OPEN_COLLECTIVE_URL = 'https://opencollective.com/celery';
 
-export const CELERY_REPOS = [
-  'celery/celery',
-  'celery/pytest-celery',
-  'celery/kombu',
+export const CELERY_REPOS = ['celery/celery', 'celery/pytest-celery', 'celery/kombu'] as const;
+
+export const CELERY_ORG_REPOS = [
   'celery/billiard',
-  'mher/flower',
+  'celery/django-celery-beat',
+  'celery/django-celery-results',
+  'celery/py-amqp',
+  'celery/vine',
+  'celery/sphinx_celery',
+  'celery/celeryproject',
 ] as const;
 
 export const REPO_ROLES: Record<string, 'owner' | 'lead' | 'creator' | 'contributor'> = {
@@ -17,12 +21,17 @@ export const REPO_ROLES: Record<string, 'owner' | 'lead' | 'creator' | 'contribu
   'celery/pytest-celery': 'creator',
   'celery/kombu': 'owner',
   'celery/billiard': 'owner',
-  'mher/flower': 'contributor',
+  'celery/django-celery-beat': 'owner',
+  'celery/django-celery-results': 'owner',
+  'celery/py-amqp': 'owner',
+  'celery/vine': 'owner',
+  'celery/sphinx_celery': 'owner',
+  'celery/celeryproject': 'owner',
 };
 
 export const SOCIAL_LINKS = {
   github: 'https://github.com/Nusnus',
-  linkedin: 'https://www.linkedin.com/in/tomer-nosrati',
+  linkedin: 'https://www.linkedin.com/in/tomernosrati',
   twitter: 'https://x.com/smilingnosrati',
   email: 'mailto:tomer.nosrati@gmail.com',
   openCollective: OPEN_COLLECTIVE_URL,
@@ -30,18 +39,25 @@ export const SOCIAL_LINKS = {
 
 export const LINKEDIN_ARTICLES = [
   {
-    title: 'Elevate Your Game with E2E Thinking',
-    url: 'https://www.linkedin.com/pulse/elevate-your-game-e2e-thinking-tomer-nosrati-yzaff/',
+    title: 'Celery: Now Powered By Blacksmith',
+    url: 'https://www.linkedin.com/pulse/celery-now-powered-blacksmith-tomer-nosrati',
     excerpt:
-      'A methodology for thinking about systems holistically — from input to output, from user to infrastructure.',
-    publishedAt: '2024-06-01',
+      'Announcing an exciting partnership for the Celery organization with Blacksmith for faster, more reliable CI/CD builds.',
+    publishedAt: '2024-10-15',
+  },
+  {
+    title: 'Elevate Your Game with E2E Thinking',
+    url: 'https://www.linkedin.com/pulse/elevate-your-game-e2e-thinking-tomer-nosrati',
+    excerpt:
+      "Taking an end-to-end approach is more than just a professional technique; it's a lifestyle philosophy.",
+    publishedAt: '2023-08-26',
   },
   {
     title: 'The Subtle Art of Making Every Word Count',
-    url: 'https://www.linkedin.com/pulse/subtle-art-making-every-word-count-tomer-nosrati-yzaff/',
+    url: 'https://www.linkedin.com/pulse/subtle-art-making-every-word-count-tomer-nosrati',
     excerpt:
-      'How precision in communication transforms engineering teams and open source collaboration.',
-    publishedAt: '2024-05-01',
+      'The Point-First Approach (PFA) — your escape hatch from verbosity and your gateway to focused, meaningful conversations.',
+    publishedAt: '2023-09-09',
   },
 ] as const;
 

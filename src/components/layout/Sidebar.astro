@@ -1,15 +1,27 @@
 ---
 import Badge from '@components/ui/Badge.astro';
-import { loadProfile, loadRepos, loadContributionGraph } from '@lib/data/loader';
+import {
+  loadProfile,
+  loadRepos,
+  loadCeleryOrgRepos,
+  loadContributionGraph,
+} from '@lib/data/loader';
 import { formatCompactNumber } from '@lib/utils/date';
 import { SOCIAL_LINKS } from '@lib/utils/constants';
 
 const profile = loadProfile();
 const repos = loadRepos();
+const orgRepos = loadCeleryOrgRepos();
 const graph = loadContributionGraph();
 
 const celeryStars = repos?.find((r) => r.fullName === 'celery/celery')?.stars ?? 0;
 const totalContributions = graph?.totalContributions ?? 0;
+
+// Collect all contributor rankings from both active and org repos
+const allRepos = [...(repos ?? []), ...(orgRepos ?? [])];
+const rankedRepos = allRepos
+  .filter((r) => r.contributorRank != null)
+  .sort((a, b) => (a.contributorRank ?? 99) - (b.contributorRank ?? 99));
 ---
 
 <aside class="border-accent/30 bg-bg-base flex h-screen flex-col border-r px-5 py-6">
@@ -59,7 +71,8 @@ const totalContributions = graph?.totalContributions ?? 0;
     {
       [
         { href: '#activity', label: 'Activity' },
-        { href: '#projects', label: 'Projects' },
+        { href: '#projects', label: 'Active Projects' },
+        { href: '#celery-organization', label: 'Celery Organization' },
         { href: '#collaborations', label: 'Collaborations' },
         { href: '#writing', label: 'Writing' },
         { href: '#sponsoring', label: 'Sponsoring' },
@@ -75,17 +88,62 @@ const totalContributions = graph?.totalContributions ?? 0;
   </nav>
 
   <!-- Quick Stats -->
-  <div class="border-border mb-5 space-y-1.5 border-t pt-4">
-    <p class="text-text-secondary font-mono text-sm">
-      <span class="text-text-primary">{formatCompactNumber(totalContributions)}</span> contributions this
-      year
+  <div class="border-border mb-5 border-t pt-4">
+    <!-- Contribution summary -->
+    <p class="text-text-primary mb-3 font-mono text-sm font-semibold">
+      {formatCompactNumber(totalContributions)} contributions this year
     </p>
-    <p class="text-text-secondary font-mono text-sm">
-      <span class="text-accent">#1</span> pytest-celery
+
+    {
+      graph && (
+        <div class="mb-4 grid grid-cols-2 gap-x-3 gap-y-1.5">
+          <p class="text-text-secondary font-mono text-xs">
+            <span class="text-text-primary font-medium">
+              {formatCompactNumber(graph.totalCommits)}
+            </span>{' '}
+            commits
+          </p>
+          <p class="text-text-secondary font-mono text-xs">
+            <span class="text-text-primary font-medium">{formatCompactNumber(graph.totalPRs)}</span>{' '}
+            PRs
+          </p>
+          <p class="text-text-secondary font-mono text-xs">
+            <span class="text-text-primary font-medium">
+              {formatCompactNumber(graph.totalReviews)}
+            </span>{' '}
+            reviews
+          </p>
+          <p class="text-text-secondary font-mono text-xs">
+            <span class="text-text-primary font-medium">
+              {formatCompactNumber(graph.totalIssues)}
+            </span>{' '}
+            issues
+          </p>
+        </div>
+      )
+    }
+
+    <!-- Contributor rankings -->
+    <p class="text-text-muted mb-2 text-xs font-medium tracking-wider uppercase">
+      Contributor Rankings
     </p>
-    <p class="text-text-secondary font-mono text-sm">
-      <span class="text-accent">#3</span> celery (since 2022)
-    </p>
+    <div class="space-y-1">
+      {
+        rankedRepos.map((repo) => (
+          <a
+            href={repo.htmlUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="hover:bg-bg-surface group flex items-center justify-between rounded-md px-2 py-1 transition-colors duration-100"
+          >
+            <span class="text-text-secondary group-hover:text-text-primary font-mono text-xs transition-colors">
+              {repo.name}
+            </span>
+            <span class="text-accent font-mono text-xs font-semibold">#{repo.contributorRank}</span>
+          </a>
+        ))
+      }
+    </div>
   </div>
 
   <!-- Spacer -->

@@ -10,7 +10,12 @@ import type {
   ContributionGraphData,
   MetaData,
 } from '../src/lib/github/types.js';
-import { CELERY_REPOS, REPO_ROLES, GITHUB_USERNAME } from '../src/lib/utils/constants.js';
+import {
+  CELERY_REPOS,
+  CELERY_ORG_REPOS,
+  REPO_ROLES,
+  GITHUB_USERNAME,
+} from '../src/lib/utils/constants.js';
 
 const token = process.env.GITHUB_TOKEN;
 if (!token) {
@@ -40,14 +45,31 @@ async function fetchProfile(): Promise<ProfileData> {
   };
 }
 
-async function fetchRepos(): Promise<RepoData[]> {
+async function fetchContributorRank(owner: string, repo: string): Promise<number | undefined> {
+  try {
+    const contributors = await octokit.paginate(
+      octokit.repos.listContributors,
+      { owner, repo, per_page: 100 },
+      (response) => response.data,
+    );
+    const index = contributors.findIndex((c) => c.login === GITHUB_USERNAME);
+    return index >= 0 ? index + 1 : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+async function fetchRepoList(repoList: readonly string[]): Promise<RepoData[]> {
   const repos: RepoData[] = [];
-  for (const fullName of CELERY_REPOS) {
+  for (const fullName of repoList) {
     const parts = fullName.split('/');
     const owner = parts[0] ?? '';
     const repo = parts[1] ?? '';
     try {
-      const { data } = await octokit.repos.get({ owner, repo });
+      const [{ data }, contributorRank] = await Promise.all([
+        octokit.repos.get({ owner, repo }),
+        fetchContributorRank(owner, repo),
+      ]);
       repos.push({
         name: data.name,
         fullName: data.full_name,
@@ -59,12 +81,21 @@ async function fetchRepos(): Promise<RepoData[]> {
         lastPush: data.pushed_at ?? new Date().toISOString(),
         language: data.language,
         role: REPO_ROLES[fullName] ?? 'contributor',
+        ...(contributorRank != null ? { contributorRank } : {}),
       });
     } catch (error) {
       console.warn(`  ⚠ Failed to fetch ${fullName}:`, error);
     }
   }
   return repos;
+}
+
+async function fetchRepos(): Promise<RepoData[]> {
+  return fetchRepoList(CELERY_REPOS);
+}
+
+async function fetchCeleryOrgRepos(): Promise<RepoData[]> {
+  return fetchRepoList(CELERY_ORG_REPOS);
 }
 
 async function fetchActivity(): Promise<ActivityData> {
@@ -200,6 +231,7 @@ async function main(): Promise<void> {
   const results = await Promise.allSettled([
     fetchProfile().then((data) => writeJson('profile.json', data)),
     fetchRepos().then((data) => writeJson('repos.json', data)),
+    fetchCeleryOrgRepos().then((data) => writeJson('celery-org-repos.json', data)),
     fetchActivity().then((data) => writeJson('activity.json', data)),
     fetchContributionGraph().then((data) => writeJson('contribution-graph.json', data)),
   ]);

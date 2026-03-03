@@ -41,6 +41,10 @@ export function loadRepos(): RepoData[] | null {
   return loadJsonFile('repos.json', reposSchema);
 }
 
+export function loadCeleryOrgRepos(): RepoData[] | null {
+  return loadJsonFile('celery-org-repos.json', reposSchema);
+}
+
 export function loadActivity(): ActivityData | null {
   return loadJsonFile('activity.json', activitySchema);
 }

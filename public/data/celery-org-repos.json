@@ -1,0 +1,93 @@
+[
+  {
+    "name": "billiard",
+    "fullName": "celery/billiard",
+    "description": "Multiprocessing Pool Extensions",
+    "htmlUrl": "https://github.com/celery/billiard",
+    "stars": 429,
+    "forks": 256,
+    "openIssues": 85,
+    "lastPush": "2026-02-26T14:22:48Z",
+    "language": "Python",
+    "role": "owner",
+    "contributorRank": 4
+  },
+  {
+    "name": "django-celery-beat",
+    "fullName": "celery/django-celery-beat",
+    "description": "Celery Periodic Tasks backed by the Django ORM",
+    "htmlUrl": "https://github.com/celery/django-celery-beat",
+    "stars": 1914,
+    "forks": 480,
+    "openIssues": 142,
+    "lastPush": "2026-03-03T09:35:52Z",
+    "language": "Python",
+    "role": "owner",
+    "contributorRank": 18
+  },
+  {
+    "name": "django-celery-results",
+    "fullName": "celery/django-celery-results",
+    "description": "Celery result back end with django",
+    "htmlUrl": "https://github.com/celery/django-celery-results",
+    "stars": 776,
+    "forks": 223,
+    "openIssues": 61,
+    "lastPush": "2026-03-02T18:15:13Z",
+    "language": "Python",
+    "role": "owner",
+    "contributorRank": 30
+  },
+  {
+    "name": "py-amqp",
+    "fullName": "celery/py-amqp",
+    "description": "amqplib fork",
+    "htmlUrl": "https://github.com/celery/py-amqp",
+    "stars": 314,
+    "forks": 190,
+    "openIssues": 40,
+    "lastPush": "2026-02-05T06:28:45Z",
+    "language": "Python",
+    "role": "owner",
+    "contributorRank": 8
+  },
+  {
+    "name": "vine",
+    "fullName": "celery/vine",
+    "description": "Python promises",
+    "htmlUrl": "https://github.com/celery/vine",
+    "stars": 128,
+    "forks": 46,
+    "openIssues": 8,
+    "lastPush": "2026-03-02T16:53:23Z",
+    "language": "Python",
+    "role": "owner",
+    "contributorRank": 6
+  },
+  {
+    "name": "sphinx_celery",
+    "fullName": "celery/sphinx_celery",
+    "description": "Celery Sphinx Theme and Utilities",
+    "htmlUrl": "https://github.com/celery/sphinx_celery",
+    "stars": 5,
+    "forks": 16,
+    "openIssues": 3,
+    "lastPush": "2026-03-02T16:53:21Z",
+    "language": "Python",
+    "role": "owner",
+    "contributorRank": 4
+  },
+  {
+    "name": "celeryproject",
+    "fullName": "celery/celeryproject",
+    "description": "The official Celery Project website",
+    "htmlUrl": "https://github.com/celery/celeryproject",
+    "stars": 22,
+    "forks": 10,
+    "openIssues": 22,
+    "lastPush": "2025-05-13T18:46:15Z",
+    "language": "CSS",
+    "role": "owner",
+    "contributorRank": 4
+  }
+]
