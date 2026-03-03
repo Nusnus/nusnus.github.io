@@ -1,0 +1,224 @@
+/**
+ * Cloudflare Worker — AI API Proxy (Production)
+ *
+ * Proxies OpenAI-compatible chat completion requests to xAI (Grok).
+ * The API key is stored as a Cloudflare secret — never in source code.
+ *
+ * Security layers:
+ *  1. Origin allowlist (CORS)
+ *  2. Method restriction (POST only, OPTIONS for preflight)
+ *  3. Content-Type validation
+ *  4. Request body size limit
+ *  5. Payload schema validation (messages array required)
+ *  6. Model allowlist (prevent abuse of expensive models)
+ *  7. max_tokens cap (prevent runaway costs)
+ *  8. Per-IP rate limiting via Cloudflare KV-free approach (in-memory)
+ */
+
+// ─── Types ───────────────────────────────────────────────────────────
+
+interface Env {
+  XAI_API_KEY: string;
+}
+
+interface ChatMessage {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+}
+
+interface ChatCompletionRequest {
+  model?: string;
+  messages?: ChatMessage[];
+  max_tokens?: number;
+  temperature?: number;
+  top_p?: number;
+  stream?: boolean;
+  [key: string]: unknown;
+}
+
+// ─── Configuration ───────────────────────────────────────────────────
+
+const ALLOWED_ORIGINS: ReadonlySet<string> = new Set([
+  'https://nusnus.github.io',
+  'http://localhost:4321',
+  'http://localhost:3000',
+]);
+
+const XAI_API_URL = 'https://api.x.ai/v1/chat/completions';
+
+/** Models visitors are allowed to use. Prevents switching to costly models. */
+const ALLOWED_MODELS: ReadonlySet<string> = new Set([
+  'grok-4-1-fast',
+  'grok-4-1-fast-reasoning',
+  'grok-4-1-fast-non-reasoning',
+  'grok-code-fast',
+  'grok-code-fast-1',
+]);
+
+const DEFAULT_MODEL = 'grok-4-1-fast';
+
+/** Hard limits to prevent abuse. */
+const MAX_REQUEST_BYTES = 32_768; // 32 KB
+const MAX_TOKENS_CAP = 1024;
+const MAX_MESSAGES = 30;
+
+/** Simple in-memory rate limiter (per-isolate, resets on cold start). */
+const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
+const RATE_LIMIT_MAX_REQUESTS = 20; // per IP per window
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+
+// ─── Helpers ─────────────────────────────────────────────────────────
+
+function corsHeaders(origin: string): Record<string, string> {
+  return {
+    'Access-Control-Allow-Origin': origin,
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Max-Age': '86400',
+  };
+}
+
+function jsonResponse(body: Record<string, unknown>, status: number, origin?: string): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(origin ? corsHeaders(origin) : {}),
+    },
+  });
+}
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return false;
+  }
+
+  entry.count++;
+  return entry.count > RATE_LIMIT_MAX_REQUESTS;
+}
+
+// ─── Worker ──────────────────────────────────────────────────────────
+
+export default {
+  async fetch(request: Request, env: Env): Promise<Response> {
+    const origin = request.headers.get('Origin') ?? '';
+    const isAllowed = ALLOWED_ORIGINS.has(origin);
+
+    // ── CORS preflight ──
+    if (request.method === 'OPTIONS') {
+      return new Response(null, {
+        status: 204,
+        headers: isAllowed ? corsHeaders(origin) : {},
+      });
+    }
+
+    // ── Health check ──
+    if (request.method === 'GET') {
+      return jsonResponse({ status: 'ok' }, 200);
+    }
+
+    // ── Method guard ──
+    if (request.method !== 'POST') {
+      return jsonResponse({ error: 'Method not allowed' }, 405, origin);
+    }
+
+    // ── Origin guard ──
+    if (!isAllowed) {
+      return jsonResponse({ error: 'Forbidden' }, 403);
+    }
+
+    // ── Rate limiting ──
+    const clientIP = request.headers.get('CF-Connecting-IP') ?? 'unknown';
+    if (isRateLimited(clientIP)) {
+      return jsonResponse({ error: 'Rate limit exceeded. Try again shortly.' }, 429, origin);
+    }
+
+    // ── Content-Type guard ──
+    const contentType = request.headers.get('Content-Type') ?? '';
+    if (!contentType.includes('application/json')) {
+      return jsonResponse({ error: 'Content-Type must be application/json' }, 415, origin);
+    }
+
+    // ── API key guard ──
+    if (!env.XAI_API_KEY) {
+      return jsonResponse({ error: 'Server misconfigured' }, 500, origin);
+    }
+
+    // ── Body size guard ──
+    const contentLength = parseInt(request.headers.get('Content-Length') ?? '0', 10);
+    if (contentLength > MAX_REQUEST_BYTES) {
+      return jsonResponse({ error: 'Request too large' }, 413, origin);
+    }
+
+    let body: ChatCompletionRequest;
+    try {
+      const raw = await request.text();
+      if (raw.length > MAX_REQUEST_BYTES) {
+        return jsonResponse({ error: 'Request too large' }, 413, origin);
+      }
+      body = JSON.parse(raw) as ChatCompletionRequest;
+    } catch {
+      return jsonResponse({ error: 'Invalid JSON' }, 400, origin);
+    }
+
+    // ── Payload validation ──
+    if (!Array.isArray(body.messages) || body.messages.length === 0) {
+      return jsonResponse({ error: 'messages array is required' }, 400, origin);
+    }
+
+    if (body.messages.length > MAX_MESSAGES) {
+      return jsonResponse({ error: `Too many messages (max ${MAX_MESSAGES})` }, 400, origin);
+    }
+
+    // Validate each message has required fields
+    for (const msg of body.messages) {
+      if (!msg.role || typeof msg.content !== 'string') {
+        return jsonResponse({ error: 'Each message must have role and content' }, 400, origin);
+      }
+    }
+
+    // ── Enforce model allowlist + token cap ──
+    const requestedModel = body.model ?? DEFAULT_MODEL;
+    if (!ALLOWED_MODELS.has(requestedModel)) {
+      body.model = DEFAULT_MODEL;
+    } else {
+      body.model = requestedModel;
+    }
+
+    body.max_tokens = Math.min(body.max_tokens ?? MAX_TOKENS_CAP, MAX_TOKENS_CAP);
+
+    // Disable streaming — we return the full response
+    body.stream = false;
+
+    // ── Forward to xAI ──
+    try {
+      const xaiResponse = await fetch(XAI_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${env.XAI_API_KEY}`,
+        },
+        body: JSON.stringify(body),
+      });
+
+      const responseBody = await xaiResponse.text();
+
+      // Forward xAI status code (200, 400, 429, 500, etc.)
+      return new Response(responseBody, {
+        status: xaiResponse.status,
+        headers: {
+          'Content-Type': 'application/json',
+          ...corsHeaders(origin),
+        },
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Upstream request failed';
+      console.error(`[ai-proxy] xAI error: ${message}`);
+      return jsonResponse({ error: 'Failed to reach AI provider' }, 502, origin);
+    }
+  },
+};

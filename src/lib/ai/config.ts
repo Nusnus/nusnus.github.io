@@ -295,15 +295,58 @@ export const AVAILABLE_MODELS: ModelInfo[] = [
   },
 ];
 
-/** Default model — strongest available for best quality. */
+/** Default local model — strongest available for best quality. */
 export const DEFAULT_MODEL_ID = 'gemma-2-9b-it-q4f32_1-MLC';
 
-/** Generation parameters tuned for a concise, factual assistant. */
+/* ─── Provider Configuration ─── */
+
+export type ChatProvider = 'cloud' | 'local';
+
+export interface CloudModelInfo {
+  /** xAI model ID. */
+  id: string;
+  /** Human-readable display name. */
+  name: string;
+  /** Short description to help users pick. */
+  description: string;
+  /** Whether this is the default cloud model. */
+  recommended?: boolean;
+}
+
+/** Cloudflare Worker proxy URL — API key is stored server-side. */
+export const CLOUD_PROXY_URL = 'https://ai-proxy.tomer-nosrati.workers.dev';
+
+export const CLOUD_MODELS: CloudModelInfo[] = [
+  {
+    id: 'grok-4-1-fast',
+    name: 'Grok 4.1 Fast',
+    description:
+      'The strongest available model. Latest Grok 4.1 with reasoning, 2M context window. Best for in-depth questions.',
+    recommended: true,
+  },
+  {
+    id: 'grok-code-fast',
+    name: 'Grok Code Fast',
+    description:
+      'Code-specialized with reasoning. Excels at technical explanations, programming topics, and code analysis.',
+  },
+];
+
+export const DEFAULT_CLOUD_MODEL_ID = 'grok-4-1-fast';
+
+/** Generation parameters for local WebLLM models (4K context). */
 export const GENERATION_CONFIG = {
   temperature: 0.6,
   top_p: 0.9,
   max_tokens: 512,
   repetition_penalty: 1.05,
+} as const;
+
+/** Generation parameters for cloud models (large context). */
+export const CLOUD_GENERATION_CONFIG = {
+  temperature: 0.6,
+  top_p: 0.9,
+  max_tokens: 1024,
 } as const;
 
 /**

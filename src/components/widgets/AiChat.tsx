@@ -12,19 +12,24 @@ import {
   ArrowRight,
   Star,
   X,
+  Cloud,
+  Monitor,
+  Zap,
 } from 'lucide-react';
 import { cn } from '@lib/utils/cn';
 import {
   DEFAULT_MODEL_ID,
   AVAILABLE_MODELS,
   GROUP_INFO,
+  CLOUD_MODELS,
+  DEFAULT_CLOUD_MODEL_ID,
   GENERATION_CONFIG,
   SUGGESTED_QUESTIONS,
   WELCOME_MESSAGE,
   isWebGPUSupported,
   trimHistory,
 } from '@lib/ai/config';
-import type { ModelInfo, ModelGroup } from '@lib/ai/config';
+import type { ModelInfo, ModelGroup, ChatProvider } from '@lib/ai/config';
 import type { MLCEngineInterface } from '@mlc-ai/web-llm';
 import type { ChatMessage, SearchIndex } from '@lib/ai/types';
 import { renderMarkdown } from '@lib/ai/markdown';
@@ -46,6 +51,7 @@ interface Props {
 /* ─── Component ─── */
 
 export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
+  const [provider, setProvider] = useState<ChatProvider>('cloud');
   const [engineState, setEngineState] = useState<EngineState>('checking');
   const [loadProgress, setLoadProgress] = useState({ text: '', progress: 0 });
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -53,8 +59,10 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [selectedModelId, setSelectedModelId] = useState(DEFAULT_MODEL_ID);
+  const [selectedCloudModelId, setSelectedCloudModelId] = useState(DEFAULT_CLOUD_MODEL_ID);
   const [cacheMap, setCacheMap] = useState<Record<string, boolean>>({});
   const [isDeletingModel, setIsDeletingModel] = useState<string | null>(null);
+  const [webGPUSupported, setWebGPUSupported] = useState(true);
 
   const engineRef = useRef<MLCEngineInterface | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -65,8 +73,10 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
   /** Check WebGPU support and probe cache status for all models. */
   useEffect(() => {
     isWebGPUSupported().then(async (supported) => {
+      setWebGPUSupported(supported);
       if (!supported) {
-        setEngineState('unsupported');
+        // No WebGPU — cloud is the only option, go straight to idle
+        setEngineState('idle');
         return;
       }
       const { hasModelInCache } = await import('@mlc-ai/web-llm');
@@ -86,36 +96,63 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
     if (engineState === 'ready') inputRef.current?.focus();
   }, [engineState]);
 
-  const initEngine = useCallback(async () => {
-    setEngineState('loading');
-    setErrorMsg('');
-    setLoadProgress({ text: 'Initializing…', progress: 0 });
-    try {
-      const webllm = await import('@mlc-ai/web-llm');
-      const engine = await webllm.CreateWebWorkerMLCEngine(
-        new Worker(new URL('../../lib/ai/worker.ts', import.meta.url), { type: 'module' }),
-        selectedModelId,
-        { initProgressCallback: (r) => setLoadProgress({ text: r.text, progress: r.progress }) },
-      );
-      engineRef.current = engine;
-      activeModelRef.current = selectedModelId;
+  /** Whether there's a saved chat in localStorage. */
+  const hasSavedChat = useRef(false);
+  useEffect(() => {
+    hasSavedChat.current = loadMessages().length > 0;
+  }, []);
 
-      // Restore persisted chat or show welcome message
-      const saved = loadMessages();
-      if (saved.length > 0) {
-        setMessages(saved);
-      } else {
-        setMessages([{ id: crypto.randomUUID(), role: 'assistant', content: WELCOME_MESSAGE }]);
+  const initEngine = useCallback(
+    async (startFresh = false) => {
+      // If starting fresh, clear persisted chat
+      if (startFresh) {
+        clearMessages();
       }
 
-      setEngineState('ready');
-      setCacheMap((prev) => ({ ...prev, [selectedModelId]: true }));
-    } catch (err) {
-      console.error('[AiChat] Engine init failed:', err);
-      setErrorMsg(err instanceof Error ? err.message : 'Failed to load AI model');
-      setEngineState('error');
-    }
-  }, [selectedModelId]);
+      const restoreMessages = () => {
+        if (!startFresh) {
+          const saved = loadMessages();
+          if (saved.length > 0) {
+            setMessages(saved);
+            return;
+          }
+        }
+        setMessages([{ id: crypto.randomUUID(), role: 'assistant', content: WELCOME_MESSAGE }]);
+      };
+
+      // Cloud provider — no engine loading needed
+      if (provider === 'cloud') {
+        restoreMessages();
+        setEngineState('ready');
+        return;
+      }
+
+      // Local provider — load WebLLM engine
+      setEngineState('loading');
+      setErrorMsg('');
+      setLoadProgress({ text: 'Initializing…', progress: 0 });
+      try {
+        const webllm = await import('@mlc-ai/web-llm');
+        const engine = await webllm.CreateWebWorkerMLCEngine(
+          new Worker(new URL('../../lib/ai/worker.ts', import.meta.url), { type: 'module' }),
+          selectedModelId,
+          { initProgressCallback: (r) => setLoadProgress({ text: r.text, progress: r.progress }) },
+        );
+        engineRef.current = engine;
+        activeModelRef.current = selectedModelId;
+
+        restoreMessages();
+
+        setEngineState('ready');
+        setCacheMap((prev) => ({ ...prev, [selectedModelId]: true }));
+      } catch (err) {
+        console.error('[AiChat] Engine init failed:', err);
+        setErrorMsg(err instanceof Error ? err.message : 'Failed to load AI model');
+        setEngineState('error');
+      }
+    },
+    [provider, selectedModelId],
+  );
 
   const deleteModel = useCallback(async (modelId: string) => {
     setIsDeletingModel(modelId);
@@ -132,8 +169,10 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
 
   const sendMessage = useCallback(
     async (text: string) => {
-      const engine = engineRef.current;
-      if (!engine || !text.trim() || isGenerating) return;
+      if (!text.trim() || isGenerating) return;
+
+      // Local provider requires a loaded engine
+      if (provider === 'local' && !engineRef.current) return;
 
       const userMsg: ChatMessage = { id: crypto.randomUUID(), role: 'user', content: text.trim() };
       const asstMsg: ChatMessage = { id: crypto.randomUUID(), role: 'assistant', content: '' };
@@ -144,42 +183,66 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
       abortRef.current = false;
 
       try {
-        // 1. Summarize old messages if conversation is long
-        const currentMessages = await maybeSummarize(engine, [...messages, userMsg]);
-
-        // 2. Retrieve relevant chunks via RAG
+        // 1. Retrieve relevant chunks via RAG
         const ragResults = searchIndex(text.trim(), ragIndex);
         const ragContext = formatRetrievedContext(ragResults);
 
-        // 3. Fetch live runtime context (recent activity)
+        // 2. Fetch live runtime context (recent activity)
         const runtimeContext = await fetchRuntimeContext();
 
-        // 4. Build augmented system prompt
+        // 3. Build augmented system prompt
         const augmentedPrompt = systemPrompt + ragContext + runtimeContext;
 
-        // 5. Prepare trimmed history
-        const fullHistory = currentMessages.map((m) => ({
-          role: m.role as 'user' | 'assistant',
-          content: m.content,
-        }));
-        const history = trimHistory(fullHistory);
-
-        // 6. Stream the response
-        const chunks = await engine.chat.completions.create({
-          messages: [{ role: 'system', content: augmentedPrompt }, ...history],
-          stream: true,
-          ...GENERATION_CONFIG,
-        });
-
         let full = '';
-        for await (const chunk of chunks) {
-          if (abortRef.current) break;
-          full += chunk.choices[0]?.delta?.content ?? '';
-          const content = full;
-          setMessages((prev) => prev.map((m) => (m.id === asstMsg.id ? { ...m, content } : m)));
+
+        if (provider === 'cloud') {
+          // ── Cloud path: call proxy ──
+          const { cloudChat } = await import('@lib/ai/cloud');
+
+          const chatHistory = [...messages, userMsg].map((m) => ({
+            role: m.role as 'system' | 'user' | 'assistant',
+            content: m.content,
+          }));
+
+          // Cloud has large context — send full history
+          full = await cloudChat(
+            [{ role: 'system', content: augmentedPrompt }, ...chatHistory],
+            selectedCloudModelId,
+          );
+
+          setMessages((prev) =>
+            prev.map((m) => (m.id === asstMsg.id ? { ...m, content: full } : m)),
+          );
+        } else {
+          // ── Local path: stream via WebLLM ──
+          // Guard checked at top of sendMessage — engine is guaranteed here
+          const engine = engineRef.current as MLCEngineInterface;
+
+          // Summarize old messages if conversation is long
+          const currentMessages = await maybeSummarize(engine, [...messages, userMsg]);
+
+          // Prepare trimmed history (4K context budget)
+          const fullHistory = currentMessages.map((m) => ({
+            role: m.role as 'user' | 'assistant',
+            content: m.content,
+          }));
+          const history = trimHistory(fullHistory);
+
+          const chunks = await engine.chat.completions.create({
+            messages: [{ role: 'system', content: augmentedPrompt }, ...history],
+            stream: true,
+            ...GENERATION_CONFIG,
+          });
+
+          for await (const chunk of chunks) {
+            if (abortRef.current) break;
+            full += chunk.choices[0]?.delta?.content ?? '';
+            const content = full;
+            setMessages((prev) => prev.map((m) => (m.id === asstMsg.id ? { ...m, content } : m)));
+          }
         }
 
-        // 7. Parse tool actions from the final response
+        // Parse tool actions from the final response
         const { text: cleanText, actions } = parseActions(full);
         if (actions.length > 0 || cleanText !== full) {
           setMessages((prev) =>
@@ -187,7 +250,7 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
           );
         }
 
-        // 8. Persist to localStorage
+        // Persist to localStorage
         setMessages((prev) => {
           saveMessages(prev);
           return prev;
@@ -205,7 +268,7 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
         setIsGenerating(false);
       }
     },
-    [messages, isGenerating, systemPrompt, ragIndex],
+    [messages, isGenerating, provider, selectedCloudModelId, systemPrompt, ragIndex],
   );
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -232,20 +295,6 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
     );
   }
 
-  if (engineState === 'unsupported') {
-    return (
-      <CenterCard>
-        <AlertCircle className="text-text-muted mb-3 h-10 w-10" />
-        <h2 className="text-text-primary mb-2 text-lg font-semibold">WebGPU Not Available</h2>
-        <p className="text-text-secondary text-sm">
-          AI Chat requires WebGPU, which is supported in Chrome and Edge.
-          <br />
-          Please switch to a supported browser to use this feature.
-        </p>
-      </CenterCard>
-    );
-  }
-
   if (engineState === 'idle') {
     const selectedModel = AVAILABLE_MODELS.find((m) => m.id === selectedModelId);
     const groups: ModelGroup[] = ['top', 'more'];
@@ -256,56 +305,151 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
           <div className="bg-accent/10 mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl">
             <Sparkles className="text-accent h-6 w-6" />
           </div>
-          <h2 className="text-text-primary mb-1 text-lg font-bold">Choose a Model</h2>
-          <p className="text-text-secondary text-xs">
-            All models run 100% in your browser via WebGPU — no data leaves your device
-          </p>
+          <h2 className="text-text-primary mb-1 text-lg font-bold">Ask AI about Tomer</h2>
+          <p className="text-text-secondary text-xs">Choose how you want to chat</p>
         </div>
 
-        {/* Model grid grouped: Top Picks first, then More Models */}
-        <div className="flex-1 overflow-y-auto px-6 py-5">
-          <div className="mx-auto max-w-5xl space-y-8">
-            {groups.map((group) => {
-              const models = AVAILABLE_MODELS.filter((m) => m.group === group);
-              if (models.length === 0) return null;
-              const info = GROUP_INFO[group];
-              return (
-                <div key={group}>
-                  <div className="mb-3">
-                    <h3 className="text-text-primary text-sm font-semibold">{info.label}</h3>
-                    <p className="text-text-muted text-[11px]">{info.subtitle}</p>
-                  </div>
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    {models.map((model) => (
-                      <ModelCard
-                        key={model.id}
-                        model={model}
-                        isSelected={selectedModelId === model.id}
-                        isCached={!!cacheMap[model.id]}
-                        isDeleting={isDeletingModel === model.id}
-                        onSelect={() => setSelectedModelId(model.id)}
-                        onDelete={() => deleteModel(model.id)}
-                      />
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
+        {/* Provider toggle */}
+        <div className="border-border shrink-0 border-b px-6 py-3">
+          <div className="mx-auto flex max-w-5xl gap-2">
+            <button
+              onClick={() => setProvider('cloud')}
+              className={cn(
+                'flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all',
+                provider === 'cloud'
+                  ? 'bg-accent/15 text-accent border-accent border'
+                  : 'border-border text-text-secondary hover:bg-bg-elevated border',
+              )}
+            >
+              <Zap className="h-4 w-4" />
+              Cloud · xAI Grok
+            </button>
+            <button
+              onClick={() => webGPUSupported && setProvider('local')}
+              className={cn(
+                'flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all',
+                !webGPUSupported && 'cursor-not-allowed opacity-40',
+                provider === 'local'
+                  ? 'bg-accent/15 text-accent border-accent border'
+                  : 'border-border text-text-secondary hover:bg-bg-elevated border',
+              )}
+              disabled={!webGPUSupported}
+              title={!webGPUSupported ? 'WebGPU is not supported in this browser' : undefined}
+            >
+              <Monitor className="h-4 w-4" />
+              Local · In-Browser
+            </button>
           </div>
         </div>
 
-        {/* Sticky footer with start button */}
+        {/* Content area */}
+        <div className="flex-1 overflow-y-auto px-6 py-5">
+          {provider === 'cloud' ? (
+            /* ── Cloud model picker ── */
+            <div className="mx-auto max-w-2xl">
+              <div className="mb-4 grid gap-3 sm:grid-cols-2">
+                {CLOUD_MODELS.map((cm) => (
+                  <button
+                    key={cm.id}
+                    onClick={() => setSelectedCloudModelId(cm.id)}
+                    className={cn(
+                      'border-border bg-bg-surface relative flex flex-col rounded-xl border p-4 text-left transition-all',
+                      selectedCloudModelId === cm.id
+                        ? 'border-accent ring-accent/30 ring-2'
+                        : 'hover:bg-bg-elevated hover:border-text-muted',
+                    )}
+                  >
+                    <div className="mb-1.5 flex items-center gap-2">
+                      <Zap className="text-accent h-4 w-4" />
+                      <h3 className="text-text-primary text-sm font-semibold">{cm.name}</h3>
+                      {cm.recommended && (
+                        <span className="bg-accent text-bg-base rounded-full px-2 py-0.5 text-[9px] font-bold">
+                          ★ Recommended
+                        </span>
+                      )}
+                    </div>
+                    <span className="bg-bg-elevated text-text-muted mb-2 inline-block w-fit rounded px-1.5 py-0.5 text-[10px] font-medium">
+                      xAI
+                    </span>
+                    <p className="text-text-secondary text-xs leading-relaxed">{cm.description}</p>
+                    <div className="text-text-muted mt-3 flex items-center gap-3 text-[11px]">
+                      <span className="flex items-center gap-1">
+                        <Cloud className="h-3.5 w-3.5 opacity-50" /> Cloud
+                      </span>
+                      <span className="opacity-30">|</span>
+                      <span>No download</span>
+                      <span className="opacity-30">|</span>
+                      <span>Instant start</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+              <p className="text-text-muted text-center text-[10px]">
+                Powered by xAI · Requests proxied through a secure endpoint · No API keys exposed
+              </p>
+            </div>
+          ) : (
+            /* ── Local model picker ── */
+            <div className="mx-auto max-w-5xl space-y-8">
+              {groups.map((group) => {
+                const models = AVAILABLE_MODELS.filter((m) => m.group === group);
+                if (models.length === 0) return null;
+                const info = GROUP_INFO[group];
+                return (
+                  <div key={group}>
+                    <div className="mb-3">
+                      <h3 className="text-text-primary text-sm font-semibold">{info.label}</h3>
+                      <p className="text-text-muted text-[11px]">{info.subtitle}</p>
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                      {models.map((model) => (
+                        <ModelCard
+                          key={model.id}
+                          model={model}
+                          isSelected={selectedModelId === model.id}
+                          isCached={!!cacheMap[model.id]}
+                          isDeleting={isDeletingModel === model.id}
+                          onSelect={() => setSelectedModelId(model.id)}
+                          onDelete={() => deleteModel(model.id)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+              <p className="text-text-muted text-center text-[10px]">
+                All models run 100% in your browser via WebGPU — no data leaves your device
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Sticky footer with start button(s) */}
         <div className="border-border shrink-0 border-t px-6 py-4 text-center">
-          <button
-            onClick={initEngine}
-            className="bg-accent text-bg-base hover:bg-accent-hover rounded-xl px-8 py-3 text-sm font-semibold transition-colors"
-          >
-            {cacheMap[selectedModelId] ? 'Start Chat' : 'Download & Start'}
-            {selectedModel && !cacheMap[selectedModelId] && (
-              <span className="ml-1.5 opacity-70">({selectedModel.downloadSize})</span>
+          <div className="flex items-center justify-center gap-3">
+            {hasSavedChat.current && (
+              <button
+                onClick={() => initEngine(false)}
+                className="bg-accent text-bg-base hover:bg-accent-hover rounded-xl px-8 py-3 text-sm font-semibold transition-colors"
+              >
+                Continue Chat
+              </button>
             )}
-          </button>
-          <p className="text-text-muted mt-2 text-[10px]">Powered by WebLLM · No server required</p>
+            <button
+              onClick={() => initEngine(true)}
+              className={cn(
+                'rounded-xl px-8 py-3 text-sm font-semibold transition-colors',
+                hasSavedChat.current
+                  ? 'border-border text-text-primary hover:bg-bg-elevated border'
+                  : 'bg-accent text-bg-base hover:bg-accent-hover',
+              )}
+            >
+              {provider === 'local' && !cacheMap[selectedModelId] ? 'Download & Start' : 'New Chat'}
+              {provider === 'local' && selectedModel && !cacheMap[selectedModelId] && (
+                <span className="ml-1.5 opacity-70">({selectedModel.downloadSize})</span>
+              )}
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -347,7 +491,7 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
           {errorMsg}
         </p>
         <button
-          onClick={initEngine}
+          onClick={() => initEngine(true)}
           className="bg-accent text-bg-base hover:bg-accent-hover rounded-xl px-6 py-2.5 text-sm font-semibold transition-colors"
         >
           Try Again
@@ -358,15 +502,18 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
 
   /* ─── Chat UI (engineState === 'ready') ─── */
   const activeModel = AVAILABLE_MODELS.find((m) => m.id === activeModelRef.current);
+  const activeCloudModel = CLOUD_MODELS.find((m) => m.id === selectedCloudModelId);
+  const statusLabel =
+    provider === 'cloud'
+      ? `${activeCloudModel?.name ?? 'Cloud AI'} · Cloud`
+      : `${activeModel?.name ?? 'AI'} · Local`;
   return (
     <div className="flex h-full flex-col">
       {/* Status bar */}
       <div className="border-border flex items-center justify-between border-b px-4 py-2">
         <div className="flex items-center gap-2">
           <span className="bg-status-active h-2 w-2 rounded-full" />
-          <span className="text-text-muted text-xs">
-            {activeModel?.name ?? 'AI'} · Running in browser
-          </span>
+          <span className="text-text-muted text-xs">{statusLabel}</span>
         </div>
         {messages.length > 0 && (
           <button

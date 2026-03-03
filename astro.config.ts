@@ -5,6 +5,8 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
   site: 'https://nusnus.github.io',
 
+  devToolbar: { enabled: false },
+
   integrations: [react()],
 
   vite: {
