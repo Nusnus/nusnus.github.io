@@ -1,0 +1,28 @@
+---
+import { loadMeta } from '@lib/data/loader';
+import { relativeTime } from '@lib/utils/date';
+
+const meta = loadMeta();
+const lastUpdated = meta?.lastUpdated ? relativeTime(meta.lastUpdated) : 'unknown';
+---
+
+<aside
+  class="scrollbar-thin border-border bg-bg-base hidden h-screen overflow-y-auto border-l px-5 py-6 lg:block"
+  aria-label="Live activity panel"
+>
+  <!-- Header -->
+  <div class="mb-5 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <h2 class="text-text-secondary text-sm font-semibold tracking-wider uppercase">
+        Live Activity
+      </h2>
+      <span class="bg-status-active inline-block h-2 w-2 rounded-full" aria-hidden="true"></span>
+    </div>
+    <span class="text-text-muted text-xs">
+      Updated {lastUpdated}
+    </span>
+  </div>
+
+  <!-- Activity Feed (React island) -->
+  <slot />
+</aside>

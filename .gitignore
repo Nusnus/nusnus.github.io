@@ -79,3 +79,13 @@ amp.yaml
 
 # Node
 node_modules/
+
+# Astro
+dist/
+.astro/
+
+# Build
+*.log
+
+# NOTE: public/data/ is intentionally NOT ignored.
+# It is committed to git and auto-updated by GitHub Actions.

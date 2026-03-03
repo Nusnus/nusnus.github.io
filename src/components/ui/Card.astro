@@ -1,0 +1,29 @@
+---
+import { cn } from '@lib/utils/cn';
+
+interface Props {
+  class?: string;
+  href?: string;
+  hover?: boolean;
+}
+
+const { class: className, href, hover = true } = Astro.props;
+
+const baseClasses = cn(
+  'border-border bg-bg-surface rounded-xl border p-5',
+  hover && 'hover:border-accent/40 transition-all duration-150 hover:-translate-y-0.5',
+  'motion-reduce:transition-none motion-reduce:hover:translate-y-0',
+  className,
+);
+
+const Tag = href ? 'a' : 'div';
+---
+
+<Tag
+  class={baseClasses}
+  href={href}
+  target={href ? '_blank' : undefined}
+  rel={href ? 'noopener noreferrer' : undefined}
+>
+  <slot />
+</Tag>

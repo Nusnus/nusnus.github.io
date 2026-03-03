@@ -1,0 +1,43 @@
+name: Lint & Type Check
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'scripts/**'
+      - 'package.json'
+      - 'tsconfig.json'
+      - 'astro.config.ts'
+      - 'eslint.config.ts'
+  pull_request:
+    branches: [main]
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        run: pnpm type-check
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Format check
+        run: pnpm format:check
+
+      - name: Test
+        run: pnpm test

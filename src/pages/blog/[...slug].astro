@@ -1,0 +1,51 @@
+---
+import type { GetStaticPaths } from 'astro';
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '@layouts/BaseLayout.astro';
+import { formatDate } from '@lib/utils/date';
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  const posts = await getCollection('blog', ({ data }) => !data.draft);
+  return posts.map((post) => ({
+    params: { slug: post.id },
+    props: { post },
+  }));
+};
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+---
+
+<BaseLayout title={`${post.data.title} — Nusnus`} description={post.data.description}>
+  <article class="mx-auto max-w-3xl px-6 py-12 lg:py-20">
+    <!-- Header -->
+    <header class="mb-10">
+      <div class="mb-4 flex flex-wrap gap-2">
+        {
+          post.data.tags.map((tag: string) => (
+            <span class="bg-bg-elevated text-text-secondary rounded-md px-2 py-0.5 text-xs">
+              {tag}
+            </span>
+          ))
+        }
+      </div>
+      <h1 class="mb-3 text-4xl font-bold tracking-tight">{post.data.title}</h1>
+      <p class="text-text-secondary mb-4 text-lg">{post.data.description}</p>
+      <time class="text-text-muted text-sm" datetime={post.data.publishedAt.toISOString()}>
+        {formatDate(post.data.publishedAt)}
+      </time>
+    </header>
+
+    <!-- Content -->
+    <div
+      class="prose prose-invert prose-headings:font-bold prose-a:text-accent prose-code:font-mono max-w-none"
+    >
+      <Content />
+    </div>
+
+    <!-- Back link -->
+    <div class="border-border mt-12 border-t pt-6">
+      <a href="/blog" class="text-accent text-sm hover:underline">← Back to writing</a>
+    </div>
+  </article>
+</BaseLayout>

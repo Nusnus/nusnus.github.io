@@ -1,0 +1,50 @@
+{
+  "events": [
+    {
+      "id": "seed-1",
+      "type": "PushEvent",
+      "repo": "celery/celery",
+      "title": "Fix: Resolve race condition in task retry logic",
+      "url": "https://github.com/celery/celery/commit/abc123",
+      "createdAt": "2026-03-03T14:28:47Z"
+    },
+    {
+      "id": "seed-2",
+      "type": "PullRequestReviewEvent",
+      "repo": "celery/celery",
+      "title": "Review: Add support for Redis Sentinel",
+      "url": "https://github.com/celery/celery/pull/9200",
+      "createdAt": "2026-03-03T12:15:00Z"
+    },
+    {
+      "id": "seed-3",
+      "type": "PullRequestEvent",
+      "repo": "celery/pytest-celery",
+      "title": "PR: Improve worker container startup reliability",
+      "url": "https://github.com/celery/pytest-celery/pull/420",
+      "createdAt": "2026-03-03T10:00:00Z"
+    },
+    {
+      "id": "seed-4",
+      "type": "IssueCommentEvent",
+      "repo": "celery/celery",
+      "title": "Comment: Discussion on task priority queues",
+      "url": "https://github.com/celery/celery/issues/9150#comment",
+      "createdAt": "2026-03-02T22:30:00Z"
+    },
+    {
+      "id": "seed-5",
+      "type": "PushEvent",
+      "repo": "celery/kombu",
+      "title": "Update: Bump SQS transport dependencies",
+      "url": "https://github.com/celery/kombu/commit/def456",
+      "createdAt": "2026-03-02T16:45:00Z"
+    }
+  ],
+  "todaySummary": {
+    "commits": 5,
+    "prsOpened": 1,
+    "prsReviewed": 2,
+    "issueComments": 1
+  }
+}

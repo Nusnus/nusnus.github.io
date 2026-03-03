@@ -1,0 +1,64 @@
+{
+  "name": "nusnus.github.io",
+  "type": "module",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Tomer Nosrati (Nusnus) — Portfolio & Activity Dashboard",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "sync": "astro sync",
+    "type-check": "astro check && tsc --noEmit",
+    "lint": "eslint src scripts",
+    "lint:fix": "eslint src scripts --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "fetch-data": "tsx scripts/fetch-github-data.mts",
+    "validate-data": "tsx scripts/validate-data.mts"
+  },
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=10.0.0"
+  },
+  "dependencies": {
+    "@astrojs/react": "^4.4.2",
+    "@tailwindcss/vite": "^4.2.1",
+    "astro": "^5.17.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.576.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "tailwind-merge": "^3.5.0",
+    "tailwindcss": "^4.2.1",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.6",
+    "@eslint/js": "^10.0.1",
+    "@octokit/graphql": "^9.0.3",
+    "@octokit/rest": "^22.0.1",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "eslint": "^10.0.2",
+    "eslint-plugin-astro": "^1.6.0",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "globals": "^17.4.0",
+    "prettier": "^3.8.1",
+    "prettier-plugin-astro": "^0.14.1",
+    "prettier-plugin-tailwindcss": "^0.7.2",
+    "svgo": "^3.3.2",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.56.1",
+    "vitest": "^4.0.18"
+  },
+  "pnpm": {
+    "overrides": {
+      "svgo": "^3.3.2"
+    }
+  }
+}

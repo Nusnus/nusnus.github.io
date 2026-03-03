@@ -1,0 +1,47 @@
+---
+import { cn } from '@lib/utils/cn';
+
+interface Props {
+  variant?: 'primary' | 'ghost' | 'link';
+  size?: 'sm' | 'md' | 'lg';
+  href?: string;
+  class?: string;
+  [key: string]: unknown;
+}
+
+const { variant = 'primary', size = 'md', href, class: className, ...rest } = Astro.props;
+
+const variantClasses = {
+  primary: 'bg-accent text-bg-base hover:bg-accent-hover shadow-sm',
+  ghost: 'border border-border text-text-primary hover:border-accent/40 hover:text-accent',
+  link: 'text-accent hover:underline underline-offset-4',
+};
+
+const sizeClasses = {
+  sm: 'px-3 py-1.5 text-sm min-h-[44px]',
+  md: 'px-4 py-2 text-sm min-h-[44px]',
+  lg: 'px-6 py-3 text-base min-h-[44px]',
+};
+
+const classes = cn(
+  'inline-flex items-center justify-center gap-2 rounded-lg font-medium',
+  'transition-colors duration-150',
+  'focus-visible:ring-accent focus-visible:ring-offset-bg-base focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
+  'motion-reduce:transition-none',
+  variantClasses[variant],
+  variant !== 'link' && sizeClasses[size],
+  className,
+);
+
+const Tag = href ? 'a' : 'button';
+---
+
+<Tag
+  class={classes}
+  href={href}
+  target={href?.startsWith('http') ? '_blank' : undefined}
+  rel={href?.startsWith('http') ? 'noopener noreferrer' : undefined}
+  {...rest}
+>
+  <slot />
+</Tag>

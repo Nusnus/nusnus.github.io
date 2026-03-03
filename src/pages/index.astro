@@ -1,0 +1,44 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import Sidebar from '@components/layout/Sidebar.astro';
+import MainContent from '@components/layout/MainContent.astro';
+import ActivityPanel from '@components/layout/ActivityPanel.astro';
+import Hero from '@components/sections/Hero.astro';
+import Projects from '@components/sections/Projects.astro';
+import Collaborations from '@components/sections/Collaborations.astro';
+import Articles from '@components/sections/Articles.astro';
+import Sponsoring from '@components/sections/Sponsoring.astro';
+import TechStack from '@components/sections/TechStack.astro';
+import ThemeToggle from '@components/widgets/ThemeToggle';
+import StatusDot from '@components/widgets/StatusDot';
+import ActivityFeed from '@components/widgets/ActivityFeed';
+import { loadActivity } from '@lib/data/loader';
+
+const activity = loadActivity();
+const lastEventTime = activity?.events[0]?.createdAt ?? new Date().toISOString();
+---
+
+<BaseLayout>
+  <div class="grid h-screen grid-cols-1 md:grid-cols-[280px_1fr] lg:grid-cols-[280px_1fr_340px]">
+    <!-- Sidebar -->
+    <Sidebar>
+      <StatusDot client:load lastEventTimestamp={lastEventTime} slot="status-dot" />
+      <ThemeToggle client:load slot="theme-toggle" />
+    </Sidebar>
+
+    <!-- Main Content -->
+    <MainContent>
+      <Hero />
+      <Projects />
+      <Collaborations />
+      <Articles />
+      <Sponsoring />
+      <TechStack />
+    </MainContent>
+
+    <!-- Activity Panel (hidden on md and below) -->
+    <ActivityPanel>
+      <ActivityFeed client:load initialEvents={activity?.events ?? []} />
+    </ActivityPanel>
+  </div>
+</BaseLayout>
