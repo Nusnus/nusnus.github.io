@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@astrojs/react": "^4.4.2",
+    "@mlc-ai/web-llm": "^0.2.81",
     "@tailwindcss/vite": "^4.2.1",
     "astro": "^5.17.1",
     "clsx": "^2.1.1",

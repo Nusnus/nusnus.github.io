@@ -12,10 +12,25 @@ import Sponsoring from '@components/sections/Sponsoring.astro';
 import ThemeToggle from '@components/widgets/ThemeToggle';
 import StatusDot from '@components/widgets/StatusDot';
 import ActivityFeed from '@components/widgets/ActivityFeed';
-import { loadActivity } from '@lib/data/loader';
+import AiChat from '@components/widgets/AiChat';
+import {
+  loadActivity,
+  loadProfile,
+  loadRepos,
+  loadCeleryOrgRepos,
+  loadContributionGraph,
+} from '@lib/data/loader';
+import { buildSystemPrompt } from '@lib/ai/config';
 
 const activity = loadActivity();
 const lastEventTime = activity?.events[0]?.createdAt ?? new Date().toISOString();
+
+const aiSystemPrompt = buildSystemPrompt({
+  profile: loadProfile(),
+  repos: loadRepos(),
+  orgRepos: loadCeleryOrgRepos(),
+  graph: loadContributionGraph(),
+});
 ---
 
 <BaseLayout>
@@ -41,4 +56,7 @@ const lastEventTime = activity?.events[0]?.createdAt ?? new Date().toISOString()
       <ActivityFeed client:load initialEvents={activity?.events ?? []} />
     </ActivityPanel>
   </div>
+
+  <!-- AI Chat (floating overlay, lazy-loaded) -->
+  <AiChat client:idle systemPrompt={aiSystemPrompt} />
 </BaseLayout>
