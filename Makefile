@@ -1,4 +1,4 @@
-.PHONY: help dev build preview lint lint-fix format format-check test type-check fetch-data pre-commit clean
+.PHONY: help dev build preview lint lint-fix format format-check test type-check fetch-data pre-commit clean deploy-worker
 
 .DEFAULT_GOAL := help
 
@@ -55,6 +55,11 @@ pre-commit: ## Run pre-commit hooks
 
 fetch-data: ## Fetch external data
 	bun run fetch-data
+
+# ─── Worker ───
+
+deploy-worker: ## Deploy Cloudflare Worker (AI proxy)
+	cd worker && npx wrangler deploy
 
 # ─── Cleanup ───
 
