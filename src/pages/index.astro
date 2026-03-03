@@ -8,7 +8,6 @@ import Projects from '@components/sections/Projects.astro';
 import Collaborations from '@components/sections/Collaborations.astro';
 import Articles from '@components/sections/Articles.astro';
 import Sponsoring from '@components/sections/Sponsoring.astro';
-import TechStack from '@components/sections/TechStack.astro';
 import ThemeToggle from '@components/widgets/ThemeToggle';
 import StatusDot from '@components/widgets/StatusDot';
 import ActivityFeed from '@components/widgets/ActivityFeed';
@@ -33,7 +32,6 @@ const lastEventTime = activity?.events[0]?.createdAt ?? new Date().toISOString()
       <Collaborations />
       <Articles />
       <Sponsoring />
-      <TechStack />
     </MainContent>
 
     <!-- Activity Panel (hidden on md and below) -->

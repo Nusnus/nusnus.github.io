@@ -8,10 +8,10 @@
   --color-bg-elevated: oklch(0.2 0.012 255);
   --color-border: oklch(0.22 0.008 255);
 
-  /* Accent — Celery amber */
-  --color-accent: oklch(0.82 0.17 85);
-  --color-accent-hover: oklch(0.88 0.15 85);
-  --color-accent-muted: oklch(0.82 0.17 85 / 0.15);
+  /* Accent — Celery green */
+  --color-accent: oklch(0.72 0.17 145);
+  --color-accent-hover: oklch(0.78 0.15 145);
+  --color-accent-muted: oklch(0.72 0.17 145 / 0.15);
 
   /* Text */
   --color-text-primary: oklch(0.93 0.005 255);
@@ -20,7 +20,7 @@
 
   /* Status */
   --color-status-active: oklch(0.72 0.2 145);
-  --color-status-warning: oklch(0.82 0.17 85);
+  --color-status-warning: oklch(0.72 0.17 85);
   --color-status-inactive: oklch(0.45 0.005 255);
 
   /* Typography */
@@ -85,9 +85,9 @@
     --color-text-primary: oklch(0.15 0.01 255);
     --color-text-secondary: oklch(0.4 0.01 255);
     --color-text-muted: oklch(0.6 0.008 255);
-    --color-accent: oklch(0.62 0.22 85);
-    --color-accent-hover: oklch(0.55 0.22 85);
-    --color-accent-muted: oklch(0.62 0.22 85 / 0.12);
+    --color-accent: oklch(0.52 0.17 145);
+    --color-accent-hover: oklch(0.45 0.17 145);
+    --color-accent-muted: oklch(0.52 0.17 145 / 0.12);
     --color-status-active: oklch(0.5 0.2 145);
   }
 }

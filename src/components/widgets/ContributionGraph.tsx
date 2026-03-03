@@ -14,9 +14,9 @@ const CELL_STEP = CELL_SIZE + CELL_GAP;
 
 const LEVEL_COLORS = [
   'var(--color-bg-elevated)',
-  'oklch(0.55 0.10 85)',
-  'oklch(0.65 0.14 85)',
-  'oklch(0.75 0.17 85)',
+  'oklch(0.45 0.10 145)',
+  'oklch(0.55 0.14 145)',
+  'oklch(0.65 0.17 145)',
   'var(--color-accent)',
 ];
 
