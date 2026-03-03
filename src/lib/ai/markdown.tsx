@@ -1,58 +1,167 @@
 /**
  * Lightweight markdown renderer for AI chat responses.
  *
- * Supports: **bold**, *italic*, `inline code`, ```code blocks```,
- * [links](url), unordered lists (- item), and paragraphs.
+ * Supports: headings (# ## ###), **bold**, *italic*, `inline code`,
+ * ```code blocks```, [links](url), unordered lists (- item),
+ * ordered lists (1. item), horizontal rules (---), and paragraphs.
  * No external dependencies — keeps the bundle small.
  */
 import type { ReactNode } from 'react';
+
+const HEADING_CLASSES: Record<number, string> = {
+  1: 'text-base font-bold mt-3 mb-1',
+  2: 'text-sm font-bold mt-2.5 mb-1',
+  3: 'text-sm font-semibold mt-2 mb-0.5',
+};
 
 /** Render a markdown string as React elements. */
 export function renderMarkdown(text: string): ReactNode {
   if (!text) return null;
 
-  const blocks = text.split(/\n{2,}/);
-  return blocks.map((block, i) => {
-    const trimmed = block.trim();
-    if (!trimmed) return null;
+  // Split into blocks, but preserve code blocks as single units
+  const blocks = splitBlocks(text);
+  return blocks.map((block, i) => renderBlock(block, i));
+}
 
-    // Code block: ```...```
-    const codeBlockMatch = trimmed.match(/^```[\s\S]*?\n([\s\S]*?)```$/);
-    if (codeBlockMatch) {
-      return (
-        <pre
-          key={i}
-          className="bg-bg-elevated scrollbar-thin my-2 overflow-x-auto rounded-lg p-3 text-xs"
-        >
-          <code>{codeBlockMatch[1]?.trim()}</code>
-        </pre>
-      );
+/** Split text into blocks while keeping fenced code blocks intact. */
+function splitBlocks(text: string): string[] {
+  const blocks: string[] = [];
+  const lines = text.split('\n');
+  let current: string[] = [];
+  let inCodeBlock = false;
+
+  for (const line of lines) {
+    if (line.trim().startsWith('```')) {
+      if (inCodeBlock) {
+        // End of code block
+        current.push(line);
+        blocks.push(current.join('\n'));
+        current = [];
+        inCodeBlock = false;
+      } else {
+        // Start of code block — flush current
+        if (current.length > 0) {
+          const joined = current.join('\n').trim();
+          if (joined) blocks.push(joined);
+          current = [];
+        }
+        current.push(line);
+        inCodeBlock = true;
+      }
+    } else if (inCodeBlock) {
+      current.push(line);
+    } else if (line.trim() === '') {
+      // Empty line — flush current block
+      if (current.length > 0) {
+        const joined = current.join('\n').trim();
+        if (joined) blocks.push(joined);
+        current = [];
+      }
+    } else {
+      current.push(line);
     }
+  }
 
-    // Unordered list: lines starting with - or *
-    const lines = trimmed.split('\n');
-    if (lines.every((l) => /^[-*]\s/.test(l.trim()))) {
-      return (
-        <ul key={i} className="my-1 list-inside list-disc space-y-0.5">
-          {lines.map((line, j) => (
-            <li key={j}>{renderInline(line.replace(/^[-*]\s/, ''))}</li>
-          ))}
-        </ul>
-      );
-    }
+  // Flush remaining
+  if (current.length > 0) {
+    const joined = current.join('\n').trim();
+    if (joined) blocks.push(joined);
+  }
 
-    // Regular paragraph (may contain multiple lines)
+  return blocks;
+}
+
+/** Render a single block (heading, code, list, hr, or paragraph). */
+function renderBlock(block: string, key: number): ReactNode {
+  const trimmed = block.trim();
+  if (!trimmed) return null;
+
+  // Code block: ```...```
+  const codeBlockMatch = trimmed.match(/^```[^\n]*\n([\s\S]*?)```$/);
+  if (codeBlockMatch) {
     return (
-      <p key={i} className="my-1">
-        {lines.map((line, j) => (
-          <span key={j}>
-            {j > 0 && <br />}
-            {renderInline(line)}
-          </span>
-        ))}
-      </p>
+      <pre
+        key={key}
+        className="bg-bg-elevated scrollbar-thin my-2 overflow-x-auto rounded-lg p-3 text-xs"
+      >
+        <code>{codeBlockMatch[1]?.trim()}</code>
+      </pre>
     );
-  });
+  }
+
+  // Horizontal rule: --- or *** or ___
+  if (/^[-*_]{3,}$/.test(trimmed)) {
+    return <hr key={key} className="border-border my-2" />;
+  }
+
+  const lines = trimmed.split('\n');
+
+  // Heading: # ## ###
+  if (lines.length === 1) {
+    const headingMatch = trimmed.match(/^(#{1,3})\s+(.+)$/);
+    if (headingMatch) {
+      const level = (headingMatch[1] ?? '#').length;
+      const content = headingMatch[2] ?? '';
+      const cls = HEADING_CLASSES[level] ?? HEADING_CLASSES[3];
+      if (level === 1)
+        return (
+          <h2 key={key} className={cls}>
+            {renderInline(content)}
+          </h2>
+        );
+      if (level === 2)
+        return (
+          <h3 key={key} className={cls}>
+            {renderInline(content)}
+          </h3>
+        );
+      return (
+        <h4 key={key} className={cls}>
+          {renderInline(content)}
+        </h4>
+      );
+    }
+  }
+
+  // Unordered list: lines starting with - or *
+  if (lines.every((l) => /^[-*]\s/.test(l.trim()))) {
+    return (
+      <ul key={key} className="my-1 list-inside list-disc space-y-0.5">
+        {lines.map((line, j) => (
+          <li key={j}>{renderInline(line.replace(/^[-*]\s/, ''))}</li>
+        ))}
+      </ul>
+    );
+  }
+
+  // Ordered list: lines starting with 1. 2. etc.
+  if (lines.every((l) => /^[0-9]+\.\s/.test(l.trim()))) {
+    return (
+      <ol key={key} className="my-1 list-inside list-decimal space-y-0.5">
+        {lines.map((line, j) => (
+          <li key={j}>{renderInline(line.replace(/^[0-9]+\.\s/, ''))}</li>
+        ))}
+      </ol>
+    );
+  }
+
+  // Mixed block: may contain headings, list items, and paragraphs on separate lines
+  // Render line-by-line for blocks that mix types
+  if (lines.length > 1 && lines.some((l) => /^#{1,3}\s/.test(l.trim()))) {
+    return <div key={key}>{lines.map((line, j) => renderBlock(line, j))}</div>;
+  }
+
+  // Regular paragraph
+  return (
+    <p key={key} className="my-1">
+      {lines.map((line, j) => (
+        <span key={j}>
+          {j > 0 && <br />}
+          {renderInline(line)}
+        </span>
+      ))}
+    </p>
+  );
 }
 
 /** Render inline markdown: bold, italic, code, links. */
