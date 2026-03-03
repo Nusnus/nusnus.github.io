@@ -1,52 +1,63 @@
-.PHONY: dev build preview lint lint-fix format format-check test type-check fetch-data pre-commit clean
+.PHONY: help dev build preview lint lint-fix format format-check test type-check fetch-data pre-commit clean
+
+.DEFAULT_GOAL := help
+
+# ─── Help ───
+
+help: ## Show this help message
+	@echo ""
+	@echo "Usage: make <target>"
+	@echo ""
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
+	@echo ""
 
 # ─── Development ───
 
-dev:
+dev: ## Start dev server
 	bun run dev --host 0.0.0.0
 
 # ─── Build ───
 
-build:
+build: ## Build for production
 	bun run build
 
 # ─── Preview production build ───
 
-preview:
+preview: ## Preview production build
 	bun run preview --host 0.0.0.0
 
 # ─── Quality ───
 
-lint:
+lint: ## Run linter
 	bun run lint
 
-lint-fix:
+lint-fix: ## Run linter with auto-fix
 	bun run lint:fix
 
-format:
+format: ## Format code
 	bun run format
 
-format-check:
+format-check: ## Check code formatting
 	bun run format:check
 
-test:
+test: ## Run tests
 	bun run test
 
-type-check:
+type-check: ## Run type checking
 	bun run type-check
 
 # ─── Pre-commit ───
 
-pre-commit:
+pre-commit: ## Run pre-commit hooks
 	bunx lefthook run pre-commit --force
 
 # ─── Data ───
 
-fetch-data:
+fetch-data: ## Fetch external data
 	bun run fetch-data
 
 # ─── Cleanup ───
 
-clean:
+clean: ## Remove build artifacts and dependencies
 	rm -rf dist .astro node_modules
 
