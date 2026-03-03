@@ -1,0 +1,81 @@
+# Environment variables
+.env
+.env.*
+
+# Claude Code
+.claude/
+
+# Claude MCP config
+.mcp.json
+
+# Crush (AI agent)
+.crush/
+.crush.json
+
+# OpenCode (AI agent)
+opencode.json
+
+# Cursor
+.cursor/
+.cursorignore
+.cursorindexingignore
+.cursorules
+
+# Windsurf
+.windsurf/
+.windsurfrules
+
+# Cline
+.cline/
+.clinerules
+.clineignore
+
+# Roo Code
+.roo/
+.rooignore
+
+# Aider
+.aider*
+
+# Copilot
+.copilot/
+.github/copilot-instructions.md
+
+# Continue
+.continue/
+.continuerc.json
+.continueignore
+
+# Cody
+.cody/
+
+# Augment
+.augment/
+.augmentignore
+
+# Tabnine
+.tabnine_root
+.tabnine/
+
+# Codex
+codex.md
+codex.yaml
+
+# Amp
+amp.yaml
+
+# Goose
+.goosehints
+.goose/
+
+# Mentat
+.mentat/
+
+# Sourcegraph
+.sourcegraph/
+
+# macOS
+.DS_Store
+
+# Node
+node_modules/

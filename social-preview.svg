@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Tomer Nosrati Portfolio</title>
+  <desc id="desc">Tomer Nosrati, CEO and Tech Lead of the Celery Organization.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#09090b"/>
+      <stop offset="100%" stop-color="#111421"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.2" cy="0.15" r="0.8">
+      <stop offset="0%" stop-color="#6c9fff" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#6c9fff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+  <rect x="72" y="72" width="1056" height="486" rx="30" fill="rgba(255,255,255,0.03)" stroke="rgba(108,159,255,0.38)"/>
+  <text x="120" y="235" fill="#9ab9ff" font-size="30" font-family="Inter, Arial, sans-serif" letter-spacing="7">CEO &amp; TECH LEAD</text>
+  <text x="120" y="332" fill="#f4f7ff" font-size="78" font-family="Space Grotesk, Inter, Arial, sans-serif" font-weight="700">Tomer Nosrati</text>
+  <text x="120" y="392" fill="#b0b4c3" font-size="36" font-family="Inter, Arial, sans-serif">Celery Organization</text>
+  <text x="120" y="468" fill="#d5ddf3" font-size="28" font-family="Inter, Arial, sans-serif">Building the backbone of distributed Python</text>
+</svg>

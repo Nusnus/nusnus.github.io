@@ -1,0 +1,466 @@
+/* === Navigation Layout === */
+.nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 120;
+    padding: 0.85rem 0;
+    background: rgba(9, 9, 11, 0.72);
+    border-bottom: 1px solid transparent;
+    backdrop-filter: blur(22px) saturate(150%);
+    -webkit-backdrop-filter: blur(22px) saturate(150%);
+    transform: translateY(-110%);
+    transition: transform var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.nav.visible {
+    transform: translateY(0);
+    border-bottom-color: var(--border);
+}
+
+.nav.scrolled {
+    background: rgba(8, 9, 13, 0.84);
+}
+
+.nav-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+}
+
+/* === Hero Layout === */
+.hero {
+    min-height: 100svh;
+    padding: clamp(6.5rem, 9vh, 8.5rem) 0 clamp(3.5rem, 5vh, 4.5rem);
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    isolation: isolate;
+}
+
+.hero::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(9, 9, 11, 0.1) 0%, rgba(9, 9, 11, 0.45) 72%, var(--bg) 100%);
+    pointer-events: none;
+    z-index: -1;
+}
+
+.hero-mesh,
+.hero-grain {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: -2;
+}
+
+.hero-mesh {
+    background:
+        radial-gradient(40rem 25rem at 20% 20%, rgba(108, 159, 255, 0.24), transparent 72%),
+        radial-gradient(32rem 21rem at 80% 12%, rgba(108, 159, 255, 0.14), transparent 74%),
+        radial-gradient(42rem 28rem at 65% 86%, rgba(108, 159, 255, 0.08), transparent 76%);
+}
+
+.hero-grain {
+    opacity: 0.26;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.08) 0.75px, transparent 0.75px);
+    background-size: 3px 3px;
+    mask-image: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.8) 35%, transparent 75%);
+}
+
+.hero-shell {
+    display: grid;
+    gap: clamp(1.7rem, 3vw, 3rem);
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 430px);
+    align-items: center;
+}
+
+.hero-content {
+    max-width: min(960px, 100%);
+}
+
+.scroll-cue {
+    position: absolute;
+    left: 50%;
+    bottom: 1.6rem;
+    transform: translateX(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.8rem;
+    height: 2.8rem;
+}
+
+.scroll-cue-line {
+    width: 1px;
+    height: 2.5rem;
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.75), transparent);
+    animation: scrollPulse 2.2s ease-in-out infinite;
+}
+
+@keyframes scrollPulse {
+    0%,
+    100% {
+        opacity: 0.9;
+        transform: scaleY(1);
+    }
+    50% {
+        opacity: 0.3;
+        transform: scaleY(0.6);
+    }
+}
+
+/* === Stats Layout === */
+.stats {
+    padding: clamp(2.3rem, 3vw, 3.1rem) 0;
+    border-top: 1px solid var(--border-soft);
+    border-bottom: 1px solid var(--border-soft);
+    background:
+        linear-gradient(180deg, rgba(12, 13, 19, 0.88), rgba(9, 9, 11, 0.98)),
+        radial-gradient(28rem 15rem at 20% 0%, rgba(108, 159, 255, 0.14), transparent 70%);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(0.8rem, 1.4vw, 1.2rem);
+}
+
+.stats-updated {
+    min-height: 1.2rem;
+    width: var(--shell-width);
+    margin: 0.9rem auto 0;
+    text-align: right;
+    color: var(--text-muted);
+    font-size: 0.76rem;
+    letter-spacing: 0.03em;
+}
+
+/* === Shared Sections === */
+.section {
+    padding: clamp(4.2rem, 9vh, 6.8rem) 0;
+    border-bottom: 1px solid var(--border-soft);
+}
+
+.section-inner {
+    display: grid;
+    grid-template-columns: minmax(180px, 260px) minmax(0, 1fr);
+    align-items: start;
+    gap: clamp(1.6rem, 3vw, 2.8rem);
+}
+
+/* === About / Projects / Recognition / Writing Layout === */
+.about-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(240px, 0.9fr);
+    gap: clamp(1.5rem, 2.8vw, 3rem);
+}
+
+.bento-grid {
+    display: grid;
+    grid-template-columns: repeat(14, minmax(0, 1fr));
+    gap: clamp(0.9rem, 1.3vw, 1.35rem);
+}
+
+.bento-featured {
+    grid-column: 1 / span 9;
+    min-height: 21rem;
+}
+
+.bento-grid .bento-card:nth-child(2) {
+    grid-column: 10 / -1;
+}
+
+.bento-grid .bento-card:nth-child(3) {
+    grid-column: 6 / -1;
+}
+
+.recognition-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(0.9rem, 1.35vw, 1.3rem);
+}
+
+.writing-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(0.9rem, 1.35vw, 1.3rem);
+}
+
+/* === Dashboard Layout === */
+.section-dashboard {
+    background: linear-gradient(180deg, rgba(12, 14, 22, 0.62), rgba(9, 9, 11, 0.88));
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: clamp(0.85rem, 1.2vw, 1.2rem);
+    align-items: start;
+}
+
+.dashboard-grid > .dash-card {
+    grid-column: span 4;
+}
+
+.dashboard-grid > .dash-card.dash-wide {
+    grid-column: span 8;
+}
+
+.dashboard-status {
+    grid-column: 1 / -1;
+    min-height: 1.2rem;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+.chart-stack {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.activity-columns {
+    display: grid;
+    gap: 0.9rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.activity-columns section {
+    min-width: 0;
+}
+
+.profile-grid,
+.contrib-summary,
+.yoy-grid {
+    display: grid;
+    gap: 0.6rem;
+}
+
+.profile-grid,
+.contrib-summary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.yoy-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.org-list,
+.legend-list,
+.release-list,
+.activity-list {
+    list-style: none;
+    display: grid;
+    gap: 0.55rem;
+}
+
+.table-wrap {
+    width: 100%;
+    overflow-x: auto;
+}
+
+/* === Footer Layout === */
+.footer {
+    padding: clamp(4rem, 8vh, 6.2rem) 0 clamp(2.2rem, 5vh, 3rem);
+    background:
+        linear-gradient(180deg, rgba(8, 9, 11, 0) 0%, rgba(8, 9, 11, 0.8) 18%, rgba(7, 8, 10, 1) 100%),
+        radial-gradient(22rem 11rem at 50% -10%, rgba(108, 159, 255, 0.12), transparent 70%);
+}
+
+.footer-inner {
+    display: grid;
+    gap: 2.6rem;
+}
+
+/* === Responsive === */
+@media (max-width: 1600px) {
+    .dashboard-grid > .dash-card,
+    .dashboard-grid > .dash-card.dash-wide {
+        grid-column: span 6;
+    }
+
+    .dashboard-grid > .dash-card.dash-wide:last-of-type {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 1340px) {
+    .hero-shell {
+        grid-template-columns: minmax(0, 1fr);
+        max-width: 980px;
+    }
+
+    .hero-aside {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .bento-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .bento-featured,
+    .bento-grid .bento-card:nth-child(2),
+    .bento-grid .bento-card:nth-child(3) {
+        grid-column: auto;
+    }
+
+    .bento-featured {
+        grid-column: 1 / -1;
+    }
+
+    .section-inner {
+        grid-template-columns: minmax(130px, 190px) minmax(0, 1fr);
+    }
+
+    .activity-columns {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 1080px) {
+    .nav {
+        padding: 0.7rem 0;
+    }
+
+    .nav-inner {
+        gap: 1rem;
+    }
+
+    .nav-links {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 0.35rem;
+    }
+
+    .nav-links a {
+        font-size: 0.78rem;
+        height: 2rem;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .section-inner {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 1.2rem;
+    }
+
+    .section-label {
+        padding-top: 0;
+    }
+
+    .about-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .recognition-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .dashboard-grid > .dash-card,
+    .dashboard-grid > .dash-card.dash-wide {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 760px) {
+    :root {
+        --shell-width: min(100%, calc(100vw - 1.6rem));
+    }
+
+    body::before,
+    body::after {
+        filter: blur(18px);
+        opacity: 0.72;
+    }
+
+    .hero {
+        padding-top: 6.6rem;
+    }
+
+    .hero-content {
+        text-align: left;
+    }
+
+    .hero-tagline {
+        max-width: 100%;
+    }
+
+    .hero-aside {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .hero-link-btn {
+        min-width: 0;
+        flex: 1 1 9rem;
+    }
+
+    .stats {
+        padding: 2rem 0;
+    }
+
+    .stats-grid,
+    .profile-grid,
+    .contrib-summary,
+    .yoy-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .stats-updated {
+        text-align: left;
+        margin-top: 0.65rem;
+    }
+
+    .bento-grid,
+    .recognition-grid,
+    .writing-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .footer-bottom {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+@media (max-width: 520px) {
+    .nav-logo {
+        width: 2.2rem;
+        height: 2.2rem;
+        font-size: 0.88rem;
+    }
+
+    .nav-links {
+        gap: 0.2rem;
+    }
+
+    .nav-links a {
+        padding-inline: 0.46rem;
+        font-size: 0.73rem;
+    }
+
+    .hero-name {
+        font-size: clamp(2.35rem, 14vw, 3.3rem);
+    }
+
+    .hero-link-btn {
+        width: 100%;
+    }
+
+    .about-languages {
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+
+    .footer-links {
+        width: 100%;
+    }
+
+    .footer-links a {
+        flex: 1 1 100%;
+    }
+}

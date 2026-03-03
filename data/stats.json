@@ -1,0 +1,61 @@
+{
+  "last_updated": "2026-03-03T14:15:21Z",
+  "meta": {
+    "username": "Nusnus",
+    "source": "github_api",
+    "generated_by": "scripts/update_stats.py",
+    "data_version": 2,
+    "core_repos": [
+      "celery/celery",
+      "celery/pytest-celery",
+      "celery/kombu"
+    ],
+    "tracked_repo_count": 0
+  },
+  "profile": {
+    "followers": null,
+    "following": null,
+    "public_repos": null,
+    "organizations": [],
+    "account_age_days": null,
+    "account_age_years": null,
+    "total_stars_received": 0
+  },
+  "contributions": {
+    "most_active_since": null,
+    "last_12_months": {
+      "total": null,
+      "commits": null,
+      "pull_requests": null,
+      "issues": null,
+      "reviews": null,
+      "calendar": [],
+      "streaks": {
+        "current": null,
+        "longest": null
+      },
+      "daily_trend": [],
+      "weekly_trend": [],
+      "monthly_trend": []
+    },
+    "year_over_year": []
+  },
+  "repositories": {
+    "tracked": [],
+    "language_distribution": [],
+    "recent_releases": [],
+    "dependents_total": 0
+  },
+  "activity": {
+    "commits": [],
+    "pull_requests": [],
+    "issues": [],
+    "summary": {}
+  },
+  "totals": {
+    "stars": 0,
+    "dependent_projects": 0,
+    "contributions": null,
+    "followers": null
+  }
+}
