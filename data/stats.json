@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-03-03T14:28:56Z",
+  "last_updated": "2026-03-03T18:11:29Z",
   "meta": {
     "username": "Nusnus",
     "source": "github_api",
@@ -21,7 +21,7 @@
     "following": 135,
     "public_repos": 19,
     "created_at": "2013-06-10T15:25:03Z",
-    "account_age_days": 4648,
+    "account_age_days": 4649,
     "account_age_years": 12.73,
     "organizations": [
       {
@@ -35,7 +35,7 @@
         "avatar_url": "https://avatars.githubusercontent.com/u/69083007?v=4"
       }
     ],
-    "total_stars_received": 107513
+    "total_stars_received": 107515
   },
   "contributions": {
     "most_active_since": null,
@@ -2379,8 +2379,8 @@
             "url": "https://github.com/celery/billiard/releases/tag/v4.2.3"
           }
         ],
-        "dependent_projects": null,
-        "dependent_source": "unavailable",
+        "dependent_projects": 104000,
+        "dependent_source": "github_dependents_html",
         "contribution_score": 23
       },
       {
@@ -2434,8 +2434,8 @@
             "url": "https://github.com/celery/librabbitmq/releases/tag/2.0.0"
           }
         ],
-        "dependent_projects": null,
-        "dependent_source": "unavailable",
+        "dependent_projects": 857,
+        "dependent_source": "github_dependents_html",
         "contribution_score": 8
       },
       {
@@ -2522,8 +2522,8 @@
             "url": "https://github.com/celery/vine/releases/tag/v5.0.0"
           }
         ],
-        "dependent_projects": null,
-        "dependent_source": "unavailable",
+        "dependent_projects": 98300,
+        "dependent_source": "github_dependents_html",
         "contribution_score": 7
       },
       {
@@ -2565,8 +2565,8 @@
             "url": "https://github.com/celery/py-amqp/releases/tag/v5.2.0"
           }
         ],
-        "dependent_projects": null,
-        "dependent_source": "unavailable",
+        "dependent_projects": 106000,
+        "dependent_source": "github_dependents_html",
         "contribution_score": 6
       },
       {
@@ -2608,8 +2608,8 @@
             "url": "https://github.com/celery/django-celery-beat/releases/tag/v2.8.0"
           }
         ],
-        "dependent_projects": null,
-        "dependent_source": "unavailable",
+        "dependent_projects": 29300,
+        "dependent_source": "github_dependents_html",
         "contribution_score": 5
       },
       {
@@ -2649,8 +2649,8 @@
             "url": "https://github.com/celery/django-celery-results/releases/tag/v2.5.0"
           }
         ],
-        "dependent_projects": null,
-        "dependent_source": "unavailable",
+        "dependent_projects": 815,
+        "dependent_source": "github_dependents_html",
         "contribution_score": 4
       },
       {
@@ -2945,7 +2945,7 @@
         "url": "https://github.com/celery/vine/releases/tag/v5.1.0"
       }
     ],
-    "dependents_total": 318000
+    "dependents_total": 657272
   },
   "activity": {
     "commits": [],
@@ -3327,7 +3327,7 @@
   },
   "totals": {
     "stars": 42249,
-    "dependent_projects": 318000,
+    "dependent_projects": 657272,
     "contributions": 2246,
     "followers": 113
   }
