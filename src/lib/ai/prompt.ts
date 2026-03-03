@@ -8,6 +8,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { ProfileData, RepoData, ContributionGraphData } from '@lib/github/types';
+import { TOOLS_PROMPT_SECTION } from './tools';
 
 /** Data consumed by the prompt builder — collected at build time in the Astro page. */
 export interface SystemPromptData {
@@ -65,5 +66,6 @@ export function buildSystemPrompt(data: SystemPromptData): string {
   return `${knowledge}
 
 # Live Data (auto-updated)
-${liveStats.join('\n')}`;
+${liveStats.join('\n')}
+${TOOLS_PROMPT_SECTION}`;
 }

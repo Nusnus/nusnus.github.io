@@ -9,13 +9,19 @@ import {
   loadContributionGraph,
 } from '@lib/data/loader';
 import { buildSystemPrompt } from '@lib/ai/prompt';
+import { buildSearchIndex } from '@lib/ai/rag-index';
+
+const repos = loadRepos() ?? [];
+const orgRepos = loadCeleryOrgRepos() ?? [];
 
 const systemPrompt = buildSystemPrompt({
   profile: loadProfile(),
-  repos: loadRepos(),
-  orgRepos: loadCeleryOrgRepos(),
+  repos,
+  orgRepos,
   graph: loadContributionGraph(),
 });
+
+const searchIndex = buildSearchIndex(repos, orgRepos);
 ---
 
 <BaseLayout title="AI Chat — Tomer Nosrati">
@@ -67,7 +73,7 @@ const systemPrompt = buildSystemPrompt({
 
     <!-- Chat area (full remaining height) -->
     <main class="min-h-0 flex-1">
-      <AiChat client:load systemPrompt={systemPrompt} fullPage />
+      <AiChat client:load systemPrompt={systemPrompt} searchIndex={searchIndex} />
     </main>
   </div>
 </BaseLayout>

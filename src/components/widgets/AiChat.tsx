@@ -6,54 +6,62 @@ import {
   Sparkles,
   Trash2,
   Send,
-  Download,
   Cpu,
   Square,
+  ExternalLink,
+  ArrowRight,
+  Star,
+  X,
 } from 'lucide-react';
 import { cn } from '@lib/utils/cn';
 import {
   DEFAULT_MODEL_ID,
-  MODEL_DOWNLOAD_SIZE_LABEL,
+  AVAILABLE_MODELS,
   GENERATION_CONFIG,
   SUGGESTED_QUESTIONS,
   WELCOME_MESSAGE,
   isWebGPUSupported,
   trimHistory,
 } from '@lib/ai/config';
+import type { ModelInfo } from '@lib/ai/config';
 import type { MLCEngineInterface } from '@mlc-ai/web-llm';
+import type { ChatMessage, SearchIndex } from '@lib/ai/types';
 import { renderMarkdown } from '@lib/ai/markdown';
+import { saveMessages, loadMessages, clearMessages } from '@lib/ai/memory';
+import { fetchRuntimeContext } from '@lib/ai/context';
+import { searchIndex, formatRetrievedContext } from '@lib/ai/rag';
+import { parseActions, executeAction } from '@lib/ai/tools';
+import { maybeSummarize } from '@lib/ai/summarize';
 
 /* ─── Types ─── */
-
-interface ChatMessage {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-}
 
 type EngineState = 'checking' | 'unsupported' | 'idle' | 'loading' | 'ready' | 'error';
 
 interface Props {
   systemPrompt: string;
-  fullPage?: boolean;
+  searchIndex: SearchIndex;
 }
 
 /* ─── Component ─── */
 
-export default function AiChat({ systemPrompt }: Props) {
+export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
   const [engineState, setEngineState] = useState<EngineState>('checking');
   const [loadProgress, setLoadProgress] = useState({ text: '', progress: 0 });
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-  const [isCached, setIsCached] = useState(false);
+  const [selectedModelId, setSelectedModelId] = useState(DEFAULT_MODEL_ID);
+  const [cacheMap, setCacheMap] = useState<Record<string, boolean>>({});
+  const [isDeletingModel, setIsDeletingModel] = useState<string | null>(null);
 
   const engineRef = useRef<MLCEngineInterface | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const abortRef = useRef(false);
+  const activeModelRef = useRef<string | null>(null);
 
+  /** Check WebGPU support and probe cache status for all models. */
   useEffect(() => {
     isWebGPUSupported().then(async (supported) => {
       if (!supported) {
@@ -61,7 +69,10 @@ export default function AiChat({ systemPrompt }: Props) {
         return;
       }
       const { hasModelInCache } = await import('@mlc-ai/web-llm');
-      setIsCached(await hasModelInCache(DEFAULT_MODEL_ID));
+      const entries = await Promise.all(
+        AVAILABLE_MODELS.map(async (m) => [m.id, await hasModelInCache(m.id)] as const),
+      );
+      setCacheMap(Object.fromEntries(entries));
       setEngineState('idle');
     });
   }, []);
@@ -82,17 +93,39 @@ export default function AiChat({ systemPrompt }: Props) {
       const webllm = await import('@mlc-ai/web-llm');
       const engine = await webllm.CreateWebWorkerMLCEngine(
         new Worker(new URL('../../lib/ai/worker.ts', import.meta.url), { type: 'module' }),
-        DEFAULT_MODEL_ID,
+        selectedModelId,
         { initProgressCallback: (r) => setLoadProgress({ text: r.text, progress: r.progress }) },
       );
       engineRef.current = engine;
-      setMessages([{ id: crypto.randomUUID(), role: 'assistant', content: WELCOME_MESSAGE }]);
+      activeModelRef.current = selectedModelId;
+
+      // Restore persisted chat or show welcome message
+      const saved = loadMessages();
+      if (saved.length > 0) {
+        setMessages(saved);
+      } else {
+        setMessages([{ id: crypto.randomUUID(), role: 'assistant', content: WELCOME_MESSAGE }]);
+      }
+
       setEngineState('ready');
-      setIsCached(true);
+      setCacheMap((prev) => ({ ...prev, [selectedModelId]: true }));
     } catch (err) {
       console.error('[AiChat] Engine init failed:', err);
       setErrorMsg(err instanceof Error ? err.message : 'Failed to load AI model');
       setEngineState('error');
+    }
+  }, [selectedModelId]);
+
+  const deleteModel = useCallback(async (modelId: string) => {
+    setIsDeletingModel(modelId);
+    try {
+      const { deleteModelAllInfoInCache } = await import('@mlc-ai/web-llm');
+      await deleteModelAllInfoInCache(modelId);
+      setCacheMap((prev) => ({ ...prev, [modelId]: false }));
+    } catch (err) {
+      console.error('[AiChat] Failed to delete model:', err);
+    } finally {
+      setIsDeletingModel(null);
     }
   }, []);
 
@@ -100,6 +133,7 @@ export default function AiChat({ systemPrompt }: Props) {
     async (text: string) => {
       const engine = engineRef.current;
       if (!engine || !text.trim() || isGenerating) return;
+
       const userMsg: ChatMessage = { id: crypto.randomUUID(), role: 'user', content: text.trim() };
       const asstMsg: ChatMessage = { id: crypto.randomUUID(), role: 'assistant', content: '' };
       setMessages((prev) => [...prev, userMsg, asstMsg]);
@@ -107,17 +141,35 @@ export default function AiChat({ systemPrompt }: Props) {
       if (inputRef.current) inputRef.current.style.height = 'auto';
       setIsGenerating(true);
       abortRef.current = false;
+
       try {
-        const fullHistory = [...messages, userMsg].map((m) => ({
+        // 1. Summarize old messages if conversation is long
+        const currentMessages = await maybeSummarize(engine, [...messages, userMsg]);
+
+        // 2. Retrieve relevant chunks via RAG
+        const ragResults = searchIndex(text.trim(), ragIndex);
+        const ragContext = formatRetrievedContext(ragResults);
+
+        // 3. Fetch live runtime context (recent activity)
+        const runtimeContext = await fetchRuntimeContext();
+
+        // 4. Build augmented system prompt
+        const augmentedPrompt = systemPrompt + ragContext + runtimeContext;
+
+        // 5. Prepare trimmed history
+        const fullHistory = currentMessages.map((m) => ({
           role: m.role as 'user' | 'assistant',
           content: m.content,
         }));
         const history = trimHistory(fullHistory);
+
+        // 6. Stream the response
         const chunks = await engine.chat.completions.create({
-          messages: [{ role: 'system', content: systemPrompt }, ...history],
+          messages: [{ role: 'system', content: augmentedPrompt }, ...history],
           stream: true,
           ...GENERATION_CONFIG,
         });
+
         let full = '';
         for await (const chunk of chunks) {
           if (abortRef.current) break;
@@ -125,6 +177,20 @@ export default function AiChat({ systemPrompt }: Props) {
           const content = full;
           setMessages((prev) => prev.map((m) => (m.id === asstMsg.id ? { ...m, content } : m)));
         }
+
+        // 7. Parse tool actions from the final response
+        const { text: cleanText, actions } = parseActions(full);
+        if (actions.length > 0 || cleanText !== full) {
+          setMessages((prev) =>
+            prev.map((m) => (m.id === asstMsg.id ? { ...m, content: cleanText, actions } : m)),
+          );
+        }
+
+        // 8. Persist to localStorage
+        setMessages((prev) => {
+          saveMessages(prev);
+          return prev;
+        });
       } catch (err) {
         console.error('[AiChat] Generation error:', err);
         setMessages((prev) =>
@@ -138,7 +204,7 @@ export default function AiChat({ systemPrompt }: Props) {
         setIsGenerating(false);
       }
     },
-    [messages, isGenerating, systemPrompt],
+    [messages, isGenerating, systemPrompt, ragIndex],
   );
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -148,9 +214,10 @@ export default function AiChat({ systemPrompt }: Props) {
     }
   };
   const clearChat = () => {
-    setMessages([]);
     abortRef.current = true;
     setIsGenerating(false);
+    clearMessages();
+    setMessages([{ id: crypto.randomUUID(), role: 'assistant', content: WELCOME_MESSAGE }]);
   };
 
   /* ─── Render ─── */
@@ -179,50 +246,64 @@ export default function AiChat({ systemPrompt }: Props) {
   }
 
   if (engineState === 'idle') {
+    const selectedModel = AVAILABLE_MODELS.find((m) => m.id === selectedModelId);
     return (
-      <CenterCard>
-        <div className="bg-accent/10 mb-5 flex h-16 w-16 items-center justify-center rounded-2xl">
-          <Sparkles className="text-accent h-8 w-8" />
+      <div className="flex h-full flex-col overflow-y-auto">
+        {/* Header */}
+        <div className="border-border shrink-0 border-b px-6 py-5 text-center">
+          <div className="bg-accent/10 mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl">
+            <Sparkles className="text-accent h-6 w-6" />
+          </div>
+          <h2 className="text-text-primary mb-1 text-lg font-bold">Choose a Model</h2>
+          <p className="text-text-secondary text-xs">
+            All models run 100% in your browser via WebGPU — no data leaves your device
+          </p>
         </div>
-        <h2 className="text-text-primary mb-2 text-xl font-bold">Ask AI about Tomer</h2>
-        <p className="text-text-secondary mb-6 max-w-md text-sm leading-relaxed">
-          Chat with an AI assistant that knows about Tomer&apos;s work, open source contributions,
-          and projects. The model runs entirely in your browser — no data leaves your device.
-        </p>
-        {!isCached && (
-          <div className="bg-bg-surface border-border mb-4 flex items-center gap-2 rounded-lg border px-4 py-2.5 text-xs">
-            <Download className="text-text-muted h-4 w-4 shrink-0" />
-            <span className="text-text-secondary">
-              First use downloads {MODEL_DOWNLOAD_SIZE_LABEL} (cached for future visits)
-            </span>
+
+        {/* Model grid — 3 columns on wide screens */}
+        <div className="flex-1 overflow-y-auto px-6 py-5">
+          <div className="mx-auto grid max-w-5xl gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+            {AVAILABLE_MODELS.map((model) => (
+              <ModelCard
+                key={model.id}
+                model={model}
+                isSelected={selectedModelId === model.id}
+                isCached={!!cacheMap[model.id]}
+                isDeleting={isDeletingModel === model.id}
+                onSelect={() => setSelectedModelId(model.id)}
+                onDelete={() => deleteModel(model.id)}
+              />
+            ))}
           </div>
-        )}
-        {isCached && (
-          <div className="bg-status-active/10 mb-4 flex items-center gap-2 rounded-lg px-4 py-2.5 text-xs">
-            <span className="bg-status-active h-2 w-2 rounded-full" />
-            <span className="text-status-active font-medium">Model cached — instant start</span>
-          </div>
-        )}
-        <button
-          onClick={initEngine}
-          className="bg-accent text-bg-base hover:bg-accent-hover rounded-xl px-8 py-3 text-sm font-semibold transition-colors"
-        >
-          {isCached ? 'Start Chat' : 'Download & Start'}
-        </button>
-        <p className="text-text-muted mt-5 max-w-sm text-center text-[10px] leading-relaxed">
-          Powered by WebLLM · Qwen2.5-7B running via WebGPU · No server required
-        </p>
-      </CenterCard>
+        </div>
+
+        {/* Sticky footer with start button */}
+        <div className="border-border shrink-0 border-t px-6 py-4 text-center">
+          <button
+            onClick={initEngine}
+            className="bg-accent text-bg-base hover:bg-accent-hover rounded-xl px-8 py-3 text-sm font-semibold transition-colors"
+          >
+            {cacheMap[selectedModelId] ? 'Start Chat' : 'Download & Start'}
+            {selectedModel && !cacheMap[selectedModelId] && (
+              <span className="ml-1.5 opacity-70">({selectedModel.downloadSize})</span>
+            )}
+          </button>
+          <p className="text-text-muted mt-2 text-[10px]">Powered by WebLLM · No server required</p>
+        </div>
+      </div>
     );
   }
 
   if (engineState === 'loading') {
+    const loadingModel = AVAILABLE_MODELS.find((m) => m.id === selectedModelId);
     return (
       <CenterCard>
         <Cpu className="text-accent mb-4 h-10 w-10 animate-pulse" />
-        <h2 className="text-text-primary mb-1 text-lg font-semibold">Loading AI Model</h2>
+        <h2 className="text-text-primary mb-1 text-lg font-semibold">
+          Loading {loadingModel?.name ?? 'AI Model'}
+        </h2>
         <p className="text-text-muted mb-4 text-xs">
-          {isCached ? 'Initializing from cache…' : 'Downloading and compiling…'}
+          {cacheMap[selectedModelId] ? 'Initializing from cache…' : 'Downloading and compiling…'}
         </p>
         <div className="bg-bg-elevated mb-2 h-2.5 w-full max-w-xs overflow-hidden rounded-full">
           <div
@@ -259,13 +340,16 @@ export default function AiChat({ systemPrompt }: Props) {
   }
 
   /* ─── Chat UI (engineState === 'ready') ─── */
+  const activeModel = AVAILABLE_MODELS.find((m) => m.id === activeModelRef.current);
   return (
     <div className="flex h-full flex-col">
       {/* Status bar */}
       <div className="border-border flex items-center justify-between border-b px-4 py-2">
         <div className="flex items-center gap-2">
           <span className="bg-status-active h-2 w-2 rounded-full" />
-          <span className="text-text-muted text-xs">Qwen2.5-7B · Running in browser</span>
+          <span className="text-text-muted text-xs">
+            {activeModel?.name ?? 'AI'} · Running in browser
+          </span>
         </div>
         {messages.length > 0 && (
           <button
@@ -315,6 +399,26 @@ export default function AiChat({ systemPrompt }: Props) {
                   renderMarkdown(msg.content)
                 ) : (
                   msg.content
+                )}
+
+                {/* Tool action buttons */}
+                {msg.actions && msg.actions.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-1.5 border-t border-white/10 pt-2">
+                    {msg.actions.map((action, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => executeAction(action)}
+                        className="bg-bg-base/30 hover:bg-bg-base/50 inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs transition-colors"
+                      >
+                        {action.type === 'open_link' ? (
+                          <ExternalLink className="h-3 w-3" />
+                        ) : (
+                          <ArrowRight className="h-3 w-3" />
+                        )}
+                        {action.label}
+                      </button>
+                    ))}
+                  </div>
                 )}
               </div>
             </div>
@@ -396,12 +500,107 @@ export default function AiChat({ systemPrompt }: Props) {
   );
 }
 
-/* ─── Layout helper ─── */
+/* ─── Layout helpers ─── */
 
 function CenterCard({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-full items-center justify-center p-6">
       <div className="flex max-w-lg flex-col items-center text-center">{children}</div>
     </div>
+  );
+}
+
+const QUALITY_COLORS: Record<ModelInfo['quality'], string> = {
+  basic: 'text-text-muted',
+  good: 'text-blue-400',
+  great: 'text-purple-400',
+  best: 'text-amber-400',
+};
+
+function ModelCard({
+  model,
+  isSelected,
+  isCached,
+  isDeleting,
+  onSelect,
+  onDelete,
+}: {
+  model: ModelInfo;
+  isSelected: boolean;
+  isCached: boolean;
+  isDeleting: boolean;
+  onSelect: () => void;
+  onDelete: () => void;
+}) {
+  const qualityIdx = ['basic', 'good', 'great', 'best'].indexOf(model.quality) + 1;
+  return (
+    <button
+      onClick={onSelect}
+      className={cn(
+        'border-border bg-bg-surface relative flex flex-col rounded-lg border px-3 py-2.5 text-left transition-all',
+        isSelected
+          ? 'border-accent ring-accent/30 ring-2'
+          : 'hover:bg-bg-elevated hover:border-text-muted',
+      )}
+    >
+      {/* Row 1: Name + quality + recommended */}
+      <div className="mb-1 flex items-center gap-2">
+        <h3 className="text-text-primary truncate text-xs font-semibold">{model.name}</h3>
+        {model.recommended && (
+          <span className="bg-accent text-bg-base shrink-0 rounded px-1.5 py-px text-[9px] font-semibold">
+            ★ Pick
+          </span>
+        )}
+        <div className={cn('ml-auto flex shrink-0 gap-px', QUALITY_COLORS[model.quality])}>
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Star
+              key={i}
+              className={cn('h-2.5 w-2.5', i < qualityIdx ? 'fill-current' : 'opacity-20')}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Row 2: Description */}
+      <p className="text-text-muted mb-1.5 truncate text-[10px]">{model.description}</p>
+
+      {/* Row 3: Stats + cache */}
+      <div className="text-text-muted flex items-center gap-2 text-[10px]">
+        <span>{model.params}</span>
+        <span className="opacity-30">·</span>
+        <span>{model.downloadSize}</span>
+        <span className="opacity-30">·</span>
+        <span>{(model.vramMB / 1024).toFixed(1)} GB</span>
+        {isCached && (
+          <>
+            <span className="ml-auto flex items-center gap-1">
+              <span className="bg-status-active h-1.5 w-1.5 rounded-full" />
+              <span className="text-status-active font-medium">Cached</span>
+            </span>
+            <span
+              role="button"
+              tabIndex={0}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.stopPropagation();
+                  onDelete();
+                }
+              }}
+              className="text-text-muted transition-colors hover:text-red-400"
+            >
+              {isDeleting ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <X className="h-3 w-3" />
+              )}
+            </span>
+          </>
+        )}
+      </div>
+    </button>
   );
 }
