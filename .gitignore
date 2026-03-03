@@ -1,6 +1,7 @@
 # Environment variables
 .env
 .env.*
+!.env.example
 
 # Claude Code
 .claude/
@@ -77,7 +78,7 @@ amp.yaml
 # macOS
 .DS_Store
 
-# Node
+# Dependencies
 node_modules/
 
 # Astro

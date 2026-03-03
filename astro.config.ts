@@ -9,15 +9,6 @@ export default defineConfig({
 
   vite: {
     plugins: [tailwindcss()],
-    server: {
-      hmr: {
-        port: 24678,
-      },
-      watch: {
-        usePolling: true,
-        interval: 300,
-      },
-    },
   },
 
   build: {

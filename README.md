@@ -6,32 +6,28 @@ Built with **Astro 5**, **Tailwind CSS v4**, and **React** islands. Self-maintai
 
 ## Prerequisites
 
-- [Docker](https://www.docker.com/) (recommended)
-- Or: [Bun](https://bun.sh/) ≥ 1.1
+- [Bun](https://bun.sh/) ≥ 1.1
+- Or: open in VS Code with the [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension
 
 ## Quick Start
 
 ```sh
-# With Docker (recommended)
-make dev
-
-# Without Docker
+# Local
 bun install
 bun run dev
+
+# Or: VS Code Dev Container
+# Cmd+Shift+P → "Dev Containers: Reopen in Container"
 ```
 
 Open [http://localhost:4321](http://localhost:4321).
 
 ## Commands
 
-All commands run inside Docker via the Makefile:
-
 | Command             | Action                                       |
 | :------------------ | :------------------------------------------- |
 | `make dev`          | Start dev server at `localhost:4321`         |
-| `make dev-build`    | Start dev server with fresh Docker build     |
 | `make build`        | Build production site to `./dist/`           |
-| `make install`      | Rebuild Docker image (after package changes) |
 | `make preview`      | Preview production build locally             |
 | `make lint`         | Run ESLint                                   |
 | `make lint-fix`     | Run ESLint with auto-fix                     |
@@ -40,8 +36,7 @@ All commands run inside Docker via the Makefile:
 | `make test`         | Run Vitest                                   |
 | `make type-check`   | Run TypeScript type checking                 |
 | `make fetch-data`   | Fetch fresh GitHub data (needs GITHUB_TOKEN) |
-| `make stop`         | Stop Docker containers                       |
-| `make clean`        | Stop containers and remove volumes           |
+| `make clean`        | Remove dist, .astro, and node_modules        |
 
 ## Self-Maintenance
 

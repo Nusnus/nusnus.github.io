@@ -1,0 +1,26 @@
+{
+  "name": "nusnus.github.io",
+  "image": "oven/bun:1-alpine",
+
+  "forwardPorts": [4321],
+  "postCreateCommand": "bun install",
+  "postStartCommand": "bun run dev --host 0.0.0.0",
+
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.codeActionsOnSave": {
+          "source.fixAll.eslint": "explicit"
+        }
+      },
+      "extensions": [
+        "astro-build.astro-vscode",
+        "bradlc.vscode-tailwindcss",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode"
+      ]
+    }
+  }
+}
