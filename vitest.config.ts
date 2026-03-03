@@ -13,6 +13,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
+    passWithNoTests: true,
     include: ['src/**/*.test.ts', 'scripts/**/*.test.ts'],
     coverage: {
       reporter: ['text', 'lcov'],
