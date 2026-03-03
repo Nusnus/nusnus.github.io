@@ -14,4 +14,4 @@ services:
       - NODE_ENV=development
       - GITHUB_TOKEN=${GITHUB_TOKEN:-}
     working_dir: /app
-    command: pnpm dev --host 0.0.0.0
+    command: bun run dev --host 0.0.0.0

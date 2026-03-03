@@ -11,7 +11,7 @@ dev-build:
 # ─── Build ───
 
 build:
-	docker compose run --rm app pnpm build
+	docker compose run --rm app bun run build
 
 # ─── Install / Rebuild ───
 
@@ -21,32 +21,32 @@ install:
 # ─── Preview production build ───
 
 preview:
-	docker compose run --rm --service-ports app pnpm preview --host 0.0.0.0
+	docker compose run --rm --service-ports app bun run preview --host 0.0.0.0
 
 # ─── Quality ───
 
 lint:
-	docker compose run --rm app pnpm lint
+	docker compose run --rm app bun run lint
 
 lint-fix:
-	docker compose run --rm app pnpm lint:fix
+	docker compose run --rm app bun run lint:fix
 
 format:
-	docker compose run --rm app pnpm format
+	docker compose run --rm app bun run format
 
 format-check:
-	docker compose run --rm app pnpm format:check
+	docker compose run --rm app bun run format:check
 
 test:
-	docker compose run --rm app pnpm test
+	docker compose run --rm app bun run test
 
 type-check:
-	docker compose run --rm app pnpm type-check
+	docker compose run --rm app bun run type-check
 
 # ─── Data ───
 
 fetch-data:
-	docker compose run --rm -e GITHUB_TOKEN=$(GITHUB_TOKEN) app pnpm fetch-data
+	docker compose run --rm -e GITHUB_TOKEN=$(GITHUB_TOKEN) app bun run fetch-data
 
 # ─── Cleanup ───
 

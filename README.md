@@ -7,7 +7,7 @@ Built with **Astro 5**, **Tailwind CSS v4**, and **React** islands. Self-maintai
 ## Prerequisites
 
 - [Docker](https://www.docker.com/) (recommended)
-- Or: Node.js ≥ 22, pnpm ≥ 10
+- Or: [Bun](https://bun.sh/) ≥ 1.1
 
 ## Quick Start
 
@@ -16,8 +16,8 @@ Built with **Astro 5**, **Tailwind CSS v4**, and **React** islands. Self-maintai
 make dev
 
 # Without Docker
-pnpm install
-pnpm dev
+bun install
+bun run dev
 ```
 
 Open [http://localhost:4321](http://localhost:4321).
@@ -79,6 +79,7 @@ Copy `.env.example` to `.env` and set `GITHUB_TOKEN` for local data fetching. Th
 - **Islands**: React (ThemeToggle, ContributionGraph, ActivityFeed, StatusDot)
 - **Validation**: Zod (data schemas)
 - **Linting**: ESLint 10 (flat config) + Prettier
+- **Runtime**: Bun (package management, script execution, TypeScript runner)
 - **Testing**: Vitest
 - **CI/CD**: GitHub Actions
 - **Hosting**: GitHub Pages

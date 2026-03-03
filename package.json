@@ -16,12 +16,8 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "fetch-data": "tsx scripts/fetch-github-data.mts",
-    "validate-data": "tsx scripts/validate-data.mts"
-  },
-  "engines": {
-    "node": ">=22.0.0",
-    "pnpm": ">=10.0.0"
+    "fetch-data": "bun scripts/fetch-github-data.mts",
+    "validate-data": "bun scripts/validate-data.mts"
   },
   "dependencies": {
     "@astrojs/react": "^4.4.2",
@@ -51,14 +47,11 @@
     "prettier-plugin-astro": "^0.14.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
     "svgo": "^3.3.2",
-    "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.56.1",
     "vitest": "^4.0.18"
   },
-  "pnpm": {
-    "overrides": {
-      "svgo": "^3.3.2"
-    }
+  "overrides": {
+    "svgo": "^3.3.2"
   }
 }
