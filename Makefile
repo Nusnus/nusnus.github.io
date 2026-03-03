@@ -1,4 +1,4 @@
-.PHONY: dev build preview lint lint-fix format format-check test type-check fetch-data clean
+.PHONY: dev build preview lint lint-fix format format-check test type-check fetch-data pre-commit clean
 
 # ─── Development ───
 
@@ -34,6 +34,11 @@ test:
 
 type-check:
 	bun run type-check
+
+# ─── Pre-commit ───
+
+pre-commit:
+	bunx lefthook run pre-commit --force
 
 # ─── Data ───
 

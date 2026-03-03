@@ -146,7 +146,7 @@ export interface RepoData {
   lastPush: string;
   language: string | null;
   role: 'owner' | 'lead' | 'creator' | 'contributor';
-  contributorRank?: number;
+  contributorRank?: number | undefined;
 }
 
 export interface ActivityData {
