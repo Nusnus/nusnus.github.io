@@ -11,8 +11,8 @@ import type { SearchChunk, SearchIndex } from './types';
 const K1 = 1.5;
 const B = 0.75;
 
-/** Maximum number of chunks to return. */
-const TOP_K = 4;
+/** Maximum number of chunks to return (kept low for 4K context windows). */
+const TOP_K = 2;
 
 /** Minimum score threshold — ignore near-zero matches. */
 const MIN_SCORE = 0.1;
@@ -66,7 +66,16 @@ export function searchIndex(
 export function formatRetrievedContext(results: { chunk: SearchChunk; score: number }[]): string {
   if (results.length === 0) return '';
 
-  const lines = results.map((r) => `[${r.chunk.source}]\n${r.chunk.content}`);
+  const MAX_CHARS = 600; // ~150 tokens — keep compact for 4K context
+  let total = 0;
+  const lines: string[] = [];
+  for (const r of results) {
+    const line = `[${r.chunk.source}]\n${r.chunk.content}`;
+    if (total + line.length > MAX_CHARS) break;
+    lines.push(line);
+    total += line.length;
+  }
+  if (lines.length === 0) return '';
 
   return `\n# Relevant Context\n${lines.join('\n\n')}`;
 }

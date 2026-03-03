@@ -17,13 +17,14 @@ import { cn } from '@lib/utils/cn';
 import {
   DEFAULT_MODEL_ID,
   AVAILABLE_MODELS,
+  GROUP_INFO,
   GENERATION_CONFIG,
   SUGGESTED_QUESTIONS,
   WELCOME_MESSAGE,
   isWebGPUSupported,
   trimHistory,
 } from '@lib/ai/config';
-import type { ModelInfo } from '@lib/ai/config';
+import type { ModelInfo, ModelGroup } from '@lib/ai/config';
 import type { MLCEngineInterface } from '@mlc-ai/web-llm';
 import type { ChatMessage, SearchIndex } from '@lib/ai/types';
 import { renderMarkdown } from '@lib/ai/markdown';
@@ -247,8 +248,9 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
 
   if (engineState === 'idle') {
     const selectedModel = AVAILABLE_MODELS.find((m) => m.id === selectedModelId);
+    const groups: ModelGroup[] = ['top', 'more'];
     return (
-      <div className="flex h-full flex-col overflow-y-auto">
+      <div className="flex h-full flex-col">
         {/* Header */}
         <div className="border-border shrink-0 border-b px-6 py-5 text-center">
           <div className="bg-accent/10 mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl">
@@ -260,20 +262,35 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
           </p>
         </div>
 
-        {/* Model grid — 3 columns on wide screens */}
+        {/* Model grid grouped: Top Picks first, then More Models */}
         <div className="flex-1 overflow-y-auto px-6 py-5">
-          <div className="mx-auto grid max-w-5xl gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
-            {AVAILABLE_MODELS.map((model) => (
-              <ModelCard
-                key={model.id}
-                model={model}
-                isSelected={selectedModelId === model.id}
-                isCached={!!cacheMap[model.id]}
-                isDeleting={isDeletingModel === model.id}
-                onSelect={() => setSelectedModelId(model.id)}
-                onDelete={() => deleteModel(model.id)}
-              />
-            ))}
+          <div className="mx-auto max-w-5xl space-y-8">
+            {groups.map((group) => {
+              const models = AVAILABLE_MODELS.filter((m) => m.group === group);
+              if (models.length === 0) return null;
+              const info = GROUP_INFO[group];
+              return (
+                <div key={group}>
+                  <div className="mb-3">
+                    <h3 className="text-text-primary text-sm font-semibold">{info.label}</h3>
+                    <p className="text-text-muted text-[11px]">{info.subtitle}</p>
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {models.map((model) => (
+                      <ModelCard
+                        key={model.id}
+                        model={model}
+                        isSelected={selectedModelId === model.id}
+                        isCached={!!cacheMap[model.id]}
+                        isDeleting={isDeletingModel === model.id}
+                        onSelect={() => setSelectedModelId(model.id)}
+                        onDelete={() => deleteModel(model.id)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -537,70 +554,88 @@ function ModelCard({
     <button
       onClick={onSelect}
       className={cn(
-        'border-border bg-bg-surface relative flex flex-col rounded-lg border px-3 py-2.5 text-left transition-all',
+        'border-border bg-bg-surface relative flex flex-col rounded-xl border p-4 text-left transition-all',
         isSelected
           ? 'border-accent ring-accent/30 ring-2'
           : 'hover:bg-bg-elevated hover:border-text-muted',
       )}
     >
-      {/* Row 1: Name + quality + recommended */}
-      <div className="mb-1 flex items-center gap-2">
-        <h3 className="text-text-primary truncate text-xs font-semibold">{model.name}</h3>
-        {model.recommended && (
-          <span className="bg-accent text-bg-base shrink-0 rounded px-1.5 py-px text-[9px] font-semibold">
-            ★ Pick
-          </span>
-        )}
-        <div className={cn('ml-auto flex shrink-0 gap-px', QUALITY_COLORS[model.quality])}>
+      {/* Header: Name + Family badge + Stars */}
+      <div className="mb-1.5 flex items-start justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <h3 className="text-text-primary text-sm leading-tight font-semibold">{model.name}</h3>
+          {model.recommended && (
+            <span className="bg-accent text-bg-base shrink-0 rounded-full px-2 py-0.5 text-[9px] font-bold">
+              ★ Recommended
+            </span>
+          )}
+        </div>
+        <div className={cn('flex shrink-0 gap-0.5 pt-0.5', QUALITY_COLORS[model.quality])}>
           {Array.from({ length: 4 }).map((_, i) => (
             <Star
               key={i}
-              className={cn('h-2.5 w-2.5', i < qualityIdx ? 'fill-current' : 'opacity-20')}
+              className={cn('h-3 w-3', i < qualityIdx ? 'fill-current' : 'opacity-20')}
             />
           ))}
         </div>
       </div>
 
-      {/* Row 2: Description */}
-      <p className="text-text-muted mb-1.5 truncate text-[10px]">{model.description}</p>
+      {/* Family tag */}
+      <span className="bg-bg-elevated text-text-muted mb-2 inline-block w-fit rounded px-1.5 py-0.5 text-[10px] font-medium">
+        {model.family}
+      </span>
 
-      {/* Row 3: Stats + cache */}
-      <div className="text-text-muted flex items-center gap-2 text-[10px]">
-        <span>{model.params}</span>
-        <span className="opacity-30">·</span>
-        <span>{model.downloadSize}</span>
-        <span className="opacity-30">·</span>
-        <span>{(model.vramMB / 1024).toFixed(1)} GB</span>
-        {isCached && (
-          <>
-            <span className="ml-auto flex items-center gap-1">
-              <span className="bg-status-active h-1.5 w-1.5 rounded-full" />
-              <span className="text-status-active font-medium">Cached</span>
-            </span>
-            <span
-              role="button"
-              tabIndex={0}
-              onClick={(e) => {
+      {/* Description — full text, not truncated */}
+      <p className="text-text-secondary mb-3 text-xs leading-relaxed">{model.description}</p>
+
+      {/* Stats */}
+      <div className="text-text-muted mt-auto flex items-center gap-3 text-[11px]">
+        <span className="flex items-center gap-1">
+          <Cpu className="h-3.5 w-3.5 opacity-50" />
+          {model.params}
+        </span>
+        <span className="opacity-30">|</span>
+        <span>↓ {model.downloadSize}</span>
+        <span className="opacity-30">|</span>
+        <span>{(model.vramMB / 1024).toFixed(1)} GB VRAM</span>
+      </div>
+
+      {/* Cache status row */}
+      {isCached && (
+        <div className="border-border mt-3 flex items-center justify-between border-t pt-2.5">
+          <span className="flex items-center gap-1.5 text-[11px]">
+            <span className="bg-status-active h-2 w-2 rounded-full" />
+            <span className="text-status-active font-medium">Cached locally</span>
+          </span>
+          <span
+            role="button"
+            tabIndex={0}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
                 e.stopPropagation();
                 onDelete();
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.stopPropagation();
-                  onDelete();
-                }
-              }}
-              className="text-text-muted transition-colors hover:text-red-400"
-            >
-              {isDeleting ? (
-                <Loader2 className="h-3 w-3 animate-spin" />
-              ) : (
-                <X className="h-3 w-3" />
-              )}
-            </span>
-          </>
-        )}
-      </div>
+              }
+            }}
+            className="text-text-muted flex items-center gap-1 text-[11px] transition-colors hover:text-red-400"
+          >
+            {isDeleting ? (
+              <>
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Removing…
+              </>
+            ) : (
+              <>
+                <X className="h-3.5 w-3.5" />
+                Remove
+              </>
+            )}
+          </span>
+        </div>
+      )}
     </button>
   );
 }

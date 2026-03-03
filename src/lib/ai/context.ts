@@ -8,8 +8,8 @@
 
 import type { ActivityEvent } from '@lib/github/types';
 
-/** Maximum number of recent activity events to include. */
-const MAX_EVENTS = 15;
+/** Maximum number of recent activity events to include (kept small for 4K context). */
+const MAX_EVENTS = 5;
 
 /**
  * Fetch recent activity data and return a formatted context string.
