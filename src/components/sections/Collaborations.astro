@@ -1,0 +1,38 @@
+---
+import Card from '@components/ui/Card.astro';
+import { COLLABORATIONS } from '@lib/utils/constants';
+---
+
+<section id="collaborations" aria-label="Collaborations and recognition">
+  <h2 class="mb-2 text-3xl font-bold tracking-tight">Collaborations</h2>
+  <p class="text-text-secondary mb-6">Recognition and partnerships across the ecosystem</p>
+
+  <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+    {
+      COLLABORATIONS.map((collab) => (
+        <Card href={collab.url}>
+          <h3 class="text-text-primary mb-1 text-base font-semibold">{collab.name}</h3>
+          <p class="text-accent mb-3 text-sm font-medium">{collab.title}</p>
+          <p class="text-text-secondary mb-4 text-sm">{collab.description}</p>
+          <span class="text-text-muted inline-flex items-center gap-1 text-xs">
+            Visit
+            <svg
+              class="h-3 w-3"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+              <polyline points="15 3 21 3 21 9" />
+              <line x1="10" y1="14" x2="21" y2="3" />
+            </svg>
+          </span>
+        </Card>
+      ))
+    }
+  </div>
+</section>

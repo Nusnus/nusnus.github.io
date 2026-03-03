@@ -1,0 +1,77 @@
+---
+import ContributionGraph from '@components/widgets/ContributionGraph';
+import { loadContributionGraph } from '@lib/data/loader';
+import { formatCompactNumber, calculateStreak } from '@lib/utils/date';
+
+const graph = loadContributionGraph();
+const totalContributions = graph?.totalContributions ?? 0;
+const weeks = graph?.weeks ?? [];
+
+const allDays = weeks.flatMap((w) => w.contributionDays);
+const streak = calculateStreak(allDays);
+---
+
+<section id="activity" class="relative" aria-label="Activity overview">
+  <!-- Living Canvas: heatmap as subtle background texture -->
+  <div
+    class="pointer-events-none absolute inset-0 overflow-hidden opacity-[0.08]"
+    aria-hidden="true"
+  >
+    {
+      weeks.length > 0 && (
+        <ContributionGraph client:visible weeks={weeks} totalContributions={totalContributions} />
+      )
+    }
+  </div>
+
+  <!-- Foreground content -->
+  <div class="relative z-10">
+    <h2 class="mb-2 text-3xl font-bold tracking-tight">Activity</h2>
+    <p class="text-text-secondary mb-6">Contribution heatmap for the last year</p>
+
+    <!-- Full-opacity heatmap -->
+    {
+      weeks.length > 0 && (
+        <div class="mb-6 overflow-x-auto">
+          <ContributionGraph client:visible weeks={weeks} totalContributions={totalContributions} />
+        </div>
+      )
+    }
+
+    <!-- Summary stats -->
+    <div class="flex flex-wrap gap-6">
+      <div>
+        <p class="text-accent font-mono text-2xl font-bold">
+          {formatCompactNumber(totalContributions)}
+        </p>
+        <p class="text-text-secondary text-sm">contributions this year</p>
+      </div>
+      <div>
+        <p class="text-accent font-mono text-2xl font-bold">
+          🔥 {streak}
+        </p>
+        <p class="text-text-secondary text-sm">day streak</p>
+      </div>
+      {
+        graph && (
+          <div>
+            <p class="text-accent font-mono text-2xl font-bold">
+              {formatCompactNumber(graph.totalCommits)}
+            </p>
+            <p class="text-text-secondary text-sm">commits</p>
+          </div>
+        )
+      }
+      {
+        graph && (
+          <div>
+            <p class="text-accent font-mono text-2xl font-bold">
+              {formatCompactNumber(graph.totalPRs)}
+            </p>
+            <p class="text-text-secondary text-sm">pull requests</p>
+          </div>
+        )
+      }
+    </div>
+  </div>
+</section>
