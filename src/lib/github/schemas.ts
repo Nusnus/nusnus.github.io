@@ -6,8 +6,8 @@ export const profileSchema = z.object({
   login: z.string(),
   name: z.string(),
   bio: z.string(),
-  avatarUrl: z.string().url(),
-  htmlUrl: z.string().url(),
+  avatarUrl: z.url(),
+  htmlUrl: z.url(),
   followers: z.number().int().nonnegative(),
   publicRepos: z.number().int().nonnegative(),
 });
@@ -18,11 +18,11 @@ export const repoSchema = z.object({
   name: z.string(),
   fullName: z.string(),
   description: z.string(),
-  htmlUrl: z.string().url(),
+  htmlUrl: z.url(),
   stars: z.number().int().nonnegative(),
   forks: z.number().int().nonnegative(),
   openIssues: z.number().int().nonnegative(),
-  lastPush: z.string().datetime(),
+  lastPush: z.iso.datetime(),
   language: z.string().nullable(),
   role: z.enum(['owner', 'lead', 'creator', 'contributor']),
   contributorRank: z.number().int().positive().optional(),
@@ -37,8 +37,8 @@ export const activityEventSchema = z.object({
   type: z.string(),
   repo: z.string(),
   title: z.string(),
-  url: z.string().url(),
-  createdAt: z.string().datetime(),
+  url: z.url(),
+  createdAt: z.iso.datetime(),
 });
 
 export const activitySchema = z.object({
@@ -75,6 +75,6 @@ export const contributionGraphSchema = z.object({
 // ─── Meta Schema ───
 
 export const metaSchema = z.object({
-  lastUpdated: z.string().datetime(),
+  lastUpdated: z.iso.datetime(),
   status: z.array(z.enum(['fulfilled', 'rejected'])),
 });
