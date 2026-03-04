@@ -3,16 +3,17 @@
  *
  * Two modes:
  * - **Cloud (Grok):** The full knowledge base + all live data is injected
- *   at query time via cloud-context.ts. The system prompt provides persona,
- *   guardrails, and formatting instructions.
+ *   at query time via cloud-context.ts. Native function calling handles
+ *   tool actions (open_link, navigate) and web search grounding. The system
+ *   prompt provides base persona, guardrails, and formatting instructions.
  * - **Local (WebLLM):** Compact prompt (~800 tokens) for 4K context windows.
- *   Detailed knowledge is injected via RAG on demand.
+ *   Detailed knowledge is injected via RAG on demand. Text-marker actions
+ *   ([LINK: ...], [NAV: ...]) are appended at runtime via LOCAL_TOOLS_PROMPT_SECTION.
  *
  * This file uses Node.js APIs and must NOT be imported from client-side code.
  */
 
 import type { ProfileData, RepoData, ContributionGraphData } from '@lib/github/types';
-import { TOOLS_PROMPT_SECTION } from './tools';
 
 /** Data consumed by the prompt builder — collected at build time in the Astro page. */
 export interface SystemPromptData {
@@ -28,7 +29,9 @@ export interface SystemPromptData {
  * This base prompt is shared by BOTH cloud (Grok) and local (WebLLM) modes.
  * For cloud mode, the full Grok persona is injected via cloud-context.ts
  * and OVERRIDES this base persona with a witty, blunt personality.
+ * Cloud mode uses native function calling for tool actions — no text markers needed.
  * For local mode, this compact prompt is all the model gets (4K context).
+ * Local mode appends LOCAL_TOOLS_PROMPT_SECTION at runtime for text-marker actions.
  */
 const CORE_PROMPT = `You are a knowledgeable AI assistant on Tomer Nosrati's personal website.
 Answer questions about Tomer's work, projects, and open source contributions.
@@ -59,7 +62,7 @@ He speaks Hebrew, English, and Spanish.
 Contact: GitHub @Nusnus · LinkedIn /in/tomernosrati · X @smilingnosrati · tomer.nosrati@gmail.com
 
 ## About This Chatbot
-Available in two modes: Cloud (powered by xAI Grok — fast, high-quality) and Local (runs in-browser via WebLLM + WebGPU — fully private, no data leaves the device).`;
+Available in two modes: Cloud (powered by xAI Grok with native tool use and web search — fast, high-quality) and Local (runs in-browser via WebLLM + WebGPU — fully private, no data leaves the device).`;
 
 /**
  * Build the system prompt from the core prompt + live site data.
@@ -94,6 +97,5 @@ export function buildSystemPrompt(data: SystemPromptData): string {
 
   const liveSection = stats.length > 0 ? `\n\n## Live Stats\n${stats.join(' · ')}` : '';
 
-  return `${CORE_PROMPT}${liveSection}
-${TOOLS_PROMPT_SECTION}`;
+  return `${CORE_PROMPT}${liveSection}`;
 }

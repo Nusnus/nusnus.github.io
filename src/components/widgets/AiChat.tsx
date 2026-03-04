@@ -45,7 +45,13 @@ import {
 import type { ChatSession } from '@lib/ai/memory';
 import { fetchRuntimeContext } from '@lib/ai/context';
 import { searchIndex, formatRetrievedContext } from '@lib/ai/rag';
-import { parseActions, executeAction } from '@lib/ai/tools';
+import {
+  CLOUD_TOOLS,
+  LOCAL_TOOLS_PROMPT_SECTION,
+  mapToolCallsToActions,
+  parseActions,
+  executeAction,
+} from '@lib/ai/tools';
 import { maybeSummarize } from '@lib/ai/summarize';
 
 /* ─── Constants ─── */
@@ -220,7 +226,7 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
         let full = '';
 
         if (provider === 'cloud') {
-          // ── Cloud path: streaming, feed ALL data, no RAG needed ──
+          // ── Cloud path: streaming + native function calling, no RAG needed ──
           const [{ cloudChatStream }, { buildCloudContext }] = await Promise.all([
             import('@lib/ai/cloud'),
             import('@lib/ai/cloud-context'),
@@ -240,8 +246,8 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
               content: m.content,
             }));
 
-          // Cloud has 2M context — stream full history + all data
-          full = await cloudChatStream(
+          // Cloud has 2M context — stream full history + all data + native tools
+          const result = await cloudChatStream(
             [{ role: 'system', content: augmentedPrompt }, ...chatHistory],
             selectedCloudModelId,
             (_token, accumulated) => {
@@ -249,7 +255,21 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
               const content = accumulated;
               setMessages((prev) => prev.map((m) => (m.id === asstMsg.id ? { ...m, content } : m)));
             },
+            undefined,
+            { tools: CLOUD_TOOLS, tool_choice: 'auto' },
           );
+
+          full = result.content;
+
+          // Map native tool_calls to UI action buttons
+          if (result.toolCalls.length > 0) {
+            const actions = mapToolCallsToActions(result.toolCalls);
+            if (actions.length > 0) {
+              setMessages((prev) =>
+                prev.map((m) => (m.id === asstMsg.id ? { ...m, content: full, actions } : m)),
+              );
+            }
+          }
         } else {
           // ── Local path: RAG + trimmed history for 4K context ──
           const engine = engineRef.current as MLCEngineInterface;
@@ -261,7 +281,9 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
           // Live runtime context (5 recent events)
           const runtimeContext = await fetchRuntimeContext();
 
-          const augmentedPrompt = systemPrompt + ragContext + runtimeContext;
+          // Local models use text-marker tool instructions (no native function calling)
+          const augmentedPrompt =
+            systemPrompt + LOCAL_TOOLS_PROMPT_SECTION + ragContext + runtimeContext;
 
           // Summarize old messages if conversation is long
           const currentMessages = await maybeSummarize(engine, [...messages, userMsg]);
@@ -285,14 +307,14 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
             const content = full;
             setMessages((prev) => prev.map((m) => (m.id === asstMsg.id ? { ...m, content } : m)));
           }
-        }
 
-        // Parse tool actions from the final response
-        const { text: cleanText, actions } = parseActions(full);
-        if (actions.length > 0 || cleanText !== full) {
-          setMessages((prev) =>
-            prev.map((m) => (m.id === asstMsg.id ? { ...m, content: cleanText, actions } : m)),
-          );
+          // Local models: parse text-marker actions from the response
+          const { text: cleanText, actions } = parseActions(full);
+          if (actions.length > 0 || cleanText !== full) {
+            setMessages((prev) =>
+              prev.map((m) => (m.id === asstMsg.id ? { ...m, content: cleanText, actions } : m)),
+            );
+          }
         }
 
         // Persist to localStorage and refresh sessions list

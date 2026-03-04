@@ -1,23 +1,147 @@
 /**
- * Tool actions — parse and execute client-side actions from AI responses.
+ * Tool actions — native function calling for cloud models + text marker
+ * fallback for local models.
  *
- * The model is instructed to include action markers at the end of responses:
- *   [LINK: url | label]   — Suggest opening a link
- *   [NAV: path | label]   — Suggest navigating to a site page
+ * Cloud (Grok): Uses OpenAI-compatible `tools` parameter with native
+ * function calling. The model returns structured `tool_calls` in the
+ * response, which are mapped to ToolAction objects for the UI.
  *
- * This module parses those markers, strips them from the display text,
- * and provides action metadata for the UI to render as buttons.
+ * Local (WebLLM): Uses text markers ([LINK: ...], [NAV: ...]) parsed
+ * with regex, since local models don't support function calling.
  */
 
 import type { ToolAction } from './types';
 
+/* ═══════════════════════════════════════════════════════════════════════
+ *  CLOUD — Native OpenAI-compatible function calling definitions
+ * ═══════════════════════════════════════════════════════════════════════ */
+
+/** OpenAI-compatible tool definition for the tools parameter. */
+export type ToolDefinition =
+  | {
+      type: 'function';
+      function: {
+        name: string;
+        description: string;
+        parameters: Record<string, unknown>;
+      };
+    }
+  | {
+      /** xAI server-side web search grounding tool. */
+      type: 'web_search';
+    };
+
+/** Raw tool call as returned by the xAI API. */
+export interface ToolCallResult {
+  id: string;
+  name: string;
+  arguments: string; // JSON string
+}
+
 /**
- * Pattern matching action markers in AI responses.
+ * Native function calling tool definitions sent to the xAI API.
+ * These replace the text-marker prompt instructions for cloud models.
+ */
+export const CLOUD_TOOL_DEFINITIONS: ToolDefinition[] = [
+  {
+    type: 'function',
+    function: {
+      name: 'open_link',
+      description:
+        'Suggest opening an external link relevant to the conversation. Use when referencing a specific URL from the knowledge base (e.g., GitHub repos, LinkedIn, articles). Maximum 2 calls per response.',
+      parameters: {
+        type: 'object',
+        properties: {
+          url: {
+            type: 'string',
+            description:
+              'The full URL to open (must be from the knowledge base, do not invent URLs)',
+          },
+          label: {
+            type: 'string',
+            description: 'Short button label describing the link (e.g., "View Celery on GitHub")',
+          },
+        },
+        required: ['url', 'label'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'navigate',
+      description:
+        'Suggest navigating to a page on this website. Use when directing the user to a section of the portfolio site. Maximum 2 calls per response.',
+      parameters: {
+        type: 'object',
+        properties: {
+          url: {
+            type: 'string',
+            description: 'The site path to navigate to (e.g., "/", "/chat")',
+          },
+          label: {
+            type: 'string',
+            description: 'Short button label (e.g., "Back to Portfolio")',
+          },
+        },
+        required: ['url', 'label'],
+      },
+    },
+  },
+];
+
+/**
+ * xAI server-side web search tool definition.
+ * Enables Grok to search the web for real-time information beyond
+ * the static knowledge base (e.g., recent news, PyPI stats, community discussions).
+ * This is a server-side tool — xAI handles the search internally.
+ */
+export const WEB_SEARCH_TOOL: ToolDefinition = { type: 'web_search' };
+
+/**
+ * Complete tool set for cloud requests: function calling + web search.
+ * Includes both client-side actions (open_link, navigate) and
+ * server-side web search grounding.
+ */
+export const CLOUD_TOOLS: ToolDefinition[] = [...CLOUD_TOOL_DEFINITIONS, WEB_SEARCH_TOOL];
+
+/**
+ * Map raw API tool_calls to UI-renderable ToolAction objects.
+ * Safely parses arguments JSON and filters out invalid calls.
+ * Server-side tool calls (e.g., web_search) are silently skipped.
+ */
+export function mapToolCallsToActions(toolCalls: ToolCallResult[]): ToolAction[] {
+  const actions: ToolAction[] = [];
+
+  for (const call of toolCalls) {
+    try {
+      const args = JSON.parse(call.arguments) as { url?: string; label?: string };
+      if (!args.url) continue;
+
+      actions.push({
+        type: call.name === 'navigate' ? 'navigate' : 'open_link',
+        label: args.label ?? args.url,
+        url: args.url,
+      });
+    } catch {
+      // Skip malformed tool call arguments
+    }
+  }
+
+  return actions;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+ *  LOCAL — Text marker parsing for WebLLM models (no function calling)
+ * ═══════════════════════════════════════════════════════════════════════ */
+
+/**
+ * Pattern matching action markers in local model responses.
  * Matches: [LINK: url | label] and [NAV: path | label]
  */
 const ACTION_PATTERN = /\[(LINK|NAV):\s*([^\]|]+?)(?:\s*\|\s*([^\]]+?))?\s*\]/g;
 
-/** Result of parsing an AI response for actions. */
+/** Result of parsing a local model response for text-marker actions. */
 export interface ParsedResponse {
   /** The response text with action markers removed. */
   text: string;
@@ -26,8 +150,9 @@ export interface ParsedResponse {
 }
 
 /**
- * Parse an AI response for action markers.
+ * Parse a local model response for text-marker actions.
  * Returns the cleaned text and any extracted actions.
+ * Only used for local (WebLLM) models — cloud uses native tool_calls.
  */
 export function parseActions(response: string): ParsedResponse {
   const actions: ToolAction[] = [];
@@ -48,6 +173,10 @@ export function parseActions(response: string): ParsedResponse {
   return { text: text.trimEnd(), actions };
 }
 
+/* ═══════════════════════════════════════════════════════════════════════
+ *  SHARED — Action execution (used by both cloud and local)
+ * ═══════════════════════════════════════════════════════════════════════ */
+
 /**
  * Execute a tool action.
  * Navigation opens in the same tab; external links open in a new tab.
@@ -61,10 +190,10 @@ export function executeAction(action: ToolAction): void {
 }
 
 /**
- * System prompt section that instructs the model how to use actions.
- * Appended to the system prompt at build time.
+ * System prompt section for LOCAL models that instructs the model how to
+ * use text-marker actions. Not used by cloud models (they use native tools).
  */
-export const TOOLS_PROMPT_SECTION = `
+export const LOCAL_TOOLS_PROMPT_SECTION = `
 # Available Actions
 When your answer references a specific link, page, or project, include action markers at the END of your response (after your text). Only include actions that are directly relevant.
 

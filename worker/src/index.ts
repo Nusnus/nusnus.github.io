@@ -25,8 +25,10 @@ interface Env {
 }
 
 interface ChatMessage {
-  role: 'system' | 'user' | 'assistant';
-  content: string;
+  role: 'system' | 'user' | 'assistant' | 'tool';
+  content?: string | null;
+  tool_call_id?: string;
+  tool_calls?: unknown[];
 }
 
 interface ChatCompletionRequest {
@@ -36,6 +38,12 @@ interface ChatCompletionRequest {
   temperature?: number;
   top_p?: number;
   stream?: boolean;
+  /** Native function calling — passed through to xAI. */
+  tools?: unknown[];
+  /** Tool choice strategy — passed through to xAI. */
+  tool_choice?: unknown;
+  /** Structured output format — passed through to xAI. */
+  response_format?: unknown;
   [key: string]: unknown;
 }
 
@@ -189,9 +197,20 @@ export default {
     }
 
     // Validate each message has required fields
+    // content may be null for tool-call assistant messages; tool messages use tool_call_id
     for (const msg of body.messages) {
-      if (!msg.role || typeof msg.content !== 'string') {
-        return jsonResponse({ error: 'Each message must have role and content' }, 400, origin);
+      if (!msg.role) {
+        return jsonResponse({ error: 'Each message must have a role' }, 400, origin);
+      }
+      const hasContent = typeof msg.content === 'string';
+      const hasToolCalls = Array.isArray(msg.tool_calls) && msg.tool_calls.length > 0;
+      const isToolResult = msg.role === 'tool' && typeof msg.tool_call_id === 'string';
+      if (!hasContent && !hasToolCalls && !isToolResult) {
+        return jsonResponse(
+          { error: 'Each message must have content, tool_calls, or be a tool result' },
+          400,
+          origin,
+        );
       }
     }
 

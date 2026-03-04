@@ -4,18 +4,41 @@
  * The proxy forwards requests to xAI (Grok) with the API key injected
  * server-side. This module is only used when the "Cloud" provider is selected.
  *
- * Supports both non-streaming (cloudChat) and streaming (cloudChatStream).
+ * Supports:
+ * - Non-streaming (cloudChat) and streaming (cloudChatStream)
+ * - Native function calling via `tools` parameter
+ * - Web search grounding via xAI's built-in search tool
+ * - Structured outputs via `response_format` parameter
  */
 
 import { CLOUD_PROXY_URL, CLOUD_GENERATION_CONFIG } from './config';
+import type { ToolDefinition, ToolCallResult } from './tools';
 
 export interface CloudMessage {
   role: 'system' | 'user' | 'assistant';
   content: string;
 }
 
+/** Optional parameters for cloud chat requests. */
+export interface CloudChatOptions {
+  /** OpenAI-compatible tool definitions for function calling. */
+  tools?: ToolDefinition[];
+  /** Tool choice strategy: 'auto' lets the model decide. */
+  tool_choice?: 'auto' | 'none' | 'required';
+  /** Response format for structured outputs (e.g., JSON schema enforcement). */
+  response_format?:
+    | { type: 'text' | 'json_object' }
+    | { type: 'json_schema'; json_schema: Record<string, unknown> };
+}
+
+interface CloudToolCall {
+  id: string;
+  type: 'function';
+  function: { name: string; arguments: string };
+}
+
 interface CloudChoice {
-  message: { content: string };
+  message: { content: string | null; tool_calls?: CloudToolCall[] };
   finish_reason: string;
 }
 
@@ -24,13 +47,23 @@ interface CloudResponse {
   error?: { message: string };
 }
 
+/** Result from cloud chat containing both content and tool calls. */
+export interface CloudChatResult {
+  content: string;
+  toolCalls: ToolCallResult[];
+}
+
 /**
  * Send a chat completion request to the cloud proxy (non-streaming).
- * Returns the assistant's full response text.
+ * Returns the assistant's response text and any tool calls.
  *
  * @throws Error if the proxy or upstream returns an error.
  */
-export async function cloudChat(messages: CloudMessage[], modelId: string): Promise<string> {
+export async function cloudChat(
+  messages: CloudMessage[],
+  modelId: string,
+  options?: CloudChatOptions,
+): Promise<CloudChatResult> {
   const response = await fetch(CLOUD_PROXY_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -39,6 +72,9 @@ export async function cloudChat(messages: CloudMessage[], modelId: string): Prom
       messages,
       stream: false,
       ...CLOUD_GENERATION_CONFIG,
+      ...(options?.tools && { tools: options.tools }),
+      ...(options?.tool_choice && { tool_choice: options.tool_choice }),
+      ...(options?.response_format && { response_format: options.response_format }),
     }),
   });
 
@@ -54,25 +90,47 @@ export async function cloudChat(messages: CloudMessage[], modelId: string): Prom
   }
 
   const data = (await response.json()) as CloudResponse;
+  const choice = data.choices?.[0];
 
-  if (!data.choices?.[0]?.message?.content) {
+  if (!choice?.message?.content && !choice?.message?.tool_calls?.length) {
     throw new Error('Empty response from AI provider');
   }
 
-  return data.choices[0].message.content;
+  return {
+    content: choice.message.content ?? '',
+    toolCalls: (choice.message.tool_calls ?? []).map((tc) => ({
+      id: tc.id,
+      name: tc.function.name,
+      arguments: tc.function.arguments,
+    })),
+  };
 }
 
 /**
  * SSE streaming delta shape from OpenAI-compatible APIs.
+ * Includes tool_calls support for native function calling.
  */
+interface StreamDeltaToolCall {
+  index: number;
+  id?: string;
+  type?: string;
+  function?: { name?: string; arguments?: string };
+}
+
 interface StreamDelta {
-  choices?: { delta?: { content?: string }; finish_reason?: string | null }[];
+  choices?: {
+    delta?: { content?: string; tool_calls?: StreamDeltaToolCall[] };
+    finish_reason?: string | null;
+  }[];
 }
 
 /**
  * Send a streaming chat completion request to the cloud proxy.
  * Calls `onToken` for each delta chunk as it arrives.
- * Returns the full accumulated response text.
+ * Returns the full accumulated response text and any tool calls.
+ *
+ * Tool calls are accumulated from stream deltas — the model may return
+ * both content AND tool_calls (e.g., text response + action buttons).
  *
  * @throws Error if the proxy or upstream returns an error.
  */
@@ -81,7 +139,8 @@ export async function cloudChatStream(
   modelId: string,
   onToken: (token: string, accumulated: string) => void,
   signal?: AbortSignal,
-): Promise<string> {
+  options?: CloudChatOptions,
+): Promise<CloudChatResult> {
   const response = await fetch(CLOUD_PROXY_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -90,6 +149,9 @@ export async function cloudChatStream(
       messages,
       stream: true,
       ...CLOUD_GENERATION_CONFIG,
+      ...(options?.tools && { tools: options.tools }),
+      ...(options?.tool_choice && { tool_choice: options.tool_choice }),
+      ...(options?.response_format && { response_format: options.response_format }),
     }),
     signal: signal ?? null,
   });
@@ -115,6 +177,9 @@ export async function cloudChatStream(
   let accumulated = '';
   let buffer = '';
 
+  // Accumulate tool_calls from stream deltas (arguments arrive in chunks)
+  const toolCallAccumulator = new Map<number, { id: string; name: string; arguments: string }>();
+
   try {
     while (true) {
       const { done, value } = await reader.read();
@@ -135,10 +200,28 @@ export async function cloudChatStream(
 
         try {
           const json = JSON.parse(trimmed.slice(6)) as StreamDelta;
-          const content = json.choices?.[0]?.delta?.content;
-          if (content) {
-            accumulated += content;
-            onToken(content, accumulated);
+          const delta = json.choices?.[0]?.delta;
+
+          // Accumulate text content
+          if (delta?.content) {
+            accumulated += delta.content;
+            onToken(delta.content, accumulated);
+          }
+
+          // Accumulate tool calls (chunked arguments)
+          if (delta?.tool_calls) {
+            for (const tc of delta.tool_calls) {
+              const existing = toolCallAccumulator.get(tc.index);
+              if (existing) {
+                existing.arguments += tc.function?.arguments ?? '';
+              } else {
+                toolCallAccumulator.set(tc.index, {
+                  id: tc.id ?? '',
+                  name: tc.function?.name ?? '',
+                  arguments: tc.function?.arguments ?? '',
+                });
+              }
+            }
           }
         } catch {
           // Skip malformed JSON chunks
@@ -149,9 +232,11 @@ export async function cloudChatStream(
     reader.releaseLock();
   }
 
-  if (!accumulated) {
+  const toolCalls = Array.from(toolCallAccumulator.values());
+
+  if (!accumulated && toolCalls.length === 0) {
     throw new Error('Empty response from AI provider');
   }
 
-  return accumulated;
+  return { content: accumulated, toolCalls };
 }

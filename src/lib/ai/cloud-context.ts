@@ -73,8 +73,6 @@ async function fetchGitHub(workerPath: string, staticPath: string): Promise<Resp
  * Files:
  *   /data/ai-context/persona.md   — Grok personality, tone, formatting rules
  *   /data/ai-context/knowledge.md — Facts about Tomer, Celery, projects, etc.
- *
- * Legacy fallback: /data/ai-knowledge.md (deprecated, kept for compatibility)
  */
 
 /** Fetch a markdown context file, returning its text or empty string. */
@@ -97,32 +95,22 @@ export async function buildCloudContext(): Promise<string> {
   const sections: string[] = [];
 
   // Fetch all data sources in parallel — context files + Worker data (static fallback)
-  const [
-    persona,
-    knowledge,
-    legacyKnowledge,
-    profileRes,
-    reposRes,
-    orgReposRes,
-    activityRes,
-    graphRes,
-  ] = await Promise.all([
-    fetchContextFile('/data/ai-context/persona.md'),
-    fetchContextFile('/data/ai-context/knowledge.md'),
-    fetchContextFile('/data/ai-knowledge.md'), // legacy fallback
-    fetchGitHub('profile', '/data/profile.json'),
-    fetchGitHub('repos', '/data/repos.json'),
-    fetchGitHub('org-repos', '/data/celery-org-repos.json'),
-    fetchGitHub('activity', '/data/activity.json'),
-    fetchGitHub('contributions', '/data/contribution-graph.json'),
-  ]);
+  const [persona, knowledge, profileRes, reposRes, orgReposRes, activityRes, graphRes] =
+    await Promise.all([
+      fetchContextFile('/data/ai-context/persona.md'),
+      fetchContextFile('/data/ai-context/knowledge.md'),
+      fetchGitHub('profile', '/data/profile.json'),
+      fetchGitHub('repos', '/data/repos.json'),
+      fetchGitHub('org-repos', '/data/celery-org-repos.json'),
+      fetchGitHub('activity', '/data/activity.json'),
+      fetchGitHub('contributions', '/data/contribution-graph.json'),
+    ]);
 
   // ── Persona (Grok personality) — must come first ──
   if (persona) sections.push(persona);
 
   // ── Knowledge base (facts about Tomer, projects, etc.) ──
-  const knowledgeContent = knowledge || legacyKnowledge;
-  if (knowledgeContent) sections.push(knowledgeContent);
+  if (knowledge) sections.push(knowledge);
 
   // ── GitHub profile ──
   if (profileRes?.ok) {

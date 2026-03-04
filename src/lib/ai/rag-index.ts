@@ -111,7 +111,7 @@ export function buildSearchIndex(repos: RepoData[], orgRepos: RepoData[]): Searc
   const chunks: SearchChunk[] = [];
 
   /* ── Knowledge base sections ── */
-  const knowledgePath = join(process.cwd(), 'public', 'data', 'ai-knowledge.md');
+  const knowledgePath = join(process.cwd(), 'public', 'data', 'ai-context', 'knowledge.md');
   const knowledge = readFileSync(knowledgePath, 'utf-8');
   const sections = knowledge.split(/^## /m).filter(Boolean);
 
