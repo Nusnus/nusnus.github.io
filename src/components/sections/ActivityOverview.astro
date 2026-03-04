@@ -1,6 +1,11 @@
 ---
 import ContributionGraph from '@components/widgets/ContributionGraph';
-import { loadContributionGraph } from '@lib/data/loader';
+import {
+  loadContributionGraph,
+  loadRepos,
+  loadCeleryOrgRepos,
+  loadProfile,
+} from '@lib/data/loader';
 import { formatCompactNumber, calculateStreak } from '@lib/utils/date';
 
 const graph = loadContributionGraph();
@@ -9,6 +14,72 @@ const weeks = graph?.weeks ?? [];
 
 const allDays = weeks.flatMap((w) => w.contributionDays);
 const streak = calculateStreak(allDays);
+
+// ── Trophy data ──
+const repos = loadRepos() ?? [];
+const orgRepos = loadCeleryOrgRepos() ?? [];
+const profile = loadProfile();
+
+const allRepos = [...repos, ...orgRepos];
+const totalStars = allRepos.reduce((sum, r) => sum + r.stars, 0);
+const topRepo = repos.find((r) => r.fullName === 'celery/celery');
+const createdRepo = repos.find((r) => r.role === 'creator');
+
+interface Trophy {
+  icon: string;
+  value: string;
+  label: string;
+  detail: string;
+}
+
+const trophies: Trophy[] = [
+  {
+    icon: '⭐',
+    value: formatCompactNumber(totalStars),
+    label: 'Total Stars',
+    detail: 'across maintained repos',
+  },
+  ...(topRepo?.contributorRank
+    ? [
+        {
+          icon: '🏆',
+          value: `#${topRepo.contributorRank}`,
+          label: 'Contributor',
+          detail: topRepo.fullName,
+        },
+      ]
+    : []),
+  ...(createdRepo
+    ? [
+        {
+          icon: '🏗️',
+          value: 'Creator',
+          label: createdRepo.name,
+          detail: 'original author',
+        },
+      ]
+    : []),
+  ...(graph
+    ? [
+        {
+          icon: '👀',
+          value: formatCompactNumber(graph.totalReviews),
+          label: 'Code Reviews',
+          detail: 'this year',
+        },
+      ]
+    : []),
+  ...(profile
+    ? [
+        {
+          icon: '👥',
+          value: String(profile.followers),
+          label: 'Followers',
+          detail: 'on GitHub',
+        },
+      ]
+    : []),
+];
 ---
 
 <section id="activity" class="relative" aria-label="Activity overview">
@@ -73,5 +144,28 @@ const streak = calculateStreak(allDays);
         )
       }
     </div>
+
+    <!-- Trophies -->
+    {
+      trophies.length > 0 && (
+        <div class="mt-6">
+          <p class="text-text-muted mb-3 text-xs font-medium tracking-wider uppercase">
+            Achievements
+          </p>
+          <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+            {trophies.map((trophy) => (
+              <div class="bg-bg-surface/50 ring-border/40 flex flex-col items-center rounded-lg p-3 text-center ring-1">
+                <span class="mb-1 text-2xl" aria-hidden="true">
+                  {trophy.icon}
+                </span>
+                <p class="text-accent font-mono text-lg leading-tight font-bold">{trophy.value}</p>
+                <p class="text-text-primary text-xs font-medium">{trophy.label}</p>
+                <p class="text-text-muted text-[10px]">{trophy.detail}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )
+    }
   </div>
 </section>
