@@ -262,13 +262,17 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
           full = result.content;
 
           // Map native tool_calls to UI action buttons
-          if (result.toolCalls.length > 0) {
-            const actions = mapToolCallsToActions(result.toolCalls);
-            if (actions.length > 0) {
-              setMessages((prev) =>
-                prev.map((m) => (m.id === asstMsg.id ? { ...m, content: full, actions } : m)),
-              );
-            }
+          const actions =
+            result.toolCalls.length > 0 ? mapToolCallsToActions(result.toolCalls) : [];
+
+          if (actions.length > 0 || !full) {
+            // Update message with actions and/or ensure empty content is replaced
+            // so the loading dots animation stops (empty string is falsy)
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === asstMsg.id ? { ...m, content: full || '*(used tools only)*', actions } : m,
+              ),
+            );
           }
         } else {
           // ── Local path: RAG + trimmed history for 4K context ──
