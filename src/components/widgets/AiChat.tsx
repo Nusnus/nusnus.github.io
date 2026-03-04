@@ -70,6 +70,17 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
   const abortRef = useRef(false);
   const activeModelRef = useRef<string | null>(null);
 
+  /** Detect ?roast=1 query param for 1-click roast from FAB. */
+  const pendingRoast = useRef(false);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('roast') === '1') {
+      pendingRoast.current = true;
+      // Clean the URL so refresh doesn't re-trigger
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
+
   /** Check WebGPU support and probe cache status for all models. */
   useEffect(() => {
     isWebGPUSupported().then(async (supported) => {
@@ -278,6 +289,22 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
     },
     [messages, isGenerating, provider, selectedCloudModelId, systemPrompt, ragIndex],
   );
+
+  /** Auto-init cloud + auto-send roast when triggered via ?roast=1 FAB. */
+  const roastAutoInitDone = useRef(false);
+  useEffect(() => {
+    if (!pendingRoast.current) return;
+    // Step 1: auto-init cloud engine once idle
+    if (engineState === 'idle' && !roastAutoInitDone.current) {
+      roastAutoInitDone.current = true;
+      initEngine(true);
+    }
+    // Step 2: auto-send roast once engine is ready
+    if (engineState === 'ready' && pendingRoast.current) {
+      pendingRoast.current = false;
+      sendMessage('Roast Tomer Nosrati 🔥');
+    }
+  }, [engineState, initEngine, sendMessage]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {

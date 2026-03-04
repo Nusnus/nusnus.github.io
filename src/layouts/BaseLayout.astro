@@ -68,5 +68,46 @@ const ogImageUrl = new URL(ogImage, SITE_URL).href;
     </a>
 
     <slot />
+
+    <!-- Roast FAB — floating fire button that triggers a 1-click roast via AI chat -->
+    {
+      Astro.url.pathname !== '/chat' && (
+        <a
+          href="/chat?roast=1"
+          aria-label="Roast Tomer Nosrati"
+          class="roast-fab group fixed right-6 bottom-6 z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-2"
+        >
+          <span class="text-2xl transition-transform duration-300 group-hover:scale-125">🔥</span>
+        </a>
+      )
+    }
+
+    <style>
+      .roast-fab {
+        background: radial-gradient(circle at 30% 30%, #ff6b35, #e63946);
+        box-shadow:
+          0 4px 15px rgba(230, 57, 70, 0.4),
+          0 0 30px rgba(255, 107, 53, 0.15);
+        animation: fab-glow 3s ease-in-out infinite;
+      }
+      .roast-fab:hover {
+        box-shadow:
+          0 6px 25px rgba(230, 57, 70, 0.5),
+          0 0 40px rgba(255, 107, 53, 0.25);
+      }
+      @keyframes fab-glow {
+        0%,
+        100% {
+          box-shadow:
+            0 4px 15px rgba(230, 57, 70, 0.4),
+            0 0 30px rgba(255, 107, 53, 0.15);
+        }
+        50% {
+          box-shadow:
+            0 4px 20px rgba(230, 57, 70, 0.5),
+            0 0 40px rgba(255, 107, 53, 0.3);
+        }
+      }
+    </style>
   </body>
 </html>
