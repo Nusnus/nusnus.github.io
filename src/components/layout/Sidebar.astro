@@ -20,7 +20,9 @@ const celeryStars = repos?.find((r) => r.fullName === 'celery/celery')?.stars ??
 const totalContributions = graph?.totalContributions ?? 0;
 ---
 
-<aside class="bg-bg-base border-border/50 hidden h-screen flex-col border-r px-5 py-6 md:flex">
+<aside
+  class="bg-bg-base border-border/50 relative hidden h-screen flex-col border-r px-5 py-6 md:flex"
+>
   <!-- Gradient accent line at the top of the sidebar -->
   <div
     class="from-accent to-accent-end absolute top-0 right-0 left-0 h-px bg-gradient-to-r opacity-40"
