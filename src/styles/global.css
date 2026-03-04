@@ -122,8 +122,8 @@
     border-color: var(--color-glass-border);
   }
 
-  /* Glow effects — use Tailwind's shadow composition to avoid overwriting ring-*/
-  shadow-* */ .glow-accent {
+  /* Glow effects — use Tailwind shadow composition to avoid overwriting ring and shadow */
+  .glow-accent {
     --tw-shadow: 0 0 20px var(--color-accent-glow), 0 0 60px oklch(0.72 0.17 145 / 0.08);
     box-shadow:
       var(--tw-inset-shadow,), var(--tw-inset-ring-shadow,), var(--tw-ring-offset-shadow,),
