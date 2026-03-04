@@ -307,6 +307,21 @@ export async function cloudChatStream(
             if (e.item.type === 'web_search_call') {
               options?.onWebSearchFound?.();
             }
+          } else if (eventType === 'response.failed') {
+            const err = (raw as Record<string, unknown>).response as
+              | { error?: { message?: string } }
+              | undefined;
+            throw new Error(err?.error?.message ?? 'Response failed');
+          } else if (eventType === 'response.incomplete') {
+            // The model stopped before finishing — surface a useful message
+            const reason = (
+              (raw as Record<string, unknown>).response as
+                | { incomplete_details?: { reason?: string } }
+                | undefined
+            )?.incomplete_details?.reason;
+            if (!accumulated) {
+              throw new Error(reason ? `Incomplete response: ${reason}` : 'Incomplete response');
+            }
           }
           // All other events (response.created, response.in_progress,
           // response.completed, etc.) — skip
