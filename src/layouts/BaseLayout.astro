@@ -111,6 +111,23 @@ const ogImageUrl = new URL(ogImage, SITE_URL).href;
           transform: scale(1);
         }
       }
+      .roast-header-btn {
+        animation: roast-header-glow 2.5s ease-in-out infinite;
+      }
+      @keyframes roast-header-glow {
+        0%,
+        100% {
+          filter: drop-shadow(0 0 2px rgba(255, 107, 53, 0.3));
+        }
+        50% {
+          filter: drop-shadow(0 0 6px rgba(255, 107, 53, 0.7));
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .roast-header-btn {
+          animation: none;
+        }
+      }
     </style>
   </body>
 </html>
