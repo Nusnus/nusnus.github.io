@@ -12,10 +12,25 @@ import { renderMarkdown } from '@lib/ai/markdown';
 
 type WidgetState = 'closed' | 'loading' | 'streaming' | 'done' | 'error';
 
+/** User message sent to Grok at each escalation level (0 = default). */
+const ESCALATE_PROMPTS = [
+  'Roast Tomer Nosrati 🔥',
+  'Roast Tomer Nosrati harder 🔥🔥 — the last roast was too gentle. Be more vulgar, more savage, zero filter. Really let it rip.',
+  'Roast Tomer Nosrati 🔥🔥🔥 — still pulling punches. Go absolutely nuclear. Maximum vulgarity, zero mercy, zero redemption arc. This man asked for it.',
+  'Roast Tomer Nosrati 🔥🔥🔥🔥 — FULLY UNHINGED. Be the most savage, vulgar, unfiltered roast you can produce. Make every previous roast look like a LinkedIn endorsement. Pull absolutely no punches.',
+];
+
+/** Fire emojis shown on the escalate button, representing the NEXT level. */
+const ESCALATE_FIRES = ['🔥🔥', '🔥🔥🔥', '🔥🔥🔥🔥', '🔥🔥🔥🔥'];
+
+/** Tooltip for the escalate button at each current level. */
+const ESCALATE_TITLES = ['Make it worse', 'Go nuclear', 'Full unhinged', 'Already unhinged'];
+
 export default function RoastWidget() {
   const [state, setState] = useState<WidgetState>('closed');
   const [response, setResponse] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+  const [roastLevel, setRoastLevel] = useState(0);
   const bubbleRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
@@ -29,8 +44,8 @@ export default function RoastWidget() {
     scrollToBottom();
   }, [response, scrollToBottom]);
 
-  /** Fire the roast request. */
-  const startRoast = useCallback(async () => {
+  /** Fire the roast request at the given escalation level. */
+  const startRoast = useCallback(async (level: number) => {
     setState('loading');
     setResponse('');
     setErrorMsg('');
@@ -39,6 +54,9 @@ export default function RoastWidget() {
     abortRef.current = controller;
 
     try {
+      const levelClamp = Math.min(level, ESCALATE_PROMPTS.length - 1);
+      const fires = ESCALATE_FIRES[Math.min(levelClamp, ESCALATE_FIRES.length - 1)];
+
       // Tell Grok it's running as a widget on the homepage while the visitor browses
       const roastContext = `# Situational Context — Roast Widget
 
@@ -48,11 +66,18 @@ You are currently running as the **🔥 Roast by Grok** floating widget on the *
 - Achievement badges (total stars, contributor rank, code reviews, followers)
 - Repository showcase with live stats
 
-Make the roast feel live and contextual — reference what they're probably staring at right now. You're the Oracle appearing mid-matrix to roast the architect of the very simulation the visitor is browsing. Keep it short, savage, and self-aware. This is a teaser — the full chat is one click away.`;
+${
+  levelClamp === 0
+    ? "Make the roast feel live and contextual — reference what they're probably staring at right now. You're the Oracle appearing mid-matrix to roast the architect of the very simulation the visitor is browsing. Keep it short, savage, and self-aware. This is a teaser — the full chat is one click away."
+    : `The visitor liked the first roast and hit the ${fires} escalate button. They want MORE — rawer, more vulgar, more savage. Don't repeat what you said before. Go harder. Keep it short, punchy, contextual to the page they're browsing.`
+}`;
 
       const context = await buildCloudContext(roastContext);
       const systemMessage = { role: 'system' as const, content: context };
-      const userMessage = { role: 'user' as const, content: 'Roast Tomer Nosrati 🔥' };
+      const userMessage = {
+        role: 'user' as const,
+        content: ESCALATE_PROMPTS[levelClamp] ?? 'Roast Tomer Nosrati 🔥',
+      };
 
       setState('streaming');
 
@@ -81,7 +106,8 @@ Make the roast feel live and contextual — reference what they're probably star
   const handleFabClick = useCallback(() => {
     if (state === 'closed' || state === 'done' || state === 'error') {
       if (state === 'closed') {
-        startRoast();
+        setRoastLevel(0);
+        startRoast(0);
       } else {
         // Close the bubble
         setState('closed');
@@ -95,10 +121,17 @@ Make the roast feel live and contextual — reference what they're probably star
     }
   }, [state, startRoast]);
 
-  /** Re-roast: get a fresh roast without closing. */
+  /** Re-roast at the same level (SVG refresh — no prompt change). */
   const handleReRoast = useCallback(() => {
-    startRoast();
-  }, [startRoast]);
+    startRoast(roastLevel);
+  }, [roastLevel, startRoast]);
+
+  /** Escalate: increment vulgarity level and re-roast with a harder prompt. */
+  const handleEscalate = useCallback(() => {
+    const nextLevel = roastLevel + 1;
+    setRoastLevel(nextLevel);
+    startRoast(nextLevel);
+  }, [roastLevel, startRoast]);
 
   /** Continue the roast in the full chat page, passing the conversation via sessionStorage. */
   const handleContinueInChat = useCallback(() => {
@@ -126,14 +159,39 @@ Make the roast feel live and contextual — reference what they're probably star
               </div>
               <div className="flex items-center gap-1">
                 {(state === 'done' || state === 'error') && (
-                  <button
-                    onClick={handleReRoast}
-                    aria-label="Roast again"
-                    className="hover:text-accent flex h-7 items-center justify-center rounded-md px-1.5 text-base transition-all hover:scale-125"
-                    title="Roast again"
-                  >
-                    🔥
-                  </button>
+                  <>
+                    {/* Escalate: harder prompt each click */}
+                    <button
+                      onClick={handleEscalate}
+                      aria-label="Make it more vulgar"
+                      className="flex h-7 items-center justify-center rounded-md px-1.5 text-sm leading-none transition-all hover:scale-125"
+                      title={ESCALATE_TITLES[Math.min(roastLevel, ESCALATE_TITLES.length - 1)]}
+                    >
+                      {ESCALATE_FIRES[Math.min(roastLevel, ESCALATE_FIRES.length - 1)]}
+                    </button>
+                    {/* Refresh: same level, same prompt */}
+                    <button
+                      onClick={handleReRoast}
+                      aria-label="Roast again (same level)"
+                      className="text-text-muted hover:text-accent flex h-7 w-7 items-center justify-center rounded-md transition-colors"
+                      title="Try again"
+                    >
+                      <svg
+                        className="h-3.5 w-3.5"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                        <path d="M3 3v5h5" />
+                        <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
+                        <path d="M16 16h5v5" />
+                      </svg>
+                    </button>
+                  </>
                 )}
                 <button
                   onClick={handleFabClick}
