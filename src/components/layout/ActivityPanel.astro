@@ -2,7 +2,7 @@
 import { loadMeta } from '@lib/data/loader';
 import { relativeTime } from '@lib/utils/date';
 
-const meta = loadMeta();
+const meta = await loadMeta();
 const lastUpdated = meta?.lastUpdated ? relativeTime(meta.lastUpdated) : 'unknown';
 ---
 

@@ -42,6 +42,7 @@ const TTL: Record<string, number> = {
   'org-repos': 900,
   activity: 300,
   contributions: 3600,
+  meta: 60,
 };
 
 // ─── Types ───────────────────────────────────────────────────────────
@@ -249,6 +250,7 @@ const ROUTES: Record<string, Fetcher> = {
   '/github/org-repos': (t) => fetchRepoList(CELERY_ORG_REPOS, t),
   '/github/activity': fetchActivity,
   '/github/contributions': fetchContributions,
+  '/github/meta': () => Promise.resolve({ lastUpdated: new Date().toISOString(), status: 'ok' }),
 };
 
 export async function handleGitHubRoute(

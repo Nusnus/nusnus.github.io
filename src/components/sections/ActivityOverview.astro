@@ -8,7 +8,7 @@ import {
 } from '@lib/data/loader';
 import { formatCompactNumber, calculateStreak } from '@lib/utils/date';
 
-const graph = loadContributionGraph();
+const graph = await loadContributionGraph();
 const totalContributions = graph?.totalContributions ?? 0;
 const weeks = graph?.weeks ?? [];
 
@@ -16,9 +16,9 @@ const allDays = weeks.flatMap((w) => w.contributionDays);
 const streak = calculateStreak(allDays);
 
 // ── Trophy data ──
-const repos = loadRepos() ?? [];
-const orgRepos = loadCeleryOrgRepos() ?? [];
-const profile = loadProfile();
+const repos = (await loadRepos()) ?? [];
+const orgRepos = (await loadCeleryOrgRepos()) ?? [];
+const profile = await loadProfile();
 
 const allRepos = [...repos, ...orgRepos];
 const totalStars = allRepos.reduce((sum, r) => sum + r.stars, 0);

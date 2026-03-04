@@ -9,10 +9,10 @@ import {
 import { formatCompactNumber } from '@lib/utils/date';
 import { SOCIAL_LINKS } from '@lib/utils/constants';
 
-const profile = loadProfile();
-const repos = loadRepos();
-const orgRepos = loadCeleryOrgRepos();
-const graph = loadContributionGraph();
+const profile = await loadProfile();
+const repos = await loadRepos();
+const orgRepos = await loadCeleryOrgRepos();
+const graph = await loadContributionGraph();
 
 const celeryStars = repos?.find((r) => r.fullName === 'celery/celery')?.stars ?? 0;
 const totalContributions = graph?.totalContributions ?? 0;

@@ -170,7 +170,7 @@ export interface ContributionGraphData {
 
 export interface MetaData {
   lastUpdated: string;
-  status: ('fulfilled' | 'rejected')[];
+  status: ('fulfilled' | 'rejected')[] | string;
 }
 
 export interface ActivityEvent {

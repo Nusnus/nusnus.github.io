@@ -1,3 +1,10 @@
+/**
+ * Data loader — fetches live data from the Cloudflare Worker (edge-cached),
+ * falling back to static JSON files on disk when the worker is unavailable.
+ *
+ * All public functions are async. Astro frontmatter supports top-level await.
+ */
+
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
@@ -15,44 +22,69 @@ import type {
   MetaData,
 } from '../github/types';
 
+const WORKER_URL = 'https://ai-proxy.tomer-nosrati.workers.dev';
 const DATA_DIR = join(process.cwd(), 'public', 'data');
 
 /**
- * Reads and validates a JSON data file at build time.
- * Returns null with a warning if the file is missing or invalid.
+ * Reads and validates a JSON data file from disk.
+ * Returns null if the file is missing or invalid.
  */
-function loadJsonFile<T>(filename: string, schema: { parse: (data: unknown) => T }): T | null {
+function loadFromDisk<T>(filename: string, schema: { parse: (data: unknown) => T }): T | null {
   try {
     const raw = readFileSync(join(DATA_DIR, filename), 'utf-8');
     const data: unknown = JSON.parse(raw);
     return schema.parse(data);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.warn(`[data-loader] Failed to load ${filename}: ${message}`);
+  } catch {
     return null;
   }
 }
 
-export function loadProfile(): ProfileData | null {
-  return loadJsonFile('profile.json', profileSchema);
+/**
+ * Fetches data from the worker, falling back to static JSON on disk.
+ * Worker responses are validated with the same Zod schema.
+ */
+async function loadData<T>(
+  workerPath: string,
+  filename: string,
+  schema: { parse: (data: unknown) => T },
+): Promise<T | null> {
+  // Try worker first (live, edge-cached)
+  try {
+    const res = await fetch(`${WORKER_URL}/github/${workerPath}`, {
+      headers: { Origin: 'https://nusnus.github.io' },
+    });
+    if (res.ok) {
+      const data: unknown = await res.json();
+      return schema.parse(data);
+    }
+  } catch {
+    /* network error — fall through to disk */
+  }
+
+  // Fallback to static JSON on disk
+  return loadFromDisk(filename, schema);
 }
 
-export function loadRepos(): RepoData[] | null {
-  return loadJsonFile('repos.json', reposSchema);
+export function loadProfile(): Promise<ProfileData | null> {
+  return loadData('profile', 'profile.json', profileSchema);
 }
 
-export function loadCeleryOrgRepos(): RepoData[] | null {
-  return loadJsonFile('celery-org-repos.json', reposSchema);
+export function loadRepos(): Promise<RepoData[] | null> {
+  return loadData('repos', 'repos.json', reposSchema);
 }
 
-export function loadActivity(): ActivityData | null {
-  return loadJsonFile('activity.json', activitySchema);
+export function loadCeleryOrgRepos(): Promise<RepoData[] | null> {
+  return loadData('org-repos', 'celery-org-repos.json', reposSchema);
 }
 
-export function loadContributionGraph(): ContributionGraphData | null {
-  return loadJsonFile('contribution-graph.json', contributionGraphSchema);
+export function loadActivity(): Promise<ActivityData | null> {
+  return loadData('activity', 'activity.json', activitySchema);
 }
 
-export function loadMeta(): MetaData | null {
-  return loadJsonFile('meta.json', metaSchema);
+export function loadContributionGraph(): Promise<ContributionGraphData | null> {
+  return loadData('contributions', 'contribution-graph.json', contributionGraphSchema);
+}
+
+export function loadMeta(): Promise<MetaData | null> {
+  return loadData('meta', 'meta.json', metaSchema);
 }

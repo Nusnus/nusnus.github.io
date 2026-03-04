@@ -11,14 +11,14 @@ import {
 import { buildSystemPrompt } from '@lib/ai/prompt';
 import { buildSearchIndex } from '@lib/ai/rag-index';
 
-const repos = loadRepos() ?? [];
-const orgRepos = loadCeleryOrgRepos() ?? [];
+const repos = (await loadRepos()) ?? [];
+const orgRepos = (await loadCeleryOrgRepos()) ?? [];
 
 const systemPrompt = buildSystemPrompt({
-  profile: loadProfile(),
+  profile: await loadProfile(),
   repos,
   orgRepos,
-  graph: loadContributionGraph(),
+  graph: await loadContributionGraph(),
 });
 
 const searchIndex = buildSearchIndex(repos, orgRepos);

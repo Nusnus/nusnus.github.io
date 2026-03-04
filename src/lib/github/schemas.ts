@@ -76,5 +76,5 @@ export const contributionGraphSchema = z.object({
 
 export const metaSchema = z.object({
   lastUpdated: z.iso.datetime(),
-  status: z.array(z.enum(['fulfilled', 'rejected'])),
+  status: z.union([z.array(z.enum(['fulfilled', 'rejected'])), z.string()]),
 });

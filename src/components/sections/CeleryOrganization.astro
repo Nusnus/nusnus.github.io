@@ -4,7 +4,7 @@ import Badge from '@components/ui/Badge.astro';
 import { loadCeleryOrgRepos } from '@lib/data/loader';
 import { formatCompactNumber, relativeTime } from '@lib/utils/date';
 
-const repos = loadCeleryOrgRepos() ?? [];
+const repos = (await loadCeleryOrgRepos()) ?? [];
 
 const roleBadgeVariant = {
   owner: 'accent' as const,

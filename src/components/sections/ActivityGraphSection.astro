@@ -3,7 +3,7 @@ import ActivityGraph from '@components/widgets/ActivityGraph';
 import ContributionLineChart from '@components/widgets/ContributionLineChart';
 import { loadContributionGraph } from '@lib/data/loader';
 
-const graph = loadContributionGraph();
+const graph = await loadContributionGraph();
 const weeks = graph?.weeks ?? [];
 ---
 
