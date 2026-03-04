@@ -59,7 +59,7 @@ fetch-data: ## Fetch external data
 # ─── Worker ───
 
 deploy-worker: ## Deploy Cloudflare Worker (AI proxy)
-	cd worker && npx wrangler deploy
+	cd worker && bunx wrangler deploy
 
 # ─── Cleanup ───
 

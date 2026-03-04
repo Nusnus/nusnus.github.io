@@ -80,6 +80,7 @@ amp.yaml
 
 # Dependencies
 node_modules/
+package-lock.json
 
 # Astro
 dist/
