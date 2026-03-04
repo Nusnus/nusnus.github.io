@@ -18,7 +18,7 @@ const lastUpdated = meta?.lastUpdated ? relativeTime(meta.lastUpdated) : 'unknow
       </h2>
       <span class="relative flex h-2 w-2">
         <span
-          class="bg-status-active absolute inline-flex h-full w-full rounded-full opacity-75"
+          class="bg-status-active absolute inline-flex h-full w-full rounded-full opacity-75 motion-reduce:hidden"
           style="animation: pulse-dot 2s ease-in-out infinite"
           aria-hidden="true"></span>
         <span class="bg-status-active relative inline-flex h-2 w-2 rounded-full"></span>
