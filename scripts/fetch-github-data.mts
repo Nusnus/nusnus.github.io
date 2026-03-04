@@ -15,6 +15,7 @@ import {
   CELERY_ORG_REPOS,
   REPO_ROLES,
   GITHUB_USERNAME,
+  isKnownPublicRepo,
 } from '../src/lib/utils/constants.js';
 
 const token = process.env.GITHUB_TOKEN;
@@ -129,12 +130,22 @@ async function fetchActivity(): Promise<ActivityData> {
         url = comment?.html_url ?? url;
       }
 
+      // Defense-in-depth: redact repo names from unknown owners
+      const repoName = event.repo.name;
+      const safeRepo = isKnownPublicRepo(repoName) ? repoName : 'Private Project';
+      const safeTitle = isKnownPublicRepo(repoName)
+        ? title
+        : (event.type?.replace('Event', '') ?? 'Activity');
+      const safeUrl = isKnownPublicRepo(repoName)
+        ? url
+        : `https://github.com/${repoName.split('/')[0]}`;
+
       events.push({
         id: event.id,
         type: event.type ?? 'Unknown',
-        repo: event.repo.name,
-        title,
-        url,
+        repo: safeRepo,
+        title: safeTitle,
+        url: safeUrl,
         createdAt: event.created_at ?? new Date().toISOString(),
       });
     }

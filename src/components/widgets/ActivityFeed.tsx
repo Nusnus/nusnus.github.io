@@ -3,6 +3,7 @@ import type { ActivityEvent } from '@lib/github/types';
 import { fetchEvents } from '@lib/github/api';
 import { formatEventType, getEventColor, truncateCommitMessage } from '@lib/github/formatters';
 import { relativeTime } from '@lib/utils/date';
+import { isKnownPublicRepo } from '@lib/utils/constants';
 import {
   GitCommitHorizontal,
   GitPullRequest,
@@ -46,12 +47,13 @@ function processRawEvents(
       title = pr?.title ?? 'Pull Request';
     }
 
+    const repoName = e.repo.name;
     return {
       id: e.id,
       type: e.type ?? 'Unknown',
-      repo: e.repo.name,
-      title,
-      url,
+      repo: isKnownPublicRepo(repoName) ? repoName : 'Private Project',
+      title: isKnownPublicRepo(repoName) ? title : (e.type?.replace('Event', '') ?? 'Activity'),
+      url: isKnownPublicRepo(repoName) ? url : `https://github.com/${repoName.split('/')[0]}`,
       createdAt: e.created_at ?? new Date().toISOString(),
     };
   });

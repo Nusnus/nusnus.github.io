@@ -4,6 +4,24 @@ export const SITE_URL = 'https://nusnus.github.io';
 
 export const OPEN_COLLECTIVE_URL = 'https://opencollective.com/celery';
 
+/**
+ * Known public GitHub org/user owners for defense-in-depth filtering.
+ * Activity events from repos NOT owned by these are redacted to prevent
+ * accidental private repo name leaks (even though we use /events/public).
+ */
+export const KNOWN_PUBLIC_OWNERS: ReadonlySet<string> = new Set(['nusnus', 'celery', 'mher']);
+
+/** Check if a repo full name (owner/repo) belongs to a known public owner. */
+export function isKnownPublicRepo(repoFullName: string): boolean {
+  const owner = repoFullName.split('/')[0]?.toLowerCase() ?? '';
+  return KNOWN_PUBLIC_OWNERS.has(owner);
+}
+
+/** Redact a repo name if it's not from a known public owner. */
+export function safeRepoName(repoFullName: string): string {
+  return isKnownPublicRepo(repoFullName) ? repoFullName : 'Private Project';
+}
+
 export const CELERY_REPOS = ['celery/celery', 'celery/pytest-celery', 'celery/kombu'] as const;
 
 export const CELERY_ORG_REPOS = [

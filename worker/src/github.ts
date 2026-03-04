@@ -36,6 +36,18 @@ const REPO_ROLES: Record<string, string> = {
   'celery/celeryproject': 'owner',
   'mher/flower': 'contributor',
 };
+/**
+ * Known public repo owners — defense-in-depth filter for activity events.
+ * Even though we use /events/public (which only returns public events),
+ * this ensures private repo names can never leak through the API.
+ */
+const KNOWN_PUBLIC_OWNERS: ReadonlySet<string> = new Set(['nusnus', 'celery', 'mher']);
+
+function isKnownPublicRepo(repoFullName: string): boolean {
+  const owner = repoFullName.split('/')[0]?.toLowerCase() ?? '';
+  return KNOWN_PUBLIC_OWNERS.has(owner);
+}
+
 const TTL: Record<string, number> = {
   profile: 3600,
   repos: 900,
@@ -183,12 +195,19 @@ async function fetchActivity(token: string) {
         title = `Comment: ${issue?.title ?? 'Issue'}`;
         url = comment?.html_url ?? url;
       }
+      // Defense-in-depth: redact repo names from unknown owners
+      const safeRepo = isKnownPublicRepo(repoName) ? repoName : 'Private Project';
+      const safeTitle = isKnownPublicRepo(repoName) ? title : eventType.replace('Event', '');
+      const safeUrl = isKnownPublicRepo(repoName)
+        ? url
+        : `https://github.com/${repoName.split('/')[0]}`;
+
       events.push({
         id: event.id as string,
         type: eventType,
-        repo: repoName,
-        title,
-        url,
+        repo: safeRepo,
+        title: safeTitle,
+        url: safeUrl,
         createdAt: (event.created_at as string) ?? new Date().toISOString(),
       });
     }

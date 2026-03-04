@@ -7,6 +7,7 @@
  */
 
 import type { ActivityEvent } from '@lib/github/types';
+import { safeRepoName } from '@lib/utils/constants';
 
 /** Maximum number of recent activity events to include (kept small for 4K context). */
 const MAX_EVENTS = 5;
@@ -29,7 +30,8 @@ export async function fetchRuntimeContext(): Promise<string> {
       if (data.events.length > 0) {
         const recent = data.events.slice(0, MAX_EVENTS);
         const lines = recent.map(
-          (e) => `- [${formatRelative(e.createdAt)}] ${e.type}: ${e.title} (${e.repo})`,
+          (e) =>
+            `- [${formatRelative(e.createdAt)}] ${e.type}: ${e.title} (${safeRepoName(e.repo)})`,
         );
         sections.push(`Recent activity:\n${lines.join('\n')}`);
       }
