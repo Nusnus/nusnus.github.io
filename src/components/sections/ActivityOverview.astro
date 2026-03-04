@@ -7,6 +7,7 @@ import {
   loadProfile,
 } from '@lib/data/loader';
 import { formatCompactNumber, calculateStreak } from '@lib/utils/date';
+import { GITHUB_USERNAME } from '@lib/utils/constants';
 
 const graph = await loadContributionGraph();
 const totalContributions = graph?.totalContributions ?? 0;
@@ -30,7 +31,11 @@ interface Trophy {
   value: string;
   label: string;
   detail: string;
+  link?: string;
 }
+
+const commitsUrl = (fullName: string) =>
+  `https://github.com/${fullName}/commits?author=${GITHUB_USERNAME}`;
 
 const trophies: Trophy[] = [
   {
@@ -46,6 +51,7 @@ const trophies: Trophy[] = [
           value: `#${topRepo.contributorRank}`,
           label: 'Contributor',
           detail: topRepo.fullName,
+          link: commitsUrl(topRepo.fullName),
         },
       ]
     : []),
@@ -56,6 +62,7 @@ const trophies: Trophy[] = [
           value: 'Creator',
           label: createdRepo.name,
           detail: 'original author',
+          link: commitsUrl(createdRepo.fullName),
         },
       ]
     : []),
@@ -153,16 +160,30 @@ const trophies: Trophy[] = [
             Achievements
           </p>
           <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-            {trophies.map((trophy) => (
-              <div class="bg-bg-surface/50 ring-border/40 flex flex-col items-center rounded-lg p-3 text-center ring-1">
-                <span class="mb-1 text-2xl" aria-hidden="true">
-                  {trophy.icon}
-                </span>
-                <p class="text-accent font-mono text-lg leading-tight font-bold">{trophy.value}</p>
-                <p class="text-text-primary text-xs font-medium">{trophy.label}</p>
-                <p class="text-text-muted text-[10px]">{trophy.detail}</p>
-              </div>
-            ))}
+            {trophies.map((trophy) => {
+              const Tag = trophy.link ? 'a' : 'div';
+              return (
+                <Tag
+                  class:list={[
+                    'bg-bg-surface/50 ring-border/40 flex flex-col items-center rounded-lg p-3 text-center ring-1',
+                    trophy.link &&
+                      'hover:ring-accent/60 cursor-pointer transition-all duration-150 hover:-translate-y-0.5',
+                  ]}
+                  href={trophy.link}
+                  target={trophy.link ? '_blank' : undefined}
+                  rel={trophy.link ? 'noopener noreferrer' : undefined}
+                >
+                  <span class="mb-1 text-2xl" aria-hidden="true">
+                    {trophy.icon}
+                  </span>
+                  <p class="text-accent font-mono text-lg leading-tight font-bold">
+                    {trophy.value}
+                  </p>
+                  <p class="text-text-primary text-xs font-medium">{trophy.label}</p>
+                  <p class="text-text-muted text-[10px]">{trophy.detail}</p>
+                </Tag>
+              );
+            })}
           </div>
         </div>
       )

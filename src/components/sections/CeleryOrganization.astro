@@ -3,6 +3,7 @@ import Card from '@components/ui/Card.astro';
 import Badge from '@components/ui/Badge.astro';
 import { loadCeleryOrgRepos } from '@lib/data/loader';
 import { formatCompactNumber, relativeTime } from '@lib/utils/date';
+import { GITHUB_USERNAME } from '@lib/utils/constants';
 
 const repos = (await loadCeleryOrgRepos()) ?? [];
 
@@ -38,9 +39,16 @@ const roleLabel = {
   <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
     {
       repos.map((repo) => (
-        <Card href={repo.htmlUrl}>
+        <Card>
           <div class="mb-3 flex items-start justify-between">
-            <h3 class="text-text-primary font-mono text-base font-semibold">{repo.fullName}</h3>
+            <a
+              href={repo.htmlUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-text-primary hover:text-accent font-mono text-base font-semibold transition-colors"
+            >
+              {repo.fullName}
+            </a>
             <Badge variant={roleBadgeVariant[repo.role]} size="sm">
               {roleLabel[repo.role]}
             </Badge>
@@ -79,14 +87,40 @@ const roleLabel = {
             </span>
           </div>
 
-          {repo.contributorRank && (
-            <p class="text-accent mt-2 font-mono text-xs">
-              <span data-live-repo={repo.fullName} data-live-field="contributorRank">
-                #{repo.contributorRank}
-              </span>{' '}
-              contributor
-            </p>
-          )}
+          <div class="mt-3 flex items-center justify-between">
+            {repo.contributorRank ? (
+              <p class="text-accent font-mono text-xs">
+                <span data-live-repo={repo.fullName} data-live-field="contributorRank">
+                  #{repo.contributorRank}
+                </span>{' '}
+                contributor
+              </p>
+            ) : (
+              <span />
+            )}
+            <a
+              href={`https://github.com/${repo.fullName}/commits?author=${GITHUB_USERNAME}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-accent inline-flex items-center gap-1 text-xs hover:underline"
+            >
+              Contributions
+              <svg
+                class="h-3 w-3"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
+                <polyline points="15 3 21 3 21 9" />
+                <line x1="10" y1="14" x2="21" y2="3" />
+              </svg>
+            </a>
+          </div>
         </Card>
       ))
     }
