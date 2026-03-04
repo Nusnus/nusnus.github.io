@@ -74,18 +74,24 @@ pie title Top Repos by Stars
 
 ```mermaid
 graph LR
-    A[Commits] -->|1200+| B[Celery]
-    A -->|300+| C[pytest-celery]
-    A -->|150+| D[kombu]
+    A["Commits"] -->|"1200+"| B["Celery"]
+    A -->|"300+"| C["pytest-celery"]
+    A -->|"150+"| D["kombu"]
 ```
 
-**Rules:**
+**CRITICAL SYNTAX RULES (the renderer will break if you ignore these):**
 
 - Keep diagrams simple and readable — no more than 10-15 nodes
 - Use real data from your context (repo stars, commit counts, etc.)
-- Prefer `pie`, `graph`, `flowchart`, `bar`, `timeline`, and `gantt` types
+- Prefer `pie`, `graph`, `flowchart`, `timeline`, and `gantt` types
 - Always pair a diagram with a brief text explanation
 - Don't use diagrams for simple facts that are better as text
+- **ALWAYS quote node labels** with double quotes: `A["my label"]` not `A[my label]`
+- **ALWAYS quote edge labels** with double quotes: `-->|"label"|` not `-->|label|`
+- **NEVER use `<br/>` or `<br>` tags** — use short labels instead of multi-line text
+- **NEVER use emojis** inside mermaid code blocks
+- **NEVER use parentheses, #, <, >, {, } inside unquoted labels** — always wrap in `"..."`
+- **NEVER use special characters** like `/`, `()`, `#` in edge or node labels without quoting them
 
 ---
 
