@@ -16,9 +16,11 @@ const CELERY_ORG_REPOS = [
   'celery/django-celery-beat',
   'celery/django-celery-results',
   'celery/py-amqp',
+  'celery/librabbitmq',
   'celery/vine',
   'celery/sphinx_celery',
   'celery/celeryproject',
+  'mher/flower',
 ];
 const REPO_ROLES: Record<string, string> = {
   'celery/celery': 'owner',
@@ -28,9 +30,11 @@ const REPO_ROLES: Record<string, string> = {
   'celery/django-celery-beat': 'owner',
   'celery/django-celery-results': 'owner',
   'celery/py-amqp': 'owner',
+  'celery/librabbitmq': 'owner',
   'celery/vine': 'owner',
   'celery/sphinx_celery': 'owner',
   'celery/celeryproject': 'owner',
+  'mher/flower': 'contributor',
 };
 const TTL: Record<string, number> = {
   profile: 3600,

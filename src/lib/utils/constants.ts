@@ -11,9 +11,11 @@ export const CELERY_ORG_REPOS = [
   'celery/django-celery-beat',
   'celery/django-celery-results',
   'celery/py-amqp',
+  'celery/librabbitmq',
   'celery/vine',
   'celery/sphinx_celery',
   'celery/celeryproject',
+  'mher/flower',
 ] as const;
 
 export const REPO_ROLES: Record<string, 'owner' | 'lead' | 'creator' | 'contributor'> = {
@@ -24,9 +26,11 @@ export const REPO_ROLES: Record<string, 'owner' | 'lead' | 'creator' | 'contribu
   'celery/django-celery-beat': 'owner',
   'celery/django-celery-results': 'owner',
   'celery/py-amqp': 'owner',
+  'celery/librabbitmq': 'owner',
   'celery/vine': 'owner',
   'celery/sphinx_celery': 'owner',
   'celery/celeryproject': 'owner',
+  'mher/flower': 'contributor',
 };
 
 export const SOCIAL_LINKS = {
