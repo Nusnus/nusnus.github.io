@@ -252,11 +252,24 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
             selectedCloudModelId,
             (_token, accumulated) => {
               if (abortRef.current) return;
-              const content = accumulated;
-              setMessages((prev) => prev.map((m) => (m.id === asstMsg.id ? { ...m, content } : m)));
+              setMessages((prev) =>
+                prev.map((m) => (m.id === asstMsg.id ? { ...m, content: accumulated } : m)),
+              );
             },
             undefined,
-            { tools: CLOUD_TOOLS, tool_choice: 'auto' },
+            {
+              tools: CLOUD_TOOLS,
+              tool_choice: 'auto',
+              onWebSearch: () => {
+                if (!abortRef.current) {
+                  setMessages((prev) =>
+                    prev.map((m) =>
+                      m.id === asstMsg.id ? { ...m, content: '🔍 _Searching the web…_' } : m,
+                    ),
+                  );
+                }
+              },
+            },
           );
 
           full = result.content;

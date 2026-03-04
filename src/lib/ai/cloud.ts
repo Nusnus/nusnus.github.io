@@ -24,6 +24,8 @@ export interface CloudChatOptions {
   tools?: ToolDefinition[];
   /** Tool choice strategy: 'auto' lets the model decide. */
   tool_choice?: 'auto' | 'none' | 'required';
+  /** Called when the model triggers a web search, before content starts streaming. */
+  onWebSearch?: () => void;
 }
 
 /** Result from cloud chat containing both content and tool calls. */
@@ -65,6 +67,52 @@ type ResponsesOutputItem =
 interface ResponsesAPIResponse {
   output?: ResponsesOutputItem[];
   error?: { message: string };
+}
+
+/**
+ * Strip <grok:render>…</grok:render> blocks from accumulated text for live display.
+ * Also hides any incomplete opening tag still being streamed.
+ */
+function stripGrokRenderForDisplay(text: string): string {
+  let result = text.replace(/<grok:render[\s\S]*?<\/grok:render>/g, '');
+  const incomplete = result.lastIndexOf('<grok:render');
+  if (incomplete !== -1) result = result.slice(0, incomplete);
+  return result.trimEnd();
+}
+
+/**
+ * Extract complete <grok:render> blocks as ToolCallResults and return cleaned content.
+ * Grok sometimes emits tool calls as XML in the text stream rather than structured events.
+ */
+function extractGrokRenderBlocks(text: string): { content: string; toolCalls: ToolCallResult[] } {
+  const toolCalls: ToolCallResult[] = [];
+  const blockRe = /<grok:render\s+type="([^"]+)">([\s\S]*?)<\/grok:render>/g;
+  const argRe = /<argument\s+name="([^"]+)">([^<]*)<\/argument>/g;
+  let m: RegExpExecArray | null;
+  let id = 0;
+
+  while ((m = blockRe.exec(text)) !== null) {
+    const type = m[1] ?? '';
+    const body = m[2] ?? '';
+    const args: Record<string, string> = {};
+    let a: RegExpExecArray | null;
+    argRe.lastIndex = 0;
+    while ((a = argRe.exec(body)) !== null) {
+      args[a[1] ?? ''] = a[2] ?? '';
+    }
+    if (args.url) {
+      toolCalls.push({
+        id: `grok_render_${id++}`,
+        name: type === 'navigate' ? 'navigate' : 'open_link',
+        arguments: JSON.stringify(args),
+      });
+    }
+  }
+
+  return {
+    content: text.replace(/<grok:render[\s\S]*?<\/grok:render>/g, '').trimEnd(),
+    toolCalls,
+  };
 }
 
 /** Build the request body for the xAI Responses API. */
@@ -230,7 +278,7 @@ export async function cloudChatStream(
           if (eventType === 'response.output_text.delta') {
             const e = raw as unknown as StreamOutputTextDelta;
             accumulated += e.delta;
-            onToken(e.delta, accumulated);
+            onToken(e.delta, stripGrokRenderForDisplay(accumulated));
           } else if (eventType === 'response.output_item.added') {
             const e = raw as unknown as StreamOutputItemAdded;
             if (e.item.type === 'function_call') {
@@ -239,6 +287,8 @@ export async function cloudChatStream(
                 name: e.item.name ?? '',
                 arguments: '',
               });
+            } else if (e.item.type === 'web_search_call') {
+              options?.onWebSearch?.();
             }
           } else if (eventType === 'response.function_call_arguments.delta') {
             const e = raw as unknown as StreamFunctionCallArgsDelta;
@@ -256,11 +306,16 @@ export async function cloudChatStream(
     reader.releaseLock();
   }
 
-  const toolCalls = Array.from(toolCallAccumulator.values());
+  const structuredToolCalls = Array.from(toolCallAccumulator.values());
 
-  if (!accumulated && toolCalls.length === 0) {
+  // Grok sometimes emits tool calls as <grok:render> XML in the text stream —
+  // extract them and strip from the visible content.
+  const { content, toolCalls: renderToolCalls } = extractGrokRenderBlocks(accumulated);
+  const toolCalls = [...structuredToolCalls, ...renderToolCalls];
+
+  if (!content && toolCalls.length === 0) {
     throw new Error('Empty response from AI provider');
   }
 
-  return { content: accumulated, toolCalls };
+  return { content, toolCalls };
 }

@@ -403,12 +403,13 @@ function renderBlock(block: string, key: number): ReactNode {
   );
 }
 
-/** Render inline markdown: bold, italic, code, links. */
+/** Render inline markdown: bold, italic, code, links, citations. */
 function renderInline(text: string): ReactNode {
   // Split on inline patterns, preserving delimiters
   const parts: ReactNode[] = [];
-  // Combined regex for: **bold**, *italic*, `code`, [text](url)
-  const regex = /(\*\*(.+?)\*\*|\*(.+?)\*|`([^`]+)`|\[([^\]]+)\]\(([^)]+)\))/g;
+  // Groups: 2=bold, 3=italic, 4=code, 5=citation-num, 6=citation-url, 7=link-text, 8=link-url
+  const regex =
+    /(\*\*(.+?)\*\*|\*(.+?)\*|`([^`]+)`|\[\[(\d+)\]\]\(([^)]+)\)|\[([^\]]+)\]\(([^)]+)\))/g;
 
   let lastIndex = 0;
   let match: RegExpExecArray | null;
@@ -441,16 +442,30 @@ function renderInline(text: string): ReactNode {
         </code>,
       );
     } else if (match[5] && match[6]) {
+      // [[n]](url) — web search citation, render as superscript link
+      parts.push(
+        <sup key={match.index}>
+          <a
+            href={match[6]}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-accent hover:underline"
+          >
+            [{match[5]}]
+          </a>
+        </sup>,
+      );
+    } else if (match[7] && match[8]) {
       // [text](url)
       parts.push(
         <a
           key={match.index}
-          href={match[6]}
+          href={match[8]}
           target="_blank"
           rel="noopener noreferrer"
           className="text-accent hover:underline"
         >
-          {match[5]}
+          {match[7]}
         </a>,
       );
     }
