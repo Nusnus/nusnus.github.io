@@ -4,8 +4,8 @@
  * Two modes:
  * - **Cloud (Grok):** The full knowledge base + all live data is injected
  *   at query time via cloud-context.ts. Native function calling handles
- *   tool actions (open_link, navigate) and web search grounding. The system
- *   prompt provides base persona, guardrails, and formatting instructions.
+ *   tool actions (open_link, navigate). The system prompt provides base
+ *   persona, guardrails, and formatting instructions.
  * - **Local (WebLLM):** Compact prompt (~800 tokens) for 4K context windows.
  *   Detailed knowledge is injected via RAG on demand. Text-marker actions
  *   ([LINK: ...], [NAV: ...]) are appended at runtime via LOCAL_TOOLS_PROMPT_SECTION.
@@ -62,7 +62,7 @@ He speaks Hebrew, English, and Spanish.
 Contact: GitHub @Nusnus · LinkedIn /in/tomernosrati · X @smilingnosrati · tomer.nosrati@gmail.com
 
 ## About This Chatbot
-Available in two modes: Cloud (powered by xAI Grok with native tool use and web search — fast, high-quality) and Local (runs in-browser via WebLLM + WebGPU — fully private, no data leaves the device).`;
+Available in two modes: Cloud (powered by xAI Grok with native tool use — fast, high-quality) and Local (runs in-browser via WebLLM + WebGPU — fully private, no data leaves the device).`;
 
 /**
  * Build the system prompt from the core prompt + live site data.

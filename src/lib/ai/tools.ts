@@ -17,19 +17,14 @@ import type { ToolAction } from './types';
  * ═══════════════════════════════════════════════════════════════════════ */
 
 /** OpenAI-compatible tool definition for the tools parameter. */
-export type ToolDefinition =
-  | {
-      type: 'function';
-      function: {
-        name: string;
-        description: string;
-        parameters: Record<string, unknown>;
-      };
-    }
-  | {
-      /** xAI server-side web search grounding tool. */
-      type: 'web_search';
-    };
+export interface ToolDefinition {
+  type: 'function';
+  function: {
+    name: string;
+    description: string;
+    parameters: Record<string, unknown>;
+  };
+}
 
 /** Raw tool call as returned by the xAI API. */
 export interface ToolCallResult {
@@ -91,19 +86,14 @@ export const CLOUD_TOOL_DEFINITIONS: ToolDefinition[] = [
 ];
 
 /**
- * xAI server-side web search tool definition.
- * Enables Grok to search the web for real-time information beyond
- * the static knowledge base (e.g., recent news, PyPI stats, community discussions).
- * This is a server-side tool — xAI handles the search internally.
+ * Complete tool set for cloud requests.
+ * Currently includes client-side action tools (open_link, navigate).
+ *
+ * Note: xAI's web_search tool requires the Responses API, not the
+ * Chat Completions API we use. Web search can be added if/when we
+ * migrate to the Responses API.
  */
-export const WEB_SEARCH_TOOL: ToolDefinition = { type: 'web_search' };
-
-/**
- * Complete tool set for cloud requests: function calling + web search.
- * Includes both client-side actions (open_link, navigate) and
- * server-side web search grounding.
- */
-export const CLOUD_TOOLS: ToolDefinition[] = [...CLOUD_TOOL_DEFINITIONS, WEB_SEARCH_TOOL];
+export const CLOUD_TOOLS: ToolDefinition[] = [...CLOUD_TOOL_DEFINITIONS];
 
 /**
  * Map raw API tool_calls to UI-renderable ToolAction objects.

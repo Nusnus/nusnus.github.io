@@ -127,7 +127,6 @@ This AI chatbot is a technical showcase built entirely into the website. It offe
 
 - Powered by **xAI's Grok** models via a secure **Cloudflare Worker proxy** — the API key is stored server-side and never exposed to the browser.
 - Uses **native function calling** for structured tool actions (link suggestions, navigation) — no text markers or regex parsing.
-- Has **live web search** grounding — can fetch real-time information from the web when the static knowledge base doesn't cover a topic.
 - Supports **structured outputs** via `response_format` for use cases requiring JSON schema enforcement.
 - Has access to **all site data** — the full knowledge base, all repos, contribution stats, and recent activity are fed directly into the model's 2M token context window.
 - Supports **Grok 4.1 Fast** (strongest, 2M context) and **Grok Code Fast** (code-specialized with reasoning).
