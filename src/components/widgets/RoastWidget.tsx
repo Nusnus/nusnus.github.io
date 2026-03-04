@@ -150,8 +150,10 @@ export default function RoastWidget() {
 
             {/* Body */}
             <div ref={bubbleRef} className="scrollbar-thin overflow-y-auto px-4 py-3">
-              {state === 'loading' && <LoadingIndicator />}
-              {(state === 'streaming' || state === 'done') && (
+              {(state === 'loading' || (state === 'streaming' && !response)) && (
+                <LoadingIndicator />
+              )}
+              {(state === 'streaming' || state === 'done') && response && (
                 <div className="text-text-primary text-sm leading-relaxed">
                   {renderMarkdown(response)}
                 </div>
