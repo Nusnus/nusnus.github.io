@@ -10,27 +10,47 @@ import { COLLABORATIONS } from '@lib/utils/constants';
   <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
     {
       COLLABORATIONS.map((collab) => (
-        <Card href={collab.url}>
+        <Card>
           <h3 class="text-text-primary mb-1 text-base font-semibold">{collab.name}</h3>
           <p class="text-accent mb-3 text-sm font-medium">{collab.title}</p>
           <p class="text-text-secondary mb-4 text-sm">{collab.description}</p>
-          <span class="text-text-muted inline-flex items-center gap-1 text-xs">
-            Visit
-            <svg
-              class="h-3 w-3"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true"
+          <div class="flex items-center gap-4">
+            <a
+              href={collab.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-accent inline-flex items-center gap-1 text-xs"
             >
-              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-              <polyline points="15 3 21 3 21 9" />
-              <line x1="10" y1="14" x2="21" y2="3" />
-            </svg>
-          </span>
+              Visit
+              <svg
+                class="h-3 w-3"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                <polyline points="15 3 21 3 21 9" />
+                <line x1="10" y1="14" x2="21" y2="3" />
+              </svg>
+            </a>
+            {'xUrl' in collab && collab.xUrl && (
+              <a
+                href={collab.xUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-text-muted hover:text-text-primary inline-flex items-center gap-1 text-xs transition-colors"
+              >
+                <svg class="h-3 w-3" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                </svg>
+                Post
+              </a>
+            )}
+          </div>
         </Card>
       ))
     }

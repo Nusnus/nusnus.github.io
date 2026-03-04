@@ -66,14 +66,14 @@ export const COLLABORATIONS = [
     name: 'Cognition AI',
     title: 'SWE-1.6 Extra Credit Recognition',
     description: 'Recognized for contributions to Celery data and tooling for SWE-1.6 evaluation.',
-    url: 'https://cognition.ai',
+    url: 'https://cognition.ai/blog/swe-1-6-preview',
   },
   {
     name: 'Blacksmith',
     title: 'Celery: Now Powered By Blacksmith',
     description:
       'Celery CI/CD infrastructure powered by Blacksmith for faster, more reliable builds.',
-    url: 'https://www.blacksmith.sh',
+    url: 'https://www.blacksmith.sh/customer-stories/celery',
   },
   {
     name: 'Devin AI',
@@ -81,5 +81,6 @@ export const COLLABORATIONS = [
     description:
       'Comprehensive AI-generated documentation and knowledge base for the Celery ecosystem.',
     url: 'https://deepwiki.com/celery/celery',
+    xUrl: 'https://x.com/smilingnosrati/status/1920104278116696513',
   },
 ] as const;
