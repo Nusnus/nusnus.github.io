@@ -26,6 +26,19 @@
     "contributorRank": 18
   },
   {
+    "name": "django-celery-results",
+    "fullName": "celery/django-celery-results",
+    "description": "Celery result back end with django",
+    "htmlUrl": "https://github.com/celery/django-celery-results",
+    "stars": 776,
+    "forks": 223,
+    "openIssues": 61,
+    "lastPush": "2026-03-02T18:15:13Z",
+    "language": "Python",
+    "role": "owner",
+    "contributorRank": 30
+  },
+  {
     "name": "py-amqp",
     "fullName": "celery/py-amqp",
     "description": "amqplib fork",
