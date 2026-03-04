@@ -160,11 +160,12 @@ ${
               <div className="flex items-center gap-1">
                 {(state === 'done' || state === 'error') && (
                   <>
-                    {/* Escalate: harder prompt each click */}
+                    {/* Escalate: harder prompt each click — emoji size kept at default so
+                        multiple fires render clearly side-by-side */}
                     <button
                       onClick={handleEscalate}
                       aria-label="Make it more vulgar"
-                      className="flex h-7 items-center justify-center rounded-md px-1.5 text-sm leading-none transition-all hover:scale-125"
+                      className="flex h-7 items-center justify-center rounded-md px-2 transition-all hover:scale-125"
                       title={ESCALATE_TITLES[Math.min(roastLevel, ESCALATE_TITLES.length - 1)]}
                     >
                       {ESCALATE_FIRES[Math.min(roastLevel, ESCALATE_FIRES.length - 1)]}
