@@ -21,6 +21,34 @@ function updateLive(key: string, text: string) {
   });
 }
 
+/**
+ * Parse a compact number string back to a number (e.g. "2.3K" → 2300, "294" → 294).
+ * Returns 0 if parsing fails.
+ */
+function parseDisplayedNumber(text: string): number {
+  const cleaned = text.trim().replace(/,/g, '');
+  const match = cleaned.match(/^([0-9.]+)\s*([KkMm]?)$/);
+  if (!match) return 0;
+  const num = parseFloat(match[1] ?? '0');
+  const suffix = (match[2] ?? '').toUpperCase();
+  if (suffix === 'K') return num * 1_000;
+  if (suffix === 'M') return num * 1_000_000;
+  return num;
+}
+
+/**
+ * Only update a live element if the new numeric value is >= the currently displayed value.
+ * Prevents stale worker cache from overwriting correct static data with lower numbers.
+ */
+function updateLiveIfHigher(key: string, value: number, formatted: string) {
+  document.querySelectorAll<HTMLElement>(`[data-live="${key}"]`).forEach((el) => {
+    const current = parseDisplayedNumber(el.textContent ?? '0');
+    if (value >= current) {
+      el.textContent = formatted;
+    }
+  });
+}
+
 /** Update repo-specific DOM elements. */
 function updateRepoField(repoFullName: string, field: string, text: string) {
   document
@@ -41,19 +69,39 @@ export default function LiveData() {
 
       // ── Contribution stats ──
       if (graphData) {
-        updateLive('totalContributions', formatCompactNumber(graphData.totalContributions));
-        updateLive('totalCommits', formatCompactNumber(graphData.totalCommits));
-        updateLive('totalPRs', formatCompactNumber(graphData.totalPRs));
-        updateLive('totalReviews', formatCompactNumber(graphData.totalReviews));
-        updateLive('totalIssues', formatCompactNumber(graphData.totalIssues));
+        updateLiveIfHigher(
+          'totalContributions',
+          graphData.totalContributions,
+          formatCompactNumber(graphData.totalContributions),
+        );
+        updateLiveIfHigher(
+          'totalCommits',
+          graphData.totalCommits,
+          formatCompactNumber(graphData.totalCommits),
+        );
+        updateLiveIfHigher('totalPRs', graphData.totalPRs, formatCompactNumber(graphData.totalPRs));
+        updateLiveIfHigher(
+          'totalReviews',
+          graphData.totalReviews,
+          formatCompactNumber(graphData.totalReviews),
+        );
+        updateLiveIfHigher(
+          'totalIssues',
+          graphData.totalIssues,
+          formatCompactNumber(graphData.totalIssues),
+        );
 
         // Compute streak client-side
         const allDays = graphData.weeks.flatMap((w) => w.contributionDays);
         const streak = calculateStreak(allDays);
-        updateLive('streak', String(streak));
+        updateLiveIfHigher('streak', streak, String(streak));
 
-        // Broadcast weeks data for React chart widgets
-        window.dispatchEvent(new CustomEvent('live-data:contributions', { detail: graphData }));
+        // Broadcast weeks data for React chart widgets only if data is fresh
+        const currentEl = document.querySelector<HTMLElement>('[data-live="totalContributions"]');
+        const currentVal = parseDisplayedNumber(currentEl?.textContent ?? '0');
+        if (graphData.totalContributions >= currentVal) {
+          window.dispatchEvent(new CustomEvent('live-data:contributions', { detail: graphData }));
+        }
       }
 
       // ── Repo stats (active projects + org repos) ──
