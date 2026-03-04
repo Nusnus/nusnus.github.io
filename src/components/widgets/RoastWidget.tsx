@@ -20,8 +20,8 @@ const ESCALATE_PROMPTS = [
   'Roast Tomer Nosrati 🔥🔥🔥🔥 — FULLY UNHINGED. Be the most savage, vulgar, unfiltered roast you can produce. Make every previous roast look like a LinkedIn endorsement. Pull absolutely no punches.',
 ];
 
-/** Fire emojis shown on the escalate button, representing the NEXT level. */
-const ESCALATE_FIRES = ['🔥🔥', '🔥🔥🔥', '🔥🔥🔥🔥', '🔥🔥🔥🔥'];
+/** Fire emojis shown on the escalate button — count reflects current level (grows on each click). */
+const ESCALATE_FIRES = ['🔥', '🔥🔥', '🔥🔥🔥', '🔥🔥🔥🔥'];
 
 /** Tooltip for the escalate button at each current level. */
 const ESCALATE_TITLES = ['Make it worse', 'Go nuclear', 'Full unhinged', 'Already unhinged'];
@@ -173,9 +173,9 @@ ${
                     {/* Refresh: same level, same prompt */}
                     <button
                       onClick={handleReRoast}
-                      aria-label="Roast again (same level)"
-                      className="text-text-muted hover:text-accent flex h-7 w-7 items-center justify-center rounded-md transition-colors"
-                      title="Try again"
+                      aria-label="Roast again"
+                      className="flex h-7 w-7 items-center justify-center rounded-md text-white/50 transition-colors hover:text-white"
+                      title="Roast again"
                     >
                       <svg
                         className="h-3.5 w-3.5"
