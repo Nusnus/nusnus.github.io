@@ -15,6 +15,7 @@ import {
   Cloud,
   Monitor,
   Zap,
+  Globe,
 } from 'lucide-react';
 import { cn } from '@lib/utils/cn';
 import {
@@ -253,7 +254,9 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
             (_token, accumulated) => {
               if (abortRef.current) return;
               setMessages((prev) =>
-                prev.map((m) => (m.id === asstMsg.id ? { ...m, content: accumulated } : m)),
+                prev.map((m) =>
+                  m.id === asstMsg.id ? { ...m, content: accumulated, isSearching: false } : m,
+                ),
               );
             },
             undefined,
@@ -263,9 +266,7 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
               onWebSearch: () => {
                 if (!abortRef.current) {
                   setMessages((prev) =>
-                    prev.map((m) =>
-                      m.id === asstMsg.id ? { ...m, content: '🔍 _Searching the web…_' } : m,
-                    ),
+                    prev.map((m) => (m.id === asstMsg.id ? { ...m, isSearching: true } : m)),
                   );
                 }
               },
@@ -806,7 +807,17 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
                     : 'bg-bg-surface text-text-primary rounded-bl-md',
                 )}
               >
-                {!msg.content ? (
+                {msg.isSearching ? (
+                  <span className="text-text-muted inline-flex items-center gap-2 text-xs">
+                    <Globe className="h-3.5 w-3.5 animate-spin" />
+                    <span>Searching the web</span>
+                    <span className="inline-flex gap-0.5">
+                      <span className="bg-text-muted inline-block h-1 w-1 animate-bounce rounded-full" />
+                      <span className="bg-text-muted inline-block h-1 w-1 animate-bounce rounded-full [animation-delay:150ms]" />
+                      <span className="bg-text-muted inline-block h-1 w-1 animate-bounce rounded-full [animation-delay:300ms]" />
+                    </span>
+                  </span>
+                ) : !msg.content ? (
                   <span className="inline-flex items-center gap-1">
                     <span className="bg-text-muted inline-block h-1.5 w-1.5 animate-pulse rounded-full" />
                     <span className="bg-text-muted inline-block h-1.5 w-1.5 animate-pulse rounded-full [animation-delay:150ms]" />

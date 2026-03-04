@@ -9,6 +9,8 @@ export interface ChatMessage {
   content: string;
   /** Client-side actions parsed from the assistant's response. */
   actions?: ToolAction[];
+  /** True while a web search is in progress (cloud provider only). */
+  isSearching?: boolean;
 }
 
 /** A client-side action the assistant can suggest. */
