@@ -152,6 +152,15 @@ ${
     startRoast(nextLevel, true);
   }, [roastLevel, startRoast]);
 
+  /** Prefetch the chat page so navigation is near-instant. */
+  useEffect(() => {
+    const link = document.createElement('link');
+    link.rel = 'prefetch';
+    link.href = '/chat';
+    document.head.appendChild(link);
+    return () => link.remove();
+  }, []);
+
   /** Continue the roast in the full chat page, passing the conversation via sessionStorage. */
   const handleContinueInChat = useCallback(() => {
     if (!response) return;

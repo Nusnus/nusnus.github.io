@@ -411,6 +411,12 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
   /** Auto-init cloud + auto-send roast when triggered via ?roast=1 FAB. */
   const roastAutoInitDone = useRef(false);
   useEffect(() => {
+    // Auto-init for roast handoff from RoastWidget (skip idle screen)
+    if (roastHandoffRef.current && engineState === 'idle' && !roastAutoInitDone.current) {
+      roastAutoInitDone.current = true;
+      initEngine(true);
+      return;
+    }
     if (!pendingRoast.current) return;
     // Step 1: auto-init cloud engine once idle
     if (engineState === 'idle' && !roastAutoInitDone.current) {
