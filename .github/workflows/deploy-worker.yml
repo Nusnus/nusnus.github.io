@@ -3,7 +3,7 @@ name: Deploy Cloudflare Worker
 on:
   push:
     branches: [main]
-    paths: [worker/**]
+    paths: ['worker/**', 'shared/**']
   workflow_dispatch:
 
 jobs:
