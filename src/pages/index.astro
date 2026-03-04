@@ -41,8 +41,18 @@ const lastEventTime = activity?.events[0]?.createdAt ?? new Date().toISOString()
     <!-- Main Content -->
     <MainContent>
       <!-- Hero Banner -->
-      <section class="flex flex-col items-center py-12 text-center" aria-label="Hero">
-        <h2 class="text-5xl font-extrabold tracking-tight sm:text-6xl">Tomer Nosrati</h2>
+      <section class="relative flex flex-col items-center py-14 text-center" aria-label="Hero">
+        <!-- Decorative gradient orb behind the heading -->
+        <div
+          class="pointer-events-none absolute top-0 left-1/2 -z-10 h-64 w-64 -translate-x-1/2 rounded-full opacity-30 blur-3xl"
+          style="background: radial-gradient(circle, var(--color-accent) 0%, transparent 70%)"
+          aria-hidden="true"
+        >
+        </div>
+
+        <h2 class="text-gradient text-5xl font-extrabold tracking-tight sm:text-6xl">
+          Tomer Nosrati
+        </h2>
         <p class="text-text-secondary mt-4 text-lg">
           CEO & Tech Lead ·
           <a
@@ -52,25 +62,27 @@ const lastEventTime = activity?.events[0]?.createdAt ?? new Date().toISOString()
             rel="noopener noreferrer">Celery Organization</a
           >
         </p>
-        <p class="text-text-muted mt-2 text-base italic">
+        <p class="text-text-muted mt-2 max-w-md text-base italic">
           Building the backbone of distributed Python
         </p>
-        <div class="mt-6 flex items-center gap-6">
+        <div class="mt-8 flex items-center gap-8">
           <a
             href={SOCIAL_LINKS.linkedin}
-            class="text-text-muted hover:text-text-primary text-xs font-semibold tracking-widest uppercase transition-colors"
+            class="text-text-muted hover:text-accent text-xs font-semibold tracking-widest uppercase transition-colors duration-200"
             target="_blank"
             rel="noopener noreferrer">LinkedIn</a
           >
+          <span class="bg-border h-4 w-px" aria-hidden="true"></span>
           <a
             href={SOCIAL_LINKS.twitter}
-            class="text-text-muted hover:text-text-primary text-xs font-semibold tracking-widest uppercase transition-colors"
+            class="text-text-muted hover:text-accent text-xs font-semibold tracking-widest uppercase transition-colors duration-200"
             target="_blank"
             rel="noopener noreferrer">X</a
           >
+          <span class="bg-border h-4 w-px" aria-hidden="true"></span>
           <a
             href={SOCIAL_LINKS.github}
-            class="text-text-muted hover:text-text-primary text-xs font-semibold tracking-widest uppercase transition-colors"
+            class="text-text-muted hover:text-accent text-xs font-semibold tracking-widest uppercase transition-colors duration-200"
             target="_blank"
             rel="noopener noreferrer">GitHub</a
           >
