@@ -205,8 +205,9 @@ export default {
 
     body.max_tokens = Math.min(body.max_tokens ?? MAX_TOKENS_CAP, MAX_TOKENS_CAP);
 
-    // Disable streaming — we return the full response
-    body.stream = false;
+    // Allow client to opt into streaming
+    const wantsStream = body.stream === true;
+    body.stream = wantsStream;
 
     // ── Forward to xAI ──
     try {
@@ -219,6 +220,27 @@ export default {
         body: JSON.stringify(body),
       });
 
+      if (wantsStream) {
+        // Pipe the SSE stream straight through to the client
+        if (!xaiResponse.ok || !xaiResponse.body) {
+          const errorBody = await xaiResponse.text().catch(() => 'Upstream error');
+          return new Response(errorBody, {
+            status: xaiResponse.status || 502,
+            headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
+          });
+        }
+        return new Response(xaiResponse.body, {
+          status: 200,
+          headers: {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            Connection: 'keep-alive',
+            ...corsHeaders(origin),
+          },
+        });
+      }
+
+      // Non-streaming: return full JSON response
       const responseBody = await xaiResponse.text();
 
       // Forward xAI status code (200, 400, 429, 500, etc.)

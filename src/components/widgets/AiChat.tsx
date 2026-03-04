@@ -197,8 +197,8 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
         let full = '';
 
         if (provider === 'cloud') {
-          // ── Cloud path: feed ALL data, no RAG needed ──
-          const [{ cloudChat }, { buildCloudContext }] = await Promise.all([
+          // ── Cloud path: streaming, feed ALL data, no RAG needed ──
+          const [{ cloudChatStream }, { buildCloudContext }] = await Promise.all([
             import('@lib/ai/cloud'),
             import('@lib/ai/cloud-context'),
           ]);
@@ -215,14 +215,15 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
             content: m.content,
           }));
 
-          // Cloud has 2M context — send full history + all data
-          full = await cloudChat(
+          // Cloud has 2M context — stream full history + all data
+          full = await cloudChatStream(
             [{ role: 'system', content: augmentedPrompt }, ...chatHistory],
             selectedCloudModelId,
-          );
-
-          setMessages((prev) =>
-            prev.map((m) => (m.id === asstMsg.id ? { ...m, content: full } : m)),
+            (_token, accumulated) => {
+              if (abortRef.current) return;
+              const content = accumulated;
+              setMessages((prev) => prev.map((m) => (m.id === asstMsg.id ? { ...m, content } : m)));
+            },
           );
         } else {
           // ── Local path: RAG + trimmed history for 4K context ──
