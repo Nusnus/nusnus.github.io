@@ -344,7 +344,7 @@ export const GENERATION_CONFIG = {
 
 /** Generation parameters for cloud models (large context). */
 export const CLOUD_GENERATION_CONFIG = {
-  temperature: 0.6,
+  temperature: 0.85,
   top_p: 0.9,
   max_tokens: 1024,
 } as const;

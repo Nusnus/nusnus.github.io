@@ -193,8 +193,11 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
           ]);
 
           // Build comprehensive context from all data sources
+          // Cloud context includes the Grok persona and MUST come FIRST
+          // so the model anchors on the witty personality before seeing
+          // the generic base prompt with stats/tools.
           const cloudContext = await buildCloudContext();
-          const augmentedPrompt = systemPrompt + cloudContext;
+          const augmentedPrompt = cloudContext + '\n\n' + systemPrompt;
 
           const chatHistory = [...messages, userMsg].map((m) => ({
             role: m.role as 'system' | 'user' | 'assistant',
