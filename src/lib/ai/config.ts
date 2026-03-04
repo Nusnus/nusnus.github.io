@@ -394,12 +394,12 @@ export const SUGGESTED_QUESTIONS = [
   "What are Tomer's main open source contributions?",
   'Tell me about the Celery project',
   'What is pytest-celery?',
-  'What technologies does Tomer work with?',
+  'Roast Tomer Nosrati 🔥',
 ] as const;
 
 /** Greeting shown when the chat engine is ready. */
 export const WELCOME_MESSAGE =
-  "Hi! I'm an AI assistant that can answer questions about **Tomer Nosrati** — his open source work, the Celery project, and more. What would you like to know?";
+  "Hey — I'm **Grok**, your guide to everything **Tomer Nosrati**. Open source empire, Celery ecosystem, tech stack, or just want me to roast the guy — ask away.";
 
 /**
  * Detect whether the current browser supports WebGPU.
