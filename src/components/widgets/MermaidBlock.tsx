@@ -27,11 +27,25 @@ async function getMermaid() {
         fontSize: '13px',
       },
       flowchart: { curve: 'basis', padding: 12 },
-      securityLevel: 'strict',
+      securityLevel: 'loose',
     });
     mermaidInitialized = true;
   }
   return mermaid;
+}
+
+/** Strip emojis and other non-BMP characters that break Mermaid's parser. */
+function sanitize(src: string): string {
+  return Array.from(src)
+    .filter((ch) => {
+      const cp = ch.codePointAt(0) ?? 0;
+      if (cp >= 0x1f000 && cp <= 0x1ffff) return false;
+      if (cp >= 0x2600 && cp <= 0x27bf) return false;
+      if (cp >= 0xfe00 && cp <= 0xfe0f) return false;
+      if (cp === 0x200d) return false;
+      return true;
+    })
+    .join('');
 }
 
 let blockCounter = 0;
@@ -48,17 +62,10 @@ export default function MermaidBlock({ code, blockKey }: { code: string; blockKe
     async function render() {
       try {
         const mermaid = await getMermaid();
-        // Validate first
-        const valid = await mermaid.parse(code, { suppressErrors: true });
-        if (!valid) {
-          if (!cancelled) {
-            setError('Invalid diagram syntax');
-            setRendering(false);
-          }
-          return;
-        }
-
-        const { svg } = await mermaid.render(idRef.current, code);
+        // Sanitize emojis/special chars that break Mermaid's parser,
+        // then render directly (skip parse() which is overly strict).
+        const clean = sanitize(code);
+        const { svg } = await mermaid.render(idRef.current, clean);
         if (!cancelled && containerRef.current) {
           containerRef.current.innerHTML = svg;
           // Make SVG responsive
