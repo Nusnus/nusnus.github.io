@@ -16,6 +16,7 @@ import type {
   ContributionGraphData,
   ProfileData,
 } from '@lib/github/types';
+import { LINKEDIN_ARTICLES, COLLABORATIONS, SOCIAL_LINKS } from '@lib/utils/constants';
 
 interface ActivityData {
   events: ActivityEvent[];
@@ -152,6 +153,27 @@ export async function buildCloudContext(): Promise<string> {
       sections.push(`# Today's Activity Summary\n${todayParts.join(' · ')}`);
     }
   }
+
+  // ── Static site content (hardcoded in constants.ts, not fetched from API) ──
+
+  const articleLines = LINKEDIN_ARTICLES.map(
+    (a) => `- **${a.title}** (${a.publishedAt})\n  ${a.excerpt}\n  URL: ${a.url}`,
+  );
+  sections.push(`# Articles & Writing (Published on LinkedIn)\n${articleLines.join('\n')}`);
+
+  const collabLines = COLLABORATIONS.map(
+    (c) => `- **${c.name}** — ${c.title}: ${c.description}\n  URL: ${c.url}`,
+  );
+  sections.push(`# Collaborations & Partnerships\n${collabLines.join('\n')}`);
+
+  sections.push(
+    `# Social Links\n` +
+      `- GitHub: ${SOCIAL_LINKS.github}\n` +
+      `- LinkedIn: ${SOCIAL_LINKS.linkedin}\n` +
+      `- X/Twitter: ${SOCIAL_LINKS.twitter}\n` +
+      `- Email: ${SOCIAL_LINKS.email}\n` +
+      `- Celery Open Collective: ${SOCIAL_LINKS.openCollective}`,
+  );
 
   return sections.length > 0 ? `\n\n${sections.join('\n\n---\n\n')}` : '';
 }
