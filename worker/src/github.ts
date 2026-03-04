@@ -6,47 +6,16 @@
  * Routes: GET /github/profile|repos|org-repos|activity|contributions
  */
 
-const GITHUB_USERNAME = 'Nusnus';
+import {
+  GITHUB_USERNAME,
+  CELERY_REPOS,
+  CELERY_ORG_REPOS,
+  REPO_ROLES,
+  isKnownPublicRepo,
+} from '../../shared/github-config';
+
 const GITHUB_API = 'https://api.github.com';
 const GITHUB_GRAPHQL = 'https://api.github.com/graphql';
-
-const CELERY_REPOS = ['celery/celery', 'celery/pytest-celery', 'celery/kombu'];
-const CELERY_ORG_REPOS = [
-  'celery/billiard',
-  'celery/django-celery-beat',
-  'celery/django-celery-results',
-  'celery/py-amqp',
-  'celery/librabbitmq',
-  'celery/vine',
-  'celery/sphinx_celery',
-  'celery/celeryproject',
-  'mher/flower',
-];
-const REPO_ROLES: Record<string, string> = {
-  'celery/celery': 'owner',
-  'celery/pytest-celery': 'creator',
-  'celery/kombu': 'owner',
-  'celery/billiard': 'owner',
-  'celery/django-celery-beat': 'owner',
-  'celery/django-celery-results': 'owner',
-  'celery/py-amqp': 'owner',
-  'celery/librabbitmq': 'owner',
-  'celery/vine': 'owner',
-  'celery/sphinx_celery': 'owner',
-  'celery/celeryproject': 'owner',
-  'mher/flower': 'contributor',
-};
-/**
- * Known public repo owners — defense-in-depth filter for activity events.
- * Even though we use /events/public (which only returns public events),
- * this ensures private repo names can never leak through the API.
- */
-const KNOWN_PUBLIC_OWNERS: ReadonlySet<string> = new Set(['nusnus', 'celery', 'mher']);
-
-function isKnownPublicRepo(repoFullName: string): boolean {
-  const owner = repoFullName.split('/')[0]?.toLowerCase() ?? '';
-  return KNOWN_PUBLIC_OWNERS.has(owner);
-}
 
 const TTL: Record<string, number> = {
   profile: 3600,

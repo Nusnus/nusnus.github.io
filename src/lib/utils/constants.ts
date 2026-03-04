@@ -18,8 +18,3 @@ export {
   isKnownPublicRepo,
   safeRepoName,
 } from '@config';
-
-/**
- * @deprecated Use `KNOWN_PUBLIC_OWNERS` check via `isKnownPublicRepo()` instead.
- */
-export const KNOWN_PUBLIC_OWNERS: ReadonlySet<string> = new Set(['nusnus', 'celery', 'mher']);

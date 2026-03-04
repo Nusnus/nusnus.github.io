@@ -18,15 +18,13 @@ import {
   safeRepoName,
   WORKER_BASE_URL,
 } from '@config';
-import { relativeTime, formatCompactNumber } from '@lib/utils/date';
+import { relativeTime } from '@lib/utils/date';
 
-/** Format a number with commas. */
-const fmt = (n: number) => formatCompactNumber(n);
+/** Format a number with commas (full precision for AI context). */
+const fmt = (n: number) => n.toLocaleString('en-US');
 
 /** Format an ISO date as relative time. */
 const formatRelative = relativeTime;
-
-const WORKER_URL = WORKER_BASE_URL;
 
 /**
  * Fetch a GitHub endpoint from the Worker (live, cached), falling back to
@@ -34,7 +32,7 @@ const WORKER_URL = WORKER_BASE_URL;
  */
 async function fetchGitHub(workerPath: string, staticPath: string): Promise<Response | null> {
   try {
-    const res = await fetch(`${WORKER_URL}/github/${workerPath}`);
+    const res = await fetch(`${WORKER_BASE_URL}/github/${workerPath}`);
     if (res.ok) return res;
   } catch {
     /* network error — fall through to static */

@@ -23,7 +23,7 @@ export function ChatMessages({
   return (
     <div className="scrollbar-thin flex-1 overflow-y-auto px-4 py-6">
       <div className="mx-auto max-w-2xl space-y-4">
-        {messages.map((msg) => (
+        {messages.map((msg, msgIndex) => (
           <div
             key={msg.id}
             className={cn('flex gap-3', msg.role === 'user' ? 'flex-row-reverse' : 'flex-row')}
@@ -73,7 +73,7 @@ export function ChatMessages({
                   <span className="bg-text-muted inline-block h-1.5 w-1.5 animate-pulse rounded-full [animation-delay:300ms]" />
                 </span>
               ) : msg.role === 'assistant' ? (
-                renderMarkdown(msg.content)
+                renderMarkdown(msg.content, isGenerating && msgIndex === messages.length - 1)
               ) : (
                 msg.content
               )}

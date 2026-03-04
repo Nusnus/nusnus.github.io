@@ -5,7 +5,7 @@
  * Imported by both client and server code.
  */
 
-export const GITHUB_USERNAME = 'Nusnus';
+export { GITHUB_USERNAME } from '../../shared/github-config';
 export const SITE_URL = 'https://nusnus.github.io';
 export const OPEN_COLLECTIVE_URL = 'https://opencollective.com/celery';
 

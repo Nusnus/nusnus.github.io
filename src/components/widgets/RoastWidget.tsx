@@ -39,39 +39,6 @@ export default function RoastWidget() {
   /** Conversation history — lets Grok "remember" previous roasts on escalation. */
   const historyRef = useRef<{ role: 'user' | 'assistant'; content: string }[]>([]);
 
-  // Inject keyframes for header button glow animation
-  useEffect(() => {
-    const styleId = 'roast-header-glow-styles';
-    if (document.getElementById(styleId)) return;
-
-    const style = document.createElement('style');
-    style.id = styleId;
-    style.textContent = `
-      @keyframes roast-header-glow {
-        0%, 100% {
-          filter: drop-shadow(0 0 3px rgba(255, 107, 53, 0.4));
-        }
-        50% {
-          filter: drop-shadow(0 0 8px rgba(255, 107, 53, 0.9));
-        }
-      }
-      .roast-header-btn {
-        animation: roast-header-glow 2.5s ease-in-out infinite;
-      }
-      @media (prefers-reduced-motion: reduce) {
-        .roast-header-btn {
-          animation: none;
-        }
-      }
-    `;
-    document.head.appendChild(style);
-
-    return () => {
-      const el = document.getElementById(styleId);
-      if (el) el.remove();
-    };
-  }, []);
-
   /** Scroll the bubble to the bottom as tokens stream in. */
   const scrollToBottom = useCallback(() => {
     const el = bubbleRef.current;

@@ -265,8 +265,13 @@ function HighlightedCodeBlock({
 const markdownCache = new Map<string, ReactNode>();
 const MAX_CACHE_SIZE = 100;
 
-/** Render a markdown string as React elements (memoized). */
-export function renderMarkdown(text: string): ReactNode {
+/**
+ * Render a markdown string as React elements (memoized).
+ *
+ * @param text - The markdown string to render
+ * @param skipCache - Skip caching (use during streaming to avoid polluting the cache with partial strings)
+ */
+export function renderMarkdown(text: string, skipCache = false): ReactNode {
   if (!text) return null;
 
   const cached = markdownCache.get(text);
@@ -275,12 +280,14 @@ export function renderMarkdown(text: string): ReactNode {
   const blocks = splitBlocks(text);
   const result = blocks.map((block, i) => renderBlock(block, i));
 
-  // Evict oldest entries if cache is too large
-  if (markdownCache.size >= MAX_CACHE_SIZE) {
-    const firstKey = markdownCache.keys().next().value;
-    if (firstKey !== undefined) markdownCache.delete(firstKey);
+  if (!skipCache) {
+    // Evict oldest entries if cache is too large
+    if (markdownCache.size >= MAX_CACHE_SIZE) {
+      const firstKey = markdownCache.keys().next().value;
+      if (firstKey !== undefined) markdownCache.delete(firstKey);
+    }
+    markdownCache.set(text, result);
   }
-  markdownCache.set(text, result);
   return result;
 }
 

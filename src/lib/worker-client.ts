@@ -8,8 +8,6 @@
 
 import { WORKER_BASE_URL } from '@config';
 
-const WORKER_URL = WORKER_BASE_URL;
-
 /** Module-level cache — deduplicates concurrent fetches to the same endpoint. */
 const inflightCache = new Map<string, Promise<unknown>>();
 
@@ -32,7 +30,7 @@ export function fetchWorkerData<T>(workerPath: string, staticPath: string): Prom
 async function doFetch<T>(workerPath: string, staticPath: string): Promise<T | null> {
   // Try worker first (live, edge-cached)
   try {
-    const res = await fetch(`${WORKER_URL}/github/${workerPath}`);
+    const res = await fetch(`${WORKER_BASE_URL}/github/${workerPath}`);
     if (res.ok) return (await res.json()) as T;
   } catch {
     /* network error — fall through to static */
