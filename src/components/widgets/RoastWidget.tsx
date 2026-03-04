@@ -39,6 +39,39 @@ export default function RoastWidget() {
   /** Conversation history — lets Grok "remember" previous roasts on escalation. */
   const historyRef = useRef<{ role: 'user' | 'assistant'; content: string }[]>([]);
 
+  // Inject keyframes for header button glow animation
+  useEffect(() => {
+    const styleId = 'roast-header-glow-styles';
+    if (document.getElementById(styleId)) return;
+
+    const style = document.createElement('style');
+    style.id = styleId;
+    style.textContent = `
+      @keyframes roast-header-glow {
+        0%, 100% {
+          filter: drop-shadow(0 0 3px rgba(255, 107, 53, 0.4));
+        }
+        50% {
+          filter: drop-shadow(0 0 8px rgba(255, 107, 53, 0.9));
+        }
+      }
+      .roast-header-btn {
+        animation: roast-header-glow 2.5s ease-in-out infinite;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .roast-header-btn {
+          animation: none;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+
+    return () => {
+      const el = document.getElementById(styleId);
+      if (el) el.remove();
+    };
+  }, []);
+
   /** Scroll the bubble to the bottom as tokens stream in. */
   const scrollToBottom = useCallback(() => {
     const el = bubbleRef.current;
@@ -195,8 +228,9 @@ ${
                     <button
                       onClick={handleEscalate}
                       aria-label="Make it more vulgar"
-                      className="flex h-7 items-center justify-center rounded-md px-2 transition-all hover:scale-125"
+                      className="roast-header-btn flex h-7 items-center justify-center rounded-md px-2 transition-all hover:scale-125"
                       title={ESCALATE_TITLES[Math.min(roastLevel, ESCALATE_TITLES.length - 1)]}
+                      style={{ animationDelay: '0s' }}
                     >
                       {ESCALATE_FIRES[Math.min(roastLevel, ESCALATE_FIRES.length - 1)]}
                     </button>
@@ -204,8 +238,9 @@ ${
                     <button
                       onClick={handleReRoast}
                       aria-label="Roast again"
-                      className="flex h-7 w-7 items-center justify-center rounded-md text-white/50 transition-colors hover:text-white"
+                      className="roast-header-btn flex h-7 w-7 items-center justify-center rounded-md text-white/50 transition-colors hover:text-white"
                       title="Roast again"
+                      style={{ animationDelay: '0.3s' }}
                     >
                       <svg
                         className="h-3.5 w-3.5"
@@ -227,7 +262,8 @@ ${
                 <button
                   onClick={handleFabClick}
                   aria-label="Close roast"
-                  className="text-text-muted hover:text-text-primary flex h-7 w-7 items-center justify-center rounded-md transition-colors"
+                  className="roast-header-btn text-text-muted hover:text-text-primary flex h-7 w-7 items-center justify-center rounded-md transition-colors"
+                  style={{ animationDelay: '0.6s' }}
                 >
                   <svg
                     className="h-4 w-4"
