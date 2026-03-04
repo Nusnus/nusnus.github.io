@@ -96,12 +96,30 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
 
   /** Detect ?roast=1 query param for 1-click roast from FAB. */
   const pendingRoast = useRef(false);
+  /** Roast conversation passed from RoastWidget via sessionStorage. */
+  const roastHandoffRef = useRef<ChatMessage[] | null>(null);
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('roast') === '1') {
       pendingRoast.current = true;
       // Clean the URL so refresh doesn't re-trigger
       window.history.replaceState({}, '', window.location.pathname);
+    }
+    // Pick up roast conversation handed off from the RoastWidget
+    const handoff = sessionStorage.getItem('grok-roast-handoff');
+    if (handoff) {
+      sessionStorage.removeItem('grok-roast-handoff');
+      try {
+        const data = JSON.parse(handoff) as { messages: ChatMessage[] };
+        if (Array.isArray(data.messages) && data.messages.length > 0) {
+          roastHandoffRef.current = [
+            { id: crypto.randomUUID(), role: 'user', content: 'Roast Tomer Nosrati 🔥' },
+            ...data.messages,
+          ];
+        }
+      } catch {
+        /* ignore malformed handoff */
+      }
     }
   }, []);
 
@@ -159,7 +177,13 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
 
       // Cloud provider — no engine loading needed
       if (provider === 'cloud') {
-        restoreMessages();
+        if (roastHandoffRef.current) {
+          // Roast conversation handed off from RoastWidget — continue it directly
+          setMessages(roastHandoffRef.current);
+          roastHandoffRef.current = null;
+        } else {
+          restoreMessages();
+        }
         setEngineState('ready');
         return;
       }
@@ -254,9 +278,12 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
             (_token, accumulated) => {
               if (abortRef.current) return;
               setMessages((prev) =>
-                prev.map((m) =>
-                  m.id === asstMsg.id ? { ...m, content: accumulated, isSearching: false } : m,
-                ),
+                prev.map((m) => {
+                  if (m.id !== asstMsg.id) return m;
+                  // exactOptionalPropertyTypes: omit searchStatus rather than set to undefined
+                  const { searchStatus: _removed, ...rest } = m;
+                  return { ...rest, content: accumulated };
+                }),
               );
             },
             undefined,
@@ -266,7 +293,18 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
               onWebSearch: () => {
                 if (!abortRef.current) {
                   setMessages((prev) =>
-                    prev.map((m) => (m.id === asstMsg.id ? { ...m, isSearching: true } : m)),
+                    prev.map((m) =>
+                      m.id === asstMsg.id ? { ...m, searchStatus: 'searching' as const } : m,
+                    ),
+                  );
+                }
+              },
+              onWebSearchFound: () => {
+                if (!abortRef.current) {
+                  setMessages((prev) =>
+                    prev.map((m) =>
+                      m.id === asstMsg.id ? { ...m, searchStatus: 'found' as const } : m,
+                    ),
                   );
                 }
               },
@@ -807,7 +845,7 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
                     : 'bg-bg-surface text-text-primary rounded-bl-md',
                 )}
               >
-                {msg.isSearching ? (
+                {msg.searchStatus === 'searching' ? (
                   <span className="text-text-muted inline-flex items-center gap-2 text-xs">
                     <Globe className="h-3.5 w-3.5 animate-spin" />
                     <span>Searching the web</span>
@@ -815,6 +853,16 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
                       <span className="bg-text-muted inline-block h-1 w-1 animate-bounce rounded-full" />
                       <span className="bg-text-muted inline-block h-1 w-1 animate-bounce rounded-full [animation-delay:150ms]" />
                       <span className="bg-text-muted inline-block h-1 w-1 animate-bounce rounded-full [animation-delay:300ms]" />
+                    </span>
+                  </span>
+                ) : msg.searchStatus === 'found' ? (
+                  <span className="text-text-muted inline-flex items-center gap-2 text-xs">
+                    <Globe className="h-3.5 w-3.5 text-green-500" />
+                    <span>Found results, synthesizing</span>
+                    <span className="inline-flex gap-0.5">
+                      <span className="bg-text-muted inline-block h-1 w-1 animate-pulse rounded-full" />
+                      <span className="bg-text-muted inline-block h-1 w-1 animate-pulse rounded-full [animation-delay:150ms]" />
+                      <span className="bg-text-muted inline-block h-1 w-1 animate-pulse rounded-full [animation-delay:300ms]" />
                     </span>
                   </span>
                 ) : !msg.content ? (

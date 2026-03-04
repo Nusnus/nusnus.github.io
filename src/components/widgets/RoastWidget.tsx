@@ -39,7 +39,18 @@ export default function RoastWidget() {
     abortRef.current = controller;
 
     try {
-      const context = await buildCloudContext();
+      // Tell Grok it's running as a widget on the homepage while the visitor browses
+      const roastContext = `# Situational Context — Roast Widget
+
+You are currently running as the **🔥 Roast by Grok** floating widget on the **homepage** of nusnus.github.io. The visitor triggered you by clicking the fire button while browsing Tomer's portfolio. They are actively looking at:
+- The contribution heatmap and streak counter
+- Live activity feed (recent pushes, PRs, reviews)
+- Achievement badges (total stars, contributor rank, code reviews, followers)
+- Repository showcase with live stats
+
+Make the roast feel live and contextual — reference what they're probably staring at right now. You're the Oracle appearing mid-matrix to roast the architect of the very simulation the visitor is browsing. Keep it short, savage, and self-aware. This is a teaser — the full chat is one click away.`;
+
+      const context = await buildCloudContext(roastContext);
       const systemMessage = { role: 'system' as const, content: context };
       const userMessage = { role: 'user' as const, content: 'Roast Tomer Nosrati 🔥' };
 
@@ -89,6 +100,16 @@ export default function RoastWidget() {
     startRoast();
   }, [startRoast]);
 
+  /** Continue the roast in the full chat page, passing the conversation via sessionStorage. */
+  const handleContinueInChat = useCallback(() => {
+    if (!response) return;
+    const handoff = {
+      messages: [{ id: crypto.randomUUID(), role: 'assistant', content: response }],
+    };
+    sessionStorage.setItem('grok-roast-handoff', JSON.stringify(handoff));
+    window.location.href = '/chat';
+  }, [response]);
+
   const isOpen = state !== 'closed';
 
   return (
@@ -107,24 +128,11 @@ export default function RoastWidget() {
                 {(state === 'done' || state === 'error') && (
                   <button
                     onClick={handleReRoast}
-                    aria-label="Get another roast"
-                    className="text-text-muted hover:text-accent flex h-7 w-7 items-center justify-center rounded-md transition-colors"
-                    title="Another roast"
+                    aria-label="Roast again"
+                    className="hover:text-accent flex h-7 items-center justify-center rounded-md px-1.5 text-base transition-all hover:scale-125"
+                    title="Roast again"
                   >
-                    <svg
-                      className="h-3.5 w-3.5"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-                      <path d="M3 3v5h5" />
-                      <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
-                      <path d="M16 16h5v5" />
-                    </svg>
+                    🔥
                   </button>
                 )}
                 <button
@@ -162,6 +170,18 @@ export default function RoastWidget() {
                 <p className="text-sm text-red-400">{errorMsg || 'Failed to generate roast.'}</p>
               )}
             </div>
+
+            {/* Footer — Continue in Chat */}
+            {state === 'done' && response && (
+              <div className="border-t border-orange-500/10 px-4 py-2">
+                <button
+                  onClick={handleContinueInChat}
+                  className="text-accent hover:text-accent/80 flex w-full items-center justify-end gap-1 text-xs font-medium transition-colors"
+                >
+                  Continue in Chat →
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

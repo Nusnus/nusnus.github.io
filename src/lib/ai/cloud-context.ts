@@ -90,8 +90,12 @@ async function fetchContextFile(path: string): Promise<string> {
  * Fetch ALL data sources and build a comprehensive context string.
  * Tries the live Worker endpoints first (cached at edge), falls back to
  * build-time static JSON if the Worker is unavailable.
+ *
+ * @param additionalContext Optional situational context appended at the end
+ *   (e.g. roast widget tells Grok it's running on the homepage while the
+ *   visitor is watching the portfolio).
  */
-export async function buildCloudContext(): Promise<string> {
+export async function buildCloudContext(additionalContext?: string): Promise<string> {
   const sections: string[] = [];
 
   // Fetch all data sources in parallel — context files + Worker data (static fallback)
@@ -203,6 +207,10 @@ export async function buildCloudContext(): Promise<string> {
       `- Email: ${SOCIAL_LINKS.email}\n` +
       `- Celery Open Collective: ${SOCIAL_LINKS.openCollective}`,
   );
+
+  if (additionalContext) {
+    sections.push(additionalContext);
+  }
 
   return sections.length > 0 ? `\n\n${sections.join('\n\n---\n\n')}` : '';
 }

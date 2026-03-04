@@ -24,8 +24,10 @@ export interface CloudChatOptions {
   tools?: ToolDefinition[];
   /** Tool choice strategy: 'auto' lets the model decide. */
   tool_choice?: 'auto' | 'none' | 'required';
-  /** Called when the model triggers a web search, before content starts streaming. */
+  /** Called when the model triggers a web search (before content streams). */
   onWebSearch?: () => void;
+  /** Called when a web search completes and the model starts synthesizing. */
+  onWebSearchFound?: () => void;
 }
 
 /** Result from cloud chat containing both content and tool calls. */
@@ -210,6 +212,12 @@ interface StreamFunctionCallArgsDelta {
   output_index: number;
 }
 
+interface StreamOutputItemDone {
+  type: 'response.output_item.done';
+  output_index: number;
+  item: { type: string; [key: string]: unknown };
+}
+
 /**
  * Send a streaming request to the cloud proxy (Responses API).
  * Calls `onToken` for each text delta as it arrives.
@@ -294,9 +302,14 @@ export async function cloudChatStream(
             const e = raw as unknown as StreamFunctionCallArgsDelta;
             const existing = toolCallAccumulator.get(e.output_index);
             if (existing) existing.arguments += e.delta;
+          } else if (eventType === 'response.output_item.done') {
+            const e = raw as unknown as StreamOutputItemDone;
+            if (e.item.type === 'web_search_call') {
+              options?.onWebSearchFound?.();
+            }
           }
           // All other events (response.created, response.in_progress,
-          // response.completed, web_search_call.*, etc.) — skip
+          // response.completed, etc.) — skip
         } catch {
           // Skip malformed JSON chunks
         }
