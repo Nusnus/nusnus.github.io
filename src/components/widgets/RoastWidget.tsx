@@ -255,7 +255,7 @@ ${
               )}
               {(state === 'streaming' || state === 'done') && response && (
                 <div className="text-text-primary text-sm leading-relaxed">
-                  {renderMarkdown(response)}
+                  {renderMarkdown(response, state === 'streaming')}
                 </div>
               )}
               {state === 'error' && (
