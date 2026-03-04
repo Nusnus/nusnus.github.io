@@ -255,12 +255,12 @@
 @keyframes border-glow {
   0%,
   100% {
-    border-color: oklch(0.72 0.17 145 / 0.3);
-    box-shadow: 0 0 8px oklch(0.72 0.17 145 / 0.1);
+    border-color: oklch(from var(--color-accent) l c h / 0.3);
+    box-shadow: 0 0 8px oklch(from var(--color-accent) l c h / 0.1);
   }
   50% {
-    border-color: oklch(0.72 0.17 145 / 0.6);
-    box-shadow: 0 0 16px oklch(0.72 0.17 145 / 0.2);
+    border-color: oklch(from var(--color-accent) l c h / 0.6);
+    box-shadow: 0 0 16px oklch(from var(--color-accent) l c h / 0.2);
   }
 }
 
@@ -286,10 +286,12 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .data-refresh,
-  .js .reveal-section,
-  .skeleton-shimmer {
-    animation: none;
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
   .js .reveal-section {
     opacity: 1;
