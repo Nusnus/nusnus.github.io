@@ -3,10 +3,11 @@ import BaseLayout from '@layouts/BaseLayout.astro';
 import Sidebar from '@components/layout/Sidebar.astro';
 import MainContent from '@components/layout/MainContent.astro';
 import ActivityPanel from '@components/layout/ActivityPanel.astro';
-import Hero from '@components/sections/Hero.astro';
+import ActivityOverview from '@components/sections/ActivityOverview.astro';
+import Collaborations from '@components/sections/Collaborations.astro';
+import ActivityGraphSection from '@components/sections/ActivityGraphSection.astro';
 import Projects from '@components/sections/Projects.astro';
 import CeleryOrganization from '@components/sections/CeleryOrganization.astro';
-import Collaborations from '@components/sections/Collaborations.astro';
 import Articles from '@components/sections/Articles.astro';
 import Sponsoring from '@components/sections/Sponsoring.astro';
 import ThemeToggle from '@components/widgets/ThemeToggle';
@@ -28,10 +29,11 @@ const lastEventTime = activity?.events[0]?.createdAt ?? new Date().toISOString()
 
     <!-- Main Content -->
     <MainContent>
-      <Hero />
+      <ActivityOverview />
+      <Collaborations />
+      <ActivityGraphSection />
       <Projects />
       <CeleryOrganization />
-      <Collaborations />
       <Articles />
       <Sponsoring />
     </MainContent>

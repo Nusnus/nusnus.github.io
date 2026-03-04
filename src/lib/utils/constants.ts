@@ -40,7 +40,7 @@ export const SOCIAL_LINKS = {
 export const LINKEDIN_ARTICLES = [
   {
     title: 'Celery: Now Powered By Blacksmith',
-    url: 'https://www.linkedin.com/pulse/celery-now-powered-blacksmith-tomer-nosrati',
+    url: 'https://www.linkedin.com/pulse/celery-now-powered-blacksmith-tomer-nosrati-ew68e',
     excerpt:
       'Announcing an exciting partnership for the Celery organization with Blacksmith for faster, more reliable CI/CD builds.',
     publishedAt: '2024-10-15',
@@ -73,7 +73,7 @@ export const COLLABORATIONS = [
     title: 'Celery: Now Powered By Blacksmith',
     description:
       'Celery CI/CD infrastructure powered by Blacksmith for faster, more reliable builds.',
-    url: 'https://useblacksmith.com',
+    url: 'https://www.blacksmith.sh',
   },
   {
     name: 'Devin AI',

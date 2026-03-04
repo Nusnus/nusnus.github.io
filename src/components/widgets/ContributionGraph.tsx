@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import type { ContributionWeek } from '@lib/github/types';
 import { getActivityLevel } from '@lib/github/formatters';
 import { formatDate } from '@lib/utils/date';
@@ -8,38 +8,96 @@ interface Props {
   totalContributions: number;
 }
 
-const CELL_SIZE = 11;
-const CELL_GAP = 2;
+const CELL_SIZE = 10;
+const CELL_GAP = 3;
 const CELL_STEP = CELL_SIZE + CELL_GAP;
+const LABEL_WIDTH = 28;
+const MONTH_LABEL_HEIGHT = 16;
+const MONTH_NAMES = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
+const DAY_LABELS = ['', 'Mon', '', 'Wed', '', 'Fri', ''];
 
 const LEVEL_COLORS = [
   'var(--color-bg-elevated)',
-  'oklch(0.45 0.10 145)',
-  'oklch(0.55 0.14 145)',
-  'oklch(0.65 0.17 145)',
+  'oklch(0.40 0.10 145)',
+  'oklch(0.50 0.14 145)',
+  'oklch(0.62 0.17 145)',
   'var(--color-accent)',
 ];
 
 interface HoveredCell {
   date: string;
   count: number;
-  x: number;
-  y: number;
+  weekIndex: number;
+  dayIndex: number;
+}
+
+/** Compute month label positions from the week data. */
+function getMonthLabels(weeks: ContributionWeek[]) {
+  const labels: { label: string; x: number }[] = [];
+  let lastMonth = -1;
+  for (let i = 0; i < weeks.length; i++) {
+    const week = weeks[i];
+    if (!week) continue;
+    const firstDay = week.contributionDays[0];
+    if (!firstDay) continue;
+    const month = new Date(firstDay.date).getMonth();
+    const monthLabel = MONTH_NAMES[month] ?? '';
+    if (month !== lastMonth) {
+      labels.push({ label: monthLabel, x: i * CELL_STEP + LABEL_WIDTH });
+      lastMonth = month;
+    }
+  }
+  return labels;
 }
 
 export default function ContributionGraph({ weeks, totalContributions }: Props) {
   const [hovered, setHovered] = useState<HoveredCell | null>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
+  const [tooltipPos, setTooltipPos] = useState<{ left: number; top: number } | null>(null);
 
-  const handleMouseEnter = useCallback((date: string, count: number, x: number, y: number) => {
-    setHovered({ date, count, x, y });
-  }, []);
+  const handleMouseEnter = useCallback(
+    (date: string, count: number, weekIndex: number, dayIndex: number) => {
+      setHovered({ date, count, weekIndex, dayIndex });
+      // Compute pixel position from SVG element's actual rendered size
+      const svg = svgRef.current;
+      if (!svg) return;
+      const rect = svg.getBoundingClientRect();
+      const parentRect = svg.parentElement?.getBoundingClientRect();
+      if (!parentRect) return;
+      const scaleX = rect.width / (LABEL_WIDTH + weeks.length * CELL_STEP);
+      const scaleY = rect.height / (MONTH_LABEL_HEIGHT + 7 * CELL_STEP);
+      const cellCenterX = LABEL_WIDTH + weekIndex * CELL_STEP + CELL_SIZE / 2;
+      const cellTopY = MONTH_LABEL_HEIGHT + dayIndex * CELL_STEP;
+      setTooltipPos({
+        left: rect.left - parentRect.left + cellCenterX * scaleX,
+        top: rect.top - parentRect.top + cellTopY * scaleY,
+      });
+    },
+    [weeks.length],
+  );
 
   const handleMouseLeave = useCallback(() => {
     setHovered(null);
+    setTooltipPos(null);
   }, []);
 
-  const svgWidth = weeks.length * CELL_STEP;
-  const svgHeight = 7 * CELL_STEP;
+  const gridWidth = weeks.length * CELL_STEP;
+  const svgWidth = LABEL_WIDTH + gridWidth;
+  const svgHeight = MONTH_LABEL_HEIGHT + 7 * CELL_STEP;
+  const monthLabels = getMonthLabels(weeks);
 
   return (
     <div
@@ -47,12 +105,51 @@ export default function ContributionGraph({ weeks, totalContributions }: Props) 
       role="img"
       aria-label={`GitHub contribution graph showing ${totalContributions} contributions in the last year`}
     >
-      <svg width="100%" viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="overflow-visible">
+      <svg
+        ref={svgRef}
+        width="100%"
+        viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+        className="overflow-visible"
+        style={{ shapeRendering: 'geometricPrecision' }}
+      >
+        {/* Month labels */}
+        {monthLabels.map(({ label, x }) => (
+          <text
+            key={`month-${label}-${x}`}
+            x={x}
+            y={10}
+            className="fill-text-muted"
+            fontSize={9}
+            fontFamily="var(--font-sans)"
+          >
+            {label}
+          </text>
+        ))}
+
+        {/* Day-of-week labels */}
+        {DAY_LABELS.map(
+          (label, i) =>
+            label && (
+              <text
+                key={`day-${i}`}
+                x={0}
+                y={MONTH_LABEL_HEIGHT + i * CELL_STEP + CELL_SIZE - 1}
+                className="fill-text-muted"
+                fontSize={9}
+                fontFamily="var(--font-sans)"
+              >
+                {label}
+              </text>
+            ),
+        )}
+
+        {/* Contribution cells */}
         {weeks.map((week, weekIndex) =>
           week.contributionDays.map((day) => {
             const level = getActivityLevel(day.contributionCount);
-            const x = weekIndex * CELL_STEP;
-            const y = day.weekday * CELL_STEP;
+            const x = LABEL_WIDTH + weekIndex * CELL_STEP;
+            const y = MONTH_LABEL_HEIGHT + day.weekday * CELL_STEP;
+            const isHovered = hovered?.weekIndex === weekIndex && hovered?.dayIndex === day.weekday;
 
             return (
               <rect
@@ -61,11 +158,15 @@ export default function ContributionGraph({ weeks, totalContributions }: Props) 
                 y={y}
                 width={CELL_SIZE}
                 height={CELL_SIZE}
-                rx={2}
+                rx={2.5}
                 fill={LEVEL_COLORS[level]}
-                className="transition-transform duration-150 hover:scale-125 motion-reduce:transition-none"
-                style={{ transformOrigin: `${x + CELL_SIZE / 2}px ${y + CELL_SIZE / 2}px` }}
-                onMouseEnter={() => handleMouseEnter(day.date, day.contributionCount, x, y)}
+                stroke={isHovered ? 'var(--color-text-secondary)' : 'transparent'}
+                strokeWidth={isHovered ? 1 : 0}
+                opacity={hovered && !isHovered ? 0.6 : 1}
+                className="transition-opacity duration-100 motion-reduce:transition-none"
+                onMouseEnter={() =>
+                  handleMouseEnter(day.date, day.contributionCount, weekIndex, day.weekday)
+                }
                 onMouseLeave={handleMouseLeave}
               />
             );
@@ -74,21 +175,34 @@ export default function ContributionGraph({ weeks, totalContributions }: Props) 
       </svg>
 
       {/* Tooltip */}
-      {hovered && (
+      {hovered && tooltipPos && (
         <div
-          className="bg-bg-elevated ring-border pointer-events-none absolute z-10 rounded-md px-2.5 py-1.5 text-xs shadow-lg ring-1"
+          className="bg-bg-elevated ring-border pointer-events-none absolute z-20 rounded-md px-2.5 py-1.5 text-xs whitespace-nowrap shadow-lg ring-1"
           style={{
-            left: `${(hovered.x / svgWidth) * 100}%`,
-            top: `${hovered.y - 8}px`,
+            left: `${tooltipPos.left}px`,
+            top: `${tooltipPos.top - 8}px`,
             transform: 'translate(-50%, -100%)',
           }}
         >
-          <span className="text-text-primary font-medium">
+          <span className="text-text-primary font-semibold">
             {hovered.count} contribution{hovered.count !== 1 ? 's' : ''}
           </span>
-          <span className="text-text-muted ml-1">{formatDate(hovered.date)}</span>
+          <span className="text-text-muted ml-1.5">{formatDate(hovered.date)}</span>
         </div>
       )}
+
+      {/* Legend */}
+      <div className="mt-2 flex items-center justify-end gap-1.5 text-[10px]">
+        <span className="text-text-muted mr-0.5">Less</span>
+        {LEVEL_COLORS.map((color, i) => (
+          <span
+            key={i}
+            className="inline-block h-[10px] w-[10px] rounded-[2.5px]"
+            style={{ backgroundColor: color }}
+          />
+        ))}
+        <span className="text-text-muted ml-0.5">More</span>
+      </div>
     </div>
   );
 }

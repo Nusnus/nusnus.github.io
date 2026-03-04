@@ -1,0 +1,33 @@
+---
+import ActivityGraph from '@components/widgets/ActivityGraph';
+import ContributionLineChart from '@components/widgets/ContributionLineChart';
+import { loadContributionGraph } from '@lib/data/loader';
+
+const graph = loadContributionGraph();
+const weeks = graph?.weeks ?? [];
+---
+
+{
+  weeks.length > 0 && (
+    <section id="activity-graph" aria-label="Activity graphs">
+      <h2 class="mb-1 text-3xl font-bold tracking-tight">Activity Graph</h2>
+      <p class="text-text-secondary mb-5 text-sm">Contribution trends and breakdown</p>
+
+      <div class="flex flex-col gap-5">
+        <div class="bg-bg-surface/50 ring-border/50 overflow-x-auto rounded-xl p-4 ring-1">
+          <p class="text-text-muted mb-3 text-xs font-medium tracking-wider uppercase">
+            Daily contributions (last 35 days)
+          </p>
+          <ContributionLineChart client:visible weeks={weeks} />
+        </div>
+
+        <div class="bg-bg-surface/50 ring-border/50 overflow-x-auto rounded-xl p-4 ring-1">
+          <p class="text-text-muted mb-3 text-xs font-medium tracking-wider uppercase">
+            Monthly breakdown
+          </p>
+          <ActivityGraph client:visible weeks={weeks} />
+        </div>
+      </div>
+    </section>
+  )
+}
