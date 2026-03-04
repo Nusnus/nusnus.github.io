@@ -15,6 +15,7 @@ import StatusDot from '@components/widgets/StatusDot';
 import ActivityFeed from '@components/widgets/ActivityFeed';
 import LiveData from '@components/widgets/LiveData';
 import { loadActivity } from '@lib/data/loader';
+import { SOCIAL_LINKS } from '@lib/utils/constants';
 
 const activity = await loadActivity();
 const lastEventTime = activity?.events[0]?.createdAt ?? new Date().toISOString();
@@ -30,6 +31,43 @@ const lastEventTime = activity?.events[0]?.createdAt ?? new Date().toISOString()
 
     <!-- Main Content -->
     <MainContent>
+      <!-- Hero Banner -->
+      <section class="flex flex-col items-center py-12 text-center" aria-label="Hero">
+        <h2 class="text-5xl font-extrabold tracking-tight sm:text-6xl">Tomer Nosrati</h2>
+        <p class="text-text-secondary mt-4 text-lg">
+          CEO & Tech Lead ·
+          <a
+            href="https://github.com/celery"
+            class="text-accent hover:underline"
+            target="_blank"
+            rel="noopener noreferrer">Celery Organization</a
+          >
+        </p>
+        <p class="text-text-muted mt-2 text-base italic">
+          Building the backbone of distributed Python
+        </p>
+        <div class="mt-6 flex items-center gap-6">
+          <a
+            href={SOCIAL_LINKS.linkedin}
+            class="text-text-muted hover:text-text-primary text-xs font-semibold tracking-widest uppercase transition-colors"
+            target="_blank"
+            rel="noopener noreferrer">LinkedIn</a
+          >
+          <a
+            href={SOCIAL_LINKS.twitter}
+            class="text-text-muted hover:text-text-primary text-xs font-semibold tracking-widest uppercase transition-colors"
+            target="_blank"
+            rel="noopener noreferrer">X</a
+          >
+          <a
+            href={SOCIAL_LINKS.github}
+            class="text-text-muted hover:text-text-primary text-xs font-semibold tracking-widest uppercase transition-colors"
+            target="_blank"
+            rel="noopener noreferrer">GitHub</a
+          >
+        </div>
+      </section>
+
       <ActivityOverview />
       <Collaborations />
       <ActivityGraphSection />
