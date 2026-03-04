@@ -7,7 +7,10 @@
  * rules (---), and paragraphs.
  * No external dependencies — keeps the bundle small.
  */
+import { lazy, Suspense } from 'react';
 import type { ReactNode } from 'react';
+
+const MermaidBlock = lazy(() => import('@components/widgets/MermaidBlock'));
 
 const HEADING_CLASSES: Record<number, string> = {
   1: 'text-base font-bold mt-3 mb-1',
@@ -325,6 +328,23 @@ function renderBlock(block: string, key: number): ReactNode {
   if (codeBlockMatch) {
     const lang = codeBlockMatch[1] ?? '';
     const code = codeBlockMatch[2]?.trim() ?? '';
+
+    // Mermaid diagrams — render as interactive SVG
+    if (lang === 'mermaid') {
+      return (
+        <Suspense
+          key={key}
+          fallback={
+            <div className="bg-bg-elevated text-text-muted my-2 rounded-lg p-3 text-xs">
+              Loading diagram…
+            </div>
+          }
+        >
+          <MermaidBlock code={code} blockKey={key} />
+        </Suspense>
+      );
+    }
+
     return <HighlightedCodeBlock key={key} code={code} lang={lang} blockKey={key} />;
   }
 
