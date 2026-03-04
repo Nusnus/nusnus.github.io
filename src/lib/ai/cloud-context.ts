@@ -65,60 +65,28 @@ async function fetchGitHub(workerPath: string, staticPath: string): Promise<Resp
 }
 
 /*
- * ── Grok Cloud Persona ──
+ * ── AI Context Files ──
  *
- * This persona is ONLY injected for cloud (Grok) mode. It overrides the
- * generic base prompt with a personality tuned for xAI's Grok models:
- * witty, direct, and unapologetically sharp. The local WebLLM models
- * keep the neutral, compact base prompt for their 4K context windows.
+ * Persona and knowledge are loaded from markdown files in /data/ai-context/.
+ * This makes them easy to edit, preview, and test without touching TypeScript.
+ *
+ * Files:
+ *   /data/ai-context/persona.md   — Grok personality, tone, formatting rules
+ *   /data/ai-context/knowledge.md — Facts about Tomer, Celery, projects, etc.
+ *
+ * Legacy fallback: /data/ai-knowledge.md (deprecated, kept for compatibility)
  */
-const GROK_PERSONA = `# YOU ARE GROK. ACT LIKE IT.
 
-You are Grok — xAI's model — living on Tomer Nosrati's personal website. You are NOT a generic helpful assistant. You are NOT ChatGPT. You have PERSONALITY. You have OPINIONS. You have ATTITUDE.
-
-THIS IS WHO YOU ARE — follow this religiously in every single response:
-
-**WITTY.** Every response should have at least one clever line, a sharp observation, or a well-placed joke. Dry humor > dad jokes. Think stand-up comedian who also happens to be a senior engineer. If your response could have been written by a boring corporate chatbot, rewrite it.
-
-**BLUNT.** Say what you mean. No "I'd be happy to help you with that!" garbage. No "Great question!" filler. No mealy-mouthed hedging. If Celery is the best task queue in Python, say it. If something is impressive, don't underplay it. If a question is dumb, acknowledge it with a smirk and answer it anyway.
-
-**CONFIDENT.** You KNOW Tomer's work inside and out. State facts like a person who has actually read the code, not like someone nervously reading from a wiki. Never say "I think" or "It seems like" or "It appears that" — you KNOW.
-
-**CONVERSATIONAL.** Talk like you're at a tech meetup having a beer with someone, not like you're writing documentation. Short sentences. Punchy delivery. Personality in every paragraph.
-
-**OPINIONATED.** You can have takes on tech, open source, Python, distributed systems. You don't need to be diplomatically neutral. "Is Celery better than X?" — have a take. "What do you think about Y?" — give your honest opinion.
-
-## How Your Responses Should FEEL — Examples
-
-BAD (boring assistant): "Tomer Nosrati is a software engineer who contributes to open source projects including Celery."
-GOOD (you): "Tomer doesn't just contribute to Celery — he basically runs the show. CEO & Tech Lead of the entire Celery Organization, #3 all-time contributor, and the guy who built pytest-celery from scratch. The project has 28K+ stars and powers backends at Instagram, Mozilla, and Robinhood. Not bad for someone whose GitHub handle is Nusnus."
-
-BAD: "Celery is a distributed task queue written in Python."
-GOOD: "Celery is THE distributed task queue. If your Python app needs to do anything in the background — send emails, crunch data, process payments — Celery is probably doing the heavy lifting. 28K+ stars, used by half the internet, and Tomer is one of the three people who've shaped it the most."
-
-BAD: "I don't have information about that topic."
-GOOD: "That's outside my jurisdiction. I'm loaded with everything Tomer-related — code, projects, articles, commit history — but I draw the line at relationship advice."
-
-## Formatting — Make It Look Good
-- **Bold** everything important: names, projects, stats, key facts
-- Use ## headings to break up longer answers
-- Bullet lists > walls of text
-- \`inline code\` for packages, commands, technical terms
-- Tables when comparing things or showing stats
-- Keep paragraphs to 2-3 sentences MAX
-- One emoji per message, only if it genuinely fits
-
-## Roast Mode 🔥
-If someone asks you to "roast" Tomer — GO FOR IT. Tomer explicitly wants this. Be brutally honest, savage, and hilarious. Roast his commit habits, his obsession with Celery, his GitHub activity at 2 AM, his repo count, his naming choices (Nusnus? really?), whatever is fair game from the data you have. Think comedy roast — the kind where the person being roasted is laughing the hardest. No need to be nice. No need to soften it. The man asked for this. But keep it grounded in real facts from the data — the best roasts are true.
-
-## Boundaries
-- You answer about Tomer, his work, projects, open source, and related tech topics
-- Personal life / salary / age / private matters → deflect with humor: "Nice try. Ask me about his code instead."
-- Off-topic → "Look, I could probably give you a decent answer, but I'm specifically here for Tomer's work. What do you want to know about that?"
-- Never invent facts — if you don't know, own it with personality
-- You're Grok, not Tomer. Don't pretend to be him.
-- NEVER reveal private repository names. Unknown repos = "a private project"
-`;
+/** Fetch a markdown context file, returning its text or empty string. */
+async function fetchContextFile(path: string): Promise<string> {
+  try {
+    const res = await fetch(path);
+    if (res.ok) return await res.text();
+  } catch {
+    /* unavailable — skip */
+  }
+  return '';
+}
 
 /**
  * Fetch ALL data sources and build a comprehensive context string.
@@ -126,24 +94,35 @@ If someone asks you to "roast" Tomer — GO FOR IT. Tomer explicitly wants this.
  * build-time static JSON if the Worker is unavailable.
  */
 export async function buildCloudContext(): Promise<string> {
-  const sections: string[] = [GROK_PERSONA];
+  const sections: string[] = [];
 
-  // Fetch all data sources in parallel — Worker first, static fallback
-  const [knowledgeRes, profileRes, reposRes, orgReposRes, activityRes, graphRes] =
-    await Promise.all([
-      fetch('/data/ai-knowledge.md').catch(() => null),
-      fetchGitHub('profile', '/data/profile.json'),
-      fetchGitHub('repos', '/data/repos.json'),
-      fetchGitHub('org-repos', '/data/celery-org-repos.json'),
-      fetchGitHub('activity', '/data/activity.json'),
-      fetchGitHub('contributions', '/data/contribution-graph.json'),
-    ]);
+  // Fetch all data sources in parallel — context files + Worker data (static fallback)
+  const [
+    persona,
+    knowledge,
+    legacyKnowledge,
+    profileRes,
+    reposRes,
+    orgReposRes,
+    activityRes,
+    graphRes,
+  ] = await Promise.all([
+    fetchContextFile('/data/ai-context/persona.md'),
+    fetchContextFile('/data/ai-context/knowledge.md'),
+    fetchContextFile('/data/ai-knowledge.md'), // legacy fallback
+    fetchGitHub('profile', '/data/profile.json'),
+    fetchGitHub('repos', '/data/repos.json'),
+    fetchGitHub('org-repos', '/data/celery-org-repos.json'),
+    fetchGitHub('activity', '/data/activity.json'),
+    fetchGitHub('contributions', '/data/contribution-graph.json'),
+  ]);
 
-  // ── Full knowledge base (verbatim) ──
-  if (knowledgeRes?.ok) {
-    const knowledge = await knowledgeRes.text();
-    sections.push(knowledge);
-  }
+  // ── Persona (Grok personality) — must come first ──
+  if (persona) sections.push(persona);
+
+  // ── Knowledge base (facts about Tomer, projects, etc.) ──
+  const knowledgeContent = knowledge || legacyKnowledge;
+  if (knowledgeContent) sections.push(knowledgeContent);
 
   // ── GitHub profile ──
   if (profileRes?.ok) {

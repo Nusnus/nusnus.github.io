@@ -1,50 +1,186 @@
 /**
- * Chat memory — persists conversation history in localStorage.
+ * Chat memory — persists conversation sessions in localStorage.
  *
- * Messages are stored as a JSON array under a single key.
- * A maximum cap prevents unbounded storage growth.
+ * Supports multiple named sessions with timestamps. The active session ID
+ * is tracked separately so chat can be resumed after page reload.
+ *
+ * Storage layout:
+ *   ai-chat-sessions  → ChatSession[]   (session metadata + messages)
+ *   ai-chat-active    → string | null    (active session ID)
+ *
+ * Legacy key `ai-chat-history` is migrated on first load.
  */
 
 import type { ChatMessage } from './types';
 
-const STORAGE_KEY = 'ai-chat-history';
-const MAX_MESSAGES = 50;
+const SESSIONS_KEY = 'ai-chat-sessions';
+const ACTIVE_KEY = 'ai-chat-active';
+const LEGACY_KEY = 'ai-chat-history';
+const MAX_SESSIONS = 20;
+const MAX_MESSAGES_PER_SESSION = 50;
 
-/** Save messages to localStorage, keeping the most recent MAX_MESSAGES. */
-export function saveMessages(messages: ChatMessage[]): void {
+/** A single chat session. */
+export interface ChatSession {
+  id: string;
+  title: string;
+  createdAt: number;
+  updatedAt: number;
+  messages: ChatMessage[];
+}
+
+/** Generate a short title from the first user message. */
+function deriveTitle(messages: ChatMessage[]): string {
+  const firstUser = messages.find((m) => m.role === 'user');
+  if (!firstUser) return 'New Chat';
+  const text = firstUser.content.slice(0, 60);
+  return text.length < firstUser.content.length ? text + '…' : text;
+}
+
+/** Validate a message shape from storage. */
+function isValidMessage(m: unknown): m is ChatMessage {
+  return (
+    typeof m === 'object' &&
+    m !== null &&
+    typeof (m as ChatMessage).id === 'string' &&
+    ((m as ChatMessage).role === 'user' || (m as ChatMessage).role === 'assistant') &&
+    typeof (m as ChatMessage).content === 'string'
+  );
+}
+
+/** Migrate legacy single-session storage to the new multi-session format. */
+function migrateLegacy(): void {
   try {
-    const trimmed = messages.slice(-MAX_MESSAGES);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed));
+    const raw = localStorage.getItem(LEGACY_KEY);
+    if (!raw) return;
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) {
+      localStorage.removeItem(LEGACY_KEY);
+      return;
+    }
+    const messages = parsed.filter(isValidMessage);
+    if (messages.length === 0) {
+      localStorage.removeItem(LEGACY_KEY);
+      return;
+    }
+    const session: ChatSession = {
+      id: crypto.randomUUID(),
+      title: deriveTitle(messages),
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      messages,
+    };
+    localStorage.setItem(SESSIONS_KEY, JSON.stringify([session]));
+    localStorage.setItem(ACTIVE_KEY, session.id);
+    localStorage.removeItem(LEGACY_KEY);
   } catch {
-    // Storage full or unavailable — silently ignore.
+    // Migration failed — start fresh.
   }
 }
 
-/** Load previously saved messages from localStorage. */
-export function loadMessages(): ChatMessage[] {
+/** Load all sessions from localStorage. Migrates legacy data on first call. */
+export function loadSessions(): ChatSession[] {
+  migrateLegacy();
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(SESSIONS_KEY);
     if (!raw) return [];
     const parsed: unknown = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
-    // Basic shape validation
-    return parsed.filter(
-      (m): m is ChatMessage =>
-        typeof m === 'object' &&
-        m !== null &&
-        typeof m.id === 'string' &&
-        (m.role === 'user' || m.role === 'assistant') &&
-        typeof m.content === 'string',
-    );
+    return (parsed as ChatSession[])
+      .filter(
+        (s) => typeof s.id === 'string' && typeof s.title === 'string' && Array.isArray(s.messages),
+      )
+      .sort((a, b) => b.updatedAt - a.updatedAt);
   } catch {
     return [];
   }
 }
 
-/** Remove all stored messages. */
-export function clearMessages(): void {
+/** Persist the sessions array to localStorage. */
+function saveSessions(sessions: ChatSession[]): void {
   try {
-    localStorage.removeItem(STORAGE_KEY);
+    // Keep only the most recent MAX_SESSIONS
+    const trimmed = sessions.sort((a, b) => b.updatedAt - a.updatedAt).slice(0, MAX_SESSIONS);
+    localStorage.setItem(SESSIONS_KEY, JSON.stringify(trimmed));
+  } catch {
+    // Storage full — silently ignore.
+  }
+}
+
+/** Get the active session ID. */
+export function getActiveSessionId(): string | null {
+  try {
+    return localStorage.getItem(ACTIVE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+/** Set the active session ID. */
+export function setActiveSessionId(id: string | null): void {
+  try {
+    if (id) {
+      localStorage.setItem(ACTIVE_KEY, id);
+    } else {
+      localStorage.removeItem(ACTIVE_KEY);
+    }
+  } catch {
+    // Silently ignore.
+  }
+}
+
+/** Save messages to the active session, creating it if needed. */
+export function saveMessages(messages: ChatMessage[], sessionId?: string): string {
+  const sessions = loadSessions();
+  const id = sessionId ?? getActiveSessionId() ?? crypto.randomUUID();
+  const existing = sessions.find((s) => s.id === id);
+
+  if (existing) {
+    existing.messages = messages.slice(-MAX_MESSAGES_PER_SESSION);
+    existing.title = deriveTitle(existing.messages);
+    existing.updatedAt = Date.now();
+  } else {
+    sessions.push({
+      id,
+      title: deriveTitle(messages),
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      messages: messages.slice(-MAX_MESSAGES_PER_SESSION),
+    });
+  }
+
+  saveSessions(sessions);
+  setActiveSessionId(id);
+  return id;
+}
+
+/** Load messages from the active session. */
+export function loadMessages(): ChatMessage[] {
+  const activeId = getActiveSessionId();
+  if (!activeId) return [];
+  const sessions = loadSessions();
+  const session = sessions.find((s) => s.id === activeId);
+  return session?.messages.filter(isValidMessage) ?? [];
+}
+
+/** Remove all stored messages (clears active session only). */
+export function clearMessages(): void {
+  setActiveSessionId(null);
+}
+
+/** Delete a specific session by ID. */
+export function deleteSession(sessionId: string): void {
+  const sessions = loadSessions().filter((s) => s.id !== sessionId);
+  saveSessions(sessions);
+  if (getActiveSessionId() === sessionId) {
+    setActiveSessionId(null);
+  }
+}
+
+/** Delete all sessions. */
+export function clearAllSessions(): void {
+  try {
+    localStorage.removeItem(SESSIONS_KEY);
+    localStorage.removeItem(ACTIVE_KEY);
   } catch {
     // Silently ignore.
   }

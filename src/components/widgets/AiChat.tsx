@@ -33,11 +33,25 @@ import type { ModelInfo, ModelGroup, ChatProvider } from '@lib/ai/config';
 import type { MLCEngineInterface } from '@mlc-ai/web-llm';
 import type { ChatMessage, SearchIndex } from '@lib/ai/types';
 import { renderMarkdown } from '@lib/ai/markdown';
-import { saveMessages, loadMessages, clearMessages } from '@lib/ai/memory';
+import {
+  saveMessages,
+  loadMessages,
+  clearMessages,
+  loadSessions,
+  deleteSession,
+  clearAllSessions,
+  setActiveSessionId,
+} from '@lib/ai/memory';
+import type { ChatSession } from '@lib/ai/memory';
 import { fetchRuntimeContext } from '@lib/ai/context';
 import { searchIndex, formatRetrievedContext } from '@lib/ai/rag';
 import { parseActions, executeAction } from '@lib/ai/tools';
 import { maybeSummarize } from '@lib/ai/summarize';
+
+/* ─── Constants ─── */
+
+/** Maximum number of user messages per chat session before prompting new chat. */
+const MAX_USER_MESSAGES = 10;
 
 /* ─── Types ─── */
 
@@ -63,6 +77,9 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
   const [cacheMap, setCacheMap] = useState<Record<string, boolean>>({});
   const [isDeletingModel, setIsDeletingModel] = useState<string | null>(null);
   const [webGPUSupported, setWebGPUSupported] = useState(true);
+  const [showHistory, setShowHistory] = useState(false);
+  const [sessions, setSessions] = useState<ChatSession[]>([]);
+  const [activeSessionId, setActiveSessionIdState] = useState<string | null>(null);
 
   const engineRef = useRef<MLCEngineInterface | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -111,13 +128,15 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
   const hasSavedChat = useRef(false);
   useEffect(() => {
     hasSavedChat.current = loadMessages().length > 0;
+    setSessions(loadSessions());
   }, []);
 
   const initEngine = useCallback(
     async (startFresh = false) => {
-      // If starting fresh, clear persisted chat
+      // If starting fresh, clear active session (don't delete it)
       if (startFresh) {
         clearMessages();
+        setActiveSessionIdState(null);
       }
 
       const restoreMessages = () => {
@@ -185,6 +204,10 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
       // Local provider requires a loaded engine
       if (provider === 'local' && !engineRef.current) return;
 
+      // Enforce message limit
+      const userMessageCount = messages.filter((m) => m.role === 'user').length;
+      if (userMessageCount >= MAX_USER_MESSAGES) return; // UI should prevent this
+
       const userMsg: ChatMessage = { id: crypto.randomUUID(), role: 'user', content: text.trim() };
       const asstMsg: ChatMessage = { id: crypto.randomUUID(), role: 'assistant', content: '' };
       setMessages((prev) => [...prev, userMsg, asstMsg]);
@@ -204,16 +227,18 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
           ]);
 
           // Build comprehensive context from all data sources
-          // Cloud context includes the Grok persona and MUST come FIRST
-          // so the model anchors on the witty personality before seeing
-          // the generic base prompt with stats/tools.
           const cloudContext = await buildCloudContext();
           const augmentedPrompt = cloudContext + '\n\n' + systemPrompt;
 
-          const chatHistory = [...messages, userMsg].map((m) => ({
-            role: m.role as 'system' | 'user' | 'assistant',
-            content: m.content,
-          }));
+          // Filter out the welcome message and map to API format
+          const chatHistory = [...messages, userMsg]
+            .filter(
+              (m) => m.role === 'user' || (m.role === 'assistant' && m.content !== WELCOME_MESSAGE),
+            )
+            .map((m) => ({
+              role: m.role as 'system' | 'user' | 'assistant',
+              content: m.content,
+            }));
 
           // Cloud has 2M context — stream full history + all data
           full = await cloudChatStream(
@@ -270,25 +295,39 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
           );
         }
 
-        // Persist to localStorage
+        // Persist to localStorage and refresh sessions list
         setMessages((prev) => {
-          saveMessages(prev);
+          const sid = saveMessages(prev, activeSessionId ?? undefined);
+          setActiveSessionIdState(sid);
+          setSessions(loadSessions());
           return prev;
         });
       } catch (err) {
         console.error('[AiChat] Generation error:', err);
+        const errText = err instanceof Error ? err.message : 'Something went wrong';
+        const friendlyMsg = errText.includes('429')
+          ? 'Rate limited — please wait a moment and try again.'
+          : errText.includes('Empty response')
+            ? 'Got an empty response. Try rephrasing or starting a new chat.'
+            : `Something went wrong: ${errText}`;
         setMessages((prev) =>
-          prev.map((m) =>
-            m.id === asstMsg.id
-              ? { ...m, content: 'Sorry, something went wrong. Please try again.' }
-              : m,
-          ),
+          prev.map((m) => (m.id === asstMsg.id ? { ...m, content: friendlyMsg } : m)),
         );
       } finally {
         setIsGenerating(false);
+        // Auto-focus input after generation completes
+        requestAnimationFrame(() => inputRef.current?.focus());
       }
     },
-    [messages, isGenerating, provider, selectedCloudModelId, systemPrompt, ragIndex],
+    [
+      messages,
+      isGenerating,
+      provider,
+      selectedCloudModelId,
+      systemPrompt,
+      ragIndex,
+      activeSessionId,
+    ],
   );
 
   /** Auto-init cloud + auto-send roast when triggered via ?roast=1 FAB. */
@@ -317,7 +356,35 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
     abortRef.current = true;
     setIsGenerating(false);
     clearMessages();
+    setActiveSessionIdState(null);
     setMessages([{ id: crypto.randomUUID(), role: 'assistant', content: WELCOME_MESSAGE }]);
+  };
+
+  /** Switch to a previous chat session. */
+  const switchSession = (session: ChatSession) => {
+    abortRef.current = true;
+    setIsGenerating(false);
+    setActiveSessionId(session.id);
+    setActiveSessionIdState(session.id);
+    setMessages(session.messages);
+    setShowHistory(false);
+  };
+
+  /** Delete a session from history. */
+  const handleDeleteSession = (sessionId: string) => {
+    deleteSession(sessionId);
+    setSessions(loadSessions());
+    // If deleting the active session, start fresh
+    if (sessionId === activeSessionId) {
+      clearChat();
+    }
+  };
+
+  /** Clear all chat history. */
+  const handleClearAll = () => {
+    clearAllSessions();
+    setSessions([]);
+    clearChat();
   };
 
   /* ─── Render ─── */
@@ -543,25 +610,136 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
     provider === 'cloud'
       ? `${activeCloudModel?.name ?? 'Cloud AI'} · Cloud`
       : `${activeModel?.name ?? 'AI'} · Local`;
+  const userMsgCount = messages.filter((m) => m.role === 'user').length;
+  const isAtLimit = userMsgCount >= MAX_USER_MESSAGES;
   return (
-    <div className="flex h-full flex-col">
+    <div className="relative flex h-full flex-col">
       {/* Status bar */}
       <div className="border-border flex items-center justify-between border-b px-4 py-2">
         <div className="flex items-center gap-2">
           <span className="bg-status-active h-2 w-2 rounded-full" />
           <span className="text-text-muted text-xs">{statusLabel}</span>
         </div>
-        {messages.length > 0 && (
-          <button
-            onClick={clearChat}
-            className="text-text-muted hover:text-text-secondary flex items-center gap-1 text-xs transition-colors"
-            aria-label="Clear chat"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-            Clear
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {sessions.length > 0 && (
+            <button
+              onClick={() => setShowHistory(!showHistory)}
+              className={cn(
+                'flex items-center gap-1 text-xs transition-colors',
+                showHistory ? 'text-accent' : 'text-text-muted hover:text-text-secondary',
+              )}
+              aria-label="Toggle chat history"
+            >
+              <svg
+                className="h-3.5 w-3.5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M12 8v4l3 3" />
+                <circle cx="12" cy="12" r="10" />
+              </svg>
+              History
+            </button>
+          )}
+          {messages.length > 0 && (
+            <>
+              <span className="bg-border h-3.5 w-px" />
+              <button
+                onClick={clearChat}
+                className="text-text-muted hover:text-text-secondary flex items-center gap-1 text-xs transition-colors"
+                aria-label="New chat"
+              >
+                <svg
+                  className="h-3.5 w-3.5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
+                New
+              </button>
+            </>
+          )}
+        </div>
       </div>
+
+      {/* Chat history panel (sliding overlay) */}
+      {showHistory && (
+        <div className="border-border bg-bg-base absolute inset-0 z-10 flex flex-col overflow-hidden">
+          <div className="border-border flex items-center justify-between border-b px-4 py-2.5">
+            <h3 className="text-text-primary text-sm font-semibold">Chat History</h3>
+            <div className="flex items-center gap-2">
+              {sessions.length > 0 && (
+                <button
+                  onClick={handleClearAll}
+                  className="text-text-muted text-xs transition-colors hover:text-red-400"
+                >
+                  Clear All
+                </button>
+              )}
+              <button
+                onClick={() => setShowHistory(false)}
+                className="text-text-muted hover:text-text-primary transition-colors"
+                aria-label="Close history"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+          <div className="scrollbar-thin flex-1 overflow-y-auto">
+            {sessions.length === 0 ? (
+              <p className="text-text-muted px-4 py-8 text-center text-sm">No chat history yet.</p>
+            ) : (
+              <div className="divide-border divide-y">
+                {sessions.map((session) => (
+                  <div
+                    key={session.id}
+                    className={cn(
+                      'group flex cursor-pointer items-start justify-between gap-2 px-4 py-3 transition-colors',
+                      session.id === activeSessionId ? 'bg-accent/10' : 'hover:bg-bg-surface',
+                    )}
+                    onClick={() => switchSession(session)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') switchSession(session);
+                    }}
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="text-text-primary truncate text-sm font-medium">
+                        {session.title}
+                      </p>
+                      <p className="text-text-muted text-xs">
+                        {session.messages.filter((m) => m.role === 'user').length} messages
+                        {' · '}
+                        {new Date(session.updatedAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteSession(session.id);
+                      }}
+                      className="text-text-muted shrink-0 opacity-0 transition-all group-hover:opacity-100 hover:text-red-400"
+                      aria-label="Delete session"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Messages area */}
       <div className="scrollbar-thin flex-1 overflow-y-auto px-4 py-6">
@@ -644,56 +822,75 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
         </div>
       </div>
 
-      {/* Input area */}
+      {/* Input area or limit banner */}
       <div className="border-border border-t px-4 py-3">
         <div className="mx-auto max-w-2xl">
-          <div className="bg-bg-surface border-border flex items-end gap-2 rounded-xl border px-4 py-3">
-            <textarea
-              ref={inputRef}
-              value={input}
-              onChange={(e) => {
-                setInput(e.target.value);
-                // Auto-resize
-                e.target.style.height = 'auto';
-                e.target.style.height = `${Math.min(e.target.scrollHeight, 128)}px`;
-              }}
-              onKeyDown={handleKeyDown}
-              placeholder="Ask about Tomer…"
-              rows={1}
-              className="text-text-primary placeholder:text-text-muted max-h-32 flex-1 resize-none bg-transparent text-sm leading-relaxed outline-none"
-              disabled={isGenerating}
-              aria-label="Chat message input"
-            />
-            {isGenerating ? (
+          {isAtLimit ? (
+            <div className="flex flex-col items-center gap-3 py-2 text-center">
+              <p className="text-text-secondary text-sm">
+                You've reached the {MAX_USER_MESSAGES}-message limit for this chat.
+              </p>
               <button
-                onClick={() => {
-                  abortRef.current = true;
-                  setIsGenerating(false);
-                }}
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-500/10 text-red-400 transition-colors hover:bg-red-500/20"
-                aria-label="Stop generating"
+                onClick={clearChat}
+                className="bg-accent text-bg-base hover:bg-accent-hover rounded-xl px-6 py-2.5 text-sm font-semibold transition-colors"
               >
-                <Square className="h-4 w-4 fill-current" />
+                Start New Chat
               </button>
-            ) : (
-              <button
-                onClick={() => sendMessage(input)}
-                disabled={!input.trim()}
-                className={cn(
-                  'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors',
-                  input.trim()
-                    ? 'bg-accent text-bg-base hover:bg-accent-hover'
-                    : 'text-text-muted cursor-not-allowed',
+            </div>
+          ) : (
+            <>
+              <div className="bg-bg-surface border-border flex items-end gap-2 rounded-xl border px-4 py-3">
+                <textarea
+                  ref={inputRef}
+                  value={input}
+                  onChange={(e) => {
+                    setInput(e.target.value);
+                    // Auto-resize
+                    e.target.style.height = 'auto';
+                    e.target.style.height = `${Math.min(e.target.scrollHeight, 128)}px`;
+                  }}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Ask about Tomer…"
+                  rows={1}
+                  className="text-text-primary placeholder:text-text-muted max-h-32 flex-1 resize-none bg-transparent text-sm leading-relaxed outline-none"
+                  disabled={isGenerating}
+                  aria-label="Chat message input"
+                />
+                {isGenerating ? (
+                  <button
+                    onClick={() => {
+                      abortRef.current = true;
+                      setIsGenerating(false);
+                    }}
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-500/10 text-red-400 transition-colors hover:bg-red-500/20"
+                    aria-label="Stop generating"
+                  >
+                    <Square className="h-4 w-4 fill-current" />
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => sendMessage(input)}
+                    disabled={!input.trim()}
+                    className={cn(
+                      'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors',
+                      input.trim()
+                        ? 'bg-accent text-bg-base hover:bg-accent-hover'
+                        : 'text-text-muted cursor-not-allowed',
+                    )}
+                    aria-label="Send message"
+                  >
+                    <Send className="h-4 w-4" />
+                  </button>
                 )}
-                aria-label="Send message"
-              >
-                <Send className="h-4 w-4" />
-              </button>
-            )}
-          </div>
-          <p className="text-text-muted mt-2 px-1 text-[10px]">
-            AI runs locally in your browser via WebGPU · Responses may be inaccurate
-          </p>
+              </div>
+              <p className="text-text-muted mt-2 px-1 text-[10px]">
+                {provider === 'cloud'
+                  ? 'Powered by xAI Grok · Responses may be inaccurate'
+                  : 'AI runs locally in your browser via WebGPU · Responses may be inaccurate'}
+                {userMsgCount > 0 && ` · ${userMsgCount}/${MAX_USER_MESSAGES} messages`}
+              </p>
+            </>
+          )}
         </div>
       </div>
     </div>
