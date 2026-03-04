@@ -1,9 +1,12 @@
 /**
  * System prompt builder (server/build-time only).
  *
- * The system prompt is intentionally compact (~800 tokens) to fit within
- * the 4096-token context windows used by all WebLLM models. Detailed
- * knowledge lives in ai-knowledge.md and is injected via RAG on demand.
+ * Two modes:
+ * - **Cloud (Grok):** The full knowledge base + all live data is injected
+ *   at query time via cloud-context.ts. The system prompt provides persona,
+ *   guardrails, and formatting instructions.
+ * - **Local (WebLLM):** Compact prompt (~800 tokens) for 4K context windows.
+ *   Detailed knowledge is injected via RAG on demand.
  *
  * This file uses Node.js APIs and must NOT be imported from client-side code.
  */
@@ -52,7 +55,7 @@ He speaks Hebrew, English, and Spanish.
 Contact: GitHub @Nusnus · LinkedIn /in/tomernosrati · X @smilingnosrati · tomer.nosrati@gmail.com
 
 ## About This Chatbot
-Runs 100% in the browser via WebLLM + WebGPU. No data leaves the device.`;
+Available in two modes: Cloud (powered by xAI Grok — fast, high-quality) and Local (runs in-browser via WebLLM + WebGPU — fully private, no data leaves the device).`;
 
 /**
  * Build the system prompt from the core prompt + live site data.

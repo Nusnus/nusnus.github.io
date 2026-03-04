@@ -183,28 +183,25 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
       abortRef.current = false;
 
       try {
-        // 1. Retrieve relevant chunks via RAG
-        const ragResults = searchIndex(text.trim(), ragIndex);
-        const ragContext = formatRetrievedContext(ragResults);
-
-        // 2. Fetch live runtime context (recent activity)
-        const runtimeContext = await fetchRuntimeContext();
-
-        // 3. Build augmented system prompt
-        const augmentedPrompt = systemPrompt + ragContext + runtimeContext;
-
         let full = '';
 
         if (provider === 'cloud') {
-          // ── Cloud path: call proxy ──
-          const { cloudChat } = await import('@lib/ai/cloud');
+          // ── Cloud path: feed ALL data, no RAG needed ──
+          const [{ cloudChat }, { buildCloudContext }] = await Promise.all([
+            import('@lib/ai/cloud'),
+            import('@lib/ai/cloud-context'),
+          ]);
+
+          // Build comprehensive context from all data sources
+          const cloudContext = await buildCloudContext();
+          const augmentedPrompt = systemPrompt + cloudContext;
 
           const chatHistory = [...messages, userMsg].map((m) => ({
             role: m.role as 'system' | 'user' | 'assistant',
             content: m.content,
           }));
 
-          // Cloud has large context — send full history
+          // Cloud has 2M context — send full history + all data
           full = await cloudChat(
             [{ role: 'system', content: augmentedPrompt }, ...chatHistory],
             selectedCloudModelId,
@@ -214,9 +211,17 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
             prev.map((m) => (m.id === asstMsg.id ? { ...m, content: full } : m)),
           );
         } else {
-          // ── Local path: stream via WebLLM ──
-          // Guard checked at top of sendMessage — engine is guaranteed here
+          // ── Local path: RAG + trimmed history for 4K context ──
           const engine = engineRef.current as MLCEngineInterface;
+
+          // RAG retrieval (compact — 2 chunks, 600 chars max)
+          const ragResults = searchIndex(text.trim(), ragIndex);
+          const ragContext = formatRetrievedContext(ragResults);
+
+          // Live runtime context (5 recent events)
+          const runtimeContext = await fetchRuntimeContext();
+
+          const augmentedPrompt = systemPrompt + ragContext + runtimeContext;
 
           // Summarize old messages if conversation is long
           const currentMessages = await maybeSummarize(engine, [...messages, userMsg]);

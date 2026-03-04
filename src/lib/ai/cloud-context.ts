@@ -1,0 +1,132 @@
+/**
+ * Cloud context builder — feeds ALL available data to cloud models.
+ *
+ * Unlike the RAG approach (designed for 4K context WebLLM models), cloud
+ * models like Grok have massive context windows (2M tokens). We can dump
+ * everything — no chunking, no BM25 search, no retrieval failures.
+ *
+ * Total context: ~12K tokens — trivial for a 2M context model.
+ */
+
+import type {
+  ActivityEvent,
+  RepoData,
+  ContributionGraphData,
+  ProfileData,
+} from '@lib/github/types';
+
+interface ActivityData {
+  events: ActivityEvent[];
+  todaySummary: Record<string, number>;
+}
+
+/** Format a number with commas. */
+const fmt = (n: number) => n.toLocaleString('en-US');
+
+/** Format an ISO date as relative time. */
+function formatRelative(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60_000);
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
+
+/**
+ * Fetch ALL data sources and build a comprehensive context string.
+ * Called at query time in the cloud path — fetches from static JSON files.
+ */
+export async function buildCloudContext(): Promise<string> {
+  const sections: string[] = [];
+
+  // Fetch all data sources in parallel
+  const [knowledgeRes, profileRes, reposRes, orgReposRes, activityRes, graphRes] =
+    await Promise.all([
+      fetch('/data/ai-knowledge.md').catch(() => null),
+      fetch('/data/profile.json').catch(() => null),
+      fetch('/data/repos.json').catch(() => null),
+      fetch('/data/celery-org-repos.json').catch(() => null),
+      fetch('/data/activity.json').catch(() => null),
+      fetch('/data/contribution-graph.json').catch(() => null),
+    ]);
+
+  // ── Full knowledge base (verbatim) ──
+  if (knowledgeRes?.ok) {
+    const knowledge = await knowledgeRes.text();
+    sections.push(knowledge);
+  }
+
+  // ── GitHub profile ──
+  if (profileRes?.ok) {
+    const profile = (await profileRes.json()) as ProfileData;
+    sections.push(
+      `# Live GitHub Profile\n` +
+        `- **${profile.name}** (@${profile.login})\n` +
+        `- Bio: ${profile.bio}\n` +
+        `- Followers: ${fmt(profile.followers)} · Public repos: ${profile.publicRepos}`,
+    );
+  }
+
+  // ── Featured projects (full details) ──
+  if (reposRes?.ok) {
+    const repos = (await reposRes.json()) as RepoData[];
+    const lines = repos.map((r) => {
+      const rank = r.contributorRank ? ` · #${r.contributorRank} all-time contributor` : '';
+      return (
+        `- **${r.fullName}**: ${r.description}\n` +
+        `  ${fmt(r.stars)}★ · ${fmt(r.forks)} forks · ${r.openIssues} open issues · ` +
+        `Role: ${r.role}${rank} · Language: ${r.language ?? 'Python'} · Last push: ${formatRelative(r.lastPush)}`
+      );
+    });
+    sections.push(`# Featured Projects (Live Data)\n${lines.join('\n')}`);
+  }
+
+  // ── Celery org repos (full details) ──
+  if (orgReposRes?.ok) {
+    const orgRepos = (await orgReposRes.json()) as RepoData[];
+    const lines = orgRepos.map((r) => {
+      const rank = r.contributorRank ? ` · #${r.contributorRank} all-time contributor` : '';
+      return `- **${r.fullName}**: ${r.description} · ${fmt(r.stars)}★ · Role: ${r.role}${rank}`;
+    });
+    sections.push(`# Celery Organization Repos (Live Data)\n${lines.join('\n')}`);
+  }
+
+  // ── Contribution stats ──
+  if (graphRes?.ok) {
+    const graph = (await graphRes.json()) as ContributionGraphData;
+    sections.push(
+      `# Contribution Stats (Last 12 Months)\n` +
+        `- Total contributions: ${fmt(graph.totalContributions)}\n` +
+        `- Commits: ${fmt(graph.totalCommits)}\n` +
+        `- Pull requests: ${fmt(graph.totalPRs)}\n` +
+        `- Code reviews: ${fmt(graph.totalReviews)}\n` +
+        `- Issues: ${fmt(graph.totalIssues)}`,
+    );
+  }
+
+  // ── Recent activity (ALL events, not just 5) ──
+  if (activityRes?.ok) {
+    const data = (await activityRes.json()) as ActivityData;
+
+    if (data.events.length > 0) {
+      const lines = data.events.map(
+        (e) => `- [${formatRelative(e.createdAt)}] ${e.type}: ${e.title} (${e.repo})`,
+      );
+      sections.push(`# Recent GitHub Activity (Live)\n${lines.join('\n')}`);
+    }
+
+    const s = data.todaySummary;
+    const todayParts: string[] = [];
+    if (s.commits) todayParts.push(`${s.commits} commits`);
+    if (s.prsOpened) todayParts.push(`${s.prsOpened} PRs opened`);
+    if (s.prsReviewed) todayParts.push(`${s.prsReviewed} PRs reviewed`);
+    if (s.issueComments) todayParts.push(`${s.issueComments} issue comments`);
+    if (todayParts.length > 0) {
+      sections.push(`# Today's Activity Summary\n${todayParts.join(' · ')}`);
+    }
+  }
+
+  return sections.length > 0 ? `\n\n${sections.join('\n\n---\n\n')}` : '';
+}

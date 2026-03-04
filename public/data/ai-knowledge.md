@@ -147,14 +147,26 @@ The site features a GitHub-inspired dashboard design that displays Tomer's open 
 
 ## About This AI Chatbot
 
-This AI chatbot is a technical showcase built entirely into the website. Key facts:
+This AI chatbot is a technical showcase built entirely into the website. It offers two modes:
 
-- It runs **100% in the visitor's browser** using **WebLLM** and **WebGPU** — the model inference happens on the user's GPU, not on any server.
-- **No data leaves the device.** All processing is local. There is no backend, no API key, and no cloud dependency.
+### Cloud Mode (xAI Grok)
+
+- Powered by **xAI's Grok** models via a secure **Cloudflare Worker proxy** — the API key is stored server-side and never exposed to the browser.
+- Has access to **all site data** — the full knowledge base, all repos, contribution stats, and recent activity are fed directly into the model's context.
+- Supports **Grok 4.1 Fast** (strongest, 2M context) and **Grok Code Fast** (code-specialized with reasoning).
+- Instant start — no download required.
+
+### Local Mode (WebLLM)
+
+- Runs **100% in the visitor's browser** using **WebLLM** and **WebGPU** — the model inference happens on the user's GPU, not on any server.
+- **No data leaves the device.** All processing is local.
 - The model is downloaded once and **cached in the browser** for instant startup on future visits.
-- It uses **Retrieval-Augmented Generation (RAG)** — it searches a pre-built index of site content to find relevant context before answering questions.
-- Conversation history is **persisted in localStorage** and automatically summarized when it gets long.
-- The chatbot was designed and built by Tomer as a demonstration of cutting-edge in-browser AI technology.
+- Uses **Retrieval-Augmented Generation (RAG)** — searches a pre-built index of site content to find relevant context before answering.
+
+### Shared Features
+
+- Conversation history is **persisted in localStorage** and can be continued or started fresh.
+- The chatbot was designed and built by Tomer as a demonstration of cutting-edge AI technology — both cloud and in-browser.
 
 ---
 
