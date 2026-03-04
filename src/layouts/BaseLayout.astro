@@ -73,6 +73,27 @@ const ogImageUrl = new URL(ogImage, SITE_URL).href;
     <!-- Roast Widget — floating 🔥 FAB with inline streaming chat bubble -->
     {Astro.url.pathname !== '/chat' && <RoastWidget client:idle />}
 
+    <!-- Section reveal animation — IntersectionObserver-powered -->
+    <script is:inline>
+      (function () {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        const observer = new IntersectionObserver(
+          function (entries) {
+            entries.forEach(function (entry) {
+              if (entry.isIntersecting) {
+                entry.target.classList.add('revealed');
+                observer.unobserve(entry.target);
+              }
+            });
+          },
+          { threshold: 0.1, rootMargin: '0px 0px -40px 0px' },
+        );
+        document.querySelectorAll('.reveal-section').forEach(function (el) {
+          observer.observe(el);
+        });
+      })();
+    </script>
+
     <style>
       .roast-fab {
         background: radial-gradient(circle at 30% 30%, #ff6b35, #e63946);

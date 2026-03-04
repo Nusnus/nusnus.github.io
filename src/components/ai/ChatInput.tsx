@@ -48,14 +48,14 @@ export function ChatInput({
             </p>
             <button
               onClick={onClearChat}
-              className="bg-accent text-bg-base hover:bg-accent-hover rounded-xl px-6 py-2.5 text-sm font-semibold transition-colors"
+              className="bg-accent text-bg-base hover:bg-accent-hover glow-accent-sm rounded-xl px-6 py-2.5 text-sm font-semibold transition-all duration-200 hover:shadow-lg"
             >
               Start New Chat
             </button>
           </div>
         ) : (
           <>
-            <div className="bg-bg-surface border-border flex items-end gap-2 rounded-xl border px-4 py-3">
+            <div className="glass-subtle border-border/50 ring-border/30 focus-within:ring-accent/40 focus-within:glow-accent-sm flex items-end gap-2 rounded-xl border px-4 py-3 ring-1 transition-all duration-200">
               <textarea
                 ref={inputRef}
                 value={input}
@@ -75,8 +75,9 @@ export function ChatInput({
               {isGenerating ? (
                 <button
                   onClick={onStop}
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-500/10 text-red-400 transition-colors hover:bg-red-500/20"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-500/10 text-red-400 ring-1 ring-red-500/20 transition-all duration-200 hover:bg-red-500/20 hover:ring-red-500/40"
                   aria-label="Stop generating"
+                  style={{ animation: 'border-glow 2s ease-in-out infinite' }}
                 >
                   <Square className="h-4 w-4 fill-current" />
                 </button>
@@ -85,9 +86,9 @@ export function ChatInput({
                   onClick={() => onSend(input)}
                   disabled={!input.trim()}
                   className={cn(
-                    'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors',
+                    'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-all duration-200',
                     input.trim()
-                      ? 'bg-accent text-bg-base hover:bg-accent-hover'
+                      ? 'bg-accent text-bg-base hover:bg-accent-hover shadow-accent/20 hover:shadow-accent/30 shadow-lg'
                       : 'text-text-muted cursor-not-allowed',
                   )}
                   aria-label="Send message"
@@ -96,12 +97,26 @@ export function ChatInput({
                 </button>
               )}
             </div>
-            <p className="text-text-muted mt-2 px-1 text-[10px]">
-              {provider === 'cloud'
-                ? 'Powered by xAI Grok · Responses may be inaccurate'
-                : 'AI runs locally in your browser via WebGPU · Responses may be inaccurate'}
-              {userMsgCount > 0 && ` · ${userMsgCount}/${maxMessages} messages`}
-            </p>
+            <div className="mt-2 flex items-center justify-between px-1">
+              <p className="text-text-muted text-[10px]">
+                {provider === 'cloud'
+                  ? 'Powered by xAI Grok · Responses may be inaccurate'
+                  : 'AI runs locally in your browser via WebGPU · Responses may be inaccurate'}
+              </p>
+              {userMsgCount > 0 && (
+                <div className="flex items-center gap-1.5">
+                  <div className="bg-bg-elevated h-1 w-16 overflow-hidden rounded-full">
+                    <div
+                      className="bg-accent h-full rounded-full transition-all duration-300"
+                      style={{ width: `${(userMsgCount / maxMessages) * 100}%` }}
+                    />
+                  </div>
+                  <span className="text-text-muted text-[10px]">
+                    {userMsgCount}/{maxMessages}
+                  </span>
+                </div>
+              )}
+            </div>
           </>
         )}
       </div>

@@ -7,7 +7,7 @@ const lastUpdated = meta?.lastUpdated ? relativeTime(meta.lastUpdated) : 'unknow
 ---
 
 <aside
-  class="scrollbar-thin border-border bg-bg-base hidden h-screen overflow-y-auto border-l px-5 py-6 lg:block"
+  class="scrollbar-thin glass border-border hidden h-screen overflow-y-auto border-l px-5 py-6 lg:block"
   aria-label="Live activity panel"
 >
   <!-- Header -->
@@ -16,7 +16,10 @@ const lastUpdated = meta?.lastUpdated ? relativeTime(meta.lastUpdated) : 'unknow
       <h2 class="text-text-secondary text-sm font-semibold tracking-wider uppercase">
         Live Activity
       </h2>
-      <span class="bg-status-active inline-block h-2 w-2 rounded-full" aria-hidden="true"></span>
+      <span class="relative inline-block h-2 w-2" aria-hidden="true">
+        <span class="bg-status-active absolute inset-0 rounded-full"></span>
+        <span class="bg-status-active absolute inset-0 animate-ping rounded-full opacity-40"></span>
+      </span>
     </div>
     <span class="text-text-muted text-xs">
       Updated <span data-live="lastUpdated">{lastUpdated}</span>

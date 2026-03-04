@@ -8,6 +8,10 @@ He is based in Herzliya, Israel. He speaks Hebrew, English, and Spanish.
 
 He holds the title of **CEO & Tech Lead of the Celery Organization**, where he oversees the strategic direction, release management, and day-to-day maintenance of the entire Celery ecosystem. His GitHub handle is **@Nusnus**.
 
+### Online Presence
+
+Tomer's primary professional presence is **nusnus.github.io** — this very site you're running on. He deliberately chose to make his own site the central hub rather than relying on GitHub profiles or LinkedIn pages. This site aggregates everything: live GitHub data, all his repos, contribution stats, articles, and this AI chatbot. When someone asks "who is Tomer Nosrati?" — this site IS the answer.
+
 ### Professional Background
 
 Tomer's career spans multiple domains and includes significant experience in both the private sector and the Israeli defense industry:
@@ -154,9 +158,11 @@ For additional career detail (other companies, dates, full LinkedIn history), us
 - **Astro 5** — Static site generator with island architecture
 - **React** — Interactive components (contribution graph, activity feed, AI chat)
 - **TypeScript** — Full type safety across the codebase
-- **Tailwind CSS** — Utility-first styling with a custom dark theme
+- **Tailwind CSS v4** — Utility-first styling with OKLCH color system and custom glassmorphism design language
 
-The site features a GitHub-inspired dashboard design that displays Tomer's open source projects, contribution statistics, recent activity, and this AI chatbot. Data is automatically updated via GitHub Actions cron jobs that fetch live statistics from the GitHub API.
+The site features a polished, GitHub-inspired dashboard with glassmorphism effects, gradient accents, and smooth animations. It displays Tomer's open source projects, contribution statistics, recent activity, and this AI chatbot. Data is automatically updated via GitHub Actions cron jobs that fetch live statistics from the GitHub API.
+
+The design system uses a distinctive Celery green (OKLCH) accent throughout, with glass-effect cards, gradient text treatments, hover glow effects, and staggered reveal animations. It's responsive across all device sizes and supports both dark and light modes with smooth theme transitions.
 
 ---
 
@@ -185,6 +191,8 @@ This AI chatbot is a technical showcase built entirely into the website. It offe
 
 - Conversation history is **persisted in localStorage** and can be continued or started fresh.
 - The chatbot was designed and built by Tomer as a demonstration of cutting-edge AI technology — both cloud and in-browser.
+- The chat UI features glassmorphism message bubbles, gradient-styled user messages, animated message entrance effects, and Mermaid diagram rendering for data visualization.
+- The roast widget on the homepage has escalation levels with visual fire indicators, creating an interactive comedy roast experience.
 
 ---
 

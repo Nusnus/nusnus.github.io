@@ -178,14 +178,38 @@ ${
       {/* Chat bubble */}
       {isOpen && (
         <div className="fixed right-4 bottom-24 z-50 w-[min(380px,calc(100vw-2rem))] sm:right-6">
-          <div className="bg-bg-base border-border flex max-h-[60vh] flex-col overflow-hidden rounded-2xl border shadow-2xl">
+          <div
+            className="flex max-h-[60vh] flex-col overflow-hidden rounded-2xl border border-orange-500/20 shadow-2xl"
+            style={{
+              background: 'var(--color-glass-bg)',
+              backdropFilter: 'blur(20px) saturate(1.5)',
+              WebkitBackdropFilter: 'blur(20px) saturate(1.5)',
+              boxShadow: `0 25px 50px -12px rgba(0,0,0,0.4), 0 0 ${roastLevel >= 2 ? '40px' : '20px'} rgba(230, 57, 70, ${0.1 + roastLevel * 0.08})`,
+            }}
+          >
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-orange-500/20 bg-gradient-to-r from-orange-500/10 to-red-500/10 px-4 py-2.5">
+            <div
+              className="flex items-center justify-between border-b border-orange-500/20 px-4 py-2.5"
+              style={{
+                background: `linear-gradient(135deg, rgba(255, 107, 53, ${0.08 + roastLevel * 0.04}) 0%, rgba(230, 57, 70, ${0.08 + roastLevel * 0.04}) 100%)`,
+              }}
+            >
               <div className="flex items-center gap-2">
                 <span className="text-base">
                   {HEADER_ICONS[Math.min(roastLevel, HEADER_ICONS.length - 1)]}
                 </span>
                 <span className="text-sm font-semibold">Roast by Grok</span>
+                {roastLevel > 0 && (
+                  <span
+                    className="rounded-full px-1.5 py-0.5 text-[9px] font-bold"
+                    style={{
+                      background: `rgba(230, 57, 70, ${0.15 + roastLevel * 0.1})`,
+                      color: `rgba(255, ${Math.max(100 - roastLevel * 30, 50)}, ${Math.max(80 - roastLevel * 20, 40)}, 1)`,
+                    }}
+                  >
+                    LVL {roastLevel + 1}
+                  </span>
+                )}
               </div>
               <div className="flex items-center gap-1">
                 {(state === 'done' || state === 'error') && (
@@ -265,12 +289,24 @@ ${
 
             {/* Footer — Continue in Chat */}
             {state === 'done' && response && (
-              <div className="border-t border-orange-500/10 px-4 py-2">
+              <div className="border-t border-orange-500/10 px-4 py-2.5">
                 <button
                   onClick={handleContinueInChat}
-                  className="text-accent hover:text-accent/80 flex w-full items-center justify-end gap-1 text-xs font-medium transition-colors"
+                  className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-orange-500/15 to-red-500/15 px-4 py-2 text-xs font-semibold text-orange-300 transition-all duration-200 hover:from-orange-500/25 hover:to-red-500/25"
                 >
-                  Continue in Chat →
+                  Continue in Chat
+                  <svg
+                    className="h-3 w-3"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M5 12h14" />
+                    <path d="m12 5 7 7-7 7" />
+                  </svg>
                 </button>
               </div>
             )}
@@ -292,17 +328,21 @@ ${
   );
 }
 
-/** Pulsing dots loading indicator. */
+/** Pulsing dots loading indicator with fire theme. */
 function LoadingIndicator() {
   return (
-    <div className="flex items-center gap-1.5 py-2">
-      <span className="text-text-muted text-sm">Grok is cooking</span>
+    <div className="flex items-center gap-2 py-3">
+      <span className="text-base" style={{ animation: 'float 1.5s ease-in-out infinite' }}>
+        🔥
+      </span>
+      <span className="text-text-muted text-sm font-medium">Grok is cooking</span>
       <span className="flex gap-0.5">
         {[0, 1, 2].map((i) => (
           <span
             key={i}
-            className="bg-accent inline-block h-1.5 w-1.5 rounded-full"
+            className="inline-block h-1.5 w-1.5 rounded-full"
             style={{
+              background: `rgba(255, ${107 + i * 30}, ${53 + i * 20}, 0.8)`,
               animation: 'roast-dot 1.4s ease-in-out infinite',
               animationDelay: `${i * 0.2}s`,
             }}
