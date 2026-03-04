@@ -77,7 +77,6 @@ export function ChatInput({
                   onClick={onStop}
                   className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-500/10 text-red-400 ring-1 ring-red-500/20 transition-all duration-200 hover:bg-red-500/20 hover:ring-red-500/40"
                   aria-label="Stop generating"
-                  style={{ animation: 'border-glow 2s ease-in-out infinite' }}
                 >
                   <Square className="h-4 w-4 fill-current" />
                 </button>

@@ -52,6 +52,7 @@ const ogImageUrl = new URL(ogImage, SITE_URL).href;
     <!-- FOUC Prevention: apply theme BEFORE any paint -->
     <script is:inline>
       (function () {
+        document.documentElement.classList.add('js');
         const stored = localStorage.getItem('theme');
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         const isDark = stored ? stored === 'dark' : prefersDark;

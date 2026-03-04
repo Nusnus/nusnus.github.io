@@ -146,8 +146,8 @@
     -webkit-text-fill-color: transparent;
   }
 
-  /* Section reveal on scroll */
-  .reveal-section {
+  /* Section reveal on scroll — only hide when JS is available */
+  .js .reveal-section {
     opacity: 0;
     transform: translateY(16px);
     transition:
@@ -155,7 +155,7 @@
       transform 0.6s ease-out;
   }
 
-  .reveal-section.revealed {
+  .js .reveal-section.revealed {
     opacity: 1;
     transform: translateY(0);
   }
@@ -283,11 +283,11 @@
 
 @media (prefers-reduced-motion: reduce) {
   .data-refresh,
-  .reveal-section,
+  .js .reveal-section,
   .skeleton-shimmer {
     animation: none;
   }
-  .reveal-section {
+  .js .reveal-section {
     opacity: 1;
     transform: none;
   }
