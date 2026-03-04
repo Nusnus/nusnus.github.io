@@ -2,9 +2,9 @@
  * Tool actions — native function calling for cloud models + text marker
  * fallback for local models.
  *
- * Cloud (Grok): Uses OpenAI-compatible `tools` parameter with native
- * function calling. The model returns structured `tool_calls` in the
- * response, which are mapped to ToolAction objects for the UI.
+ * Cloud (Grok): Uses the xAI Responses API with native function calling
+ * and built-in web search. The model returns structured tool calls in
+ * the response, which are mapped to ToolAction objects for the UI.
  *
  * Local (WebLLM): Uses text markers ([LINK: ...], [NAV: ...]) parsed
  * with regex, since local models don't support function calling.
@@ -13,20 +13,24 @@
 import type { ToolAction } from './types';
 
 /* ═══════════════════════════════════════════════════════════════════════
- *  CLOUD — Native OpenAI-compatible function calling definitions
+ *  CLOUD — xAI Responses API tool definitions
  * ═══════════════════════════════════════════════════════════════════════ */
 
-/** OpenAI-compatible tool definition for the tools parameter. */
-export interface ToolDefinition {
-  type: 'function';
-  function: {
-    name: string;
-    description: string;
-    parameters: Record<string, unknown>;
-  };
-}
+/**
+ * Tool definition for the xAI Responses API.
+ * Built-in tools use `type: "web_search"`.
+ * Custom functions use `type: "function"` with flat name/description/parameters.
+ */
+export type ToolDefinition =
+  | { type: 'web_search' }
+  | {
+      type: 'function';
+      name: string;
+      description: string;
+      parameters: Record<string, unknown>;
+    };
 
-/** Raw tool call as returned by the xAI API. */
+/** Raw tool call as returned by the xAI Responses API. */
 export interface ToolCallResult {
   id: string;
   name: string;
@@ -34,66 +38,57 @@ export interface ToolCallResult {
 }
 
 /**
- * Native function calling tool definitions sent to the xAI API.
- * These replace the text-marker prompt instructions for cloud models.
+ * Function tool definitions sent to the xAI Responses API.
+ * Uses the flat format required by the Responses API (no nested `function` key).
  */
-export const CLOUD_TOOL_DEFINITIONS: ToolDefinition[] = [
+const FUNCTION_TOOLS: ToolDefinition[] = [
   {
     type: 'function',
-    function: {
-      name: 'open_link',
-      description:
-        'Suggest opening an external link relevant to the conversation. Use when referencing a specific URL from the knowledge base (e.g., GitHub repos, LinkedIn, articles). Maximum 2 calls per response.',
-      parameters: {
-        type: 'object',
-        properties: {
-          url: {
-            type: 'string',
-            description:
-              'The full URL to open (must be from the knowledge base, do not invent URLs)',
-          },
-          label: {
-            type: 'string',
-            description: 'Short button label describing the link (e.g., "View Celery on GitHub")',
-          },
+    name: 'open_link',
+    description:
+      'Suggest opening an external link relevant to the conversation. Use when referencing a specific URL from the knowledge base (e.g., GitHub repos, LinkedIn, articles). Maximum 2 calls per response.',
+    parameters: {
+      type: 'object',
+      properties: {
+        url: {
+          type: 'string',
+          description: 'The full URL to open (must be from the knowledge base, do not invent URLs)',
         },
-        required: ['url', 'label'],
+        label: {
+          type: 'string',
+          description: 'Short button label describing the link (e.g., "View Celery on GitHub")',
+        },
       },
+      required: ['url', 'label'],
     },
   },
   {
     type: 'function',
-    function: {
-      name: 'navigate',
-      description:
-        'Suggest navigating to a page on this website. Use when directing the user to a section of the portfolio site. Maximum 2 calls per response.',
-      parameters: {
-        type: 'object',
-        properties: {
-          url: {
-            type: 'string',
-            description: 'The site path to navigate to (e.g., "/", "/chat")',
-          },
-          label: {
-            type: 'string',
-            description: 'Short button label (e.g., "Back to Portfolio")',
-          },
+    name: 'navigate',
+    description:
+      'Suggest navigating to a page on this website. Use when directing the user to a section of the portfolio site. Maximum 2 calls per response.',
+    parameters: {
+      type: 'object',
+      properties: {
+        url: {
+          type: 'string',
+          description: 'The site path to navigate to (e.g., "/", "/chat")',
         },
-        required: ['url', 'label'],
+        label: {
+          type: 'string',
+          description: 'Short button label (e.g., "Back to Portfolio")',
+        },
       },
+      required: ['url', 'label'],
     },
   },
 ];
 
 /**
  * Complete tool set for cloud requests.
- * Currently includes client-side action tools (open_link, navigate).
- *
- * Note: xAI's web_search tool requires the Responses API, not the
- * Chat Completions API we use. Web search can be added if/when we
- * migrate to the Responses API.
+ * Includes xAI's built-in web search + client-side action tools.
  */
-export const CLOUD_TOOLS: ToolDefinition[] = [...CLOUD_TOOL_DEFINITIONS];
+export const CLOUD_TOOLS: ToolDefinition[] = [{ type: 'web_search' }, ...FUNCTION_TOOLS];
 
 /**
  * Map raw API tool_calls to UI-renderable ToolAction objects.

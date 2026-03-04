@@ -14,10 +14,21 @@ import { fetchWorkerData } from '@lib/worker-client';
 import type { ContributionGraphData, RepoData } from '@lib/github/types';
 import { formatCompactNumber, calculateStreak, relativeTime } from '@lib/utils/date';
 
+/** Trigger the data-refresh animation on an element. */
+function animateRefresh(el: HTMLElement) {
+  el.classList.remove('data-refresh');
+  // Force reflow so re-adding the class restarts the animation
+  void el.offsetWidth;
+  el.classList.add('data-refresh');
+}
+
 /** Update all DOM elements matching `[data-live="key"]` with the given text. */
 function updateLive(key: string, text: string) {
   document.querySelectorAll<HTMLElement>(`[data-live="${key}"]`).forEach((el) => {
-    el.textContent = text;
+    if (el.textContent !== text) {
+      el.textContent = text;
+      animateRefresh(el);
+    }
   });
 }
 
@@ -43,8 +54,9 @@ function parseDisplayedNumber(text: string): number {
 function updateLiveIfHigher(key: string, value: number, formatted: string) {
   document.querySelectorAll<HTMLElement>(`[data-live="${key}"]`).forEach((el) => {
     const current = parseDisplayedNumber(el.textContent ?? '0');
-    if (value >= current) {
+    if (value >= current && el.textContent !== formatted) {
       el.textContent = formatted;
+      animateRefresh(el);
     }
   });
 }
@@ -54,7 +66,10 @@ function updateRepoField(repoFullName: string, field: string, text: string) {
   document
     .querySelectorAll<HTMLElement>(`[data-live-repo="${repoFullName}"][data-live-field="${field}"]`)
     .forEach((el) => {
-      el.textContent = text;
+      if (el.textContent !== text) {
+        el.textContent = text;
+        animateRefresh(el);
+      }
     });
 }
 

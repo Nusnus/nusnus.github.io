@@ -812,7 +812,8 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
                       <button
                         key={idx}
                         onClick={() => executeAction(action)}
-                        className="bg-bg-base/30 hover:bg-bg-base/50 inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs transition-colors"
+                        title={action.url}
+                        className="text-accent border-accent/30 hover:bg-accent/15 hover:border-accent/50 inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-xs font-medium transition-colors"
                       >
                         {action.type === 'open_link' ? (
                           <ExternalLink className="h-3 w-3" />

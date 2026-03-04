@@ -123,3 +123,30 @@
     opacity: 1;
   }
 }
+
+@keyframes data-refresh {
+  0% {
+    opacity: 0.4;
+    filter: blur(2px);
+  }
+  50% {
+    opacity: 1;
+    filter: blur(0);
+    color: var(--color-accent);
+  }
+  100% {
+    opacity: 1;
+    filter: blur(0);
+    color: inherit;
+  }
+}
+
+.data-refresh {
+  animation: data-refresh 600ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .data-refresh {
+    animation: none;
+  }
+}

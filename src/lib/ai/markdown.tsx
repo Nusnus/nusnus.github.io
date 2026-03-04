@@ -2,8 +2,9 @@
  * Lightweight markdown renderer for AI chat responses.
  *
  * Supports: headings (# ## ###), **bold**, *italic*, `inline code`,
- * ```code blocks```, [links](url), unordered lists (- item),
- * ordered lists (1. item), horizontal rules (---), and paragraphs.
+ * ```code blocks``` (with syntax highlighting), [links](url),
+ * unordered lists (- item), ordered lists (1. item), horizontal
+ * rules (---), and paragraphs.
  * No external dependencies — keeps the bundle small.
  */
 import type { ReactNode } from 'react';
@@ -13,6 +14,249 @@ const HEADING_CLASSES: Record<number, string> = {
   2: 'text-sm font-bold mt-2.5 mb-1',
   3: 'text-sm font-semibold mt-2 mb-0.5',
 };
+
+/* ── Minimal keyword-based syntax highlighter ──
+ * Avoids pulling in shiki/prism at runtime. Covers the languages
+ * the AI is most likely to produce (Python, JS/TS, shell, etc.). */
+
+const KEYWORD_SETS: Record<string, Set<string>> = {
+  python: new Set([
+    'def',
+    'class',
+    'import',
+    'from',
+    'return',
+    'if',
+    'elif',
+    'else',
+    'for',
+    'while',
+    'try',
+    'except',
+    'finally',
+    'with',
+    'as',
+    'yield',
+    'raise',
+    'pass',
+    'break',
+    'continue',
+    'and',
+    'or',
+    'not',
+    'in',
+    'is',
+    'None',
+    'True',
+    'False',
+    'lambda',
+    'async',
+    'await',
+    'self',
+    'print',
+    'global',
+    'nonlocal',
+    'del',
+    'assert',
+  ]),
+  javascript: new Set([
+    'const',
+    'let',
+    'var',
+    'function',
+    'return',
+    'if',
+    'else',
+    'for',
+    'while',
+    'do',
+    'switch',
+    'case',
+    'break',
+    'continue',
+    'new',
+    'this',
+    'class',
+    'extends',
+    'import',
+    'export',
+    'from',
+    'default',
+    'try',
+    'catch',
+    'finally',
+    'throw',
+    'async',
+    'await',
+    'yield',
+    'typeof',
+    'instanceof',
+    'in',
+    'of',
+    'null',
+    'undefined',
+    'true',
+    'false',
+    'void',
+    'delete',
+    'super',
+    'static',
+    'get',
+    'set',
+  ]),
+  shell: new Set([
+    'if',
+    'then',
+    'else',
+    'elif',
+    'fi',
+    'for',
+    'while',
+    'do',
+    'done',
+    'case',
+    'esac',
+    'function',
+    'return',
+    'exit',
+    'echo',
+    'export',
+    'source',
+    'cd',
+    'ls',
+    'rm',
+    'mkdir',
+    'cp',
+    'mv',
+    'cat',
+    'grep',
+    'sed',
+    'awk',
+    'curl',
+    'wget',
+    'sudo',
+    'apt',
+    'brew',
+    'npm',
+    'bun',
+    'pip',
+    'docker',
+    'git',
+  ]),
+};
+
+// Alias common lang identifiers
+const LANG_ALIAS: Record<string, string> = {
+  py: 'python',
+  python: 'python',
+  python3: 'python',
+  js: 'javascript',
+  javascript: 'javascript',
+  jsx: 'javascript',
+  ts: 'javascript',
+  typescript: 'javascript',
+  tsx: 'javascript',
+  sh: 'shell',
+  bash: 'shell',
+  zsh: 'shell',
+  shell: 'shell',
+};
+
+function highlightCode(code: string, lang: string): ReactNode[] {
+  const resolved = LANG_ALIAS[lang.toLowerCase()] ?? '';
+  const keywords = KEYWORD_SETS[resolved];
+  if (!keywords) {
+    // Unknown language — return plain text
+    return [code];
+  }
+
+  const elements: ReactNode[] = [];
+  // Tokenize: strings, comments, numbers, words, whitespace/symbols
+  const tokenRegex =
+    /(#[^\n]*|\/\/[^\n]*|\/\*[\s\S]*?\*\/|"""[\s\S]*?"""|'''[\s\S]*?'''|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`|\b[0-9]+(?:\.[0-9]+)?\b|@\w+|\b[a-zA-Z_]\w*\b)/g;
+
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+  let key = 0;
+
+  while ((match = tokenRegex.exec(code)) !== null) {
+    // Plain text before token
+    if (match.index > lastIndex) {
+      elements.push(code.slice(lastIndex, match.index));
+    }
+
+    const token = match[0];
+    const ch = token[0] ?? '';
+
+    if (ch === '#' || token.startsWith('//') || token.startsWith('/*')) {
+      // Comment
+      elements.push(
+        <span key={key++} className="text-text-muted italic">
+          {token}
+        </span>,
+      );
+    } else if (ch === '"' || ch === "'" || ch === '`') {
+      // String
+      elements.push(
+        <span key={key++} className="text-status-warning">
+          {token}
+        </span>,
+      );
+    } else if (ch === '@') {
+      // Decorator
+      elements.push(
+        <span key={key++} className="text-accent">
+          {token}
+        </span>,
+      );
+    } else if (/^[0-9]/.test(ch)) {
+      // Number
+      elements.push(
+        <span key={key++} className="text-accent">
+          {token}
+        </span>,
+      );
+    } else if (keywords.has(token)) {
+      // Keyword
+      elements.push(
+        <span key={key++} className="text-accent font-semibold">
+          {token}
+        </span>,
+      );
+    } else {
+      elements.push(token);
+    }
+
+    lastIndex = match.index + token.length;
+  }
+
+  // Remaining text
+  if (lastIndex < code.length) {
+    elements.push(code.slice(lastIndex));
+  }
+
+  return elements;
+}
+
+/** React component for a highlighted code block. */
+function HighlightedCodeBlock({
+  code,
+  lang,
+  blockKey,
+}: {
+  code: string;
+  lang: string;
+  blockKey: number;
+}) {
+  return (
+    <pre
+      key={blockKey}
+      className="bg-bg-elevated scrollbar-thin my-2 overflow-x-auto rounded-lg p-3 text-xs"
+    >
+      <code>{highlightCode(code, lang)}</code>
+    </pre>
+  );
+}
 
 /** Render a markdown string as React elements. */
 export function renderMarkdown(text: string): ReactNode {
@@ -76,17 +320,12 @@ function renderBlock(block: string, key: number): ReactNode {
   const trimmed = block.trim();
   if (!trimmed) return null;
 
-  // Code block: ```...```
-  const codeBlockMatch = trimmed.match(/^```[^\n]*\n([\s\S]*?)```$/);
+  // Code block: ```lang\n...\n```
+  const codeBlockMatch = trimmed.match(/^```(\w*)\n([\s\S]*?)```$/);
   if (codeBlockMatch) {
-    return (
-      <pre
-        key={key}
-        className="bg-bg-elevated scrollbar-thin my-2 overflow-x-auto rounded-lg p-3 text-xs"
-      >
-        <code>{codeBlockMatch[1]?.trim()}</code>
-      </pre>
-    );
+    const lang = codeBlockMatch[1] ?? '';
+    const code = codeBlockMatch[2]?.trim() ?? '';
+    return <HighlightedCodeBlock key={key} code={code} lang={lang} blockKey={key} />;
   }
 
   // Horizontal rule: --- or *** or ___

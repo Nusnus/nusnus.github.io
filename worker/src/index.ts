@@ -1,7 +1,7 @@
 /**
  * Cloudflare Worker — AI API Proxy (Production)
  *
- * Proxies OpenAI-compatible chat completion requests to xAI (Grok).
+ * Proxies requests to xAI (Grok) via the Responses API.
  * The API key is stored as a Cloudflare secret — never in source code.
  *
  * Security layers:
@@ -9,9 +9,9 @@
  *  2. Method restriction (POST only, OPTIONS for preflight)
  *  3. Content-Type validation
  *  4. Request body size limit
- *  5. Payload schema validation (messages array required)
+ *  5. Payload schema validation (input array required)
  *  6. Model allowlist (prevent abuse of expensive models)
- *  7. max_tokens cap (prevent runaway costs)
+ *  7. max_output_tokens cap (prevent runaway costs)
  *  8. Per-IP rate limiting via Cloudflare KV-free approach (in-memory)
  */
 
@@ -24,26 +24,22 @@ interface Env {
   GITHUB_TOKEN: string;
 }
 
-interface ChatMessage {
-  role: 'system' | 'user' | 'assistant' | 'tool';
+interface InputMessage {
+  role: 'system' | 'user' | 'assistant';
   content?: string | null;
-  tool_call_id?: string;
-  tool_calls?: unknown[];
 }
 
-interface ChatCompletionRequest {
+interface ResponsesAPIRequest {
   model?: string;
-  messages?: ChatMessage[];
-  max_tokens?: number;
+  input?: InputMessage[];
+  max_output_tokens?: number;
   temperature?: number;
   top_p?: number;
   stream?: boolean;
-  /** Native function calling — passed through to xAI. */
+  /** Tools — includes built-in tools (web_search) and function definitions. */
   tools?: unknown[];
   /** Tool choice strategy — passed through to xAI. */
   tool_choice?: unknown;
-  /** Structured output format — passed through to xAI. */
-  response_format?: unknown;
   [key: string]: unknown;
 }
 
@@ -55,7 +51,7 @@ const ALLOWED_ORIGINS: ReadonlySet<string> = new Set([
   'http://localhost:3000',
 ]);
 
-const XAI_API_URL = 'https://api.x.ai/v1/chat/completions';
+const XAI_RESPONSES_URL = 'https://api.x.ai/v1/responses';
 
 /** Models visitors are allowed to use. Prevents switching to costly models. */
 const ALLOWED_MODELS: ReadonlySet<string> = new Set([
@@ -70,8 +66,8 @@ const DEFAULT_MODEL = 'grok-4-1-fast';
 
 /** Hard limits to prevent abuse. */
 const MAX_REQUEST_BYTES = 131_072; // 128 KB — accommodates full context + tools + chat history
-const MAX_TOKENS_CAP = 1024;
-const MAX_MESSAGES = 30;
+const MAX_OUTPUT_TOKENS_CAP = 1024;
+const MAX_INPUT_ITEMS = 30;
 
 /** Simple in-memory rate limiter (per-isolate, resets on cold start). */
 const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
@@ -148,6 +144,12 @@ export default {
       return jsonResponse({ error: 'Method not allowed' }, 405, origin);
     }
 
+    // ── Path guard — only /v1/responses is accepted ──
+    const postPath = new URL(request.url).pathname;
+    if (postPath !== '/v1/responses') {
+      return jsonResponse({ error: 'Not found' }, 404, origin);
+    }
+
     // ── Origin guard ──
     if (!isAllowed) {
       return jsonResponse({ error: 'Forbidden' }, 403);
@@ -176,41 +178,33 @@ export default {
       return jsonResponse({ error: 'Request too large' }, 413, origin);
     }
 
-    let body: ChatCompletionRequest;
+    let body: ResponsesAPIRequest;
     try {
       const raw = await request.text();
       if (raw.length > MAX_REQUEST_BYTES) {
         return jsonResponse({ error: 'Request too large' }, 413, origin);
       }
-      body = JSON.parse(raw) as ChatCompletionRequest;
+      body = JSON.parse(raw) as ResponsesAPIRequest;
     } catch {
       return jsonResponse({ error: 'Invalid JSON' }, 400, origin);
     }
 
-    // ── Payload validation ──
-    if (!Array.isArray(body.messages) || body.messages.length === 0) {
-      return jsonResponse({ error: 'messages array is required' }, 400, origin);
+    // ── Payload validation (Responses API uses `input` instead of `messages`) ──
+    if (!Array.isArray(body.input) || body.input.length === 0) {
+      return jsonResponse({ error: 'input array is required' }, 400, origin);
     }
 
-    if (body.messages.length > MAX_MESSAGES) {
-      return jsonResponse({ error: `Too many messages (max ${MAX_MESSAGES})` }, 400, origin);
+    if (body.input.length > MAX_INPUT_ITEMS) {
+      return jsonResponse({ error: `Too many input items (max ${MAX_INPUT_ITEMS})` }, 400, origin);
     }
 
-    // Validate each message has required fields
-    // content may be null for tool-call assistant messages; tool messages use tool_call_id
-    for (const msg of body.messages) {
+    // Validate each input message has required fields
+    for (const msg of body.input) {
       if (!msg.role) {
-        return jsonResponse({ error: 'Each message must have a role' }, 400, origin);
+        return jsonResponse({ error: 'Each input item must have a role' }, 400, origin);
       }
-      const hasContent = typeof msg.content === 'string';
-      const hasToolCalls = Array.isArray(msg.tool_calls) && msg.tool_calls.length > 0;
-      const isToolResult = msg.role === 'tool' && typeof msg.tool_call_id === 'string';
-      if (!hasContent && !hasToolCalls && !isToolResult) {
-        return jsonResponse(
-          { error: 'Each message must have content, tool_calls, or be a tool result' },
-          400,
-          origin,
-        );
+      if (typeof msg.content !== 'string') {
+        return jsonResponse({ error: 'Each input item must have string content' }, 400, origin);
       }
     }
 
@@ -222,15 +216,18 @@ export default {
       body.model = requestedModel;
     }
 
-    body.max_tokens = Math.min(body.max_tokens ?? MAX_TOKENS_CAP, MAX_TOKENS_CAP);
+    body.max_output_tokens = Math.min(
+      body.max_output_tokens ?? MAX_OUTPUT_TOKENS_CAP,
+      MAX_OUTPUT_TOKENS_CAP,
+    );
 
     // Allow client to opt into streaming
     const wantsStream = body.stream === true;
     body.stream = wantsStream;
 
-    // ── Forward to xAI ──
+    // ── Forward to xAI Responses API ──
     try {
-      const xaiResponse = await fetch(XAI_API_URL, {
+      const xaiResponse = await fetch(XAI_RESPONSES_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

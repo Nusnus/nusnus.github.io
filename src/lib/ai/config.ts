@@ -314,7 +314,7 @@ export interface CloudModelInfo {
 }
 
 /** Cloudflare Worker proxy URL — API key is stored server-side. */
-export const CLOUD_PROXY_URL = 'https://ai-proxy.tomer-nosrati.workers.dev';
+export const CLOUD_PROXY_URL = 'https://ai-proxy.tomer-nosrati.workers.dev/v1/responses';
 
 export const CLOUD_MODELS: CloudModelInfo[] = [
   {
@@ -342,11 +342,11 @@ export const GENERATION_CONFIG = {
   repetition_penalty: 1.05,
 } as const;
 
-/** Generation parameters for cloud models (large context). */
+/** Generation parameters for cloud models (large context, Responses API). */
 export const CLOUD_GENERATION_CONFIG = {
   temperature: 0.85,
   top_p: 0.9,
-  max_tokens: 1024,
+  max_output_tokens: 1024,
 } as const;
 
 /**
