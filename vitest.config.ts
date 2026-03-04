@@ -5,6 +5,8 @@ export default defineConfig({
   resolve: {
     alias: {
       '@components': resolve(__dirname, './src/components'),
+      '@config': resolve(__dirname, './src/config'),
+      '@hooks': resolve(__dirname, './src/hooks'),
       '@layouts': resolve(__dirname, './src/layouts'),
       '@lib': resolve(__dirname, './src/lib'),
       '@styles': resolve(__dirname, './src/styles'),

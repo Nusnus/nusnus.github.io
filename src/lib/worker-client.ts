@@ -6,7 +6,9 @@
  * Deduplicates concurrent requests to the same endpoint.
  */
 
-const WORKER_URL = 'https://ai-proxy.tomer-nosrati.workers.dev';
+import { WORKER_BASE_URL } from '@config';
+
+const WORKER_URL = WORKER_BASE_URL;
 
 /** Module-level cache — deduplicates concurrent fetches to the same endpoint. */
 const inflightCache = new Map<string, Promise<unknown>>();

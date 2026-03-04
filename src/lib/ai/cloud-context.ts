@@ -10,39 +10,23 @@
  * Total context: ~12K tokens — trivial for a 2M context model.
  */
 
-import type {
-  ActivityEvent,
-  RepoData,
-  ContributionGraphData,
-  ProfileData,
-} from '@lib/github/types';
+import type { ActivityData, RepoData, ContributionGraphData, ProfileData } from '@lib/github/types';
 import {
   LINKEDIN_ARTICLES,
   COLLABORATIONS,
   SOCIAL_LINKS,
   safeRepoName,
-} from '@lib/utils/constants';
-
-interface ActivityData {
-  events: ActivityEvent[];
-  todaySummary: Record<string, number>;
-}
+  WORKER_BASE_URL,
+} from '@config';
+import { relativeTime, formatCompactNumber } from '@lib/utils/date';
 
 /** Format a number with commas. */
-const fmt = (n: number) => n.toLocaleString('en-US');
+const fmt = (n: number) => formatCompactNumber(n);
 
 /** Format an ISO date as relative time. */
-function formatRelative(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
-  const mins = Math.floor(diff / 60_000);
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
-}
+const formatRelative = relativeTime;
 
-const WORKER_URL = 'https://ai-proxy.tomer-nosrati.workers.dev';
+const WORKER_URL = WORKER_BASE_URL;
 
 /**
  * Fetch a GitHub endpoint from the Worker (live, cached), falling back to

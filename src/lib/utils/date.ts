@@ -112,3 +112,19 @@ export function calculateStreak(days: { date: string; contributionCount: number 
 export function formatCompactNumber(n: number): string {
   return new Intl.NumberFormat('en', { notation: 'compact' }).format(n);
 }
+
+/** Short month names for chart/graph labels. */
+export const MONTH_NAMES = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+] as const;

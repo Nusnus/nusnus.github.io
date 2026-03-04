@@ -28,7 +28,9 @@ import type {
   MetaData,
 } from '../github/types';
 
-const WORKER_URL = 'https://ai-proxy.tomer-nosrati.workers.dev';
+import { WORKER_BASE_URL } from '@config';
+
+const WORKER_URL = WORKER_BASE_URL;
 const DATA_DIR = join(process.cwd(), 'public', 'data');
 
 /* ── In-memory cache ── */

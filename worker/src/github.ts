@@ -137,15 +137,15 @@ async function fetchContributorRank(o: string, r: string, t: string): Promise<nu
 }
 
 async function fetchRepoList(repoList: string[], token: string): Promise<RepoData[]> {
-  const repos: RepoData[] = [];
-  for (const fullName of repoList) {
-    const [owner = '', repo = ''] = fullName.split('/');
-    try {
+  // Fetch all repos in parallel for much faster response times
+  const results = await Promise.allSettled(
+    repoList.map(async (fullName) => {
+      const [owner = '', repo = ''] = fullName.split('/');
       const [d, rank] = await Promise.all([
         ghFetch<Record<string, unknown>>(`/repos/${owner}/${repo}`, token),
         fetchContributorRank(owner, repo, token),
       ]);
-      repos.push({
+      return {
         name: d.name as string,
         fullName: d.full_name as string,
         description: (d.description as string) ?? '',
@@ -157,12 +157,12 @@ async function fetchRepoList(repoList: string[], token: string): Promise<RepoDat
         language: (d.language as string | null) ?? null,
         role: REPO_ROLES[fullName] ?? 'contributor',
         ...(rank != null ? { contributorRank: rank } : {}),
-      });
-    } catch {
-      /* skip */
-    }
-  }
-  return repos;
+      };
+    }),
+  );
+  return results
+    .filter((r): r is PromiseFulfilledResult<RepoData> => r.status === 'fulfilled')
+    .map((r) => r.value);
 }
 
 async function fetchActivity(token: string) {
