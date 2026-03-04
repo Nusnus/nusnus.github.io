@@ -3,6 +3,8 @@ import BaseLayout from '@layouts/BaseLayout.astro';
 import Sidebar from '@components/layout/Sidebar.astro';
 import MainContent from '@components/layout/MainContent.astro';
 import ActivityPanel from '@components/layout/ActivityPanel.astro';
+import MobileHeader from '@components/layout/MobileHeader.astro';
+import MobileNav from '@components/layout/MobileNav.astro';
 import ActivityOverview from '@components/sections/ActivityOverview.astro';
 import Collaborations from '@components/sections/Collaborations.astro';
 import ActivityGraphSection from '@components/sections/ActivityGraphSection.astro';
@@ -22,8 +24,15 @@ const lastEventTime = activity?.events[0]?.createdAt ?? new Date().toISOString()
 ---
 
 <BaseLayout>
-  <div class="grid h-screen grid-cols-1 md:grid-cols-[280px_1fr] lg:grid-cols-[280px_1fr_340px]">
-    <!-- Sidebar -->
+  <!-- Mobile Header + Drawer (visible only below md) -->
+  <MobileHeader>
+    <MobileNav />
+  </MobileHeader>
+
+  <div
+    class="grid min-h-screen grid-cols-1 md:h-screen md:grid-cols-[280px_1fr] lg:grid-cols-[280px_1fr_340px]"
+  >
+    <!-- Sidebar (hidden on mobile, shown on md+) -->
     <Sidebar>
       <StatusDot client:load lastEventTimestamp={lastEventTime} slot="status-dot" />
       <ThemeToggle client:load slot="theme-toggle" />

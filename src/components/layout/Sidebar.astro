@@ -24,7 +24,7 @@ const rankedRepos = allRepos
   .sort((a, b) => (a.contributorRank ?? 99) - (b.contributorRank ?? 99));
 ---
 
-<aside class="border-accent/30 bg-bg-base flex h-screen flex-col border-r px-5 py-6">
+<aside class="border-accent/30 bg-bg-base hidden h-screen flex-col border-r px-5 py-6 md:flex">
   <!-- Avatar + Status -->
   <div class="mb-4 flex items-center gap-3">
     <div class="group relative">
