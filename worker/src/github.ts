@@ -6,47 +6,16 @@
  * Routes: GET /github/profile|repos|org-repos|activity|contributions
  */
 
-const GITHUB_USERNAME = 'Nusnus';
+import {
+  GITHUB_USERNAME,
+  CELERY_REPOS,
+  CELERY_ORG_REPOS,
+  REPO_ROLES,
+  isKnownPublicRepo,
+} from '../../shared/github-config';
+
 const GITHUB_API = 'https://api.github.com';
 const GITHUB_GRAPHQL = 'https://api.github.com/graphql';
-
-const CELERY_REPOS = ['celery/celery', 'celery/pytest-celery', 'celery/kombu'];
-const CELERY_ORG_REPOS = [
-  'celery/billiard',
-  'celery/django-celery-beat',
-  'celery/django-celery-results',
-  'celery/py-amqp',
-  'celery/librabbitmq',
-  'celery/vine',
-  'celery/sphinx_celery',
-  'celery/celeryproject',
-  'mher/flower',
-];
-const REPO_ROLES: Record<string, string> = {
-  'celery/celery': 'owner',
-  'celery/pytest-celery': 'creator',
-  'celery/kombu': 'owner',
-  'celery/billiard': 'owner',
-  'celery/django-celery-beat': 'owner',
-  'celery/django-celery-results': 'owner',
-  'celery/py-amqp': 'owner',
-  'celery/librabbitmq': 'owner',
-  'celery/vine': 'owner',
-  'celery/sphinx_celery': 'owner',
-  'celery/celeryproject': 'owner',
-  'mher/flower': 'contributor',
-};
-/**
- * Known public repo owners — defense-in-depth filter for activity events.
- * Even though we use /events/public (which only returns public events),
- * this ensures private repo names can never leak through the API.
- */
-const KNOWN_PUBLIC_OWNERS: ReadonlySet<string> = new Set(['nusnus', 'celery', 'mher']);
-
-function isKnownPublicRepo(repoFullName: string): boolean {
-  const owner = repoFullName.split('/')[0]?.toLowerCase() ?? '';
-  return KNOWN_PUBLIC_OWNERS.has(owner);
-}
 
 const TTL: Record<string, number> = {
   profile: 3600,
@@ -137,15 +106,15 @@ async function fetchContributorRank(o: string, r: string, t: string): Promise<nu
 }
 
 async function fetchRepoList(repoList: string[], token: string): Promise<RepoData[]> {
-  const repos: RepoData[] = [];
-  for (const fullName of repoList) {
-    const [owner = '', repo = ''] = fullName.split('/');
-    try {
+  // Fetch all repos in parallel for much faster response times
+  const results = await Promise.allSettled(
+    repoList.map(async (fullName) => {
+      const [owner = '', repo = ''] = fullName.split('/');
       const [d, rank] = await Promise.all([
         ghFetch<Record<string, unknown>>(`/repos/${owner}/${repo}`, token),
         fetchContributorRank(owner, repo, token),
       ]);
-      repos.push({
+      return {
         name: d.name as string,
         fullName: d.full_name as string,
         description: (d.description as string) ?? '',
@@ -157,12 +126,12 @@ async function fetchRepoList(repoList: string[], token: string): Promise<RepoDat
         language: (d.language as string | null) ?? null,
         role: REPO_ROLES[fullName] ?? 'contributor',
         ...(rank != null ? { contributorRank: rank } : {}),
-      });
-    } catch {
-      /* skip */
-    }
-  }
-  return repos;
+      };
+    }),
+  );
+  return results
+    .filter((r): r is PromiseFulfilledResult<RepoData> => r.status === 'fulfilled')
+    .map((r) => r.value);
 }
 
 async function fetchActivity(token: string) {

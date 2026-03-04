@@ -6,10 +6,12 @@ on:
     paths:
       - 'src/**'
       - 'scripts/**'
+      - 'shared/**'
       - 'package.json'
       - 'tsconfig.json'
       - 'astro.config.ts'
       - 'eslint.config.ts'
+      - 'vitest.config.ts'
   pull_request:
     branches: [main]
 

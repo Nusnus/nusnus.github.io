@@ -314,7 +314,7 @@ export interface CloudModelInfo {
 }
 
 /** Cloudflare Worker proxy URL — API key is stored server-side. */
-export const CLOUD_PROXY_URL = 'https://ai-proxy.tomer-nosrati.workers.dev/v1/responses';
+export { WORKER_AI_URL as CLOUD_PROXY_URL } from '@config';
 
 export const CLOUD_MODELS: CloudModelInfo[] = [
   {

@@ -7,7 +7,8 @@
  */
 
 import type { ActivityEvent } from '@lib/github/types';
-import { safeRepoName } from '@lib/utils/constants';
+import { safeRepoName } from '@config';
+import { relativeTime } from '@lib/utils/date';
 
 /** Maximum number of recent activity events to include (kept small for 4K context). */
 const MAX_EVENTS = 5;
@@ -30,8 +31,7 @@ export async function fetchRuntimeContext(): Promise<string> {
       if (data.events.length > 0) {
         const recent = data.events.slice(0, MAX_EVENTS);
         const lines = recent.map(
-          (e) =>
-            `- [${formatRelative(e.createdAt)}] ${e.type}: ${e.title} (${safeRepoName(e.repo)})`,
+          (e) => `- [${relativeTime(e.createdAt)}] ${e.type}: ${e.title} (${safeRepoName(e.repo)})`,
         );
         sections.push(`Recent activity:\n${lines.join('\n')}`);
       }
@@ -51,15 +51,4 @@ export async function fetchRuntimeContext(): Promise<string> {
   }
 
   return sections.length > 0 ? `\n# Recent Activity (live)\n${sections.join('\n')}` : '';
-}
-
-/** Format an ISO date string as a relative time label. */
-function formatRelative(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
-  const mins = Math.floor(diff / 60_000);
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
 }

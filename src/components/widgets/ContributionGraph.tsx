@@ -1,7 +1,8 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import type { ContributionWeek, ContributionGraphData } from '@lib/github/types';
 import { getActivityLevel } from '@lib/github/formatters';
-import { formatDate } from '@lib/utils/date';
+import { formatDate, MONTH_NAMES } from '@lib/utils/date';
+import { useLiveData } from '@hooks/useLiveData';
 
 interface Props {
   weeks: ContributionWeek[];
@@ -13,20 +14,6 @@ const CELL_GAP = 3;
 const CELL_STEP = CELL_SIZE + CELL_GAP;
 const LABEL_WIDTH = 28;
 const MONTH_LABEL_HEIGHT = 16;
-const MONTH_NAMES = [
-  'Jan',
-  'Feb',
-  'Mar',
-  'Apr',
-  'May',
-  'Jun',
-  'Jul',
-  'Aug',
-  'Sep',
-  'Oct',
-  'Nov',
-  'Dec',
-];
 const DAY_LABELS = ['', 'Mon', '', 'Wed', '', 'Fri', ''];
 
 const LEVEL_COLORS = [
@@ -67,25 +54,21 @@ export default function ContributionGraph({
   weeks: initialWeeks,
   totalContributions: initialTotal,
 }: Props) {
-  const [liveWeeks, setLiveWeeks] = useState(initialWeeks);
-  const [liveTotal, setLiveTotal] = useState(initialTotal);
+  const liveWeeks = useLiveData<ContributionGraphData, ContributionWeek[]>(
+    'live-data:contributions',
+    useCallback((data) => data?.weeks, []),
+  );
+  const liveTotal = useLiveData<ContributionGraphData, number>(
+    'live-data:contributions',
+    useCallback((data) => data?.totalContributions, []),
+  );
+
+  const weeks = liveWeeks ?? initialWeeks;
+  const totalContributions = liveTotal ?? initialTotal;
+
   const [hovered, setHovered] = useState<HoveredCell | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const [tooltipPos, setTooltipPos] = useState<{ left: number; top: number } | null>(null);
-
-  // Listen for live data updates from LiveData island
-  useEffect(() => {
-    function onLiveData(e: Event) {
-      const data = (e as CustomEvent<ContributionGraphData>).detail;
-      if (data?.weeks) setLiveWeeks(data.weeks);
-      if (data?.totalContributions != null) setLiveTotal(data.totalContributions);
-    }
-    window.addEventListener('live-data:contributions', onLiveData);
-    return () => window.removeEventListener('live-data:contributions', onLiveData);
-  }, []);
-
-  const weeks = liveWeeks;
-  const totalContributions = liveTotal;
 
   const handleMouseEnter = useCallback(
     (date: string, count: number, weekIndex: number, dayIndex: number) => {

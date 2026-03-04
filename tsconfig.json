@@ -5,7 +5,10 @@
       "@components/*": ["./src/components/*"],
       "@layouts/*": ["./src/layouts/*"],
       "@lib/*": ["./src/lib/*"],
-      "@styles/*": ["./src/styles/*"]
+      "@styles/*": ["./src/styles/*"],
+      "@config": ["./src/config/index.ts"],
+      "@config/*": ["./src/config/*"],
+      "@hooks/*": ["./src/hooks/*"]
     }
   },
   "include": [".astro/types.d.ts", "src/**/*", "scripts/**/*"],

@@ -1,0 +1,51 @@
+---
+/**
+ * ContributorRankings — Shared contributor ranking list.
+ *
+ * Used in both Sidebar and MobileNav to eliminate duplication.
+ */
+import type { RepoData } from '@lib/github/types';
+
+interface Props {
+  repos: RepoData[] | null;
+  orgRepos: RepoData[] | null;
+}
+
+const { repos, orgRepos } = Astro.props;
+
+const allRepos = [...(repos ?? []), ...(orgRepos ?? [])];
+const rankedRepos = allRepos
+  .filter((r) => r.contributorRank != null)
+  .sort((a, b) => (a.contributorRank ?? 99) - (b.contributorRank ?? 99));
+---
+
+{
+  rankedRepos.length > 0 && (
+    <>
+      <p class="text-text-muted mb-2 text-xs font-medium tracking-wider uppercase">
+        Contributor Rankings
+      </p>
+      <div class="space-y-1">
+        {rankedRepos.map((repo) => (
+          <a
+            href={repo.htmlUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="hover:bg-bg-surface group flex items-center justify-between rounded-md px-2 py-1 transition-colors duration-100"
+          >
+            <span class="text-text-secondary group-hover:text-text-primary font-mono text-xs transition-colors">
+              {repo.name}
+            </span>
+            <span
+              class="text-accent font-mono text-xs font-semibold"
+              data-live-repo={repo.fullName}
+              data-live-field="contributorRank"
+            >
+              #{repo.contributorRank}
+            </span>
+          </a>
+        ))}
+      </div>
+    </>
+  )
+}

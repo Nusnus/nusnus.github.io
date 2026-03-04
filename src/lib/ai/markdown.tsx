@@ -261,13 +261,34 @@ function HighlightedCodeBlock({
   );
 }
 
-/** Render a markdown string as React elements. */
-export function renderMarkdown(text: string): ReactNode {
+/** LRU-ish cache for rendered markdown (avoids re-parsing identical strings). */
+const markdownCache = new Map<string, ReactNode>();
+const MAX_CACHE_SIZE = 100;
+
+/**
+ * Render a markdown string as React elements (memoized).
+ *
+ * @param text - The markdown string to render
+ * @param skipCache - Skip caching (use during streaming to avoid polluting the cache with partial strings)
+ */
+export function renderMarkdown(text: string, skipCache = false): ReactNode {
   if (!text) return null;
 
-  // Split into blocks, but preserve code blocks as single units
+  const cached = markdownCache.get(text);
+  if (cached !== undefined) return cached;
+
   const blocks = splitBlocks(text);
-  return blocks.map((block, i) => renderBlock(block, i));
+  const result = blocks.map((block, i) => renderBlock(block, i));
+
+  if (!skipCache) {
+    // Evict oldest entries if cache is too large
+    if (markdownCache.size >= MAX_CACHE_SIZE) {
+      const firstKey = markdownCache.keys().next().value;
+      if (firstKey !== undefined) markdownCache.delete(firstKey);
+    }
+    markdownCache.set(text, result);
+  }
+  return result;
 }
 
 /** Split text into blocks while keeping fenced code blocks intact. */

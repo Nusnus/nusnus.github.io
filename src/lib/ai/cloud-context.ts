@@ -10,39 +10,21 @@
  * Total context: ~12K tokens — trivial for a 2M context model.
  */
 
-import type {
-  ActivityEvent,
-  RepoData,
-  ContributionGraphData,
-  ProfileData,
-} from '@lib/github/types';
+import type { ActivityData, RepoData, ContributionGraphData, ProfileData } from '@lib/github/types';
 import {
   LINKEDIN_ARTICLES,
   COLLABORATIONS,
   SOCIAL_LINKS,
   safeRepoName,
-} from '@lib/utils/constants';
+  WORKER_BASE_URL,
+} from '@config';
+import { relativeTime } from '@lib/utils/date';
 
-interface ActivityData {
-  events: ActivityEvent[];
-  todaySummary: Record<string, number>;
-}
-
-/** Format a number with commas. */
+/** Format a number with commas (full precision for AI context). */
 const fmt = (n: number) => n.toLocaleString('en-US');
 
 /** Format an ISO date as relative time. */
-function formatRelative(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
-  const mins = Math.floor(diff / 60_000);
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
-}
-
-const WORKER_URL = 'https://ai-proxy.tomer-nosrati.workers.dev';
+const formatRelative = relativeTime;
 
 /**
  * Fetch a GitHub endpoint from the Worker (live, cached), falling back to
@@ -50,7 +32,7 @@ const WORKER_URL = 'https://ai-proxy.tomer-nosrati.workers.dev';
  */
 async function fetchGitHub(workerPath: string, staticPath: string): Promise<Response | null> {
   try {
-    const res = await fetch(`${WORKER_URL}/github/${workerPath}`);
+    const res = await fetch(`${WORKER_BASE_URL}/github/${workerPath}`);
     if (res.ok) return res;
   } catch {
     /* network error — fall through to static */

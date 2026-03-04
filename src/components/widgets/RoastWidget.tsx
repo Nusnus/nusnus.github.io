@@ -195,8 +195,9 @@ ${
                     <button
                       onClick={handleEscalate}
                       aria-label="Make it more vulgar"
-                      className="flex h-7 items-center justify-center rounded-md px-2 transition-all hover:scale-125"
+                      className="roast-header-btn flex h-7 items-center justify-center rounded-md px-2 transition-all hover:scale-125"
                       title={ESCALATE_TITLES[Math.min(roastLevel, ESCALATE_TITLES.length - 1)]}
+                      style={{ animationDelay: '0s' }}
                     >
                       {ESCALATE_FIRES[Math.min(roastLevel, ESCALATE_FIRES.length - 1)]}
                     </button>
@@ -204,8 +205,9 @@ ${
                     <button
                       onClick={handleReRoast}
                       aria-label="Roast again"
-                      className="flex h-7 w-7 items-center justify-center rounded-md text-white/50 transition-colors hover:text-white"
+                      className="roast-header-btn flex h-7 w-7 items-center justify-center rounded-md text-white/50 transition-colors hover:text-white"
                       title="Roast again"
+                      style={{ animationDelay: '0.3s' }}
                     >
                       <svg
                         className="h-3.5 w-3.5"
@@ -227,7 +229,8 @@ ${
                 <button
                   onClick={handleFabClick}
                   aria-label="Close roast"
-                  className="text-text-muted hover:text-text-primary flex h-7 w-7 items-center justify-center rounded-md transition-colors"
+                  className="roast-header-btn text-text-muted hover:text-text-primary flex h-7 w-7 items-center justify-center rounded-md transition-colors"
+                  style={{ animationDelay: '0.6s' }}
                 >
                   <svg
                     className="h-4 w-4"
@@ -252,7 +255,7 @@ ${
               )}
               {(state === 'streaming' || state === 'done') && response && (
                 <div className="text-text-primary text-sm leading-relaxed">
-                  {renderMarkdown(response)}
+                  {renderMarkdown(response, state === 'streaming')}
                 </div>
               )}
               {state === 'error' && (

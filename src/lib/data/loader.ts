@@ -28,7 +28,8 @@ import type {
   MetaData,
 } from '../github/types';
 
-const WORKER_URL = 'https://ai-proxy.tomer-nosrati.workers.dev';
+import { WORKER_BASE_URL } from '@config';
+
 const DATA_DIR = join(process.cwd(), 'public', 'data');
 
 /* ── In-memory cache ── */
@@ -82,7 +83,7 @@ async function loadData<T>(
   const promise = (async (): Promise<T | null> => {
     // Try worker first (live, edge-cached)
     try {
-      const res = await fetch(`${WORKER_URL}/github/${workerPath}`, {
+      const res = await fetch(`${WORKER_BASE_URL}/github/${workerPath}`, {
         headers: { Origin: 'https://nusnus.github.io' },
       });
       if (res.ok) {

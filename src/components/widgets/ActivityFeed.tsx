@@ -3,7 +3,7 @@ import type { ActivityEvent } from '@lib/github/types';
 import { fetchEvents } from '@lib/github/api';
 import { formatEventType, getEventColor, truncateCommitMessage } from '@lib/github/formatters';
 import { relativeTime } from '@lib/utils/date';
-import { isKnownPublicRepo } from '@lib/utils/constants';
+import { isKnownPublicRepo } from '@config';
 import {
   GitCommitHorizontal,
   GitPullRequest,
