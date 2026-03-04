@@ -13,6 +13,7 @@ import Sponsoring from '@components/sections/Sponsoring.astro';
 import ThemeToggle from '@components/widgets/ThemeToggle';
 import StatusDot from '@components/widgets/StatusDot';
 import ActivityFeed from '@components/widgets/ActivityFeed';
+import LiveData from '@components/widgets/LiveData';
 import { loadActivity } from '@lib/data/loader';
 
 const activity = loadActivity();
@@ -43,4 +44,7 @@ const lastEventTime = activity?.events[0]?.createdAt ?? new Date().toISOString()
       <ActivityFeed client:load initialEvents={activity?.events ?? []} />
     </ActivityPanel>
   </div>
+
+  <!-- Invisible island: fetches live data from worker and updates all data-live elements -->
+  <LiveData client:load />
 </BaseLayout>

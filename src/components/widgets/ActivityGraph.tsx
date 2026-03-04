@@ -1,5 +1,5 @@
-import { useState, useCallback, useMemo } from 'react';
-import type { ContributionWeek } from '@lib/github/types';
+import { useState, useCallback, useMemo, useEffect } from 'react';
+import type { ContributionWeek, ContributionGraphData } from '@lib/github/types';
 
 interface Props {
   weeks: ContributionWeek[];
@@ -57,8 +57,20 @@ const BAR_RADIUS = 3;
 const LABEL_HEIGHT = 20;
 const TOP_PAD = 24;
 
-export default function ActivityGraph({ weeks }: Props) {
+export default function ActivityGraph({ weeks: initialWeeks }: Props) {
+  const [liveWeeks, setLiveWeeks] = useState(initialWeeks);
   const [hovered, setHovered] = useState<HoveredBar | null>(null);
+
+  useEffect(() => {
+    function onLiveData(e: Event) {
+      const data = (e as CustomEvent<ContributionGraphData>).detail;
+      if (data?.weeks) setLiveWeeks(data.weeks);
+    }
+    window.addEventListener('live-data:contributions', onLiveData);
+    return () => window.removeEventListener('live-data:contributions', onLiveData);
+  }, []);
+
+  const weeks = liveWeeks;
 
   const buckets = useMemo(() => aggregateByMonth(weeks), [weeks]);
   const maxTotal = useMemo(() => Math.max(...buckets.map((b) => b.total), 1), [buckets]);

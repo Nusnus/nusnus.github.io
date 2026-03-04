@@ -1,5 +1,5 @@
-import { useState, useCallback, useMemo } from 'react';
-import type { ContributionWeek } from '@lib/github/types';
+import { useState, useCallback, useMemo, useEffect } from 'react';
+import type { ContributionWeek, ContributionGraphData } from '@lib/github/types';
 
 interface Props {
   weeks: ContributionWeek[];
@@ -56,8 +56,20 @@ function getYTicks(max: number): number[] {
   return ticks;
 }
 
-export default function ContributionLineChart({ weeks }: Props) {
+export default function ContributionLineChart({ weeks: initialWeeks }: Props) {
+  const [liveWeeks, setLiveWeeks] = useState(initialWeeks);
   const [hovered, setHovered] = useState<HoveredPoint | null>(null);
+
+  useEffect(() => {
+    function onLiveData(e: Event) {
+      const data = (e as CustomEvent<ContributionGraphData>).detail;
+      if (data?.weeks) setLiveWeeks(data.weeks);
+    }
+    window.addEventListener('live-data:contributions', onLiveData);
+    return () => window.removeEventListener('live-data:contributions', onLiveData);
+  }, []);
+
+  const weeks = liveWeeks;
 
   const days = useMemo(() => extractDays(weeks, 35), [weeks]);
   const maxCount = useMemo(() => Math.max(...days.map((d) => d.count), 1), [days]);

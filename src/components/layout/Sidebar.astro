@@ -55,7 +55,7 @@ const rankedRepos = allRepos
   <div class="mb-5 flex items-center gap-2">
     <Badge variant="accent" size="md">CEO & Tech Lead</Badge>
     <span class="text-text-secondary text-sm">
-      Celery · ★ {formatCompactNumber(celeryStars)}
+      Celery · ★ <span data-live="celeryStars">{formatCompactNumber(celeryStars)}</span>
     </span>
   </div>
 
@@ -109,30 +109,33 @@ const rankedRepos = allRepos
   <div class="border-border mb-5 border-t pt-4">
     <!-- Contribution summary -->
     <p class="text-text-primary mb-3 font-mono text-sm font-semibold">
-      {formatCompactNumber(totalContributions)} contributions this year
+      <span data-live="totalContributions">{formatCompactNumber(totalContributions)}</span> contributions
+      this year
     </p>
 
     {
       graph && (
         <div class="mb-4 grid grid-cols-2 gap-x-3 gap-y-1.5">
           <p class="text-text-secondary font-mono text-xs">
-            <span class="text-text-primary font-medium">
+            <span class="text-text-primary font-medium" data-live="totalCommits">
               {formatCompactNumber(graph.totalCommits)}
             </span>{' '}
             commits
           </p>
           <p class="text-text-secondary font-mono text-xs">
-            <span class="text-text-primary font-medium">{formatCompactNumber(graph.totalPRs)}</span>{' '}
+            <span class="text-text-primary font-medium" data-live="totalPRs">
+              {formatCompactNumber(graph.totalPRs)}
+            </span>{' '}
             PRs
           </p>
           <p class="text-text-secondary font-mono text-xs">
-            <span class="text-text-primary font-medium">
+            <span class="text-text-primary font-medium" data-live="totalReviews">
               {formatCompactNumber(graph.totalReviews)}
             </span>{' '}
             reviews
           </p>
           <p class="text-text-secondary font-mono text-xs">
-            <span class="text-text-primary font-medium">
+            <span class="text-text-primary font-medium" data-live="totalIssues">
               {formatCompactNumber(graph.totalIssues)}
             </span>{' '}
             issues
@@ -157,7 +160,13 @@ const rankedRepos = allRepos
             <span class="text-text-secondary group-hover:text-text-primary font-mono text-xs transition-colors">
               {repo.name}
             </span>
-            <span class="text-accent font-mono text-xs font-semibold">#{repo.contributorRank}</span>
+            <span
+              class="text-accent font-mono text-xs font-semibold"
+              data-live-repo={repo.fullName}
+              data-live-field="contributorRank"
+            >
+              #{repo.contributorRank}
+            </span>
           </a>
         ))
       }

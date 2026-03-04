@@ -1,5 +1,5 @@
-import { useState, useCallback, useRef } from 'react';
-import type { ContributionWeek } from '@lib/github/types';
+import { useState, useCallback, useRef, useEffect } from 'react';
+import type { ContributionWeek, ContributionGraphData } from '@lib/github/types';
 import { getActivityLevel } from '@lib/github/formatters';
 import { formatDate } from '@lib/utils/date';
 
@@ -63,10 +63,29 @@ function getMonthLabels(weeks: ContributionWeek[]) {
   return labels;
 }
 
-export default function ContributionGraph({ weeks, totalContributions }: Props) {
+export default function ContributionGraph({
+  weeks: initialWeeks,
+  totalContributions: initialTotal,
+}: Props) {
+  const [liveWeeks, setLiveWeeks] = useState(initialWeeks);
+  const [liveTotal, setLiveTotal] = useState(initialTotal);
   const [hovered, setHovered] = useState<HoveredCell | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const [tooltipPos, setTooltipPos] = useState<{ left: number; top: number } | null>(null);
+
+  // Listen for live data updates from LiveData island
+  useEffect(() => {
+    function onLiveData(e: Event) {
+      const data = (e as CustomEvent<ContributionGraphData>).detail;
+      if (data?.weeks) setLiveWeeks(data.weeks);
+      if (data?.totalContributions != null) setLiveTotal(data.totalContributions);
+    }
+    window.addEventListener('live-data:contributions', onLiveData);
+    return () => window.removeEventListener('live-data:contributions', onLiveData);
+  }, []);
+
+  const weeks = liveWeeks;
+  const totalContributions = liveTotal;
 
   const handleMouseEnter = useCallback(
     (date: string, count: number, weekIndex: number, dayIndex: number) => {

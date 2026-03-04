@@ -41,21 +41,21 @@ const streak = calculateStreak(allDays);
     <!-- Summary stats -->
     <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
       <div class="bg-bg-surface/50 ring-border/40 rounded-lg p-3 ring-1">
-        <p class="text-accent font-mono text-xl font-bold">
+        <p class="text-accent font-mono text-xl font-bold" data-live="totalContributions">
           {formatCompactNumber(totalContributions)}
         </p>
         <p class="text-text-muted text-xs">contributions</p>
       </div>
       <div class="bg-bg-surface/50 ring-border/40 rounded-lg p-3 ring-1">
         <p class="text-accent font-mono text-xl font-bold">
-          🔥 {streak}
+          🔥 <span data-live="streak">{streak}</span>
         </p>
         <p class="text-text-muted text-xs">day streak</p>
       </div>
       {
         graph && (
           <div class="bg-bg-surface/50 ring-border/40 rounded-lg p-3 ring-1">
-            <p class="text-accent font-mono text-xl font-bold">
+            <p class="text-accent font-mono text-xl font-bold" data-live="totalCommits">
               {formatCompactNumber(graph.totalCommits)}
             </p>
             <p class="text-text-muted text-xs">commits</p>
@@ -65,7 +65,7 @@ const streak = calculateStreak(allDays);
       {
         graph && (
           <div class="bg-bg-surface/50 ring-border/40 rounded-lg p-3 ring-1">
-            <p class="text-accent font-mono text-xl font-bold">
+            <p class="text-accent font-mono text-xl font-bold" data-live="totalPRs">
               {formatCompactNumber(graph.totalPRs)}
             </p>
             <p class="text-text-muted text-xs">pull requests</p>
