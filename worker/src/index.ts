@@ -15,10 +15,13 @@
  *  8. Per-IP rate limiting via Cloudflare KV-free approach (in-memory)
  */
 
+import { handleGitHubRoute } from './github';
+
 // ─── Types ───────────────────────────────────────────────────────────
 
 interface Env {
   XAI_API_KEY: string;
+  GITHUB_TOKEN: string;
 }
 
 interface ChatMessage {
@@ -117,8 +120,19 @@ export default {
     }
 
     // ── Health check ──
-    if (request.method === 'GET') {
+    if (request.method === 'GET' && new URL(request.url).pathname === '/') {
       return jsonResponse({ status: 'ok' }, 200);
+    }
+
+    // ── GitHub data routes (GET /github/*) ──
+    if (request.method === 'GET' && !env.GITHUB_TOKEN) {
+      return jsonResponse({ error: 'GitHub token not configured' }, 500, origin);
+    }
+    if (request.method === 'GET') {
+      if (!isAllowed) return jsonResponse({ error: 'Forbidden' }, 403);
+      const ghResponse = await handleGitHubRoute(request, env.GITHUB_TOKEN, corsHeaders(origin));
+      if (ghResponse) return ghResponse;
+      return jsonResponse({ error: 'Not found' }, 404, origin);
     }
 
     // ── Method guard ──

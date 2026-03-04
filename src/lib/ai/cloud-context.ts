@@ -2,9 +2,11 @@
  * Cloud context builder — feeds ALL available data to cloud models.
  *
  * Unlike the RAG approach (designed for 4K context WebLLM models), cloud
- * models like Grok have massive context windows (2M tokens). We can dump
+ * models like Grok have massive context windows (2M tokens). We dump
  * everything — no chunking, no BM25 search, no retrieval failures.
  *
+ * Data is fetched from the Cloudflare Worker (live, edge-cached) with
+ * automatic fallback to build-time static JSON if the Worker is unavailable.
  * Total context: ~12K tokens — trivial for a 2M context model.
  */
 
@@ -34,22 +36,45 @@ function formatRelative(iso: string): string {
   return `${days}d ago`;
 }
 
+const WORKER_URL = 'https://ai-proxy.tomer-nosrati.workers.dev';
+
+/**
+ * Fetch a GitHub endpoint from the Worker (live, cached), falling back to
+ * the static JSON file baked in at build time.
+ */
+async function fetchGitHub(workerPath: string, staticPath: string): Promise<Response | null> {
+  try {
+    const res = await fetch(`${WORKER_URL}/github/${workerPath}`);
+    if (res.ok) return res;
+  } catch {
+    /* network error — fall through to static */
+  }
+  try {
+    const res = await fetch(staticPath);
+    if (res.ok) return res;
+  } catch {
+    /* ignore */
+  }
+  return null;
+}
+
 /**
  * Fetch ALL data sources and build a comprehensive context string.
- * Called at query time in the cloud path — fetches from static JSON files.
+ * Tries the live Worker endpoints first (cached at edge), falls back to
+ * build-time static JSON if the Worker is unavailable.
  */
 export async function buildCloudContext(): Promise<string> {
   const sections: string[] = [];
 
-  // Fetch all data sources in parallel
+  // Fetch all data sources in parallel — Worker first, static fallback
   const [knowledgeRes, profileRes, reposRes, orgReposRes, activityRes, graphRes] =
     await Promise.all([
       fetch('/data/ai-knowledge.md').catch(() => null),
-      fetch('/data/profile.json').catch(() => null),
-      fetch('/data/repos.json').catch(() => null),
-      fetch('/data/celery-org-repos.json').catch(() => null),
-      fetch('/data/activity.json').catch(() => null),
-      fetch('/data/contribution-graph.json').catch(() => null),
+      fetchGitHub('profile', '/data/profile.json'),
+      fetchGitHub('repos', '/data/repos.json'),
+      fetchGitHub('org-repos', '/data/celery-org-repos.json'),
+      fetchGitHub('activity', '/data/activity.json'),
+      fetchGitHub('contributions', '/data/contribution-graph.json'),
     ]);
 
   // ── Full knowledge base (verbatim) ──
