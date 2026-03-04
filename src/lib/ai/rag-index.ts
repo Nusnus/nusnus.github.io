@@ -9,7 +9,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { RepoData } from '@lib/github/types';
-import { LINKEDIN_ARTICLES, COLLABORATIONS } from '@lib/utils/constants';
+import { LINKEDIN_ARTICLES, COLLABORATIONS } from '@config';
 import type { SearchChunk, SearchIndex } from './types';
 
 /** Common English stop words excluded from keyword extraction. */

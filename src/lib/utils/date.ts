@@ -109,8 +109,10 @@ export function calculateStreak(days: { date: string; contributionCount: number 
 /**
  * Formats a number with compact notation (e.g. 24000 → "24k").
  */
+const cnf = new Intl.NumberFormat('en', { notation: 'compact' });
+
 export function formatCompactNumber(n: number): string {
-  return new Intl.NumberFormat('en', { notation: 'compact' }).format(n);
+  return cnf.format(n);
 }
 
 /** Short month names for chart/graph labels. */
