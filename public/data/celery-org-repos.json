@@ -52,6 +52,19 @@
     "contributorRank": 8
   },
   {
+    "name": "librabbitmq",
+    "fullName": "celery/librabbitmq",
+    "description": "Python bindings to librabbitmq-c",
+    "htmlUrl": "https://github.com/celery/librabbitmq",
+    "stars": 204,
+    "forks": 92,
+    "openIssues": 28,
+    "lastPush": "2025-11-24T08:58:58Z",
+    "language": "C",
+    "role": "owner",
+    "contributorRank": 23
+  },
+  {
     "name": "vine",
     "fullName": "celery/vine",
     "description": "Python promises",
@@ -89,5 +102,18 @@
     "language": "CSS",
     "role": "owner",
     "contributorRank": 4
+  },
+  {
+    "name": "flower",
+    "fullName": "mher/flower",
+    "description": "Real-time monitor and web admin for Celery distributed task queue",
+    "htmlUrl": "https://github.com/mher/flower",
+    "stars": 7119,
+    "forks": 1147,
+    "openIssues": 194,
+    "lastPush": "2026-02-09T23:15:18Z",
+    "language": "Python",
+    "role": "contributor",
+    "contributorRank": 25
   }
 ]
