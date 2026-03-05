@@ -7,7 +7,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { cloudChatStream } from '@lib/ai/cloud';
 import { buildCloudContext } from '@lib/ai/cloud-context';
-import { DEFAULT_CLOUD_MODEL_ID } from '@lib/ai/config';
 import { renderMarkdown } from '@lib/ai/markdown';
 
 type WidgetState = 'closed' | 'loading' | 'streaming' | 'done' | 'error';
@@ -60,27 +59,19 @@ export default function RoastWidget() {
 
     try {
       const levelClamp = Math.min(level, ESCALATE_PROMPTS.length - 1);
-      const fires = ESCALATE_FIRES[Math.min(levelClamp, ESCALATE_FIRES.length - 1)];
 
       // Fresh roast (level 0) — reset history
       if (levelClamp === 0) historyRef.current = [];
 
-      // Tell Grok it's running as a widget on the homepage while the visitor browses
-      const roastContext = `# Situational Context — Roast Widget
-
-You are currently running as the **🔥 Roast by Grok** floating widget on the **homepage** of nusnus.github.io. The visitor triggered you by clicking the fire button while browsing Tomer's portfolio. They are actively looking at:
-- The contribution heatmap and streak counter
-- Live activity feed (recent pushes, PRs, reviews)
-- Achievement badges (total stars, contributor rank, code reviews, followers)
-- Repository showcase with live stats
-
-${
-  levelClamp === 0
-    ? "Make the roast feel live and contextual — reference what they're probably staring at right now. You're the Oracle appearing mid-matrix to roast the architect of the very simulation the visitor is browsing. Keep it short, savage, and self-aware. This is a teaser — the full chat is one click away."
-    : `The visitor already got ${levelClamp} roast${levelClamp > 1 ? 's' : ''} from you and just hit the ${fires} escalate button — they're literally asking you to go harder. You can see your previous roast${levelClamp > 1 ? 's' : ''} in the conversation. Acknowledge that they came back for more (be smug about it), then deliver a fresh roast that's rawer, more vulgar, more savage. Don't repeat material from your previous roast${levelClamp > 1 ? 's' : ''}. Keep it short, punchy, contextual to the page they're browsing.`
-}`;
-
-      const context = await buildCloudContext(roastContext);
+      // Runtime self-awareness: declare surface + host page + escalation level.
+      // runtime-context.ts generates the Grok-voice prologue, describes what
+      // the visitor is looking at, and tells buildCloudContext to SKIP
+      // persona.md (roast speaks as Grok, not as Cybernus-as-Tomer).
+      const context = await buildCloudContext({
+        surface: 'roast-widget',
+        hostPath: window.location.pathname,
+        roastLevel: levelClamp,
+      });
       const systemMessage = { role: 'system' as const, content: context };
       const userMessage = {
         role: 'user' as const,
@@ -94,7 +85,6 @@ ${
 
       const { content } = await cloudChatStream(
         messages,
-        DEFAULT_CLOUD_MODEL_ID,
         (_token, accumulated) => {
           setResponse(accumulated);
         },

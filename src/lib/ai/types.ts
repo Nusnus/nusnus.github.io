@@ -1,6 +1,18 @@
 /**
- * Shared types for the AI chatbot subsystem.
+ * Shared types for the Cybernus chat subsystem.
+ *
+ * Optional fields explicitly include `| undefined` so they play nice with
+ * `exactOptionalPropertyTypes` — we legitimately clear them during streaming
+ * (e.g. `{ ...msg, status: undefined }` when the first text token arrives).
  */
+
+/** Ephemeral activity state shown in the assistant bubble while generating. */
+export type MessageStatus =
+  | 'thinking' // model is reasoning (reasoning tokens streaming)
+  | 'searching' // web_search tool running
+  | 'reading' // MCP tool running (DeepWiki / Context7)
+  | 'coding' // code_execution tool running
+  | 'found'; // a tool completed, synthesizing answer
 
 /** A single message in the chat conversation. */
 export interface ChatMessage {
@@ -8,9 +20,11 @@ export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   /** Client-side actions parsed from the assistant's response. */
-  actions?: ToolAction[];
-  /** Web search phase: 'searching' while running, 'found' when complete (synthesizing). */
-  searchStatus?: 'searching' | 'found';
+  actions?: ToolAction[] | undefined;
+  /** Live activity status for the assistant bubble while generating. */
+  status?: MessageStatus | undefined;
+  /** Cumulative reasoning tokens observed (for "thinking N tokens" display). */
+  reasoningTokens?: number | undefined;
 }
 
 /** A client-side action the assistant can suggest. */
@@ -20,23 +34,4 @@ export interface ToolAction {
   label: string;
   /** URL or path to navigate to / open. */
   url: string;
-}
-
-/** A chunk of indexed content for RAG retrieval. */
-export interface SearchChunk {
-  /** Unique chunk identifier. */
-  id: string;
-  /** The text content of the chunk. */
-  content: string;
-  /** Human-readable source label (e.g., "Knowledge Base > About"). */
-  source: string;
-  /** Pre-extracted lowercase keywords for BM25 scoring. */
-  keywords: string[];
-}
-
-/** Pre-built search index serialized as a prop from the Astro page. */
-export interface SearchIndex {
-  chunks: SearchChunk[];
-  /** Average document length in keywords (used for BM25 normalisation). */
-  avgDocLength: number;
 }
