@@ -57,6 +57,11 @@ export const VoiceButton = memo(function VoiceButton({
       abortRef.current = null;
       sessionRef.current?.stop();
       sessionRef.current = null;
+      // When abort lands during the token fetch, voice.ts never gets the
+      // chance to call onStateChange('idle') — fetch itself throws. Our
+      // .catch() below only clears refs. Without this, the spinner sticks.
+      // (Redundant for the live-session path — stop() already sets idle.)
+      setState('idle');
       // Flush any pending assistant transcript into the chat
       if (assistantFinalRef.current) {
         onAssistantSpeech(assistantFinalRef.current);
