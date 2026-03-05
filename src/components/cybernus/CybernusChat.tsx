@@ -338,19 +338,39 @@ export default function CybernusChat() {
   }, []);
 
   /* ── Session management ──
-   * Always abort any in-flight stream before switching context — otherwise
-   * `streaming` stays true until the abandoned request completes, blocking
-   * `send()` and leaving the composer stuck on the stop button.
+   * Switching session context while a stream is in flight must BOTH abort
+   * the request AND synchronously reset the streaming flags. Aborting alone
+   * isn't enough: the abort propagates through fetch rejection asynchronously,
+   * so there's one render where `streaming` is still true but `messages` has
+   * already been replaced. During that render `streamingMessageId` derives
+   * from the NEW session's last message — wrong bubble gets the blinking
+   * cursor. Resetting the flags in the same batch as `setMessages` keeps
+   * the render consistent. The `send()` finally block still runs afterwards
+   * but its `setStreaming(false)` is a harmless no-op at that point.
+   *
+   * This is distinct from `stop()`, which aborts the CURRENT session's
+   * stream — there the finally block is the right place to reset because
+   * the abort handler needs to trim the empty assistant bubble first.
    */
-  const selectSession = useCallback((id: string) => {
+  const abortAndReset = useCallback(() => {
     abortRef.current?.abort();
-    setActiveSessionId(id);
-    setActiveSessionIdState(id);
-    const all = loadSessions();
-    const s = all.find((x) => x.id === id);
-    setMessages(s?.messages ?? []);
-    setSidebarOpen(false);
+    setStreaming(false);
+    setIsThinking(false);
+    setToolActivity([]);
   }, []);
+
+  const selectSession = useCallback(
+    (id: string) => {
+      abortAndReset();
+      setActiveSessionId(id);
+      setActiveSessionIdState(id);
+      const all = loadSessions();
+      const s = all.find((x) => x.id === id);
+      setMessages(s?.messages ?? []);
+      setSidebarOpen(false);
+    },
+    [abortAndReset],
+  );
 
   const removeSession = useCallback(
     (id: string) => {
@@ -358,30 +378,30 @@ export default function CybernusChat() {
       setSessions(loadSessions());
       if (id === activeSessionId) {
         // Deleting the session we're currently streaming into — pull the plug.
-        abortRef.current?.abort();
+        abortAndReset();
         setMessages([]);
         setActiveSessionIdState(null);
       }
     },
-    [activeSessionId],
+    [activeSessionId, abortAndReset],
   );
 
   const newSession = useCallback(() => {
-    abortRef.current?.abort();
+    abortAndReset();
     setActiveSessionId(null);
     setActiveSessionIdState(null);
     setMessages([]);
     setError('');
     setSidebarOpen(false);
-  }, []);
+  }, [abortAndReset]);
 
   const clearAll = useCallback(() => {
-    abortRef.current?.abort();
+    abortAndReset();
     clearAllSessions();
     setSessions([]);
     setMessages([]);
     setActiveSessionIdState(null);
-  }, []);
+  }, [abortAndReset]);
 
   /* ── Derived ── */
   const isMobile = viewport === 'mobile';
