@@ -112,7 +112,9 @@ export const ChatComposer = memo(
       el.style.height = `${Math.min(el.scrollHeight, MAX_HEIGHT)}px`;
     }, []);
 
-    useEffect(autosize, [value, autosize]);
+    // Also depend on speech.transcript — the textarea shows the live interim
+    // transcript while dictating, so it can grow before `value` updates.
+    useEffect(autosize, [value, speech.transcript, autosize]);
 
     const send = useCallback(() => {
       const text = value.trim();
