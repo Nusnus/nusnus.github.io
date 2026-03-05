@@ -214,8 +214,9 @@ export const SUMMARIZE_AFTER_MESSAGES = 20;
 
 /**
  * Max user messages per session before prompting new chat.
- * Generous — the real constraint is the 30-item worker limit,
- * but summarization keeps us under that.
+ * 40 user messages → ~81 input items with assistant replies + system.
+ * Worker accepts up to 100 items; summarization is for localStorage
+ * hygiene and model focus, not a hard cap.
  */
 export const MAX_USER_MESSAGES = 40;
 

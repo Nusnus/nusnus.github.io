@@ -7,8 +7,9 @@
  * message marked `isSummary: true`, which is sent to the model but
  * hidden from the UI.
  *
- * This keeps the worker's 30-item input limit comfortable and keeps
- * localStorage lean, without relying on WebLLM.
+ * This keeps the request payload lean and localStorage tidy without
+ * relying on WebLLM. Not load-bearing for the worker's item cap —
+ * that's sized to accept the full conversation either way.
  */
 
 import { cloudChat } from './cloud';
