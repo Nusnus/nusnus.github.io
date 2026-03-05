@@ -34,8 +34,10 @@ import type { ChatSession } from '@lib/ai/memory';
 import { CYBERNUS_TOOLS, mapToolCallsToActions } from '@lib/ai/tools';
 import type { ChatMessage } from '@lib/ai/types';
 import { buildCybernusContext } from '@lib/cybernus/context';
-import type { CybernusLanguage, CybernusViewport } from '@lib/cybernus/context';
+import type { CybernusLanguage } from '@lib/cybernus/context';
+import { trimHistoryForRequest } from '@lib/cybernus/history';
 import { DEFAULT_SPECTRUM, SPECTRUM_STORAGE_KEY } from '@lib/cybernus/spectrum';
+import { useViewport } from '@lib/cybernus/viewport';
 import { cn } from '@lib/utils/cn';
 
 import { ChatComposer } from './ChatComposer';
@@ -51,15 +53,8 @@ import { ThinkingIndicator } from './ThinkingIndicator';
 
 const ROAST_HANDOFF_KEY = 'grok-roast-handoff';
 const LANG_STORAGE_KEY = 'cybernus-lang';
-const DESKTOP_BREAKPOINT = 768; // md
 
 /* ─── Helpers ─── */
-
-/** Resolve the current viewport class (SSR-safe, defaults to desktop). */
-function currentViewport(): CybernusViewport {
-  if (typeof window === 'undefined') return 'desktop';
-  return window.innerWidth >= DESKTOP_BREAKPOINT ? 'desktop' : 'mobile';
-}
 
 /** Read a number from localStorage with a fallback. */
 function readStoredNumber(key: string, fallback: number): number {
@@ -92,7 +87,6 @@ export default function CybernusChat() {
   const [activeSessionId, setActiveSessionIdState] = useState<string | null>(null);
   const [spectrum, setSpectrum] = useState(DEFAULT_SPECTRUM);
   const [language, setLanguage] = useState<CybernusLanguage>('en');
-  const [viewport, setViewport] = useState<CybernusViewport>('desktop');
   const [streaming, setStreaming] = useState(false);
   const [error, setError] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false); // mobile drawer
@@ -101,6 +95,9 @@ export default function CybernusChat() {
   const [reasoningTokens, setReasoningTokens] = useState<number | undefined>();
   const [toolActivity, setToolActivity] = useState<string[]>([]);
   const [isThinking, setIsThinking] = useState(false);
+
+  /* External stores */
+  const viewport = useViewport();
 
   /* Refs */
   const abortRef = useRef<AbortController | null>(null);
@@ -111,12 +108,20 @@ export default function CybernusChat() {
   // because `send()` runs asynchronously on user action.
   const spectrumRef = useRef(spectrum);
   const languageRef = useRef(language);
+  // Mirror `messages` into a ref so `send()` can read the current list
+  // without a side-effecting functional updater. Updated via effect —
+  // the one-render lag is safe because `send()` is a click handler and
+  // runs after effects settle, and `streaming` guards concurrent sends.
+  const messagesRef = useRef<ChatMessage[]>(messages);
   useEffect(() => {
     spectrumRef.current = spectrum;
   }, [spectrum]);
   useEffect(() => {
     languageRef.current = language;
   }, [language]);
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
 
   /* ── Boot: load persisted state, consume roast handoff, track viewport ── */
   useEffect(() => {
@@ -171,16 +176,10 @@ export default function CybernusChat() {
     }
 
     setSessions(loadSessions());
-
-    // Viewport tracking.
-    setViewport(currentViewport());
-    const onResize = () => setViewport(currentViewport());
-    window.addEventListener('resize', onResize);
-    return () => {
-      window.removeEventListener('resize', onResize);
-      abortRef.current?.abort();
-    };
   }, []);
+
+  // Abort any in-flight stream on unmount (navigation away).
+  useEffect(() => () => abortRef.current?.abort(), []);
 
   /* ── Persist spectrum + language on change ── */
   useEffect(() => {
@@ -233,13 +232,10 @@ export default function CybernusChat() {
       const assistantId = crypto.randomUUID();
       const assistantMsg: ChatMessage = { id: assistantId, role: 'assistant', content: '' };
 
-      // Snapshot the message array for history building (functional update
-      // below doesn't give us the resolved value synchronously).
-      let snapshot: ChatMessage[] = [];
-      setMessages((prev) => {
-        snapshot = [...prev, userMsg];
-        return [...snapshot, assistantMsg];
-      });
+      // Read the current message list from a ref (no side-effecting updater
+      // — React may double-invoke functional setState in strict mode).
+      const snapshot = [...messagesRef.current, userMsg];
+      setMessages([...snapshot, assistantMsg]);
 
       setStreaming(true);
       setIsThinking(true);
@@ -257,15 +253,18 @@ export default function CybernusChat() {
         const systemContext = await buildCybernusContext({
           spectrum: spectrumRef.current,
           pathname: window.location.pathname,
-          viewport: currentViewport(),
+          viewport,
           surface: 'chat-page',
           language: languageRef.current,
         });
 
-        // Responses API `input` array: system context + full conversation.
+        // Responses API `input` array: system context + recent conversation.
+        // `trimHistoryForRequest` applies a sliding window so long sessions
+        // never exceed the worker's MAX_INPUT_ITEMS cap — the oldest turns
+        // are silently dropped rather than failing the request.
         const history: CloudMessage[] = [
           { role: 'system', content: systemContext },
-          ...snapshot.map((m) => ({ role: m.role, content: m.content })),
+          ...trimHistoryForRequest(snapshot).map((m) => ({ role: m.role, content: m.content })),
         ];
 
         const result = await cloudChatStream(
@@ -321,7 +320,7 @@ export default function CybernusChat() {
           const msg = (err as Error).message || 'Request failed';
           setError(msg);
           setMessages((prev) =>
-            prev.map((m) => (m.id === assistantId ? { ...m, content: `_Error: ${msg}_` } : m)),
+            prev.map((m) => (m.id === assistantId ? { ...m, content: `*Error: ${msg}*` } : m)),
           );
         }
       } finally {
@@ -331,7 +330,7 @@ export default function CybernusChat() {
         abortRef.current = null;
       }
     },
-    [streaming],
+    [streaming, viewport],
   );
 
   const stop = useCallback(() => {

@@ -76,11 +76,19 @@ const ERROR_LABELS: Record<string, string> = {
   aborted: '', // intentional stop — don't surface
 };
 
-/** Resolve the SpeechRecognition constructor if the browser supports it. */
+/**
+ * Resolve the SpeechRecognition constructor if the browser supports it.
+ *
+ * Memoised at module scope — the answer is constant per realm, no point
+ * re-probing `window` on every render. Server and client get separate
+ * module instances, so caching `null` during SSR doesn't leak to the client.
+ */
+let _ctorCache: SpeechRecognitionCtor | null | undefined;
 function getRecognitionCtor(): SpeechRecognitionCtor | null {
-  if (typeof window === 'undefined') return null;
+  if (_ctorCache !== undefined) return _ctorCache;
+  if (typeof window === 'undefined') return (_ctorCache = null);
   const w = window as unknown as SpeechWindow;
-  return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
+  return (_ctorCache = w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null);
 }
 
 /* ─── Hook ─── */
@@ -116,6 +124,8 @@ export interface SpeechInput {
 const noopSubscribe = (): (() => void) => () => undefined;
 /** Server snapshot — always unsupported (no `window` during SSR). */
 const serverSupported = (): boolean => false;
+/** Client snapshot for `supported` — module-scope so the identity is stable. */
+const clientSupported = (): boolean => getRecognitionCtor() !== null;
 
 /**
  * React hook wrapping the Web Speech API.
@@ -127,13 +137,11 @@ export function useSpeechInput(
   language: CybernusLanguage,
   options?: SpeechInputOptions,
 ): SpeechInput {
-  const Ctor = getRecognitionCtor();
-
   // Hydration safety: `supported` depends on `window`, which is absent during
   // SSR. `useSyncExternalStore` lets us return `false` for the server snapshot
   // and the real value on the client — React reconciles the difference without
   // a hydration mismatch (and without tripping `react-hooks/set-state-in-effect`).
-  const supported = useSyncExternalStore(noopSubscribe, () => Ctor !== null, serverSupported);
+  const supported = useSyncExternalStore(noopSubscribe, clientSupported, serverSupported);
 
   const recogRef = useRef<SpeechRecognition | null>(null);
   // Accumulate the transcript in a ref so the onend handler can read the
@@ -161,6 +169,7 @@ export function useSpeechInput(
   }, [language]);
 
   const start = useCallback(() => {
+    const Ctor = getRecognitionCtor();
     if (!Ctor || recogRef.current) return;
 
     const r = new Ctor();
@@ -204,7 +213,7 @@ export function useSpeechInput(
     setListening(true);
     recogRef.current = r;
     r.start();
-  }, [Ctor, language]);
+  }, [language]);
 
   const stop = useCallback(() => {
     recogRef.current?.stop();

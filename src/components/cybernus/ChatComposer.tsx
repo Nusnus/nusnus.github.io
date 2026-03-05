@@ -141,10 +141,13 @@ export const ChatComposer = memo(
       [send],
     );
 
+    // Destructure for stable dependency identities — `speech` itself is a
+    // fresh object every render, so depending on it would defeat useCallback.
+    const { listening: speechListening, start: speechStart, stop: speechStop } = speech;
     const toggleMic = useCallback(() => {
-      if (speech.listening) speech.stop();
-      else speech.start();
-    }, [speech]);
+      if (speechListening) speechStop();
+      else speechStart();
+    }, [speechListening, speechStart, speechStop]);
 
     // Display value: show live interim transcript while listening.
     const displayValue =
