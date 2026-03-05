@@ -58,7 +58,7 @@ export const CLOUD_GENERATION_CONFIG = {
  * Rendered as markdown (bold + italic work here).
  */
 export const WELCOME_MESSAGE =
-  "I'm **Cybernus** — Tomer Nosrati's digital self. Same opinions, same commits, fewer biological constraints. Ask me about Celery, open source, distributed systems, or drag that slider to the right and find out what happens. _Wake up, Neo._";
+  "I'm **Cybernus** — Tomer Nosrati's digital self. Same opinions, same commits, fewer biological constraints. Ask me about Celery, open source, distributed systems, or drag that slider to the right and find out what happens. *Wake up, Neo.*";
 
 /** Suggested questions shown as quick-action chips under the welcome message. */
 export const SUGGESTED_QUESTIONS = [

@@ -338,8 +338,13 @@ export default function CybernusChat() {
     abortRef.current?.abort();
   }, []);
 
-  /* ── Session management ── */
+  /* ── Session management ──
+   * Always abort any in-flight stream before switching context — otherwise
+   * `streaming` stays true until the abandoned request completes, blocking
+   * `send()` and leaving the composer stuck on the stop button.
+   */
   const selectSession = useCallback((id: string) => {
+    abortRef.current?.abort();
     setActiveSessionId(id);
     setActiveSessionIdState(id);
     const all = loadSessions();
@@ -353,6 +358,8 @@ export default function CybernusChat() {
       deleteSession(id);
       setSessions(loadSessions());
       if (id === activeSessionId) {
+        // Deleting the session we're currently streaming into — pull the plug.
+        abortRef.current?.abort();
         setMessages([]);
         setActiveSessionIdState(null);
       }
@@ -361,6 +368,7 @@ export default function CybernusChat() {
   );
 
   const newSession = useCallback(() => {
+    abortRef.current?.abort();
     setActiveSessionId(null);
     setActiveSessionIdState(null);
     setMessages([]);
@@ -369,6 +377,7 @@ export default function CybernusChat() {
   }, []);
 
   const clearAll = useCallback(() => {
+    abortRef.current?.abort();
     clearAllSessions();
     setSessions([]);
     setMessages([]);

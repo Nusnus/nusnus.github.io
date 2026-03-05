@@ -15,7 +15,7 @@
  *     Either way, the raw audio never touches our worker.
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import type { CybernusLanguage } from './context';
 
 /* ─── Vendor types ─── */
@@ -112,6 +112,11 @@ export interface SpeechInput {
   stop: () => void;
 }
 
+/** No-op subscription for `useSyncExternalStore` — browser feature support never changes. */
+const noopSubscribe = (): (() => void) => () => undefined;
+/** Server snapshot — always unsupported (no `window` during SSR). */
+const serverSupported = (): boolean => false;
+
 /**
  * React hook wrapping the Web Speech API.
  *
@@ -123,7 +128,12 @@ export function useSpeechInput(
   options?: SpeechInputOptions,
 ): SpeechInput {
   const Ctor = getRecognitionCtor();
-  const supported = Ctor !== null;
+
+  // Hydration safety: `supported` depends on `window`, which is absent during
+  // SSR. `useSyncExternalStore` lets us return `false` for the server snapshot
+  // and the real value on the client — React reconciles the difference without
+  // a hydration mismatch (and without tripping `react-hooks/set-state-in-effect`).
+  const supported = useSyncExternalStore(noopSubscribe, () => Ctor !== null, serverSupported);
 
   const recogRef = useRef<SpeechRecognition | null>(null);
   // Accumulate the transcript in a ref so the onend handler can read the
