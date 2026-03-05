@@ -11,6 +11,17 @@ export interface ChatMessage {
   actions?: ToolAction[];
   /** Web search phase: 'searching' while running, 'found' when complete (synthesizing). */
   searchStatus?: 'searching' | 'found';
+  /**
+   * Whether this assistant message is currently in reasoning mode.
+   * True while the model is thinking (before visible content streams).
+   * Removed once content starts arriving.
+   */
+  thinking?: boolean;
+  /**
+   * Marks a synthetic summary message inserted by cloud-summarize.
+   * Filtered out of the visible UI but sent to the model as context.
+   */
+  isSummary?: boolean;
 }
 
 /** A client-side action the assistant can suggest. */
@@ -20,23 +31,4 @@ export interface ToolAction {
   label: string;
   /** URL or path to navigate to / open. */
   url: string;
-}
-
-/** A chunk of indexed content for RAG retrieval. */
-export interface SearchChunk {
-  /** Unique chunk identifier. */
-  id: string;
-  /** The text content of the chunk. */
-  content: string;
-  /** Human-readable source label (e.g., "Knowledge Base > About"). */
-  source: string;
-  /** Pre-extracted lowercase keywords for BM25 scoring. */
-  keywords: string[];
-}
-
-/** Pre-built search index serialized as a prop from the Astro page. */
-export interface SearchIndex {
-  chunks: SearchChunk[];
-  /** Average document length in keywords (used for BM25 normalisation). */
-  avgDocLength: number;
 }
