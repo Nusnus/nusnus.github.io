@@ -145,8 +145,84 @@
   animation: data-refresh 600ms ease-out;
 }
 
+/* ─── Cybernus (/chat) animations ─────────────────────────────────── */
+
+@keyframes cybernus-rain {
+  0% {
+    transform: translateY(-10%);
+    opacity: 0;
+  }
+  8% {
+    opacity: 0.85;
+  }
+  90% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(110vh);
+    opacity: 0;
+  }
+}
+.cybernus-rain-col {
+  animation: cybernus-rain var(--dur, 6s) linear var(--delay, 0s) infinite;
+  will-change: transform, opacity;
+}
+
+@keyframes cybernus-think {
+  0%,
+  80%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  40% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+.cybernus-think-dot {
+  animation: cybernus-think 1.2s ease-in-out infinite;
+}
+.cybernus-think-dot:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.cybernus-think-dot:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes cybernus-band-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 8px -2px var(--band-glow, var(--color-accent));
+  }
+  50% {
+    box-shadow: 0 0 18px 1px var(--band-glow, var(--color-accent));
+  }
+}
+.cybernus-band-active {
+  animation: cybernus-band-glow 2.4s ease-in-out infinite;
+}
+
+@keyframes cybernus-msg-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.cybernus-msg-in {
+  animation: cybernus-msg-in 220ms ease-out;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .data-refresh {
+  .data-refresh,
+  .cybernus-rain-col,
+  .cybernus-think-dot,
+  .cybernus-band-active,
+  .cybernus-msg-in {
     animation: none;
   }
 }
