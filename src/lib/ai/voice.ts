@@ -12,6 +12,12 @@
  *   6. Surface transcripts via callbacks so the main chat can show them.
  *
  * Clean shutdown on stop(): close mic stream, close AudioContext, close WS.
+ *
+ * Cancellation: pass an AbortSignal. Aborting during the token fetch throws
+ * before any resources are allocated. Aborting after: the caller is responsible
+ * for calling .stop() on the resolved session (VoiceButton checks signal.aborted
+ * in its .then() and immediately tears down). Once stop() runs, an internal
+ * `stopped` flag prevents late getUserMedia resolution from leaking the mic.
  */
 
 import { WORKER_BASE_URL } from '@config';
@@ -64,17 +70,27 @@ export interface VoiceSession {
 }
 
 /**
- * Start a voice session. Resolves once the WS is open and the mic is live.
- * The returned `stop()` must be called to release the mic + audio context.
+ * Start a voice session. Resolves with a `stop()` handle once the token is
+ * fetched and the WS is constructed (mic attaches asynchronously on WS open).
+ * The returned `stop()` MUST be called to release the mic + audio context.
+ *
+ * If `signal` is aborted during the token fetch, nothing is allocated and the
+ * promise rejects with an AbortError.
  */
 export async function startVoiceSession(
   instructions: string,
   callbacks: VoiceCallbacks,
+  signal?: AbortSignal,
 ): Promise<VoiceSession> {
   callbacks.onStateChange('connecting');
 
-  /* ── 1. Fetch ephemeral token ── */
-  const tokenRes = await fetch(TOKEN_ENDPOINT, { method: 'POST' });
+  /* ── 1. Fetch ephemeral token ──
+   * Signal threads through to fetch: aborting here rejects the await with
+   * AbortError before WS/AudioContext/mic are ever allocated. */
+  const tokenRes = await fetch(TOKEN_ENDPOINT, {
+    method: 'POST',
+    ...(signal ? { signal } : {}),
+  });
   if (!tokenRes.ok) {
     const msg = `Failed to get voice token (${tokenRes.status})`;
     callbacks.onError(msg);
@@ -83,8 +99,22 @@ export async function startVoiceSession(
   }
   const { token } = (await tokenRes.json()) as { token: string };
 
+  // Microtask-race guard: signal may flip between fetch resolving and this
+  // check. Bail before allocating anything.
+  if (signal?.aborted) {
+    callbacks.onStateChange('idle');
+    throw new DOMException('Voice session cancelled', 'AbortError');
+  }
+
   /* ── 2. Connect to xAI WS directly ── */
   const ws = new WebSocket(XAI_WS_URL, [`xai-client-secret.${token}`]);
+
+  /**
+   * Latch. Once stop() runs, any in-flight async work (getUserMedia
+   * permission dialog, WS onopen) must short-circuit rather than allocate.
+   * Without this, getUserMedia resolving AFTER stop() would leak a live mic.
+   */
+  let stopped = false;
 
   /* ── 3. Audio context (shared for in + out) ── */
   const AudioCtx =
@@ -114,7 +144,7 @@ export async function startVoiceSession(
   let processorNode: ScriptProcessorNode | null = null;
 
   const attachMic = async () => {
-    micStream = await navigator.mediaDevices.getUserMedia({
+    const stream = await navigator.mediaDevices.getUserMedia({
       audio: {
         sampleRate: SAMPLE_RATE,
         channelCount: 1,
@@ -122,6 +152,13 @@ export async function startVoiceSession(
         noiseSuppression: true,
       },
     });
+    // Permission dialog can take arbitrarily long. If stop() ran while we
+    // were waiting, release the stream immediately — don't plug it in.
+    if (stopped) {
+      stream.getTracks().forEach((t) => t.stop());
+      return;
+    }
+    micStream = stream;
     sourceNode = audioCtx.createMediaStreamSource(micStream);
     // ScriptProcessorNode is deprecated but universally supported; AudioWorklet
     // setup is significantly heavier and this is a non-critical path.
@@ -141,6 +178,9 @@ export async function startVoiceSession(
   let assistantTranscript = '';
 
   ws.onopen = () => {
+    // stop() may have closed the WS while CONNECTING. Some browsers still
+    // fire onopen for in-flight handshakes — don't attach the mic.
+    if (stopped) return;
     // Configure the session: voice, instructions, server-side VAD, PCM @24kHz
     ws.send(
       JSON.stringify({
@@ -225,6 +265,8 @@ export async function startVoiceSession(
 
   /* ── 5. Cleanup ── */
   const stop = () => {
+    if (stopped) return; // idempotent
+    stopped = true;
     try {
       processorNode?.disconnect();
       sourceNode?.disconnect();

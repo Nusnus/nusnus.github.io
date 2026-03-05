@@ -31,12 +31,31 @@ export const VoiceButton = memo(function VoiceButton({
   const sessionRef = useRef<VoiceSession | null>(null);
   const assistantFinalRef = useRef('');
 
-  // Cleanup on unmount
-  useEffect(() => () => sessionRef.current?.stop(), []);
+  /**
+   * Tracks the in-flight startVoiceSession call. If the component unmounts
+   * (or the user toggles off) while the token fetch is still pending,
+   * sessionRef is still null and .stop() is a no-op — so we abort the
+   * controller instead. The fetch rejects, nothing ever allocates.
+   * If the promise already resolved, the .then() below checks .aborted
+   * and tears down the freshly-returned session immediately.
+   */
+  const abortRef = useRef<AbortController | null>(null);
+
+  // Cleanup on unmount — abort in-flight start, stop any live session.
+  useEffect(
+    () => () => {
+      abortRef.current?.abort();
+      sessionRef.current?.stop();
+    },
+    [],
+  );
 
   const handleClick = useCallback(() => {
-    if (sessionRef.current) {
-      sessionRef.current.stop();
+    // Toggle-off: stop live session OR cancel in-flight connect.
+    if (sessionRef.current || abortRef.current) {
+      abortRef.current?.abort();
+      abortRef.current = null;
+      sessionRef.current?.stop();
       sessionRef.current = null;
       // Flush any pending assistant transcript into the chat
       if (assistantFinalRef.current) {
@@ -46,26 +65,44 @@ export const VoiceButton = memo(function VoiceButton({
       return;
     }
 
-    void startVoiceSession(instructions, {
-      onStateChange: setState,
-      onUserTranscript: (text) => {
-        if (text.trim()) onUserSpeech(text);
+    const ctrl = new AbortController();
+    abortRef.current = ctrl;
+
+    void startVoiceSession(
+      instructions,
+      {
+        onStateChange: setState,
+        onUserTranscript: (text) => {
+          if (text.trim()) onUserSpeech(text);
+        },
+        onAssistantTranscript: (text, final) => {
+          assistantFinalRef.current = text;
+          if (final && text.trim()) {
+            onAssistantSpeech(text);
+            assistantFinalRef.current = '';
+          }
+        },
+        onError: (msg) => {
+          console.error('[Voice]', msg);
+        },
       },
-      onAssistantTranscript: (text, final) => {
-        assistantFinalRef.current = text;
-        if (final && text.trim()) {
-          onAssistantSpeech(text);
-          assistantFinalRef.current = '';
-        }
-      },
-      onError: (msg) => {
-        console.error('[Voice]', msg);
-      },
-    })
+      ctrl.signal,
+    )
       .then((session) => {
+        // Unmounted or toggled-off while connecting — session just allocated
+        // WS + AudioContext on the far side of the await. Tear down now.
+        if (ctrl.signal.aborted) {
+          session.stop();
+          return;
+        }
+        abortRef.current = null;
         sessionRef.current = session;
       })
       .catch(() => {
+        // Either the token fetch was aborted (AbortError — expected) or it
+        // failed for real (network/4xx). Either way: nothing to clean up,
+        // voice.ts guarantees no resources were allocated before the throw.
+        if (abortRef.current === ctrl) abortRef.current = null;
         sessionRef.current = null;
       });
   }, [instructions, onUserSpeech, onAssistantSpeech]);
@@ -77,15 +114,17 @@ export const VoiceButton = memo(function VoiceButton({
     <button
       type="button"
       onClick={handleClick}
-      disabled={disabled || connecting}
-      aria-label={active ? 'Stop voice chat' : 'Start voice chat'}
+      disabled={disabled}
+      aria-label={active ? 'Stop voice chat' : connecting ? 'Cancel' : 'Start voice chat'}
       aria-pressed={active}
       title={
         state === 'error'
           ? 'Voice unavailable — click to retry'
           : active
             ? 'Voice chat active — click to stop'
-            : 'Talk to Cybernus'
+            : connecting
+              ? 'Connecting — click to cancel'
+              : 'Talk to Cybernus'
       }
       className={cn(
         'relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-all',
