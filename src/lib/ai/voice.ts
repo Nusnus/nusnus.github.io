@@ -196,10 +196,17 @@ export async function startVoiceSession(
         },
       }),
     );
-    // Start mic capture after session is configured
+    // Start mic capture after session is configured.
+    // attachMic() returns successfully even when `stopped` (it just releases
+    // the stream and bails) — so both branches must re-check the latch or
+    // they'll clobber the 'idle' state that stop() already set.
     void attachMic()
-      .then(() => callbacks.onStateChange('listening'))
+      .then(() => {
+        if (stopped) return;
+        callbacks.onStateChange('listening');
+      })
       .catch((err: unknown) => {
+        if (stopped) return;
         callbacks.onError(err instanceof Error ? err.message : 'Microphone access denied');
         callbacks.onStateChange('error');
         ws.close();
