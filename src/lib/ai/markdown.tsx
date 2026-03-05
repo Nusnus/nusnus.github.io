@@ -1,11 +1,16 @@
 /**
  * Lightweight markdown renderer for AI chat responses.
  *
- * Supports: headings (# ## ###), **bold**, *italic*, `inline code`,
- * ```code blocks``` (with syntax highlighting), [links](url),
- * unordered lists (- item), ordered lists (1. item), horizontal
- * rules (---), and paragraphs.
+ * Supports:
+ *   Block: headings (# ## ###), ```code blocks``` (+ syntax highlighting,
+ *   + Mermaid), | tables |, > blockquotes, - [ ] task lists, unordered
+ *   lists (- item), ordered lists (1. item), horizontal rules (---),
+ *   paragraphs.
+ *   Inline: **bold**, *italic*, `inline code`, [links](url), [[n]](url)
+ *   citations, and bare URLs (auto-linked).
+ *
  * No external dependencies — keeps the bundle small.
+ * Obsidian-flavoured enough for Cybernus to format rich answers.
  */
 import { lazy, Suspense } from 'react';
 import type { ReactNode } from 'react';
@@ -376,6 +381,59 @@ function renderBlock(block: string, key: number): ReactNode {
 
   const lines = trimmed.split('\n');
 
+  // Table: |...| rows with a |---|---| separator as the second line.
+  // Must have at least 2 lines (header + separator), all lines must be | rows.
+  if (lines.length >= 2 && lines.every((l) => /^\s*\|.*\|\s*$/.test(l))) {
+    const sep = lines[1] ?? '';
+    if (/^\s*\|[\s:|-]+\|\s*$/.test(sep)) {
+      return renderTable(lines, key);
+    }
+  }
+
+  // Blockquote: every line starts with > (optionally followed by a space)
+  if (lines.every((l) => /^>\s?/.test(l))) {
+    const inner = lines.map((l) => l.replace(/^>\s?/, '')).join('\n');
+    return (
+      <blockquote
+        key={key}
+        className="border-accent/40 text-text-muted my-2 border-l-2 pl-3 italic"
+      >
+        {/* Recurse so nested formatting inside the quote still works. */}
+        {renderMarkdown(inner, true)}
+      </blockquote>
+    );
+  }
+
+  // Task list: - [ ] / - [x] (check BEFORE generic unordered list —
+  // the `- ` prefix overlaps)
+  if (lines.every((l) => /^[-*]\s\[[ xX]\]\s/.test(l.trim()))) {
+    return (
+      <ul key={key} className="my-1 space-y-0.5">
+        {lines.map((line, j) => {
+          const m = line.trim().match(/^[-*]\s\[([ xX])\]\s(.*)$/);
+          const checked = (m?.[1] ?? ' ').toLowerCase() === 'x';
+          const label = m?.[2] ?? '';
+          return (
+            <li key={j} className="flex items-start gap-2">
+              {/* Display-only checkbox — chat UI is not an editable task manager. */}
+              <input
+                type="checkbox"
+                checked={checked}
+                readOnly
+                aria-hidden="true"
+                tabIndex={-1}
+                className="accent-accent mt-1 cursor-default"
+              />
+              <span className={checked ? 'text-text-muted line-through' : undefined}>
+                {renderInline(label)}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+    );
+  }
+
   // Heading: # ## ###
   if (lines.length === 1) {
     const headingMatch = trimmed.match(/^(#{1,3})\s+(.+)$/);
@@ -444,13 +502,57 @@ function renderBlock(block: string, key: number): ReactNode {
   );
 }
 
-/** Render inline markdown: bold, italic, code, links, citations. */
+/** Split a pipe-table row into trimmed cells (drop leading/trailing empties). */
+function splitTableRow(line: string): string[] {
+  const cells = line.split('|').map((c) => c.trim());
+  // Leading/trailing `|` produce empty strings at the edges — drop them.
+  if (cells.length > 0 && cells[0] === '') cells.shift();
+  if (cells.length > 0 && cells[cells.length - 1] === '') cells.pop();
+  return cells;
+}
+
+/** Render a markdown pipe table. `lines` is [header, separator, ...body]. */
+function renderTable(lines: string[], key: number): ReactNode {
+  const header = splitTableRow(lines[0] ?? '');
+  const body = lines.slice(2).map(splitTableRow);
+
+  return (
+    <div key={key} className="scrollbar-thin my-2 overflow-x-auto">
+      <table className="border-border w-full border-collapse text-xs">
+        <thead>
+          <tr className="border-border border-b">
+            {header.map((cell, j) => (
+              <th key={j} className="px-2 py-1 text-left font-semibold">
+                {renderInline(cell)}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {body.map((row, i) => (
+            <tr key={i} className="border-border/50 border-b last:border-0">
+              {row.map((cell, j) => (
+                <td key={j} className="px-2 py-1 align-top">
+                  {renderInline(cell)}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+/** Render inline markdown: bold, italic, code, links, citations, bare URLs. */
 function renderInline(text: string): ReactNode {
   // Split on inline patterns, preserving delimiters
   const parts: ReactNode[] = [];
-  // Groups: 2=bold, 3=italic, 4=code, 5=citation-num, 6=citation-url, 7=link-text, 8=link-url
+  // Groups: 2=bold, 3=italic, 4=code, 5=citation-num, 6=citation-url, 7=link-text, 8=link-url, 9=bare-url
+  // Bare URL stops at whitespace or common trailing punctuation so sentence-final
+  // periods/commas don't become part of the href.
   const regex =
-    /(\*\*(.+?)\*\*|\*(.+?)\*|`([^`]+)`|\[\[(\d+)\]\]\(([^)]+)\)|\[([^\]]+)\]\(([^)]+)\))/g;
+    /(\*\*(.+?)\*\*|\*(.+?)\*|`([^`]+)`|\[\[(\d+)\]\]\(([^)]+)\)|\[([^\]]+)\]\(([^)]+)\)|(https?:\/\/[^\s<>)\]]+[^\s<>)\].,;:!?]))/g;
 
   let lastIndex = 0;
   let match: RegExpExecArray | null;
@@ -507,6 +609,19 @@ function renderInline(text: string): ReactNode {
           className="text-accent hover:underline"
         >
           {match[7]}
+        </a>,
+      );
+    } else if (match[9]) {
+      // Bare URL — auto-link. Obsidian does this; so do we.
+      parts.push(
+        <a
+          key={match.index}
+          href={match[9]}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-accent break-all hover:underline"
+        >
+          {match[9]}
         </a>,
       );
     }

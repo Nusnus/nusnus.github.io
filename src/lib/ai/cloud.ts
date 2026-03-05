@@ -20,20 +20,35 @@ export interface CloudMessage {
 
 /** Optional parameters for cloud chat requests. */
 export interface CloudChatOptions {
-  /** Tool definitions (web_search, function calls, etc.). */
-  tools?: ToolDefinition[];
+  /** Tool definitions (web_search, code_interpreter, mcp, function calls). */
+  tools?: readonly ToolDefinition[];
   /** Tool choice strategy: 'auto' lets the model decide. */
   tool_choice?: 'auto' | 'none' | 'required';
   /** Called when the model triggers a web search (before content streams). */
   onWebSearch?: () => void;
   /** Called when a web search completes and the model starts synthesizing. */
   onWebSearchFound?: () => void;
+  /**
+   * Called when any server-side tool fires (code_interpreter, mcp, web_search).
+   * Lets the UI show a live "running Python…" / "querying DeepWiki…" chip.
+   * @param label Human-readable tool label ("Web search", "Python", "DeepWiki", …)
+   * @param phase 'start' when the call begins, 'done' when it completes
+   */
+  onToolActivity?: (label: string, phase: 'start' | 'done') => void;
+  /**
+   * Called when Grok 4's reasoning token count updates (via usage snapshots
+   * in `response.in_progress` / `response.completed` events). The actual
+   * reasoning content is encrypted by xAI — only the count is exposed.
+   */
+  onReasoning?: (tokens: number) => void;
 }
 
 /** Result from cloud chat containing both content and tool calls. */
 export interface CloudChatResult {
   content: string;
   toolCalls: ToolCallResult[];
+  /** Final reasoning token count from `response.completed` usage. */
+  reasoningTokens?: number;
 }
 
 /* ─── Responses API response shapes ─── */
@@ -218,6 +233,28 @@ interface StreamOutputItemDone {
   item: { type: string; [key: string]: unknown };
 }
 
+/** Usage snapshot from `response.in_progress` / `response.completed` events. */
+interface StreamResponseUsage {
+  output_tokens_details?: { reasoning_tokens?: number };
+}
+
+/** Map an output item `type` to a human-readable tool label for the UI. */
+function labelForToolItem(itemType: string, serverLabel?: string): string | null {
+  switch (itemType) {
+    case 'web_search_call':
+      return 'Web search';
+    case 'code_interpreter_call':
+      return 'Python';
+    case 'mcp_call':
+      return serverLabel ? `MCP · ${serverLabel}` : 'MCP';
+    case 'mcp_list_tools':
+      // MCP server handshake — not worth surfacing to the user
+      return null;
+    default:
+      return null;
+  }
+}
+
 /**
  * Send a streaming request to the cloud proxy (Responses API).
  * Calls `onToken` for each text delta as it arrives.
@@ -262,6 +299,18 @@ export async function cloudChatStream(
 
   // Accumulate function call tool_calls (arguments arrive in chunks)
   const toolCallAccumulator = new Map<number, { id: string; name: string; arguments: string }>();
+  // Track server-side tool labels by output_index for matching start → done
+  const activeToolLabels = new Map<number, string>();
+  let reasoningTokens = 0;
+
+  const reportUsage = (response: unknown): void => {
+    const usage = (response as { usage?: StreamResponseUsage } | undefined)?.usage;
+    const tokens = usage?.output_tokens_details?.reasoning_tokens;
+    if (typeof tokens === 'number' && tokens !== reasoningTokens) {
+      reasoningTokens = tokens;
+      options?.onReasoning?.(tokens);
+    }
+  };
 
   try {
     while (true) {
@@ -295,8 +344,16 @@ export async function cloudChatStream(
                 name: e.item.name ?? '',
                 arguments: '',
               });
-            } else if (e.item.type === 'web_search_call') {
-              options?.onWebSearch?.();
+            } else {
+              // Server-side tool (web_search, code_interpreter, mcp) — surface to UI
+              const serverLabel = (e.item as { server_label?: string }).server_label;
+              const label = labelForToolItem(e.item.type, serverLabel);
+              if (label) {
+                activeToolLabels.set(e.output_index, label);
+                options?.onToolActivity?.(label, 'start');
+              }
+              // Legacy callback for RoastWidget compat
+              if (e.item.type === 'web_search_call') options?.onWebSearch?.();
             }
           } else if (eventType === 'response.function_call_arguments.delta') {
             const e = raw as unknown as StreamFunctionCallArgsDelta;
@@ -304,9 +361,16 @@ export async function cloudChatStream(
             if (existing) existing.arguments += e.delta;
           } else if (eventType === 'response.output_item.done') {
             const e = raw as unknown as StreamOutputItemDone;
-            if (e.item.type === 'web_search_call') {
-              options?.onWebSearchFound?.();
+            const label = activeToolLabels.get(e.output_index);
+            if (label) {
+              activeToolLabels.delete(e.output_index);
+              options?.onToolActivity?.(label, 'done');
             }
+            // Legacy callback for RoastWidget compat
+            if (e.item.type === 'web_search_call') options?.onWebSearchFound?.();
+          } else if (eventType === 'response.in_progress' || eventType === 'response.completed') {
+            // Grok 4 streams usage snapshots on these events — extract reasoning_tokens
+            reportUsage((raw as { response?: unknown }).response);
           } else if (eventType === 'response.failed') {
             const err = (raw as Record<string, unknown>).response as
               | { error?: { message?: string } }
@@ -323,8 +387,7 @@ export async function cloudChatStream(
               throw new Error(reason ? `Incomplete response: ${reason}` : 'Incomplete response');
             }
           }
-          // All other events (response.created, response.in_progress,
-          // response.completed, etc.) — skip
+          // All other events (response.created, etc.) — skip
         } catch {
           // Skip malformed JSON chunks
         }
@@ -345,5 +408,9 @@ export async function cloudChatStream(
     throw new Error('Empty response from AI provider');
   }
 
-  return { content, toolCalls };
+  return {
+    content,
+    toolCalls,
+    ...(reasoningTokens > 0 && { reasoningTokens }),
+  };
 }

@@ -1,5 +1,8 @@
 /**
- * Shared types for the AI chatbot subsystem.
+ * Shared types for the AI chat subsystem.
+ *
+ * Used by both the legacy RoastWidget and the new Cybernus agent.
+ * Keep this file lean — Cybernus-specific types live in @lib/cybernus/types.
  */
 
 /** A single message in the chat conversation. */
@@ -11,6 +14,15 @@ export interface ChatMessage {
   actions?: ToolAction[];
   /** Web search phase: 'searching' while running, 'found' when complete (synthesizing). */
   searchStatus?: 'searching' | 'found';
+  /**
+   * Live tool activity labels (e.g. "DeepWiki", "Python", "Web search").
+   * Populated during streaming so the UI can show what's happening.
+   */
+  toolActivity?: string[];
+  /** Reasoning tokens used by Grok 4's internal thinking. Updates during stream. */
+  reasoningTokens?: number;
+  /** True while the model is still reasoning (before first output token). */
+  isThinking?: boolean;
 }
 
 /** A client-side action the assistant can suggest. */
@@ -20,23 +32,4 @@ export interface ToolAction {
   label: string;
   /** URL or path to navigate to / open. */
   url: string;
-}
-
-/** A chunk of indexed content for RAG retrieval. */
-export interface SearchChunk {
-  /** Unique chunk identifier. */
-  id: string;
-  /** The text content of the chunk. */
-  content: string;
-  /** Human-readable source label (e.g., "Knowledge Base > About"). */
-  source: string;
-  /** Pre-extracted lowercase keywords for BM25 scoring. */
-  keywords: string[];
-}
-
-/** Pre-built search index serialized as a prop from the Astro page. */
-export interface SearchIndex {
-  chunks: SearchChunk[];
-  /** Average document length in keywords (used for BM25 normalisation). */
-  avgDocLength: number;
 }

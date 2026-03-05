@@ -4,6 +4,11 @@
  * Proxies requests to xAI (Grok) via the Responses API.
  * The API key is stored as a Cloudflare secret — never in source code.
  *
+ * Powers **Cybernus** — Tomer's digital self on nusnus.github.io.
+ * Uses `grok-4-1-fast-reasoning` as the single canonical model with
+ * native tool passthrough for web_search, code_interpreter, and MCP
+ * servers (DeepWiki, etc.). Reasoning tokens are streamed back via SSE.
+ *
  * Security layers:
  *  1. Origin allowlist (CORS)
  *  2. Method restriction (POST only, OPTIONS for preflight)
@@ -48,30 +53,41 @@ interface ResponsesAPIRequest {
 const ALLOWED_ORIGINS: ReadonlySet<string> = new Set([
   'https://nusnus.github.io',
   'http://localhost:4321',
+  'http://127.0.0.1:4321',
   'http://localhost:3000',
 ]);
 
 const XAI_RESPONSES_URL = 'https://api.x.ai/v1/responses';
 
-/** Models visitors are allowed to use. Prevents switching to costly models. */
+/**
+ * Models visitors are allowed to use. Prevents switching to costly models.
+ * Cybernus uses `grok-4-1-fast-reasoning` exclusively; legacy aliases are
+ * kept for the RoastWidget until its next refactor.
+ */
 const ALLOWED_MODELS: ReadonlySet<string> = new Set([
   'grok-4-1-fast',
   'grok-4-1-fast-reasoning',
   'grok-4-1-fast-non-reasoning',
-  'grok-code-fast',
-  'grok-code-fast-1',
 ]);
 
-const DEFAULT_MODEL = 'grok-4-1-fast';
+const DEFAULT_MODEL = 'grok-4-1-fast-reasoning';
 
-/** Hard limits to prevent abuse. */
-const MAX_REQUEST_BYTES = 131_072; // 128 KB — accommodates full context + tools + chat history
-const MAX_OUTPUT_TOKENS_CAP = 1024;
-const MAX_INPUT_ITEMS = 30;
+/**
+ * Hard limits to prevent abuse.
+ *
+ * Cybernus feeds the full persona + knowledge base + live GitHub data
+ * (~15K tokens ≈ 60KB) plus up to 50 chat turns. 256KB gives comfortable
+ * headroom. 4096 output tokens covers long-form answers with Mermaid
+ * diagrams and code blocks — the worker caps this server-side regardless
+ * of what the client asks for.
+ */
+const MAX_REQUEST_BYTES = 262_144; // 256 KB
+const MAX_OUTPUT_TOKENS_CAP = 4096;
+const MAX_INPUT_ITEMS = 60;
 
 /** Simple in-memory rate limiter (per-isolate, resets on cold start). */
 const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
-const RATE_LIMIT_MAX_REQUESTS = 20; // per IP per window
+const RATE_LIMIT_MAX_REQUESTS = 30; // per IP per window
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 
 // ─── Helpers ─────────────────────────────────────────────────────────
