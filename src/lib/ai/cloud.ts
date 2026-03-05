@@ -376,8 +376,12 @@ export async function cloudChatStream(
           }
           // All other events (response.created, response.in_progress,
           // response.completed, etc.) — skip
-        } catch {
-          // Skip malformed JSON chunks
+        } catch (e) {
+          // Only swallow malformed JSON (JSON.parse throws SyntaxError).
+          // Intentional throws from response.failed / response.incomplete
+          // must propagate to the caller's error handler.
+          if (e instanceof SyntaxError) continue;
+          throw e;
         }
       }
     }
