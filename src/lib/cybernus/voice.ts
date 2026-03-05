@@ -159,14 +159,14 @@ export function useSpeechInput(
     r.interimResults = true; // stream words as they're heard
 
     r.onresult = (ev) => {
-      // Concatenate all results from resultIndex onward (interim + final).
-      let buf = '';
-      for (let i = ev.resultIndex; i < ev.results.length; i++) {
-        const result = ev.results[i];
-        if (result) buf += result[0].transcript;
-      }
-      bufferRef.current += buf;
-      setTranscript(bufferRef.current);
+      // `ev.results` is cumulative — interim results update IN PLACE at the
+      // same index, and the list only grows when a new utterance starts.
+      // We must rebuild the full transcript from scratch on every event;
+      // appending would duplicate every previously-seen interim word.
+      // (SpeechRecognitionResultList is array-like, not iterable — hence Array.from.)
+      const full = Array.from(ev.results, (r) => r[0].transcript).join('');
+      bufferRef.current = full;
+      setTranscript(full);
     };
 
     r.onerror = (ev) => {

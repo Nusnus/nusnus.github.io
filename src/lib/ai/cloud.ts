@@ -328,69 +328,74 @@ export async function cloudChatStream(
         if (!trimmed || trimmed.startsWith(':')) continue;
         if (!trimmed.startsWith('data: ')) continue;
 
+        // Parse the JSON payload. This is the ONLY thing we guard with a
+        // try/catch — if parsing fails, skip the chunk. Intentional throws
+        // from `response.failed` / `response.incomplete` below must NOT be
+        // swallowed here; they need to propagate to the caller.
+        let raw: Record<string, unknown>;
         try {
-          const raw = JSON.parse(trimmed.slice(6)) as Record<string, unknown>;
-          const eventType = raw.type as string | undefined;
+          raw = JSON.parse(trimmed.slice(6)) as Record<string, unknown>;
+        } catch {
+          continue; // malformed JSON chunk — skip
+        }
+        const eventType = raw.type as string | undefined;
 
-          if (eventType === 'response.output_text.delta') {
-            const e = raw as unknown as StreamOutputTextDelta;
-            accumulated += e.delta;
-            onToken(e.delta, stripGrokRenderForDisplay(accumulated));
-          } else if (eventType === 'response.output_item.added') {
-            const e = raw as unknown as StreamOutputItemAdded;
-            if (e.item.type === 'function_call') {
-              toolCallAccumulator.set(e.output_index, {
-                id: e.item.call_id ?? '',
-                name: e.item.name ?? '',
-                arguments: '',
-              });
-            } else {
-              // Server-side tool (web_search, code_interpreter, mcp) — surface to UI
-              const serverLabel = (e.item as { server_label?: string }).server_label;
-              const label = labelForToolItem(e.item.type, serverLabel);
-              if (label) {
-                activeToolLabels.set(e.output_index, label);
-                options?.onToolActivity?.(label, 'start');
-              }
-              // Legacy callback for RoastWidget compat
-              if (e.item.type === 'web_search_call') options?.onWebSearch?.();
-            }
-          } else if (eventType === 'response.function_call_arguments.delta') {
-            const e = raw as unknown as StreamFunctionCallArgsDelta;
-            const existing = toolCallAccumulator.get(e.output_index);
-            if (existing) existing.arguments += e.delta;
-          } else if (eventType === 'response.output_item.done') {
-            const e = raw as unknown as StreamOutputItemDone;
-            const label = activeToolLabels.get(e.output_index);
+        if (eventType === 'response.output_text.delta') {
+          const e = raw as unknown as StreamOutputTextDelta;
+          accumulated += e.delta;
+          onToken(e.delta, stripGrokRenderForDisplay(accumulated));
+        } else if (eventType === 'response.output_item.added') {
+          const e = raw as unknown as StreamOutputItemAdded;
+          if (e.item.type === 'function_call') {
+            toolCallAccumulator.set(e.output_index, {
+              id: e.item.call_id ?? '',
+              name: e.item.name ?? '',
+              arguments: '',
+            });
+          } else {
+            // Server-side tool (web_search, code_interpreter, mcp) — surface to UI
+            const serverLabel = (e.item as { server_label?: string }).server_label;
+            const label = labelForToolItem(e.item.type, serverLabel);
             if (label) {
-              activeToolLabels.delete(e.output_index);
-              options?.onToolActivity?.(label, 'done');
+              activeToolLabels.set(e.output_index, label);
+              options?.onToolActivity?.(label, 'start');
             }
             // Legacy callback for RoastWidget compat
-            if (e.item.type === 'web_search_call') options?.onWebSearchFound?.();
-          } else if (eventType === 'response.in_progress' || eventType === 'response.completed') {
-            // Grok 4 streams usage snapshots on these events — extract reasoning_tokens
-            reportUsage((raw as { response?: unknown }).response);
-          } else if (eventType === 'response.failed') {
-            const err = (raw as Record<string, unknown>).response as
-              | { error?: { message?: string } }
-              | undefined;
-            throw new Error(err?.error?.message ?? 'Response failed');
-          } else if (eventType === 'response.incomplete') {
-            // The model stopped before finishing — surface a useful message
-            const reason = (
-              (raw as Record<string, unknown>).response as
-                | { incomplete_details?: { reason?: string } }
-                | undefined
-            )?.incomplete_details?.reason;
-            if (!accumulated) {
-              throw new Error(reason ? `Incomplete response: ${reason}` : 'Incomplete response');
-            }
+            if (e.item.type === 'web_search_call') options?.onWebSearch?.();
           }
-          // All other events (response.created, etc.) — skip
-        } catch {
-          // Skip malformed JSON chunks
+        } else if (eventType === 'response.function_call_arguments.delta') {
+          const e = raw as unknown as StreamFunctionCallArgsDelta;
+          const existing = toolCallAccumulator.get(e.output_index);
+          if (existing) existing.arguments += e.delta;
+        } else if (eventType === 'response.output_item.done') {
+          const e = raw as unknown as StreamOutputItemDone;
+          const label = activeToolLabels.get(e.output_index);
+          if (label) {
+            activeToolLabels.delete(e.output_index);
+            options?.onToolActivity?.(label, 'done');
+          }
+          // Legacy callback for RoastWidget compat
+          if (e.item.type === 'web_search_call') options?.onWebSearchFound?.();
+        } else if (eventType === 'response.in_progress' || eventType === 'response.completed') {
+          // Grok 4 streams usage snapshots on these events — extract reasoning_tokens
+          reportUsage((raw as { response?: unknown }).response);
+        } else if (eventType === 'response.failed') {
+          const err = (raw as Record<string, unknown>).response as
+            | { error?: { message?: string } }
+            | undefined;
+          throw new Error(err?.error?.message ?? 'Response failed');
+        } else if (eventType === 'response.incomplete') {
+          // The model stopped before finishing — surface a useful message
+          const reason = (
+            (raw as Record<string, unknown>).response as
+              | { incomplete_details?: { reason?: string } }
+              | undefined
+          )?.incomplete_details?.reason;
+          if (!accumulated) {
+            throw new Error(reason ? `Incomplete response: ${reason}` : 'Incomplete response');
+          }
         }
+        // All other events (response.created, etc.) — skip
       }
     }
   } finally {
