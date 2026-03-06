@@ -230,12 +230,26 @@ export async function buildCloudContext(
     try {
       // Use Function constructor to hide import from Vite's static analysis
       const getCollection = (await new Function('return import("astro:content")')()).getCollection;
-      const blogPosts = await getCollection('blog');
-      const publishedPosts = blogPosts.filter((post: any) => !post.data.draft);
+
+      // Type for blog post entries
+      interface BlogPost {
+        id: string;
+        data: {
+          title: string;
+          description: string;
+          publishedAt: Date;
+          tags: string[];
+          draft: boolean;
+          crossPostedTo?: string[];
+        };
+      }
+
+      const blogPosts = (await getCollection('blog')) as BlogPost[];
+      const publishedPosts = blogPosts.filter((post) => !post.data.draft);
       if (publishedPosts.length > 0) {
         const blogLines = publishedPosts
-          .sort((a: any, b: any) => b.data.publishedAt.getTime() - a.data.publishedAt.getTime())
-          .map((post: any) => {
+          .sort((a, b) => b.data.publishedAt.getTime() - a.data.publishedAt.getTime())
+          .map((post) => {
             const tags = post.data.tags.length > 0 ? ` · Tags: ${post.data.tags.join(', ')}` : '';
             const crossPosted =
               post.data.crossPostedTo && post.data.crossPostedTo.length > 0

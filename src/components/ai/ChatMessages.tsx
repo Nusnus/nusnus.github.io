@@ -70,7 +70,9 @@ export function ChatMessages({
                 <span className="bg-bg-base/50 text-accent ring-accent/30 inline-flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium ring-1">
                   <Globe
                     className="text-accent h-4 w-4"
-                    style="filter: drop-shadow(0 0 4px oklch(0.72 0.17 145 / 0.6));"
+                    style={{
+                      filter: 'drop-shadow(0 0 4px oklch(0.72 0.17 145 / 0.6))',
+                    }}
                   />
                   <span className="font-mono">Synthesizing results</span>
                   <span className="inline-flex gap-1">
@@ -129,7 +131,10 @@ export function ChatMessages({
                 {/* Hover glow effect */}
                 <div
                   className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-150 group-hover:opacity-100"
-                  style="background: radial-gradient(circle at center, oklch(0.72 0.17 145 / 0.05), transparent 70%);"
+                  style={{
+                    background:
+                      'radial-gradient(circle at center, oklch(0.72 0.17 145 / 0.05), transparent 70%)',
+                  }}
                   aria-hidden="true"
                 ></div>
               </button>

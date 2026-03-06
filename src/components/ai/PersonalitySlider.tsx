@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { cn } from '@lib/utils/cn';
 
 /** Personality levels for the Grok Spectrum slider */
@@ -18,23 +18,22 @@ interface PersonalitySliderProps {
 
 /** Grok Spectrum personality slider — controls AI humor/vulgarity level */
 export function PersonalitySlider({ onChange }: PersonalitySliderProps) {
-  const [level, setLevel] = useState(2); // Default to "Witty"
-  const [isDragging, setIsDragging] = useState(false);
-
-  // Load saved preference on mount
-  useEffect(() => {
+  // Initialize level from localStorage or default to "Witty" (2)
+  const [level, setLevel] = useState(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved !== null) {
         const parsed = parseInt(saved, 10);
         if (parsed >= 0 && parsed < PERSONALITY_LEVELS.length) {
-          setLevel(parsed);
+          return parsed;
         }
       }
     } catch {
       // Ignore localStorage errors
     }
-  }, []);
+    return 2; // Default to "Witty"
+  });
+  const [isDragging, setIsDragging] = useState(false);
 
   // Save preference and notify parent
   const updateLevel = (newLevel: number) => {
@@ -51,7 +50,7 @@ export function PersonalitySlider({ onChange }: PersonalitySliderProps) {
     updateLevel(parseInt(e.target.value, 10));
   };
 
-  const currentPersonality = PERSONALITY_LEVELS[level];
+  const currentPersonality = PERSONALITY_LEVELS[level] ?? PERSONALITY_LEVELS[2];
 
   return (
     <div className="w-full max-w-md">

@@ -1,6 +1,7 @@
 import { type RefObject, useState, useRef, useCallback } from 'react';
 import { Send, Square, Mic, StopCircle } from 'lucide-react';
 import { cn } from '@lib/utils/cn';
+import { useLanguage } from '@hooks/useLanguage';
 
 interface ChatInputProps {
   input: string;
@@ -28,6 +29,9 @@ export function ChatInput({
   onStop,
   onClearChat,
 }: ChatInputProps) {
+  // Translation hook
+  const { t } = useLanguage();
+
   // Voice recording state
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
@@ -67,6 +71,8 @@ export function ChatInput({
       };
 
       mediaRecorder.onstop = () => {
+        // Create audio blob for future use
+        // @ts-expect-error - audioBlob will be used for future voice chat integration
         const _audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
 
         // FUTURE: Send _audioBlob to transcription service or Eleven Labs
@@ -118,7 +124,11 @@ export function ChatInput({
       {/* Top glow line */}
       <div
         className="pointer-events-none absolute top-0 right-0 left-0 h-px"
-        style="background: linear-gradient(90deg, transparent, oklch(0.72 0.17 145 / 0.3) 50%, transparent); box-shadow: 0 0 8px oklch(0.72 0.17 145 / 0.2);"
+        style={{
+          background:
+            'linear-gradient(90deg, transparent, oklch(0.72 0.17 145 / 0.3) 50%, transparent)',
+          boxShadow: '0 0 8px oklch(0.72 0.17 145 / 0.2)',
+        }}
         aria-hidden="true"
       ></div>
 
@@ -150,7 +160,10 @@ export function ChatInput({
               <span className="relative z-10">{t('initializeNewSession')}</span>
               <div
                 className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-150 group-hover:opacity-100"
-                style="background: linear-gradient(90deg, transparent, oklch(1 0 0 / 0.1) 50%, transparent);"
+                style={{
+                  background:
+                    'linear-gradient(90deg, transparent, oklch(1 0 0 / 0.1) 50%, transparent)',
+                }}
                 aria-hidden="true"
               ></div>
             </button>
@@ -161,7 +174,9 @@ export function ChatInput({
               {/* Animated border glow on focus */}
               <div
                 className="pointer-events-none absolute inset-0 rounded-xl opacity-0 transition-opacity duration-150 group-focus-within:opacity-100"
-                style="box-shadow: inset 0 0 12px oklch(0.72 0.17 145 / 0.1);"
+                style={{
+                  boxShadow: 'inset 0 0 12px oklch(0.72 0.17 145 / 0.1)',
+                }}
                 aria-hidden="true"
               ></div>
 
