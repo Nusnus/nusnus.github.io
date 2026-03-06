@@ -156,11 +156,17 @@ export function useSpeechInput(
   const [transcript, setTranscript] = useState('');
   const [error, setError] = useState('');
 
-  // Tear down on unmount or language change.
+  // Tear down on unmount or language change. The `isStale()` guard on the
+  // async handlers means `onend` will no-op after this cleanup nulls the ref,
+  // so we must reset listening/transcript state here — otherwise `listening`
+  // stays stuck `true` and the composer textarea is disabled until refresh.
   useEffect(() => {
     return () => {
       recogRef.current?.abort();
       recogRef.current = null;
+      bufferRef.current = '';
+      setListening(false);
+      setTranscript('');
     };
   }, [language]);
 
