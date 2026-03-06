@@ -50,11 +50,11 @@ GitHub API → fetch-data → public/data/*.json → Astro build → GitHub Page
         every 4h (CI)                          on push to main
 ```
 
-Three GitHub Actions workflows keep the site alive:
+GitHub Actions workflows keep the site alive:
 
+- **ci** — parallel jobs (lint, format, type-check, test, build) on PRs and pushes to `main`
 - **update-data** — cron every 4h, fetches profile/repos/activity/contribution data, commits JSON
 - **deploy** — builds and deploys to Pages on every push to `main`
-- **lint** — type-check, lint, format, tests on PRs and pushes
 
 The site works offline with seed data in `public/data/` — no API token required for development.
 
