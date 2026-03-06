@@ -272,7 +272,10 @@ export function useVoiceChat(): UseVoiceChatReturn {
         throw new Error('No ephemeral token in response');
       }
 
-      if (!isRecordingRef.current) return;
+      if (!isRecordingRef.current) {
+        cleanup();
+        return;
+      }
 
       // 4. Connect WebSocket to xAI Realtime API
       const ws = new WebSocket('wss://api.x.ai/v1/realtime', [`xai-client-secret.${token}`]);

@@ -76,7 +76,7 @@ export function ChatInput({
               onClick={onClearChat}
               className="rounded-xl bg-green-500 px-6 py-2.5 text-sm font-semibold text-black transition-colors hover:bg-green-400"
             >
-              {t.newChat}
+              {t.startNewChat}
             </button>
           </div>
         ) : (
