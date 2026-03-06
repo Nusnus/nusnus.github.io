@@ -111,6 +111,8 @@ export function useVoiceChat(): UseVoiceChatReturn {
   const lastEventRef = useRef<string | null>(null);
   const isRecordingRef = useRef(false);
   const cleanupTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** Accumulates output transcript deltas to avoid duplication on done. */
+  const outputTranscriptAccRef = useRef('');
 
   /* ─── Diagnostics ─── */
   const diagnostics: VoiceDiagnostics = {
@@ -172,6 +174,7 @@ export function useVoiceChat(): UseVoiceChatReturn {
 
     audioBufferRef.current = [];
     chunksSentRef.current = 0;
+    outputTranscriptAccRef.current = '';
   }, []);
 
   // Cleanup on unmount
@@ -361,16 +364,19 @@ export function useVoiceChat(): UseVoiceChatReturn {
               setTranscriptVersion((v) => v + 1);
             }
           } else if (eventType === 'response.output_audio_transcript.delta') {
-            // xAI sends output transcript deltas — extract text
+            // Accumulate deltas internally — only emit on done to prevent duplication
             const delta = data.delta as string | undefined;
             if (delta) {
-              console.log(`[Voice] Output transcript delta: "${delta}"`);
-              setTranscript(delta);
-              setTranscriptVersion((v) => v + 1);
+              outputTranscriptAccRef.current += delta;
+              console.log(
+                `[Voice] Output transcript delta (accumulated ${outputTranscriptAccRef.current.length} chars)`,
+              );
             }
           } else if (eventType === 'response.output_audio_transcript.done') {
-            // Full output transcript completed
-            const transcriptText = data.transcript as string | undefined;
+            // Full output transcript completed — emit the accumulated text
+            const transcriptText =
+              outputTranscriptAccRef.current || (data.transcript as string | undefined) || '';
+            outputTranscriptAccRef.current = '';
             if (transcriptText) {
               console.log(`[Voice] Output transcript done: "${transcriptText}"`);
               setTranscript(transcriptText);

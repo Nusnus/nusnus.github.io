@@ -189,11 +189,16 @@ export default function AiChat({ systemPrompt }: Props) {
         const langPrompt = langConfig.promptInstruction;
         const augmentedPrompt = `${langPrompt}\n\n${personalityPrompt}\n\n${cloudContext}\n\n${systemPrompt}\n\n---\nREMINDER: ${langPrompt}`;
 
+        // Filter out welcome messages in ALL languages (not just current) so a
+        // language switch doesn't leak the old welcome into chat history.
+        const allWelcomeMessages = new Set(
+          (['en', 'es', 'he'] as const).map((l) => getTranslations(l).welcomeMessage),
+        );
         const chatHistory = [...messages, userMsg]
-          .filter((m) => {
-            const t = getTranslations(language);
-            return m.role === 'user' || (m.role === 'assistant' && m.content !== t.welcomeMessage);
-          })
+          .filter(
+            (m) =>
+              m.role === 'user' || (m.role === 'assistant' && !allWelcomeMessages.has(m.content)),
+          )
           .map((m) => ({
             role: m.role as 'system' | 'user' | 'assistant',
             content: m.content,
