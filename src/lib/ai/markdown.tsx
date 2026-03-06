@@ -4,7 +4,8 @@
  * Supports: headings (# ## ###), **bold**, *italic*, `inline code`,
  * ```code blocks``` (with syntax highlighting), [links](url),
  * unordered lists (- item), ordered lists (1. item), horizontal
- * rules (---), and paragraphs.
+ * rules (---), paragraphs, [[wikilinks]], callouts (> [!note]),
+ * and markdown tables.
  * No external dependencies — keeps the bundle small.
  */
 import { lazy, Suspense } from 'react';
@@ -16,6 +17,55 @@ const HEADING_CLASSES: Record<number, string> = {
   1: 'text-base font-bold mt-3 mb-1',
   2: 'text-sm font-bold mt-2.5 mb-1',
   3: 'text-sm font-semibold mt-2 mb-0.5',
+};
+
+/* ── Obsidian-style callout types ── */
+const CALLOUT_STYLES: Record<
+  string,
+  { icon: string; bgClass: string; borderClass: string; textClass: string }
+> = {
+  note: {
+    icon: '📝',
+    bgClass: 'bg-blue-500/10',
+    borderClass: 'border-blue-500/50',
+    textClass: 'text-blue-400',
+  },
+  tip: {
+    icon: '💡',
+    bgClass: 'bg-green-500/10',
+    borderClass: 'border-green-500/50',
+    textClass: 'text-green-400',
+  },
+  warning: {
+    icon: '⚠️',
+    bgClass: 'bg-yellow-500/10',
+    borderClass: 'border-yellow-500/50',
+    textClass: 'text-yellow-400',
+  },
+  danger: {
+    icon: '🚨',
+    bgClass: 'bg-red-500/10',
+    borderClass: 'border-red-500/50',
+    textClass: 'text-red-400',
+  },
+  info: {
+    icon: 'ℹ️',
+    bgClass: 'bg-cyan-500/10',
+    borderClass: 'border-cyan-500/50',
+    textClass: 'text-cyan-400',
+  },
+  success: {
+    icon: '✅',
+    bgClass: 'bg-green-500/10',
+    borderClass: 'border-green-500/50',
+    textClass: 'text-green-400',
+  },
+  question: {
+    icon: '❓',
+    bgClass: 'bg-purple-500/10',
+    borderClass: 'border-purple-500/50',
+    textClass: 'text-purple-400',
+  },
 };
 
 /* ── Minimal keyword-based syntax highlighter ──
@@ -339,7 +389,107 @@ function splitBlocks(text: string): string[] {
   return blocks;
 }
 
-/** Render a single block (heading, code, list, hr, or paragraph). */
+/** Render an Obsidian-style callout block. */
+function renderCallout(lines: string[], key: number): ReactNode {
+  const firstLine = lines[0] ?? '';
+  const match = firstLine.trim().match(/^>\s*\[!(\w+)\]\s*(.*)$/);
+  if (!match) return null;
+
+  const type = match[1]?.toLowerCase() ?? 'note';
+  const title = match[2]?.trim() || type.charAt(0).toUpperCase() + type.slice(1);
+  const style = CALLOUT_STYLES[type] ?? CALLOUT_STYLES.note;
+
+  // Collect content lines (skip first line, remove leading >)
+  const contentLines = lines
+    .slice(1)
+    .map((line) => line.trim().replace(/^>\s?/, ''))
+    .filter((line) => line.length > 0);
+
+  return (
+    <div
+      key={key}
+      className={`my-2 rounded-lg border-l-4 p-3 ${style.bgClass} ${style.borderClass}`}
+    >
+      <div className={`mb-1 flex items-center gap-2 text-sm font-semibold ${style.textClass}`}>
+        <span>{style.icon}</span>
+        <span>{title}</span>
+      </div>
+      {contentLines.length > 0 && (
+        <div className="text-text-primary text-sm">
+          {contentLines.map((line, i) => (
+            <p key={i} className="my-0.5">
+              {renderInline(line)}
+            </p>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Render a markdown table. */
+function renderTable(lines: string[], key: number): ReactNode {
+  if (lines.length < 2) return null;
+
+  // Parse header
+  const headerCells = lines[0]
+    ?.split('|')
+    .map((cell) => cell.trim())
+    .filter((cell) => cell.length > 0) ?? [];
+
+  // Parse separator line to detect alignment
+  const separatorCells = lines[1]
+    ?.split('|')
+    .map((cell) => cell.trim())
+    .filter((cell) => cell.length > 0) ?? [];
+
+  const alignments = separatorCells.map((cell) => {
+    if (cell.startsWith(':') && cell.endsWith(':')) return 'center';
+    if (cell.endsWith(':')) return 'right';
+    return 'left';
+  });
+
+  // Parse body rows
+  const bodyRows = lines.slice(2).map((line) =>
+    line
+      .split('|')
+      .map((cell) => cell.trim())
+      .filter((cell) => cell.length > 0),
+  );
+
+  return (
+    <div key={key} className="scrollbar-thin my-2 overflow-x-auto">
+      <table className="border-border w-full border-collapse text-sm">
+        <thead>
+          <tr className="border-border border-b">
+            {headerCells.map((cell, i) => (
+              <th
+                key={i}
+                className="bg-bg-elevated px-3 py-2 text-left font-semibold"
+                style={{ textAlign: alignments[i] }}
+              >
+                {renderInline(cell)}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {bodyRows.map((row, i) => (
+            <tr key={i} className="border-border border-b last:border-b-0">
+              {row.map((cell, j) => (
+                <td key={j} className="px-3 py-2" style={{ textAlign: alignments[j] }}>
+                  {renderInline(cell)}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+/** Render a single block (heading, code, list, hr, callout, table, or paragraph). */
 function renderBlock(block: string, key: number): ReactNode {
   const trimmed = block.trim();
   if (!trimmed) return null;
@@ -375,6 +525,22 @@ function renderBlock(block: string, key: number): ReactNode {
   }
 
   const lines = trimmed.split('\n');
+
+  // Callout: > [!type] or > [!type] Title
+  // Matches Obsidian-style callouts
+  if (lines.length > 0 && lines[0]?.trim().match(/^>\s*\[!(\w+)\]/)) {
+    return renderCallout(lines, key);
+  }
+
+  // Table: lines with | separators
+  // Detect markdown tables (header | separator | rows)
+  if (
+    lines.length >= 2 &&
+    lines[0]?.includes('|') &&
+    lines[1]?.match(/^\s*\|?\s*[-:]+\s*\|/)
+  ) {
+    return renderTable(lines, key);
+  }
 
   // Heading: # ## ###
   if (lines.length === 1) {
@@ -444,13 +610,15 @@ function renderBlock(block: string, key: number): ReactNode {
   );
 }
 
-/** Render inline markdown: bold, italic, code, links, citations. */
+/** Render inline markdown: bold, italic, code, links, wikilinks, citations. */
 function renderInline(text: string): ReactNode {
   // Split on inline patterns, preserving delimiters
   const parts: ReactNode[] = [];
-  // Groups: 2=bold, 3=italic, 4=code, 5=citation-num, 6=citation-url, 7=link-text, 8=link-url
+  // Regex groups:
+  // 2=bold, 3=italic, 4=code, 5=wikilink-page, 6=wikilink-display,
+  // 7=citation-num, 8=citation-url, 9=link-text, 10=link-url
   const regex =
-    /(\*\*(.+?)\*\*|\*(.+?)\*|`([^`]+)`|\[\[(\d+)\]\]\(([^)]+)\)|\[([^\]]+)\]\(([^)]+)\))/g;
+    /(\*\*(.+?)\*\*|\*(.+?)\*|`([^`]+)`|\[\[([^\]|]+)(?:\|([^\]]+))?\]\]|\[\[(\d+)\]\]\(([^)]+)\)|\[([^\]]+)\]\(([^)]+)\))/g;
 
   let lastIndex = 0;
   let match: RegExpExecArray | null;
@@ -482,31 +650,44 @@ function renderInline(text: string): ReactNode {
           {match[4]}
         </code>,
       );
-    } else if (match[5] && match[6]) {
+    } else if (match[5]) {
+      // [[page]] or [[page|display]] — Obsidian-style wikilink
+      const page = match[5];
+      const display = match[6] || page;
+      parts.push(
+        <span
+          key={match.index}
+          className="bg-accent/10 text-accent rounded px-1 py-0.5 text-sm font-medium"
+          title={`Link to: ${page}`}
+        >
+          {display}
+        </span>,
+      );
+    } else if (match[7] && match[8]) {
       // [[n]](url) — web search citation, render as superscript link
       parts.push(
         <sup key={match.index}>
           <a
-            href={match[6]}
+            href={match[8]}
             target="_blank"
             rel="noopener noreferrer"
             className="text-accent hover:underline"
           >
-            [{match[5]}]
+            [{match[7]}]
           </a>
         </sup>,
       );
-    } else if (match[7] && match[8]) {
+    } else if (match[9] && match[10]) {
       // [text](url)
       parts.push(
         <a
           key={match.index}
-          href={match[8]}
+          href={match[10]}
           target="_blank"
           rel="noopener noreferrer"
           className="text-accent hover:underline"
         >
-          {match[7]}
+          {match[9]}
         </a>,
       );
     }

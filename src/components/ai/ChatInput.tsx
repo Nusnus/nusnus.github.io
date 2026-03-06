@@ -1,6 +1,7 @@
-import { type RefObject } from 'react';
-import { Send, Square } from 'lucide-react';
+import { type RefObject, useState, useRef, useCallback } from 'react';
+import { Send, Square, Mic, StopCircle } from 'lucide-react';
 import { cn } from '@lib/utils/cn';
+import { useLanguage } from '@hooks/useLanguage';
 
 interface ChatInputProps {
   input: string;
@@ -28,11 +29,90 @@ export function ChatInput({
   onStop,
   onClearChat,
 }: ChatInputProps) {
+  const { t } = useLanguage();
+  // Voice recording state
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const [showVoiceConfirmation, setShowVoiceConfirmation] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const recordingTimerRef = useRef<number | null>(null);
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       onSend(input);
     }
+  };
+
+  /**
+   * Start voice recording using MediaRecorder API.
+   *
+   * FUTURE INTEGRATION POINT: Eleven Labs Voice Synthesis
+   * - This captures audio for potential voice chat features
+   * - Audio blob can be sent to Eleven Labs API for voice synthesis
+   * - Consider adding real-time streaming for lower latency
+   * - May need to add voice activity detection (VAD)
+   */
+  const startRecording = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+
+      audioChunksRef.current = [];
+      mediaRecorderRef.current = mediaRecorder;
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+
+        // FUTURE: Send audioBlob to transcription service or Eleven Labs
+        // For now, just show confirmation
+        setShowVoiceConfirmation(true);
+        setTimeout(() => setShowVoiceConfirmation(false), 3000);
+
+        // Clean up
+        stream.getTracks().forEach(track => track.stop());
+        setRecordingTime(0);
+        if (recordingTimerRef.current) {
+          clearInterval(recordingTimerRef.current);
+          recordingTimerRef.current = null;
+        }
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+
+      // Start timer
+      recordingTimerRef.current = window.setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
+    } catch (error) {
+      console.error('Error accessing microphone:', error);
+      alert('Unable to access microphone. Please check your browser permissions.');
+    }
+  }, []);
+
+  /**
+   * Stop voice recording.
+   */
+  const stopRecording = useCallback(() => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  }, [isRecording]);
+
+  // Format recording time as MM:SS
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   return (
@@ -44,20 +124,32 @@ export function ChatInput({
         aria-hidden="true"
       ></div>
 
+      {/* Voice note confirmation banner */}
+      {showVoiceConfirmation && (
+        <div className="mx-auto max-w-5xl mb-3 animate-[message-slide-in_0.3s_ease-out]">
+          <div className="bg-accent/10 ring-accent/30 rounded-lg px-4 py-2.5 ring-1 flex items-center gap-2">
+            <Mic className="h-4 w-4 text-accent" />
+            <p className="text-accent font-mono text-sm">
+              Voice note captured successfully
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="mx-auto max-w-5xl">
         {isAtLimit ? (
           <div className="flex flex-col items-center gap-4 py-4 text-center">
             <div className="bg-accent/5 ring-accent/20 rounded-lg px-4 py-3 ring-1">
-              <p className="text-accent font-mono text-sm font-medium">SESSION LIMIT REACHED</p>
+              <p className="text-accent font-mono text-sm font-medium">{t('sessionLimitReached')}</p>
               <p className="text-text-muted mt-1 text-xs">
-                Maximum {maxMessages} messages per session
+                {t('maxMessagesPerSession', { count: maxMessages })}
               </p>
             </div>
             <button
               onClick={onClearChat}
               className="group from-accent to-accent/90 text-bg-base ring-accent/50 focus-visible:ring-accent focus-visible:ring-offset-bg-base relative overflow-hidden rounded-xl bg-gradient-to-r px-8 py-3 font-mono text-sm font-bold shadow-lg ring-1 transition-all duration-150 hover:shadow-[0_0_24px_oklch(0.72_0.17_145_/_0.4)] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
             >
-              <span className="relative z-10">INITIALIZE NEW SESSION</span>
+              <span className="relative z-10">{t('initializeNewSession')}</span>
               <div
                 className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-150 group-hover:opacity-100"
                 style="background: linear-gradient(90deg, transparent, oklch(1 0 0 / 0.1) 50%, transparent);"
@@ -85,10 +177,10 @@ export function ChatInput({
                   e.target.style.height = `${Math.min(e.target.scrollHeight, 128)}px`;
                 }}
                 onKeyDown={handleKeyDown}
-                placeholder="Enter your query..."
+                placeholder={isRecording ? `Recording... ${formatTime(recordingTime)}` : t('enterYourQuery')}
                 rows={1}
                 className="text-text-primary placeholder:text-text-muted/60 relative z-10 max-h-32 flex-1 resize-none bg-transparent font-mono text-base leading-relaxed outline-none md:text-sm"
-                disabled={isGenerating}
+                disabled={isGenerating || isRecording}
                 aria-label="Chat message input"
                 autoComplete="off"
                 autoCorrect="off"
@@ -96,11 +188,39 @@ export function ChatInput({
                 spellCheck="true"
               />
 
+              {/* Voice recording button */}
+              {!isGenerating && (
+                isRecording ? (
+                  <button
+                    onClick={stopRecording}
+                    className="focus-visible:ring-offset-bg-surface relative z-10 flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-lg bg-red-500/10 text-red-400 ring-1 ring-red-500/30 transition-all duration-150 hover:bg-red-500/20 hover:shadow-[0_0_12px_oklch(0.5_0.2_25_/_0.3)] hover:ring-red-500/50 focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 focus-visible:outline-none active:scale-95"
+                    aria-label="Stop recording"
+                  >
+                    <StopCircle className="h-5 w-5 fill-current animate-pulse" />
+                  </button>
+                ) : (
+                  <button
+                    onClick={startRecording}
+                    disabled={!!input.trim()}
+                    className={cn(
+                      'relative z-10 flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-lg ring-1 transition-all duration-150 focus-visible:outline-none',
+                      !input.trim()
+                        ? 'bg-bg-elevated text-text-secondary ring-border hover:bg-bg-surface hover:text-accent focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg-surface active:scale-95'
+                        : 'bg-bg-elevated text-text-muted ring-border cursor-not-allowed opacity-30',
+                    )}
+                    aria-label="Record voice note"
+                    title="Record voice note (disabled when typing)"
+                  >
+                    <Mic className="h-5 w-5" />
+                  </button>
+                )
+              )}
+
               {isGenerating ? (
                 <button
                   onClick={onStop}
                   className="focus-visible:ring-offset-bg-surface relative z-10 flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-lg bg-red-500/10 text-red-400 ring-1 ring-red-500/30 transition-all duration-150 hover:bg-red-500/20 hover:shadow-[0_0_12px_oklch(0.5_0.2_25_/_0.3)] hover:ring-red-500/50 focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 focus-visible:outline-none active:scale-95"
-                  aria-label="Stop generating"
+                  aria-label={t('stopGenerating')}
                 >
                   <Square className="h-5 w-5 fill-current" />
                 </button>
@@ -114,7 +234,7 @@ export function ChatInput({
                       ? 'from-accent to-accent/90 text-bg-base ring-accent/50 focus-visible:ring-accent focus-visible:ring-offset-bg-surface bg-gradient-to-br shadow-lg hover:shadow-[0_0_20px_oklch(0.72_0.17_145_/_0.4)] focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-95'
                       : 'bg-bg-elevated text-text-muted ring-border cursor-not-allowed opacity-50',
                   )}
-                  aria-label="Send message"
+                  aria-label={t('sendMessage')}
                 >
                   <Send className="h-5 w-5" />
                 </button>
@@ -123,14 +243,14 @@ export function ChatInput({
 
             <div className="mt-3 flex items-center justify-between px-1">
               <p className="text-text-muted font-mono text-[10px] tracking-wider uppercase">
-                <span className="text-accent">xAI Grok</span> Neural Interface
+                <span className="text-accent">xAI Grok</span> {t('neuralInterface')}
                 {userMsgCount > 0 && (
                   <span className="ml-2 opacity-60">
-                    · {userMsgCount}/{maxMessages} queries
+                    · {userMsgCount}/{maxMessages} {t('queries')}
                   </span>
                 )}
               </p>
-              <p className="text-text-muted/60 text-[10px]">Responses may be inaccurate</p>
+              <p className="text-text-muted/60 text-[10px]">{t('responsesInaccurate')}</p>
             </div>
           </>
         )}

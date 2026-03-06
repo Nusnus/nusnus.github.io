@@ -76,4 +76,76 @@ describe('renderMarkdown', () => {
     const result = renderMarkdown('above\n\n---\n\nbelow');
     expect(result).not.toBeNull();
   });
+
+  // Obsidian-style features
+  it('handles wikilinks', () => {
+    const result = renderMarkdown('Check out [[My Page]] for more info');
+    expect(result).not.toBeNull();
+  });
+
+  it('handles wikilinks with display text', () => {
+    const result = renderMarkdown('See [[actual-page|Custom Display Text]]');
+    expect(result).not.toBeNull();
+  });
+
+  it('handles callouts - note type', () => {
+    const result = renderMarkdown('> [!note]\n> This is a note callout\n> With multiple lines');
+    expect(result).not.toBeNull();
+  });
+
+  it('handles callouts - warning type', () => {
+    const result = renderMarkdown('> [!warning] Important\n> Be careful here');
+    expect(result).not.toBeNull();
+  });
+
+  it('handles callouts - tip type', () => {
+    const result = renderMarkdown('> [!tip]\n> Here is a helpful tip');
+    expect(result).not.toBeNull();
+  });
+
+  it('handles callouts - danger type', () => {
+    const result = renderMarkdown('> [!danger]\n> This is dangerous');
+    expect(result).not.toBeNull();
+  });
+
+  it('handles markdown tables', () => {
+    const table = `| Name | Age | City |
+| --- | --- | --- |
+| Alice | 30 | NYC |
+| Bob | 25 | LA |`;
+    const result = renderMarkdown(table);
+    expect(result).not.toBeNull();
+  });
+
+  it('handles tables with alignment', () => {
+    const table = `| Left | Center | Right |
+| :--- | :---: | ---: |
+| A | B | C |`;
+    const result = renderMarkdown(table);
+    expect(result).not.toBeNull();
+  });
+
+  it('handles tables with inline formatting', () => {
+    const table = `| Feature | Status |
+| --- | --- |
+| **Bold** | \`code\` |
+| *Italic* | [link](url) |`;
+    const result = renderMarkdown(table);
+    expect(result).not.toBeNull();
+  });
+
+  it('handles mixed content with wikilinks and callouts', () => {
+    const mixed = `# Title
+
+Check [[Page]] for details.
+
+> [!note]
+> Important information here
+
+| Col1 | Col2 |
+| --- | --- |
+| A | B |`;
+    const result = renderMarkdown(mixed);
+    expect(result).not.toBeNull();
+  });
 });
