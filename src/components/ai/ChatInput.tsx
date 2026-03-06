@@ -1,7 +1,6 @@
 import { type RefObject } from 'react';
 import { Send, Square } from 'lucide-react';
 import { cn } from '@lib/utils/cn';
-import type { ChatProvider } from '@lib/ai/config';
 
 interface ChatInputProps {
   input: string;
@@ -10,7 +9,6 @@ interface ChatInputProps {
   isAtLimit: boolean;
   userMsgCount: number;
   maxMessages: number;
-  provider: ChatProvider;
   inputRef: RefObject<HTMLTextAreaElement | null>;
   onSend: (text: string) => void;
   onStop: () => void;
@@ -25,7 +23,6 @@ export function ChatInput({
   isAtLimit,
   userMsgCount,
   maxMessages,
-  provider,
   inputRef,
   onSend,
   onStop,
@@ -66,7 +63,7 @@ export function ChatInput({
                   e.target.style.height = `${Math.min(e.target.scrollHeight, 128)}px`;
                 }}
                 onKeyDown={handleKeyDown}
-                placeholder="Ask about Tomer…"
+                placeholder="Ask me anything…"
                 rows={1}
                 className="text-text-primary placeholder:text-text-muted max-h-32 flex-1 resize-none bg-transparent text-sm leading-relaxed outline-none"
                 disabled={isGenerating}
@@ -97,9 +94,7 @@ export function ChatInput({
               )}
             </div>
             <p className="text-text-muted mt-2 px-1 text-[10px]">
-              {provider === 'cloud'
-                ? 'Powered by xAI Grok · Responses may be inaccurate'
-                : 'AI runs locally in your browser via WebGPU · Responses may be inaccurate'}
+              Powered by xAI Grok · Responses may be inaccurate
               {userMsgCount > 0 && ` · ${userMsgCount}/${maxMessages} messages`}
             </p>
           </>
