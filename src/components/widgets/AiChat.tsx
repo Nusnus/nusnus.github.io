@@ -13,6 +13,7 @@ import {
 } from '@lib/ai/memory';
 import type { ChatSession } from '@lib/ai/memory';
 import { CLOUD_TOOLS, mapToolCallsToActions } from '@lib/ai/tools';
+import { getCurrentPageContext } from '@lib/ai/page-context';
 import { CenterCard } from '@components/ai/CenterCard';
 import { ModelPicker } from '@components/ai/ModelPicker';
 import { SessionHistory } from '@components/ai/SessionHistory';
