@@ -370,6 +370,10 @@ export function useVoiceChat(): UseVoiceChatReturn {
     const ws = wsRef.current;
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({ type: 'input_audio_buffer.commit' }));
+      // Cancel any previous pending cleanup timeout before setting a new one
+      if (cleanupTimeoutRef.current) {
+        clearTimeout(cleanupTimeoutRef.current);
+      }
       // Wait a moment for final transcription before cleanup
       cleanupTimeoutRef.current = setTimeout(() => {
         cleanupTimeoutRef.current = null;
