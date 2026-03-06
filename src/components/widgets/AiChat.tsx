@@ -282,6 +282,14 @@ export default function AiChat({ systemPrompt }: Props) {
     setIsGenerating(false);
   };
 
+  // Safety check: ensure messages array is never empty in ready state
+  useEffect(() => {
+    if (engineState === 'ready' && messages.length === 0) {
+      console.warn('[AiChat] Messages array is empty in ready state, adding welcome message');
+      setMessages([{ id: crypto.randomUUID(), role: 'assistant', content: WELCOME_MESSAGE }]);
+    }
+  }, [engineState, messages.length]);
+
   /* ─── Render ─── */
 
   if (engineState === 'idle') {
