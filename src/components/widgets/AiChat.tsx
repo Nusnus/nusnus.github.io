@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { CLOUD_MODELS, DEFAULT_CLOUD_MODEL_ID, WELCOME_MESSAGE } from '@lib/ai/config';
-import type { ChatMessage, SearchIndex } from '@lib/ai/types';
+import type { ChatMessage } from '@lib/ai/types';
 import {
   saveMessages,
   loadMessages,
@@ -13,7 +13,6 @@ import {
 } from '@lib/ai/memory';
 import type { ChatSession } from '@lib/ai/memory';
 import { CLOUD_TOOLS, mapToolCallsToActions } from '@lib/ai/tools';
-import { getCurrentPageContext } from '@lib/ai/page-context';
 import { CenterCard } from '@components/ai/CenterCard';
 import { ModelPicker } from '@components/ai/ModelPicker';
 import { SessionHistory } from '@components/ai/SessionHistory';
@@ -31,7 +30,6 @@ type EngineState = 'idle' | 'ready' | 'error';
 
 interface Props {
   systemPrompt: string;
-  searchIndex: SearchIndex;
 }
 
 /* ─── Component ─── */
@@ -41,7 +39,7 @@ export default function AiChat({ systemPrompt }: Props) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
+  const [errorMsg, _setErrorMsg] = useState('');
   const [selectedCloudModelId, setSelectedCloudModelId] = useState(DEFAULT_CLOUD_MODEL_ID);
   const [showHistory, setShowHistory] = useState(false);
   const [sessions, setSessions] = useState<ChatSession[]>([]);

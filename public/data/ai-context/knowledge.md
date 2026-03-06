@@ -162,9 +162,9 @@ The site features a GitHub-inspired dashboard design that displays Tomer's open 
 
 ## About This AI Chatbot
 
-This AI chatbot is a technical showcase built entirely into the website. It offers two modes:
+This AI chatbot is a technical showcase built entirely into the website, powered by **xAI's Grok** models.
 
-### Cloud Mode (xAI Grok)
+### Features
 
 - Powered by **xAI's Grok** models via a secure **Cloudflare Worker proxy** — the API key is stored server-side and never exposed to the browser.
 - Uses **native function calling** for structured tool actions (link suggestions, navigation) — no text markers or regex parsing.
@@ -172,19 +172,8 @@ This AI chatbot is a technical showcase built entirely into the website. It offe
 - Has access to **all site data** — the full knowledge base, all repos, contribution stats, and recent activity are fed directly into the model's 2M token context window.
 - Supports **Grok 4.1 Fast** (strongest, 2M context) and **Grok Code Fast** (code-specialized with reasoning).
 - Instant start — no download required.
-
-### Local Mode (WebLLM)
-
-- Runs **100% in the visitor's browser** using **WebLLM** and **WebGPU** — the model inference happens on the user's GPU, not on any server.
-- **No data leaves the device.** All processing is local.
-- The model is downloaded once and **cached in the browser** for instant startup on future visits.
-- Uses **Retrieval-Augmented Generation (RAG)** — searches a pre-built index of site content to find relevant context before answering.
-- Uses text-marker actions ([LINK: ...], [NAV: ...]) parsed with regex for tool functionality (local models don't support native function calling).
-
-### Shared Features
-
 - Conversation history is **persisted in localStorage** and can be continued or started fresh.
-- The chatbot was designed and built by Tomer as a demonstration of cutting-edge AI technology — both cloud and in-browser.
+- The chatbot was designed and built by Tomer as a demonstration of cutting-edge AI technology.
 
 ---
 
