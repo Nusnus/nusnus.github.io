@@ -93,27 +93,27 @@ Tables are now rendered with proper styling and support alignment.
 
 ### Basic Table
 
-| Feature | Status | Priority |
-| --- | --- | --- |
-| Wikilinks | ✅ Complete | High |
-| Callouts | ✅ Complete | High |
-| Tables | ✅ Complete | Medium |
+| Feature   | Status      | Priority |
+| --------- | ----------- | -------- |
+| Wikilinks | ✅ Complete | High     |
+| Callouts  | ✅ Complete | High     |
+| Tables    | ✅ Complete | Medium   |
 
 ### Table with Alignment
 
 | Left Aligned | Center Aligned | Right Aligned |
-| :--- | :---: | ---: |
-| Text | Text | Text |
-| More | More | More |
+| :----------- | :------------: | ------------: |
+| Text         |      Text      |          Text |
+| More         |      More      |          More |
 
 ### Table with Inline Formatting
 
-| Feature | Description | Example |
-| --- | --- | --- |
-| **Bold** | Make text bold | `**text**` |
-| *Italic* | Make text italic | `*text*` |
-| `Code` | Inline code | `` `code` `` |
-| [Links](url) | Hyperlinks | `[text](url)` |
+| Feature      | Description      | Example       |
+| ------------ | ---------------- | ------------- |
+| **Bold**     | Make text bold   | `**text**`    |
+| _Italic_     | Make text italic | `*text*`      |
+| `Code`       | Inline code      | `` `code` ``  |
+| [Links](url) | Hyperlinks       | `[text](url)` |
 
 ## Combined Example
 
@@ -122,11 +122,11 @@ Here's an example combining multiple features:
 > [!tip] Using Wikilinks
 > Check out [[Documentation]] and [[API Reference|the API docs]] for more details.
 
-| Component | Status | Notes |
-| --- | --- | --- |
-| Renderer | ✅ | See [[markdown.tsx]] |
-| Tests | ✅ | All passing |
-| Docs | ✅ | You're reading them! |
+| Component | Status | Notes                |
+| --------- | ------ | -------------------- |
+| Renderer  | ✅     | See [[markdown.tsx]] |
+| Tests     | ✅     | All passing          |
+| Docs      | ✅     | You're reading them! |
 
 > [!success]
 > All Obsidian-style features are now supported!
@@ -138,4 +138,3 @@ Here's an example combining multiple features:
 - Tables support left, center, and right alignment via `:---`, `:---:`, and `---:`
 - All features work with existing markdown (bold, italic, code, links, etc.)
 - Performance is maintained through efficient regex parsing and caching
-

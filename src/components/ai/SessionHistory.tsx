@@ -1,6 +1,7 @@
 import { Trash2, X } from 'lucide-react';
 import { cn } from '@lib/utils/cn';
 import type { ChatSession } from '@lib/ai/memory';
+import { useLanguage } from '@hooks/useLanguage';
 
 interface SessionHistoryProps {
   sessions: ChatSession[];
@@ -20,23 +21,25 @@ export function SessionHistory({
   onClearAll,
   onClose,
 }: SessionHistoryProps) {
+  const { t } = useLanguage();
+
   return (
     <div className="border-border bg-bg-base absolute inset-0 z-10 flex flex-col overflow-hidden">
       <div className="border-border flex items-center justify-between border-b px-4 py-2.5">
-        <h3 className="text-text-primary text-sm font-semibold">Chat History</h3>
+        <h3 className="text-text-primary text-sm font-semibold">{t('chatHistory')}</h3>
         <div className="flex items-center gap-2">
           {sessions.length > 0 && (
             <button
               onClick={onClearAll}
               className="text-text-muted text-xs transition-colors hover:text-red-400"
             >
-              Clear All
+              {t('clearAll')}
             </button>
           )}
           <button
             onClick={onClose}
             className="text-text-muted hover:text-text-primary transition-colors"
-            aria-label="Close history"
+            aria-label={t('closeHistory')}
           >
             <X className="h-4 w-4" />
           </button>
@@ -44,7 +47,7 @@ export function SessionHistory({
       </div>
       <div className="scrollbar-thin flex-1 overflow-y-auto">
         {sessions.length === 0 ? (
-          <p className="text-text-muted px-4 py-8 text-center text-sm">No chat history yet.</p>
+          <p className="text-text-muted px-4 py-8 text-center text-sm">{t('noChatHistory')}</p>
         ) : (
           <div className="divide-border divide-y">
             {sessions.map((session) => (
@@ -64,7 +67,7 @@ export function SessionHistory({
                 <div className="min-w-0 flex-1">
                   <p className="text-text-primary truncate text-sm font-medium">{session.title}</p>
                   <p className="text-text-muted text-xs">
-                    {session.messages.filter((m) => m.role === 'user').length} messages
+                    {session.messages.filter((m) => m.role === 'user').length} {t('messages')}
                     {' · '}
                     {new Date(session.updatedAt).toLocaleDateString()}
                   </p>
@@ -75,7 +78,7 @@ export function SessionHistory({
                     onDeleteSession(session.id);
                   }}
                   className="text-text-muted shrink-0 opacity-0 transition-all group-hover:opacity-100 hover:text-red-400"
-                  aria-label="Delete session"
+                  aria-label={t('deleteSession')}
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>

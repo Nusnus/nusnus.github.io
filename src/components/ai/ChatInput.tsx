@@ -1,7 +1,6 @@
 import { type RefObject, useState, useRef, useCallback } from 'react';
 import { Send, Square, Mic, StopCircle } from 'lucide-react';
 import { cn } from '@lib/utils/cn';
-import { useLanguage } from '@hooks/useLanguage';
 
 interface ChatInputProps {
   input: string;
@@ -29,7 +28,6 @@ export function ChatInput({
   onStop,
   onClearChat,
 }: ChatInputProps) {
-  const { t } = useLanguage();
   // Voice recording state
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
@@ -69,15 +67,15 @@ export function ChatInput({
       };
 
       mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const _audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
 
-        // FUTURE: Send audioBlob to transcription service or Eleven Labs
+        // FUTURE: Send _audioBlob to transcription service or Eleven Labs
         // For now, just show confirmation
         setShowVoiceConfirmation(true);
         setTimeout(() => setShowVoiceConfirmation(false), 3000);
 
         // Clean up
-        stream.getTracks().forEach(track => track.stop());
+        stream.getTracks().forEach((track) => track.stop());
         setRecordingTime(0);
         if (recordingTimerRef.current) {
           clearInterval(recordingTimerRef.current);
@@ -90,7 +88,7 @@ export function ChatInput({
 
       // Start timer
       recordingTimerRef.current = window.setInterval(() => {
-        setRecordingTime(prev => prev + 1);
+        setRecordingTime((prev) => prev + 1);
       }, 1000);
     } catch (error) {
       console.error('Error accessing microphone:', error);
@@ -126,12 +124,10 @@ export function ChatInput({
 
       {/* Voice note confirmation banner */}
       {showVoiceConfirmation && (
-        <div className="mx-auto max-w-5xl mb-3 animate-[message-slide-in_0.3s_ease-out]">
-          <div className="bg-accent/10 ring-accent/30 rounded-lg px-4 py-2.5 ring-1 flex items-center gap-2">
-            <Mic className="h-4 w-4 text-accent" />
-            <p className="text-accent font-mono text-sm">
-              Voice note captured successfully
-            </p>
+        <div className="mx-auto mb-3 max-w-5xl animate-[message-slide-in_0.3s_ease-out]">
+          <div className="bg-accent/10 ring-accent/30 flex items-center gap-2 rounded-lg px-4 py-2.5 ring-1">
+            <Mic className="text-accent h-4 w-4" />
+            <p className="text-accent font-mono text-sm">Voice note captured successfully</p>
           </div>
         </div>
       )}
@@ -140,7 +136,9 @@ export function ChatInput({
         {isAtLimit ? (
           <div className="flex flex-col items-center gap-4 py-4 text-center">
             <div className="bg-accent/5 ring-accent/20 rounded-lg px-4 py-3 ring-1">
-              <p className="text-accent font-mono text-sm font-medium">{t('sessionLimitReached')}</p>
+              <p className="text-accent font-mono text-sm font-medium">
+                {t('sessionLimitReached')}
+              </p>
               <p className="text-text-muted mt-1 text-xs">
                 {t('maxMessagesPerSession', { count: maxMessages })}
               </p>
@@ -177,7 +175,9 @@ export function ChatInput({
                   e.target.style.height = `${Math.min(e.target.scrollHeight, 128)}px`;
                 }}
                 onKeyDown={handleKeyDown}
-                placeholder={isRecording ? `Recording... ${formatTime(recordingTime)}` : t('enterYourQuery')}
+                placeholder={
+                  isRecording ? `Recording... ${formatTime(recordingTime)}` : 'Enter your query...'
+                }
                 rows={1}
                 className="text-text-primary placeholder:text-text-muted/60 relative z-10 max-h-32 flex-1 resize-none bg-transparent font-mono text-base leading-relaxed outline-none md:text-sm"
                 disabled={isGenerating || isRecording}
@@ -189,14 +189,14 @@ export function ChatInput({
               />
 
               {/* Voice recording button */}
-              {!isGenerating && (
-                isRecording ? (
+              {!isGenerating &&
+                (isRecording ? (
                   <button
                     onClick={stopRecording}
                     className="focus-visible:ring-offset-bg-surface relative z-10 flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-lg bg-red-500/10 text-red-400 ring-1 ring-red-500/30 transition-all duration-150 hover:bg-red-500/20 hover:shadow-[0_0_12px_oklch(0.5_0.2_25_/_0.3)] hover:ring-red-500/50 focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 focus-visible:outline-none active:scale-95"
                     aria-label="Stop recording"
                   >
-                    <StopCircle className="h-5 w-5 fill-current animate-pulse" />
+                    <StopCircle className="h-5 w-5 animate-pulse fill-current" />
                   </button>
                 ) : (
                   <button
@@ -205,7 +205,7 @@ export function ChatInput({
                     className={cn(
                       'relative z-10 flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-lg ring-1 transition-all duration-150 focus-visible:outline-none',
                       !input.trim()
-                        ? 'bg-bg-elevated text-text-secondary ring-border hover:bg-bg-surface hover:text-accent focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg-surface active:scale-95'
+                        ? 'bg-bg-elevated text-text-secondary ring-border hover:bg-bg-surface hover:text-accent focus-visible:ring-accent focus-visible:ring-offset-bg-surface focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-95'
                         : 'bg-bg-elevated text-text-muted ring-border cursor-not-allowed opacity-30',
                     )}
                     aria-label="Record voice note"
@@ -213,8 +213,7 @@ export function ChatInput({
                   >
                     <Mic className="h-5 w-5" />
                   </button>
-                )
-              )}
+                ))}
 
               {isGenerating ? (
                 <button

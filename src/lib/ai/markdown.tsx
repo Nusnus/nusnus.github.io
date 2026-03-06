@@ -397,7 +397,13 @@ function renderCallout(lines: string[], key: number): ReactNode {
 
   const type = match[1]?.toLowerCase() ?? 'note';
   const title = match[2]?.trim() || type.charAt(0).toUpperCase() + type.slice(1);
-  const style = CALLOUT_STYLES[type] ?? CALLOUT_STYLES.note;
+  // Fallback to 'note' style if type is unknown
+  const style = CALLOUT_STYLES[type] ?? {
+    icon: '📝',
+    bgClass: 'bg-blue-500/10',
+    borderClass: 'border-blue-500/50',
+    textClass: 'text-blue-400',
+  };
 
   // Collect content lines (skip first line, remove leading >)
   const contentLines = lines
@@ -432,16 +438,18 @@ function renderTable(lines: string[], key: number): ReactNode {
   if (lines.length < 2) return null;
 
   // Parse header
-  const headerCells = lines[0]
-    ?.split('|')
-    .map((cell) => cell.trim())
-    .filter((cell) => cell.length > 0) ?? [];
+  const headerCells =
+    lines[0]
+      ?.split('|')
+      .map((cell) => cell.trim())
+      .filter((cell) => cell.length > 0) ?? [];
 
   // Parse separator line to detect alignment
-  const separatorCells = lines[1]
-    ?.split('|')
-    .map((cell) => cell.trim())
-    .filter((cell) => cell.length > 0) ?? [];
+  const separatorCells =
+    lines[1]
+      ?.split('|')
+      .map((cell) => cell.trim())
+      .filter((cell) => cell.length > 0) ?? [];
 
   const alignments = separatorCells.map((cell) => {
     if (cell.startsWith(':') && cell.endsWith(':')) return 'center';
@@ -534,11 +542,7 @@ function renderBlock(block: string, key: number): ReactNode {
 
   // Table: lines with | separators
   // Detect markdown tables (header | separator | rows)
-  if (
-    lines.length >= 2 &&
-    lines[0]?.includes('|') &&
-    lines[1]?.match(/^\s*\|?\s*[-:]+\s*\|/)
-  ) {
+  if (lines.length >= 2 && lines[0]?.includes('|') && lines[1]?.match(/^\s*\|?\s*[-:]+\s*\|/)) {
     return renderTable(lines, key);
   }
 

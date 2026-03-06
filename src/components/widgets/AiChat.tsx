@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { AlertCircle } from 'lucide-react';
 import { CLOUD_MODELS, DEFAULT_CLOUD_MODEL_ID, WELCOME_MESSAGE } from '@lib/ai/config';
 import type { ChatMessage } from '@lib/ai/types';
+import { useLanguage } from '@hooks/useLanguage';
 import {
   saveMessages,
   loadMessages,
@@ -37,6 +38,7 @@ interface Props {
 /* ─── Component ─── */
 
 export default function AiChat({ systemPrompt }: Props) {
+  const { t } = useLanguage();
   const [engineState, setEngineState] = useState<EngineState>('idle');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
@@ -300,7 +302,7 @@ export default function AiChat({ systemPrompt }: Props) {
         <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-red-500/10">
           <AlertCircle className="h-7 w-7 text-red-400" />
         </div>
-        <h2 className="text-text-primary mb-2 text-lg font-semibold">Failed to Load</h2>
+        <h2 className="text-text-primary mb-2 text-lg font-semibold">{t('failedToLoad')}</h2>
         <p className="text-text-secondary mb-4 max-w-sm text-center text-xs leading-relaxed">
           {errorMsg}
         </p>
@@ -308,7 +310,7 @@ export default function AiChat({ systemPrompt }: Props) {
           onClick={() => initEngine(true)}
           className="bg-accent text-bg-base hover:bg-accent-hover rounded-xl px-6 py-2.5 text-sm font-semibold transition-colors"
         >
-          Try Again
+          {t('tryAgain')}
         </button>
       </CenterCard>
     );
@@ -316,7 +318,7 @@ export default function AiChat({ systemPrompt }: Props) {
 
   /* ─── Chat UI (engineState === 'ready') ─── */
   const activeCloudModel = CLOUD_MODELS.find((m) => m.id === selectedCloudModelId);
-  const statusLabel = `${activeCloudModel?.name ?? 'Grok'} · Cloud`;
+  const statusLabel = `${activeCloudModel?.name ?? 'Grok'} · ${t('cloud')}`;
   const userMsgCount = messages.filter((m) => m.role === 'user').length;
   const isAtLimit = userMsgCount >= MAX_USER_MESSAGES;
 
@@ -335,7 +337,7 @@ export default function AiChat({ systemPrompt }: Props) {
               className={`flex items-center gap-1 text-xs transition-colors ${
                 showHistory ? 'text-accent' : 'text-text-muted hover:text-text-secondary'
               }`}
-              aria-label="Toggle chat history"
+              aria-label={t('toggleChatHistory')}
             >
               <svg
                 className="h-3.5 w-3.5"

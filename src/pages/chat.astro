@@ -1,6 +1,8 @@
 ---
 import BaseLayout from '@layouts/BaseLayout.astro';
 import ThemeToggle from '@components/widgets/ThemeToggle';
+import LanguageToggle from '@components/widgets/LanguageToggle';
+import ChatHeader from '@components/widgets/ChatHeader';
 import { PersonalitySlider } from '@components/ai/PersonalitySlider';
 import AiChat from '@components/widgets/AiChat';
 import {
@@ -61,42 +63,14 @@ const systemPrompt = buildSystemPrompt({
 
         <div class="bg-accent/20 h-6 w-px"></div>
 
-        <div class="flex items-center gap-3">
-          <div
-            class="bg-accent/10 ring-accent/30 flex h-8 w-8 items-center justify-center rounded-lg ring-1"
-            style="box-shadow: 0 0 12px oklch(0.72 0.17 145 / 0.2), inset 0 0 8px oklch(0.72 0.17 145 / 0.1);"
-          >
-            <svg
-              class="text-accent h-4 w-4"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path>
-            </svg>
-          </div>
-          <div>
-            <h1
-              class="text-accent font-mono text-base font-bold tracking-wide"
-              style="text-shadow: 0 0 8px oklch(0.72 0.17 145 / 0.4);"
-            >
-              AI INTERFACE
-            </h1>
-            <p class="text-text-muted text-[10px] font-medium tracking-wider uppercase">
-              Neural Network Active
-            </p>
-          </div>
-        </div>
+        <ChatHeader client:load />
       </div>
 
       <div class="relative z-10 flex items-center gap-3 sm:gap-6">
         <div class="hidden md:block">
           <PersonalitySlider client:load />
         </div>
+        <LanguageToggle client:load />
         <ThemeToggle client:load />
       </div>
     </header>
