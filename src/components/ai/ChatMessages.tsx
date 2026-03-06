@@ -1,77 +1,93 @@
+/**
+ * ChatMessages — Renders the scrollable message list.
+ *
+ * Matrix-inspired dark theme with neon green accents.
+ * Uses full width of the main panel, no max-width constraint.
+ */
 import { type RefObject } from 'react';
-import { ArrowRight, Bot, ExternalLink, Globe } from 'lucide-react';
+import { ArrowRight, ExternalLink, Globe, Loader2, Terminal } from 'lucide-react';
 import { cn } from '@lib/utils/cn';
-import { SUGGESTED_QUESTIONS } from '@lib/ai/config';
+import type { Language } from '@lib/ai/config';
 import type { ChatMessage } from '@lib/ai/types';
 import { renderMarkdown } from '@lib/ai/markdown';
 import { executeAction } from '@lib/ai/tools';
+import { getTranslations } from '@lib/ai/i18n';
 
 interface ChatMessagesProps {
   messages: ChatMessage[];
   isGenerating: boolean;
+  thinkingStatus: string | null;
   messagesEndRef: RefObject<HTMLDivElement | null>;
   onSendMessage: (text: string) => void;
+  language: Language;
 }
 
-/** Renders the scrollable message list with message bubbles and suggested questions. */
 export function ChatMessages({
   messages,
   isGenerating,
+  thinkingStatus,
   messagesEndRef,
   onSendMessage,
+  language,
 }: ChatMessagesProps) {
+  const t = getTranslations(language);
+  const isRtl = language === 'he';
+
   return (
-    <div className="scrollbar-thin flex-1 overflow-y-auto px-4 py-6">
-      <div className="mx-auto max-w-2xl space-y-4">
+    <div className="scrollbar-thin flex-1 overflow-y-auto px-6 py-6">
+      <div className="mx-auto max-w-5xl space-y-4">
         {messages.map((msg, msgIndex) => (
           <div
             key={msg.id}
-            className={cn('flex gap-3', msg.role === 'user' ? 'flex-row-reverse' : 'flex-row')}
+            className={cn(
+              'animate-in fade-in slide-in-from-bottom-1 flex gap-3 duration-200',
+              msg.role === 'user' ? 'flex-row-reverse' : 'flex-row',
+            )}
+            style={{ animationDelay: `${Math.min(msgIndex * 20, 100)}ms` }}
           >
+            {/* Avatar */}
             <div
               className={cn(
-                'flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-medium',
+                'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg font-mono text-xs font-bold',
                 msg.role === 'user'
-                  ? 'bg-accent/20 text-accent'
-                  : 'bg-bg-elevated text-text-secondary',
+                  ? 'border border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
+                  : 'border border-emerald-500/20 bg-black text-emerald-500',
               )}
             >
-              {msg.role === 'user' ? 'You' : <Bot className="h-4 w-4" />}
+              {msg.role === 'user' ? '>' : <Terminal className="h-3.5 w-3.5" />}
             </div>
+
+            {/* Message bubble */}
             <div
               className={cn(
-                'max-w-[75%] rounded-2xl px-4 py-3 text-sm leading-relaxed',
+                'max-w-[85%] rounded-lg px-4 py-3 text-sm leading-relaxed lg:max-w-[80%]',
                 msg.role === 'user'
-                  ? 'bg-accent text-bg-base rounded-br-md'
-                  : 'bg-bg-surface text-text-primary rounded-bl-md',
+                  ? 'border border-emerald-500/30 bg-emerald-500/10 text-emerald-100'
+                  : 'border border-emerald-500/[0.08] bg-[#0a0a0a] text-gray-200',
               )}
+              dir={isRtl ? 'rtl' : 'ltr'}
             >
+              {/* Search status */}
               {msg.searchStatus === 'searching' ? (
-                <span className="text-text-muted inline-flex items-center gap-2 text-xs">
+                <span className="inline-flex items-center gap-2 font-mono text-xs text-emerald-500">
                   <Globe className="h-3.5 w-3.5 animate-spin" />
-                  <span>Searching the web</span>
-                  <span className="inline-flex gap-0.5">
-                    <span className="bg-text-muted inline-block h-1 w-1 animate-bounce rounded-full" />
-                    <span className="bg-text-muted inline-block h-1 w-1 animate-bounce rounded-full [animation-delay:150ms]" />
-                    <span className="bg-text-muted inline-block h-1 w-1 animate-bounce rounded-full [animation-delay:300ms]" />
-                  </span>
+                  <span>{t.searchingWeb}</span>
+                  <ThinkingDots />
                 </span>
               ) : msg.searchStatus === 'found' ? (
-                <span className="text-text-muted inline-flex items-center gap-2 text-xs">
-                  <Globe className="h-3.5 w-3.5 text-green-500" />
-                  <span>Found results, synthesizing</span>
-                  <span className="inline-flex gap-0.5">
-                    <span className="bg-text-muted inline-block h-1 w-1 animate-pulse rounded-full" />
-                    <span className="bg-text-muted inline-block h-1 w-1 animate-pulse rounded-full [animation-delay:150ms]" />
-                    <span className="bg-text-muted inline-block h-1 w-1 animate-pulse rounded-full [animation-delay:300ms]" />
-                  </span>
+                <span className="inline-flex items-center gap-2 font-mono text-xs text-emerald-400">
+                  <Globe className="h-3.5 w-3.5" />
+                  <span>{t.foundResults}</span>
+                  <ThinkingDots />
                 </span>
               ) : !msg.content ? (
-                <span className="inline-flex items-center gap-1">
-                  <span className="bg-text-muted inline-block h-1.5 w-1.5 animate-pulse rounded-full" />
-                  <span className="bg-text-muted inline-block h-1.5 w-1.5 animate-pulse rounded-full [animation-delay:150ms]" />
-                  <span className="bg-text-muted inline-block h-1.5 w-1.5 animate-pulse rounded-full [animation-delay:300ms]" />
-                </span>
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin text-emerald-500" />
+                  {thinkingStatus && (
+                    <span className="font-mono text-xs text-emerald-500/80">{thinkingStatus}</span>
+                  )}
+                  {!thinkingStatus && <ThinkingDots />}
+                </div>
               ) : msg.role === 'assistant' ? (
                 renderMarkdown(msg.content, isGenerating && msgIndex === messages.length - 1)
               ) : (
@@ -80,13 +96,13 @@ export function ChatMessages({
 
               {/* Tool action buttons */}
               {msg.actions && msg.actions.length > 0 && (
-                <div className="mt-2 flex flex-wrap gap-1.5 border-t border-white/10 pt-2">
+                <div className="mt-3 flex flex-wrap gap-1.5 border-t border-emerald-500/10 pt-2.5">
                   {msg.actions.map((action, idx) => (
                     <button
                       key={idx}
                       onClick={() => executeAction(action)}
                       title={action.url}
-                      className="text-accent border-accent/30 hover:bg-accent/15 hover:border-accent/50 inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-xs font-medium transition-colors"
+                      className="inline-flex items-center gap-1.5 rounded-md border border-emerald-500/20 bg-emerald-500/5 px-3 py-1.5 font-mono text-[11px] font-medium text-emerald-400 transition-all hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:shadow-sm hover:shadow-emerald-500/10"
                     >
                       {action.type === 'open_link' ? (
                         <ExternalLink className="h-3 w-3" />
@@ -102,16 +118,17 @@ export function ChatMessages({
           </div>
         ))}
 
-        {/* Suggested questions — shown after welcome message only */}
+        {/* Suggested questions */}
         {messages.length === 1 && messages[0]?.role === 'assistant' && (
-          <div className="mx-auto grid max-w-lg gap-2 pt-2 sm:grid-cols-2">
-            {SUGGESTED_QUESTIONS.map((q) => (
+          <div className="mx-auto grid max-w-3xl gap-2 pt-6 sm:grid-cols-2">
+            {t.suggestedQuestions.map((q) => (
               <button
                 key={q}
                 onClick={() => onSendMessage(q)}
                 disabled={isGenerating}
-                className="bg-bg-surface hover:bg-bg-elevated border-border text-text-secondary hover:text-text-primary rounded-xl border px-4 py-3 text-left text-xs leading-relaxed transition-colors"
+                className="group rounded-lg border border-emerald-500/10 bg-[#0a0a0a] px-4 py-3 text-left font-mono text-[11px] leading-relaxed text-emerald-700 transition-all hover:border-emerald-500/30 hover:bg-emerald-500/5 hover:text-emerald-400 hover:shadow-lg hover:shadow-emerald-500/5"
               >
+                <span className="text-emerald-600 group-hover:text-emerald-400">{'> '}</span>
                 {q}
               </button>
             ))}
@@ -121,5 +138,17 @@ export function ChatMessages({
         <div ref={messagesEndRef} />
       </div>
     </div>
+  );
+}
+
+/* ─── Sub-components ─── */
+
+function ThinkingDots() {
+  return (
+    <span className="inline-flex gap-0.5">
+      <span className="inline-block h-1 w-1 animate-bounce rounded-full bg-emerald-500" />
+      <span className="inline-block h-1 w-1 animate-bounce rounded-full bg-emerald-500 [animation-delay:150ms]" />
+      <span className="inline-block h-1 w-1 animate-bounce rounded-full bg-emerald-500 [animation-delay:300ms]" />
+    </span>
   );
 }

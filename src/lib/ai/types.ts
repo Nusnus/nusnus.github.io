@@ -22,7 +22,7 @@ export interface ToolAction {
   url: string;
 }
 
-/** A chunk of indexed content for RAG retrieval. */
+/** A chunk of indexed content for RAG retrieval (used by build-time index). */
 export interface SearchChunk {
   /** Unique chunk identifier. */
   id: string;

@@ -24,6 +24,8 @@ export interface CloudChatOptions {
   tools?: ToolDefinition[];
   /** Tool choice strategy: 'auto' lets the model decide. */
   tool_choice?: 'auto' | 'none' | 'required';
+  /** Override temperature for personality levels. */
+  temperature?: number;
   /** Called when the model triggers a web search (before content streams). */
   onWebSearch?: () => void;
   /** Called when a web search completes and the model starts synthesizing. */
@@ -129,6 +131,7 @@ function buildRequestBody(
     input: messages,
     stream,
     ...CLOUD_GENERATION_CONFIG,
+    ...(options?.temperature !== undefined && { temperature: options.temperature }),
     ...(options?.tools && { tools: options.tools }),
     ...(options?.tool_choice && { tool_choice: options.tool_choice }),
   };
@@ -232,6 +235,7 @@ export async function cloudChatStream(
   signal?: AbortSignal,
   options?: CloudChatOptions,
 ): Promise<CloudChatResult> {
+  console.log(`[Cloud] Starting stream request: model=${modelId}, messages=${messages.length}`);
   const response = await fetch(CLOUD_PROXY_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -243,10 +247,13 @@ export async function cloudChatStream(
     let errorMessage = `Request failed (${response.status})`;
     try {
       const text = await response.text();
+      console.error(
+        `[Cloud] Stream request failed: status=${response.status}, body=${text.slice(0, 500)}`,
+      );
       const data = JSON.parse(text) as ResponsesAPIResponse;
       if (data.error?.message) errorMessage = data.error.message;
     } catch {
-      // Use default error message
+      console.error(`[Cloud] Stream request failed: status=${response.status}, no parseable body`);
     }
     throw new Error(errorMessage);
   }
@@ -279,55 +286,61 @@ export async function cloudChatStream(
         if (!trimmed || trimmed.startsWith(':')) continue;
         if (!trimmed.startsWith('data: ')) continue;
 
+        let raw: Record<string, unknown>;
         try {
-          const raw = JSON.parse(trimmed.slice(6)) as Record<string, unknown>;
-          const eventType = raw.type as string | undefined;
-
-          if (eventType === 'response.output_text.delta') {
-            const e = raw as unknown as StreamOutputTextDelta;
-            accumulated += e.delta;
-            onToken(e.delta, stripGrokRenderForDisplay(accumulated));
-          } else if (eventType === 'response.output_item.added') {
-            const e = raw as unknown as StreamOutputItemAdded;
-            if (e.item.type === 'function_call') {
-              toolCallAccumulator.set(e.output_index, {
-                id: e.item.call_id ?? '',
-                name: e.item.name ?? '',
-                arguments: '',
-              });
-            } else if (e.item.type === 'web_search_call') {
-              options?.onWebSearch?.();
-            }
-          } else if (eventType === 'response.function_call_arguments.delta') {
-            const e = raw as unknown as StreamFunctionCallArgsDelta;
-            const existing = toolCallAccumulator.get(e.output_index);
-            if (existing) existing.arguments += e.delta;
-          } else if (eventType === 'response.output_item.done') {
-            const e = raw as unknown as StreamOutputItemDone;
-            if (e.item.type === 'web_search_call') {
-              options?.onWebSearchFound?.();
-            }
-          } else if (eventType === 'response.failed') {
-            const err = (raw as Record<string, unknown>).response as
-              | { error?: { message?: string } }
-              | undefined;
-            throw new Error(err?.error?.message ?? 'Response failed');
-          } else if (eventType === 'response.incomplete') {
-            // The model stopped before finishing — surface a useful message
-            const reason = (
-              (raw as Record<string, unknown>).response as
-                | { incomplete_details?: { reason?: string } }
-                | undefined
-            )?.incomplete_details?.reason;
-            if (!accumulated) {
-              throw new Error(reason ? `Incomplete response: ${reason}` : 'Incomplete response');
-            }
-          }
-          // All other events (response.created, response.in_progress,
-          // response.completed, etc.) — skip
+          raw = JSON.parse(trimmed.slice(6)) as Record<string, unknown>;
         } catch {
           // Skip malformed JSON chunks
+          continue;
         }
+
+        const eventType = raw.type as string | undefined;
+
+        if (eventType === 'response.output_text.delta') {
+          const e = raw as unknown as StreamOutputTextDelta;
+          accumulated += e.delta;
+          onToken(e.delta, stripGrokRenderForDisplay(accumulated));
+        } else if (eventType === 'response.output_item.added') {
+          const e = raw as unknown as StreamOutputItemAdded;
+          if (e.item.type === 'function_call') {
+            toolCallAccumulator.set(e.output_index, {
+              id: e.item.call_id ?? '',
+              name: e.item.name ?? '',
+              arguments: '',
+            });
+          } else if (e.item.type === 'web_search_call') {
+            console.log('[Cloud] Web search triggered by model');
+            options?.onWebSearch?.();
+          }
+        } else if (eventType === 'response.function_call_arguments.delta') {
+          const e = raw as unknown as StreamFunctionCallArgsDelta;
+          const existing = toolCallAccumulator.get(e.output_index);
+          if (existing) existing.arguments += e.delta;
+        } else if (eventType === 'response.output_item.done') {
+          const e = raw as unknown as StreamOutputItemDone;
+          if (e.item.type === 'web_search_call') {
+            console.log('[Cloud] Web search completed');
+            options?.onWebSearchFound?.();
+          }
+        } else if (eventType === 'response.failed') {
+          const err = (raw as Record<string, unknown>).response as
+            | { error?: { message?: string } }
+            | undefined;
+          console.error('[Cloud] Response failed:', JSON.stringify(raw).slice(0, 500));
+          throw new Error(err?.error?.message ?? 'Response failed');
+        } else if (eventType === 'response.incomplete') {
+          // The model stopped before finishing — surface a useful message
+          const reason = (
+            (raw as Record<string, unknown>).response as
+              | { incomplete_details?: { reason?: string } }
+              | undefined
+          )?.incomplete_details?.reason;
+          if (!accumulated) {
+            throw new Error(reason ? `Incomplete response: ${reason}` : 'Incomplete response');
+          }
+        }
+        // All other events (response.created, response.in_progress,
+        // response.completed, etc.) — skip
       }
     }
   } finally {

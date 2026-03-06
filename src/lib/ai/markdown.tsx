@@ -1,10 +1,19 @@
 /**
- * Lightweight markdown renderer for AI chat responses.
+ * Enhanced markdown renderer for Cybernus chat responses.
  *
- * Supports: headings (# ## ###), **bold**, *italic*, `inline code`,
- * ```code blocks``` (with syntax highlighting), [links](url),
- * unordered lists (- item), ordered lists (1. item), horizontal
- * rules (---), and paragraphs.
+ * Supports:
+ * - Headings (# ## ###)
+ * - **bold**, *italic*, `inline code`
+ * - ```code blocks``` with syntax highlighting
+ * - [links](url), [[n]](url) citations
+ * - Unordered lists (- item), ordered lists (1. item)
+ * - Horizontal rules (---)
+ * - Mermaid diagrams (```mermaid)
+ * - Obsidian callouts (> [!note], > [!warning], > [!tip])
+ * - Wikilinks ([[Page Name]])
+ * - Markdown tables (| col | col |)
+ * - Paragraphs
+ *
  * No external dependencies — keeps the bundle small.
  */
 import { lazy, Suspense } from 'react';
@@ -18,9 +27,19 @@ const HEADING_CLASSES: Record<number, string> = {
   3: 'text-sm font-semibold mt-2 mb-0.5',
 };
 
-/* ── Minimal keyword-based syntax highlighter ──
- * Avoids pulling in shiki/prism at runtime. Covers the languages
- * the AI is most likely to produce (Python, JS/TS, shell, etc.). */
+/* ── Callout type styling ── */
+const CALLOUT_STYLES: Record<string, { icon: string; borderColor: string; bgColor: string }> = {
+  note: { icon: '📝', borderColor: 'border-blue-500/40', bgColor: 'bg-blue-500/10' },
+  info: { icon: 'ℹ️', borderColor: 'border-blue-500/40', bgColor: 'bg-blue-500/10' },
+  tip: { icon: '💡', borderColor: 'border-green-500/40', bgColor: 'bg-green-500/10' },
+  warning: { icon: '⚠️', borderColor: 'border-yellow-500/40', bgColor: 'bg-yellow-500/10' },
+  danger: { icon: '🔴', borderColor: 'border-red-500/40', bgColor: 'bg-red-500/10' },
+  example: { icon: '📋', borderColor: 'border-purple-500/40', bgColor: 'bg-purple-500/10' },
+  quote: { icon: '💬', borderColor: 'border-gray-500/40', bgColor: 'bg-gray-500/10' },
+  success: { icon: '🟢', borderColor: 'border-green-500/40', bgColor: 'bg-green-500/10' },
+};
+
+/* ── Minimal keyword-based syntax highlighter ── */
 
 const KEYWORD_SETS: Record<string, Set<string>> = {
   python: new Set([
@@ -148,7 +167,6 @@ const KEYWORD_SETS: Record<string, Set<string>> = {
   ]),
 };
 
-// Alias common lang identifiers
 const LANG_ALIAS: Record<string, string> = {
   py: 'python',
   python: 'python',
@@ -168,13 +186,9 @@ const LANG_ALIAS: Record<string, string> = {
 function highlightCode(code: string, lang: string): ReactNode[] {
   const resolved = LANG_ALIAS[lang.toLowerCase()] ?? '';
   const keywords = KEYWORD_SETS[resolved];
-  if (!keywords) {
-    // Unknown language — return plain text
-    return [code];
-  }
+  if (!keywords) return [code];
 
   const elements: ReactNode[] = [];
-  // Tokenize: strings, comments, numbers, words, whitespace/symbols
   const tokenRegex =
     /(#[^\n]*|\/\/[^\n]*|\/\*[\s\S]*?\*\/|"""[\s\S]*?"""|'''[\s\S]*?'''|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`|\b[0-9]+(?:\.[0-9]+)?\b|@\w+|\b[a-zA-Z_]\w*\b)/g;
 
@@ -183,44 +197,35 @@ function highlightCode(code: string, lang: string): ReactNode[] {
   let key = 0;
 
   while ((match = tokenRegex.exec(code)) !== null) {
-    // Plain text before token
-    if (match.index > lastIndex) {
-      elements.push(code.slice(lastIndex, match.index));
-    }
-
+    if (match.index > lastIndex) elements.push(code.slice(lastIndex, match.index));
     const token = match[0];
     const ch = token[0] ?? '';
 
     if (ch === '#' || token.startsWith('//') || token.startsWith('/*')) {
-      // Comment
       elements.push(
         <span key={key++} className="text-text-muted italic">
           {token}
         </span>,
       );
     } else if (ch === '"' || ch === "'" || ch === '`') {
-      // String
       elements.push(
         <span key={key++} className="text-status-warning">
           {token}
         </span>,
       );
     } else if (ch === '@') {
-      // Decorator
       elements.push(
         <span key={key++} className="text-accent">
           {token}
         </span>,
       );
     } else if (/^[0-9]/.test(ch)) {
-      // Number
       elements.push(
         <span key={key++} className="text-accent">
           {token}
         </span>,
       );
     } else if (keywords.has(token)) {
-      // Keyword
       elements.push(
         <span key={key++} className="text-accent font-semibold">
           {token}
@@ -229,19 +234,13 @@ function highlightCode(code: string, lang: string): ReactNode[] {
     } else {
       elements.push(token);
     }
-
     lastIndex = match.index + token.length;
   }
 
-  // Remaining text
-  if (lastIndex < code.length) {
-    elements.push(code.slice(lastIndex));
-  }
-
+  if (lastIndex < code.length) elements.push(code.slice(lastIndex));
   return elements;
 }
 
-/** React component for a highlighted code block. */
 function HighlightedCodeBlock({
   code,
   lang,
@@ -261,15 +260,12 @@ function HighlightedCodeBlock({
   );
 }
 
-/** LRU-ish cache for rendered markdown (avoids re-parsing identical strings). */
+/** LRU-ish cache for rendered markdown. */
 const markdownCache = new Map<string, ReactNode>();
 const MAX_CACHE_SIZE = 100;
 
 /**
  * Render a markdown string as React elements (memoized).
- *
- * @param text - The markdown string to render
- * @param skipCache - Skip caching (use during streaming to avoid polluting the cache with partial strings)
  */
 export function renderMarkdown(text: string, skipCache = false): ReactNode {
   if (!text) return null;
@@ -281,7 +277,6 @@ export function renderMarkdown(text: string, skipCache = false): ReactNode {
   const result = blocks.map((block, i) => renderBlock(block, i));
 
   if (!skipCache) {
-    // Evict oldest entries if cache is too large
     if (markdownCache.size >= MAX_CACHE_SIZE) {
       const firstKey = markdownCache.keys().next().value;
       if (firstKey !== undefined) markdownCache.delete(firstKey);
@@ -291,23 +286,22 @@ export function renderMarkdown(text: string, skipCache = false): ReactNode {
   return result;
 }
 
-/** Split text into blocks while keeping fenced code blocks intact. */
+/** Split text into blocks while keeping fenced code blocks and callouts intact. */
 function splitBlocks(text: string): string[] {
   const blocks: string[] = [];
   const lines = text.split('\n');
   let current: string[] = [];
   let inCodeBlock = false;
+  let inCallout = false;
 
   for (const line of lines) {
     if (line.trim().startsWith('```')) {
       if (inCodeBlock) {
-        // End of code block
         current.push(line);
         blocks.push(current.join('\n'));
         current = [];
         inCodeBlock = false;
       } else {
-        // Start of code block — flush current
         if (current.length > 0) {
           const joined = current.join('\n').trim();
           if (joined) blocks.push(joined);
@@ -318,8 +312,25 @@ function splitBlocks(text: string): string[] {
       }
     } else if (inCodeBlock) {
       current.push(line);
+    } else if (/^>\s*\[!(\w+)\]/.test(line.trim())) {
+      // Start of callout — flush current
+      if (current.length > 0) {
+        const joined = current.join('\n').trim();
+        if (joined) blocks.push(joined);
+        current = [];
+      }
+      current.push(line);
+      inCallout = true;
+    } else if (inCallout && /^>\s/.test(line)) {
+      current.push(line);
+    } else if (inCallout) {
+      // End of callout
+      const joined = current.join('\n').trim();
+      if (joined) blocks.push(joined);
+      current = [];
+      inCallout = false;
+      if (line.trim()) current.push(line);
     } else if (line.trim() === '') {
-      // Empty line — flush current block
       if (current.length > 0) {
         const joined = current.join('\n').trim();
         if (joined) blocks.push(joined);
@@ -330,7 +341,6 @@ function splitBlocks(text: string): string[] {
     }
   }
 
-  // Flush remaining
   if (current.length > 0) {
     const joined = current.join('\n').trim();
     if (joined) blocks.push(joined);
@@ -339,18 +349,115 @@ function splitBlocks(text: string): string[] {
   return blocks;
 }
 
-/** Render a single block (heading, code, list, hr, or paragraph). */
+/** Detect if a block is a markdown table. */
+function isTable(lines: string[]): boolean {
+  if (lines.length < 2) return false;
+  const hasHeaderSep = lines[1] !== undefined && /^\|[\s:|-]+\|$/.test(lines[1].trim());
+  const allPipeLines = lines.every((l) => l.trim().startsWith('|') && l.trim().endsWith('|'));
+  return hasHeaderSep && allPipeLines;
+}
+
+/** Render a markdown table. */
+function renderTable(lines: string[], key: number): ReactNode {
+  const parseRow = (line: string): string[] =>
+    line
+      .trim()
+      .slice(1, -1)
+      .split('|')
+      .map((c) => c.trim());
+
+  const headers = lines[0] ? parseRow(lines[0]) : [];
+  // lines[1] is the separator row, skip it
+  const alignments = lines[1]
+    ? parseRow(lines[1]).map((c) => {
+        if (c.startsWith(':') && c.endsWith(':')) return 'center' as const;
+        if (c.endsWith(':')) return 'right' as const;
+        return 'left' as const;
+      })
+    : [];
+
+  const rows = lines.slice(2).map(parseRow);
+
+  return (
+    <div key={key} className="my-2 overflow-x-auto">
+      <table className="border-border w-full border-collapse text-xs">
+        <thead>
+          <tr className="border-border border-b">
+            {headers.map((h, i) => (
+              <th
+                key={i}
+                className="text-text-primary px-3 py-1.5 text-left font-semibold"
+                style={{ textAlign: alignments[i] ?? 'left' }}
+              >
+                {renderInline(h)}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, ri) => (
+            <tr key={ri} className="border-border border-b last:border-0">
+              {row.map((cell, ci) => (
+                <td
+                  key={ci}
+                  className="text-text-secondary px-3 py-1.5"
+                  style={{ textAlign: alignments[ci] ?? 'left' }}
+                >
+                  {renderInline(cell)}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+/** Render an Obsidian-style callout block. */
+function renderCallout(block: string, key: number): ReactNode {
+  const lines = block.split('\n');
+  const headerMatch = lines[0]?.match(/^>\s*\[!(\w+)\]\s*(.*)/);
+  if (!headerMatch) return null;
+
+  const calloutType = headerMatch[1]?.toLowerCase() ?? 'note';
+  const title = headerMatch[2] || calloutType.charAt(0).toUpperCase() + calloutType.slice(1);
+  const style = CALLOUT_STYLES[calloutType] ?? CALLOUT_STYLES.note;
+  if (!style) return null;
+
+  const content = lines
+    .slice(1)
+    .map((l) => l.replace(/^>\s?/, ''))
+    .join('\n')
+    .trim();
+
+  return (
+    <div
+      key={key}
+      className={`my-2 rounded-lg border-l-4 px-4 py-2.5 ${style.borderColor} ${style.bgColor}`}
+    >
+      <div className="mb-1 flex items-center gap-1.5 text-xs font-semibold">
+        <span>{style.icon}</span>
+        <span>{title}</span>
+      </div>
+      {content && (
+        <div className="text-text-secondary text-xs leading-relaxed">{renderInline(content)}</div>
+      )}
+    </div>
+  );
+}
+
+/** Render a single block. */
 function renderBlock(block: string, key: number): ReactNode {
   const trimmed = block.trim();
   if (!trimmed) return null;
 
-  // Code block: ```lang\n...\n```
+  // Code block
   const codeBlockMatch = trimmed.match(/^```(\w*)\n([\s\S]*?)```$/);
   if (codeBlockMatch) {
     const lang = codeBlockMatch[1] ?? '';
     const code = codeBlockMatch[2]?.trim() ?? '';
 
-    // Mermaid diagrams — render as interactive SVG
     if (lang === 'mermaid') {
       return (
         <Suspense
@@ -369,14 +476,24 @@ function renderBlock(block: string, key: number): ReactNode {
     return <HighlightedCodeBlock key={key} code={code} lang={lang} blockKey={key} />;
   }
 
-  // Horizontal rule: --- or *** or ___
+  // Callout: > [!type] title
+  if (/^>\s*\[!\w+\]/.test(trimmed)) {
+    return renderCallout(trimmed, key);
+  }
+
+  // Horizontal rule
   if (/^[-*_]{3,}$/.test(trimmed)) {
     return <hr key={key} className="border-border my-2" />;
   }
 
   const lines = trimmed.split('\n');
 
-  // Heading: # ## ###
+  // Table
+  if (isTable(lines)) {
+    return renderTable(lines, key);
+  }
+
+  // Heading
   if (lines.length === 1) {
     const headingMatch = trimmed.match(/^(#{1,3})\s+(.+)$/);
     if (headingMatch) {
@@ -403,7 +520,7 @@ function renderBlock(block: string, key: number): ReactNode {
     }
   }
 
-  // Unordered list: lines starting with - or *
+  // Unordered list
   if (lines.every((l) => /^[-*]\s/.test(l.trim()))) {
     return (
       <ul key={key} className="my-1 list-inside list-disc space-y-0.5">
@@ -414,7 +531,7 @@ function renderBlock(block: string, key: number): ReactNode {
     );
   }
 
-  // Ordered list: lines starting with 1. 2. etc.
+  // Ordered list
   if (lines.every((l) => /^[0-9]+\.\s/.test(l.trim()))) {
     return (
       <ol key={key} className="my-1 list-inside list-decimal space-y-0.5">
@@ -425,8 +542,7 @@ function renderBlock(block: string, key: number): ReactNode {
     );
   }
 
-  // Mixed block: may contain headings, list items, and paragraphs on separate lines
-  // Render line-by-line for blocks that mix types
+  // Mixed block with headings
   if (lines.length > 1 && lines.some((l) => /^#{1,3}\s/.test(l.trim()))) {
     return <div key={key}>{lines.map((line, j) => renderBlock(line, j))}</div>;
   }
@@ -444,46 +560,38 @@ function renderBlock(block: string, key: number): ReactNode {
   );
 }
 
-/** Render inline markdown: bold, italic, code, links, citations. */
+/** Render inline markdown: bold, italic, code, links, citations, wikilinks. */
 function renderInline(text: string): ReactNode {
-  // Split on inline patterns, preserving delimiters
   const parts: ReactNode[] = [];
-  // Groups: 2=bold, 3=italic, 4=code, 5=citation-num, 6=citation-url, 7=link-text, 8=link-url
+  // Groups: 2=bold, 3=italic, 4=code, 5=citation-num, 6=citation-url, 7=link-text, 8=link-url, 9=wikilink
   const regex =
-    /(\*\*(.+?)\*\*|\*(.+?)\*|`([^`]+)`|\[\[(\d+)\]\]\(([^)]+)\)|\[([^\]]+)\]\(([^)]+)\))/g;
+    /(\*\*(.+?)\*\*|\*(.+?)\*|`([^`]+)`|\[\[(\d+)\]\]\(([^)]+)\)|\[([^\]]+)\]\(([^)]+)\)|\[\[([^\]]+)\]\])/g;
 
   let lastIndex = 0;
   let match: RegExpExecArray | null;
 
   while ((match = regex.exec(text)) !== null) {
-    // Text before match
-    if (match.index > lastIndex) {
-      parts.push(text.slice(lastIndex, match.index));
-    }
+    if (match.index > lastIndex) parts.push(text.slice(lastIndex, match.index));
 
     if (match[2]) {
-      // **bold**
       parts.push(
         <strong key={match.index} className="font-semibold">
           {match[2]}
         </strong>,
       );
     } else if (match[3]) {
-      // *italic*
       parts.push(
         <em key={match.index} className="italic">
           {match[3]}
         </em>,
       );
     } else if (match[4]) {
-      // `code`
       parts.push(
         <code key={match.index} className="bg-bg-elevated rounded px-1 py-0.5 text-xs">
           {match[4]}
         </code>,
       );
     } else if (match[5] && match[6]) {
-      // [[n]](url) — web search citation, render as superscript link
       parts.push(
         <sup key={match.index}>
           <a
@@ -497,7 +605,6 @@ function renderInline(text: string): ReactNode {
         </sup>,
       );
     } else if (match[7] && match[8]) {
-      // [text](url)
       parts.push(
         <a
           key={match.index}
@@ -509,15 +616,21 @@ function renderInline(text: string): ReactNode {
           {match[7]}
         </a>,
       );
+    } else if (match[9]) {
+      // Wikilink [[Page Name]] — render as styled inline reference
+      parts.push(
+        <span
+          key={match.index}
+          className="text-accent border-accent/30 inline-flex items-center gap-0.5 rounded border px-1.5 py-0.5 text-xs font-medium"
+        >
+          {match[9]}
+        </span>,
+      );
     }
 
     lastIndex = match.index + match[0].length;
   }
 
-  // Remaining text
-  if (lastIndex < text.length) {
-    parts.push(text.slice(lastIndex));
-  }
-
+  if (lastIndex < text.length) parts.push(text.slice(lastIndex));
   return parts.length === 1 ? parts[0] : parts;
 }

@@ -52,6 +52,7 @@ const ALLOWED_ORIGINS: ReadonlySet<string> = new Set([
 ]);
 
 const XAI_RESPONSES_URL = 'https://api.x.ai/v1/responses';
+const XAI_REALTIME_SECRETS_URL = 'https://api.x.ai/v1/realtime/client_secrets';
 
 /** Models visitors are allowed to use. Prevents switching to costly models. */
 const ALLOWED_MODELS: ReadonlySet<string> = new Set([
@@ -151,8 +152,48 @@ export default {
       return jsonResponse({ error: 'Method not allowed' }, 405, origin);
     }
 
-    // ── Path guard — only /v1/responses is accepted ──
+    // ── Path guard — only /v1/responses and /v1/realtime/session are accepted ──
     const postPath = new URL(request.url).pathname;
+
+    // ── Ephemeral token endpoint for voice chat ──
+    if (postPath === '/v1/realtime/session') {
+      if (!isAllowed) {
+        return jsonResponse({ error: 'Forbidden' }, 403);
+      }
+      const clientIP = request.headers.get('CF-Connecting-IP') ?? 'unknown';
+      if (isRateLimited(clientIP)) {
+        return jsonResponse({ error: 'Rate limit exceeded. Try again shortly.' }, 429, origin);
+      }
+      if (!env.XAI_API_KEY) {
+        return jsonResponse({ error: 'Server misconfigured' }, 500, origin);
+      }
+      try {
+        const xaiResponse = await fetch(XAI_REALTIME_SECRETS_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${env.XAI_API_KEY}`,
+          },
+          body: JSON.stringify({
+            expires_after: { seconds: 300 },
+          }),
+        });
+
+        const responseBody = await xaiResponse.text();
+        return new Response(responseBody, {
+          status: xaiResponse.status,
+          headers: {
+            'Content-Type': 'application/json',
+            ...corsHeaders(origin),
+          },
+        });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Upstream request failed';
+        console.error(`[ai-proxy] Realtime token error: ${message}`);
+        return jsonResponse({ error: 'Failed to obtain ephemeral token' }, 502, origin);
+      }
+    }
+
     if (postPath !== '/v1/responses') {
       return jsonResponse({ error: 'Not found' }, 404, origin);
     }
