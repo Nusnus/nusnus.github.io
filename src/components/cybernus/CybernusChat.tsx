@@ -181,8 +181,21 @@ export default function CybernusChat() {
   // Abort any in-flight stream on unmount (navigation away).
   useEffect(() => () => abortRef.current?.abort(), []);
 
-  /* ── Persist spectrum + language on change ── */
+  /* ── Persist spectrum + language on change ──
+   * Skip the first run: on mount these fire in the same commit as the boot
+   * effect above, but with the *initial* state (DEFAULT_SPECTRUM / 'en') —
+   * the boot effect's `setSpectrum(stored)` is batched and hasn't applied
+   * yet. Without the guard we'd briefly overwrite the stored value with the
+   * default. (Lazy `useState(() => readStored...)` is not an option here:
+   * it reads `localStorage` during render, and this island is SSR'd under
+   * `client:load`, so server and client snapshots would diverge.)
+   */
+  const spectrumPersistBooted = useRef(false);
   useEffect(() => {
+    if (!spectrumPersistBooted.current) {
+      spectrumPersistBooted.current = true;
+      return;
+    }
     try {
       localStorage.setItem(SPECTRUM_STORAGE_KEY, String(spectrum));
     } catch {
@@ -190,7 +203,12 @@ export default function CybernusChat() {
     }
   }, [spectrum]);
 
+  const langPersistBooted = useRef(false);
   useEffect(() => {
+    if (!langPersistBooted.current) {
+      langPersistBooted.current = true;
+      return;
+    }
     try {
       localStorage.setItem(LANG_STORAGE_KEY, language);
     } catch {
