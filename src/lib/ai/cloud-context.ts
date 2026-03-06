@@ -7,7 +7,17 @@
  *
  * Data is fetched from the Cloudflare Worker (live, edge-cached) with
  * automatic fallback to build-time static JSON if the Worker is unavailable.
- * Total context: ~12K tokens — trivial for a 2M context model.
+ *
+ * Comprehensive data sources included:
+ * - Persona & knowledge base (markdown files)
+ * - Live GitHub data (profile, repos, activity, contributions)
+ * - Site metadata (URL, username, navigation structure)
+ * - Repository configuration (featured repos, org repos, roles)
+ * - LinkedIn articles & blog posts
+ * - Collaborations & partnerships
+ * - Social links
+ *
+ * Total context: ~15K tokens — trivial for a 2M context model.
  */
 
 import type { ActivityData, RepoData, ContributionGraphData, ProfileData } from '@lib/github/types';
@@ -15,10 +25,17 @@ import {
   LINKEDIN_ARTICLES,
   COLLABORATIONS,
   SOCIAL_LINKS,
+  NAV_LINKS,
+  SITE_URL,
+  GITHUB_USERNAME,
+  CELERY_REPOS,
+  CELERY_ORG_REPOS,
+  REPO_ROLES,
   safeRepoName,
   WORKER_BASE_URL,
 } from '@config';
 import { relativeTime } from '@lib/utils/date';
+import { getCollection } from 'astro:content';
 
 /** Format a number with commas (full precision for AI context). */
 const fmt = (n: number) => n.toLocaleString('en-US');
@@ -171,16 +188,66 @@ export async function buildCloudContext(additionalContext?: string): Promise<str
 
   // ── Static site content (hardcoded in constants.ts, not fetched from API) ──
 
+  // Site metadata
+  sections.push(
+    `# Website Information\n` +
+      `- **Site URL**: ${SITE_URL}\n` +
+      `- **GitHub Username**: ${GITHUB_USERNAME}\n` +
+      `- **Navigation Sections**: ${NAV_LINKS.map((link) => link.label).join(', ')}`,
+  );
+
+  // Repository configuration
+  const featuredReposList = CELERY_REPOS.map(
+    (repo) => `${repo} (${REPO_ROLES[repo] ?? 'contributor'})`,
+  ).join(', ');
+  const orgReposList = CELERY_ORG_REPOS.map(
+    (repo) => `${repo} (${REPO_ROLES[repo] ?? 'contributor'})`,
+  ).join(', ');
+  sections.push(
+    `# Repository Configuration\n` +
+      `- **Featured Celery Repos**: ${featuredReposList}\n` +
+      `- **Celery Organization Repos**: ${orgReposList}`,
+  );
+
+  // LinkedIn articles
   const articleLines = LINKEDIN_ARTICLES.map(
     (a) => `- **${a.title}** (${a.publishedAt})\n  ${a.excerpt}\n  URL: ${a.url}`,
   );
   sections.push(`# Articles & Writing (Published on LinkedIn)\n${articleLines.join('\n')}`);
 
+  // Blog posts (if any exist)
+  try {
+    const blogPosts = await getCollection('blog');
+    const publishedPosts = blogPosts.filter((post) => !post.data.draft);
+    if (publishedPosts.length > 0) {
+      const blogLines = publishedPosts
+        .sort((a, b) => b.data.publishedAt.getTime() - a.data.publishedAt.getTime())
+        .map((post) => {
+          const tags = post.data.tags.length > 0 ? ` · Tags: ${post.data.tags.join(', ')}` : '';
+          const crossPosted =
+            post.data.crossPostedTo && post.data.crossPostedTo.length > 0
+              ? ` · Cross-posted to: ${post.data.crossPostedTo.join(', ')}`
+              : '';
+          return (
+            `- **${post.data.title}** (${post.data.publishedAt.toISOString().split('T')[0]})\n` +
+            `  ${post.data.description}${tags}${crossPosted}\n` +
+            `  URL: ${SITE_URL}/blog/${post.id}`
+          );
+        });
+      sections.push(`# Blog Posts\n${blogLines.join('\n')}`);
+    }
+  } catch {
+    // Blog collection might not be available in all contexts (e.g., client-side)
+    // Skip silently if unavailable
+  }
+
+  // Collaborations
   const collabLines = COLLABORATIONS.map(
     (c) => `- **${c.name}** — ${c.title}: ${c.description}\n  URL: ${c.url}`,
   );
   sections.push(`# Collaborations & Partnerships\n${collabLines.join('\n')}`);
 
+  // Social links
   sections.push(
     `# Social Links\n` +
       `- GitHub: ${SOCIAL_LINKS.github}\n` +
