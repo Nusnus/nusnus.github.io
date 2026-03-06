@@ -1,8 +1,9 @@
-import { type RefObject } from 'react';
-import { Send, Square } from 'lucide-react';
+import { type RefObject, useEffect } from 'react';
+import { Mic, MicOff, Send, Square } from 'lucide-react';
 import { cn } from '@lib/utils/cn';
 import type { Language } from '@lib/ai/config';
 import { getTranslations } from '@lib/ai/i18n';
+import { useVoiceChat } from '@hooks/useVoiceChat';
 
 interface ChatInputProps {
   input: string;
@@ -18,7 +19,7 @@ interface ChatInputProps {
   language: Language;
 }
 
-/** Chat input footer — textarea + send/stop + message limit banner. */
+/** Chat input footer — textarea + mic + send/stop + message limit banner. */
 export function ChatInput({
   input,
   setInput,
@@ -33,11 +34,32 @@ export function ChatInput({
   language,
 }: ChatInputProps) {
   const t = getTranslations(language);
+  const voice = useVoiceChat();
+
+  // When transcription arrives, append to input
+  useEffect(() => {
+    if (voice.transcript) {
+      setInput(input ? `${input} ${voice.transcript}` : voice.transcript);
+    }
+    // Only run when transcript changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [voice.transcript]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       onSend(input);
+    }
+  };
+
+  const isVoiceActive =
+    voice.state === 'connecting' || voice.state === 'recording' || voice.state === 'transcribing';
+
+  const handleMicClick = () => {
+    if (isVoiceActive) {
+      voice.stopRecording();
+    } else {
+      voice.startRecording();
     }
   };
 
@@ -66,13 +88,40 @@ export function ChatInput({
                   e.target.style.height = `${Math.min(e.target.scrollHeight, 128)}px`;
                 }}
                 onKeyDown={handleKeyDown}
-                placeholder={t.askPlaceholder}
+                placeholder={
+                  isVoiceActive
+                    ? voice.state === 'connecting'
+                      ? t.connecting
+                      : voice.state === 'transcribing'
+                        ? t.transcribing
+                        : t.startRecording
+                    : t.askPlaceholder
+                }
                 rows={1}
                 className="text-text-primary placeholder:text-text-muted max-h-32 flex-1 resize-none bg-transparent text-sm leading-relaxed outline-none"
                 disabled={isGenerating}
                 aria-label={t.sendMessage}
                 dir={language === 'he' ? 'rtl' : 'ltr'}
               />
+
+              {/* Mic button */}
+              {!isGenerating && (
+                <button
+                  onClick={handleMicClick}
+                  className={cn(
+                    'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-all',
+                    isVoiceActive
+                      ? 'animate-pulse bg-red-500/20 text-red-400 hover:bg-red-500/30'
+                      : 'text-text-muted hover:bg-green-500/10 hover:text-green-400',
+                  )}
+                  aria-label={isVoiceActive ? t.stopRecording : t.startRecording}
+                  title={isVoiceActive ? t.stopRecording : t.startRecording}
+                >
+                  {isVoiceActive ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                </button>
+              )}
+
+              {/* Send / Stop button */}
               {isGenerating ? (
                 <button
                   onClick={onStop}
@@ -97,6 +146,12 @@ export function ChatInput({
                 </button>
               )}
             </div>
+
+            {/* Voice error */}
+            {voice.state === 'error' && voice.errorMessage && (
+              <p className="mt-1 px-1 text-[10px] text-red-400">{voice.errorMessage}</p>
+            )}
+
             <p className="text-text-muted mt-2 px-1 text-[10px]">
               {t.poweredBy}
               {userMsgCount > 0 && ` · ${userMsgCount}/${maxMessages}`}
