@@ -75,6 +75,7 @@ export function SessionHistory({
                   </p>
                 </div>
                 <button
+                  type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     onDeleteSession(session.id);
