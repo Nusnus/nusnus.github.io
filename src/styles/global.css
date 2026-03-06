@@ -241,6 +241,21 @@
   }
 }
 
+/* GPU acceleration hints for animated elements */
+.animate-\[grid-scan_20s_linear_infinite\],
+.animate-\[thinking-pulse_1s_ease-in-out_infinite\],
+.animate-\[message-slide-in_0\.3s_ease-out\] {
+  will-change: transform, opacity;
+}
+
+/* Optimize scrolling performance */
+.mobile-smooth-scroll,
+.scrollbar-thin {
+  /* Use GPU-accelerated scrolling */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .data-refresh {
     animation: none;

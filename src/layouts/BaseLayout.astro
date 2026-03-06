@@ -33,6 +33,18 @@ const ogImageUrl = new URL(ogImage, SITE_URL).href;
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="canonical" href={canonicalUrl} />
 
+    <!-- Preload critical fonts -->
+    <link
+      rel="preload"
+      href="/fonts/InterVariable.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin="anonymous"
+    />
+
+    <!-- DNS prefetch for external resources -->
+    <link rel="dns-prefetch" href="https://nusnus-ai-proxy.nusnus.workers.dev" />
+
     <!-- Title & Description -->
     <title>{title}</title>
     <meta name="description" content={description} />

@@ -11,10 +11,33 @@ export default defineConfig({
 
   vite: {
     plugins: [tailwindcss()],
+    build: {
+      // Enable minification for production
+      minify: 'esbuild',
+      // Optimize CSS
+      cssMinify: true,
+      // Manual chunks for better code splitting
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            // Separate React vendor chunk
+            'react-vendor': ['react', 'react-dom'],
+            // Separate mermaid (large library)
+            mermaid: ['mermaid'],
+          },
+        },
+      },
+    },
+    // Optimize dependencies
+    optimizeDeps: {
+      include: ['react', 'react-dom', 'clsx', 'tailwind-merge'],
+    },
   },
 
   build: {
     assets: 'assets',
+    // Inline small assets to reduce requests
+    inlineStylesheets: 'auto',
   },
 
   markdown: {
