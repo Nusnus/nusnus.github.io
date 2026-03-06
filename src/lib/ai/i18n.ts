@@ -35,6 +35,7 @@ export interface UITranslations {
   // Voice
   startRecording: string;
   stopRecording: string;
+  recording: string;
   voiceNotSupported: string;
   connecting: string;
   transcribing: string;
@@ -68,6 +69,7 @@ const EN: UITranslations = {
   personalityLabel: 'Personality',
   startRecording: 'Start voice recording',
   stopRecording: 'Stop recording',
+  recording: 'Listening…',
   voiceNotSupported: 'Voice not supported in this browser',
   connecting: 'Connecting…',
   transcribing: 'Transcribing…',
@@ -103,6 +105,7 @@ const ES: UITranslations = {
   personalityLabel: 'Personalidad',
   startRecording: 'Iniciar grabación de voz',
   stopRecording: 'Detener grabación',
+  recording: 'Escuchando…',
   voiceNotSupported: 'Voz no soportada en este navegador',
   connecting: 'Conectando…',
   transcribing: 'Transcribiendo…',
@@ -138,6 +141,7 @@ const HE: UITranslations = {
   personalityLabel: 'אישיות',
   startRecording: 'התחל הקלטת קול',
   stopRecording: 'עצור הקלטה',
+  recording: '…מקשיב',
   voiceNotSupported: 'קול לא נתמך בדפדפן זה',
   connecting: '…מתחבר',
   transcribing: '…מתמלל',

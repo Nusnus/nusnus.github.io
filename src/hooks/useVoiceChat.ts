@@ -366,7 +366,27 @@ export function useVoiceChat(): UseVoiceChatReturn {
   const stopRecording = useCallback(() => {
     isRecordingRef.current = false;
 
-    // Tell xAI we're done sending audio
+    // Immediately release microphone and audio resources
+    if (processorRef.current) {
+      processorRef.current.disconnect();
+      processorRef.current = null;
+    }
+    if (sourceRef.current) {
+      sourceRef.current.disconnect();
+      sourceRef.current = null;
+    }
+    if (mediaStreamRef.current) {
+      for (const track of mediaStreamRef.current.getTracks()) {
+        track.stop();
+      }
+      mediaStreamRef.current = null;
+    }
+    if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+      audioContextRef.current.close().catch(() => undefined);
+      audioContextRef.current = null;
+    }
+
+    // Tell xAI we're done sending audio, keep WebSocket open briefly for final transcription
     const ws = wsRef.current;
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({ type: 'input_audio_buffer.commit' }));
@@ -374,10 +394,20 @@ export function useVoiceChat(): UseVoiceChatReturn {
       if (cleanupTimeoutRef.current) {
         clearTimeout(cleanupTimeoutRef.current);
       }
-      // Wait a moment for final transcription before cleanup
+      // Wait for final transcription, then close WebSocket
       cleanupTimeoutRef.current = setTimeout(() => {
         cleanupTimeoutRef.current = null;
-        cleanup();
+        if (wsRef.current) {
+          if (
+            wsRef.current.readyState === WebSocket.OPEN ||
+            wsRef.current.readyState === WebSocket.CONNECTING
+          ) {
+            wsRef.current.close();
+          }
+          wsRef.current = null;
+        }
+        audioBufferRef.current = [];
+        chunksSentRef.current = 0;
         setState('idle');
       }, 2000);
     } else {

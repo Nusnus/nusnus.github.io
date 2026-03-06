@@ -97,7 +97,7 @@ export function ChatInput({
                       ? t.connecting
                       : voice.state === 'transcribing'
                         ? t.transcribing
-                        : t.startRecording
+                        : t.recording
                     : t.askPlaceholder
                 }
                 rows={1}
