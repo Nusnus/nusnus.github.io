@@ -1,15 +1,11 @@
 /**
  * ChatMessages — Renders the scrollable message list.
  *
- * Features:
- * - Wide-screen layout (max-w-4xl)
- * - Vibrant dark theme with cyan/blue accents
- * - Smooth entry animations per message
- * - Tool-use visibility (thinking status indicator)
- * - Suggested questions grid
+ * Matrix-inspired dark theme with neon green accents.
+ * Uses full width of the main panel, no max-width constraint.
  */
 import { type RefObject } from 'react';
-import { ArrowRight, ExternalLink, Globe, Loader2 } from 'lucide-react';
+import { ArrowRight, ExternalLink, Globe, Loader2, Terminal } from 'lucide-react';
 import { cn } from '@lib/utils/cn';
 import type { Language } from '@lib/ai/config';
 import type { ChatMessage } from '@lib/ai/types';
@@ -20,14 +16,12 @@ import { getTranslations } from '@lib/ai/i18n';
 interface ChatMessagesProps {
   messages: ChatMessage[];
   isGenerating: boolean;
-  /** Current tool/activity status (e.g. "Searching the web…", "Thinking…"). */
   thinkingStatus: string | null;
   messagesEndRef: RefObject<HTMLDivElement | null>;
   onSendMessage: (text: string) => void;
   language: Language;
 }
 
-/** Renders the scrollable message list with message bubbles and suggested questions. */
 export function ChatMessages({
   messages,
   isGenerating,
@@ -40,64 +34,59 @@ export function ChatMessages({
   const isRtl = language === 'he';
 
   return (
-    <div className="scrollbar-thin flex-1 overflow-y-auto px-4 py-6">
-      <div className="mx-auto max-w-4xl space-y-5">
+    <div className="scrollbar-thin flex-1 overflow-y-auto px-6 py-6">
+      <div className="mx-auto max-w-5xl space-y-4">
         {messages.map((msg, msgIndex) => (
           <div
             key={msg.id}
             className={cn(
-              'animate-in fade-in slide-in-from-bottom-1 flex gap-3 duration-300',
+              'animate-in fade-in slide-in-from-bottom-1 flex gap-3 duration-200',
               msg.role === 'user' ? 'flex-row-reverse' : 'flex-row',
             )}
-            style={{ animationDelay: `${Math.min(msgIndex * 30, 150)}ms` }}
+            style={{ animationDelay: `${Math.min(msgIndex * 20, 100)}ms` }}
           >
             {/* Avatar */}
             <div
               className={cn(
-                'flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-xs font-medium',
+                'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg font-mono text-xs font-bold',
                 msg.role === 'user'
-                  ? 'bg-gradient-to-br from-blue-500/30 to-cyan-500/20 text-cyan-300'
-                  : 'bg-gradient-to-br from-cyan-500/20 to-purple-500/10 text-cyan-400',
+                  ? 'border border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
+                  : 'border border-emerald-500/20 bg-black text-emerald-500',
               )}
             >
-              {msg.role === 'user' ? (
-                <span className="text-[11px] font-semibold">You</span>
-              ) : (
-                <span className="text-sm">🧠</span>
-              )}
+              {msg.role === 'user' ? '>' : <Terminal className="h-3.5 w-3.5" />}
             </div>
 
             {/* Message bubble */}
             <div
               className={cn(
-                'max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed lg:max-w-[75%]',
+                'max-w-[85%] rounded-lg px-4 py-3 text-sm leading-relaxed lg:max-w-[80%]',
                 msg.role === 'user'
-                  ? 'rounded-tr-md bg-gradient-to-br from-blue-600/90 to-cyan-600/80 text-white shadow-lg shadow-blue-500/10'
-                  : 'rounded-tl-md border border-white/[0.06] bg-[#12141f] text-gray-100 shadow-lg shadow-black/20',
+                  ? 'border border-emerald-500/30 bg-emerald-500/10 text-emerald-100'
+                  : 'border border-emerald-500/[0.08] bg-[#0a0a0a] text-gray-200',
               )}
               dir={isRtl ? 'rtl' : 'ltr'}
             >
-              {/* Search status indicators */}
+              {/* Search status */}
               {msg.searchStatus === 'searching' ? (
-                <span className="inline-flex items-center gap-2 text-xs text-cyan-400">
+                <span className="inline-flex items-center gap-2 font-mono text-xs text-emerald-500">
                   <Globe className="h-3.5 w-3.5 animate-spin" />
                   <span>{t.searchingWeb}</span>
-                  <ThinkingDots color="cyan" />
+                  <ThinkingDots />
                 </span>
               ) : msg.searchStatus === 'found' ? (
-                <span className="inline-flex items-center gap-2 text-xs text-emerald-400">
+                <span className="inline-flex items-center gap-2 font-mono text-xs text-emerald-400">
                   <Globe className="h-3.5 w-3.5" />
                   <span>{t.foundResults}</span>
-                  <ThinkingDots color="emerald" />
+                  <ThinkingDots />
                 </span>
               ) : !msg.content ? (
-                /* Empty assistant message = still generating */
                 <div className="flex items-center gap-2">
-                  <Loader2 className="h-3.5 w-3.5 animate-spin text-cyan-400" />
+                  <Loader2 className="h-3.5 w-3.5 animate-spin text-emerald-500" />
                   {thinkingStatus && (
-                    <span className="text-xs text-cyan-400/80">{thinkingStatus}</span>
+                    <span className="font-mono text-xs text-emerald-500/80">{thinkingStatus}</span>
                   )}
-                  {!thinkingStatus && <ThinkingDots color="cyan" />}
+                  {!thinkingStatus && <ThinkingDots />}
                 </div>
               ) : msg.role === 'assistant' ? (
                 renderMarkdown(msg.content, isGenerating && msgIndex === messages.length - 1)
@@ -107,13 +96,13 @@ export function ChatMessages({
 
               {/* Tool action buttons */}
               {msg.actions && msg.actions.length > 0 && (
-                <div className="mt-3 flex flex-wrap gap-1.5 border-t border-white/[0.06] pt-2.5">
+                <div className="mt-3 flex flex-wrap gap-1.5 border-t border-emerald-500/10 pt-2.5">
                   {msg.actions.map((action, idx) => (
                     <button
                       key={idx}
                       onClick={() => executeAction(action)}
                       title={action.url}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-cyan-500/20 bg-cyan-500/5 px-3 py-1.5 text-xs font-medium text-cyan-400 transition-all hover:border-cyan-500/40 hover:bg-cyan-500/10 hover:shadow-sm hover:shadow-cyan-500/10"
+                      className="inline-flex items-center gap-1.5 rounded-md border border-emerald-500/20 bg-emerald-500/5 px-3 py-1.5 font-mono text-[11px] font-medium text-emerald-400 transition-all hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:shadow-sm hover:shadow-emerald-500/10"
                     >
                       {action.type === 'open_link' ? (
                         <ExternalLink className="h-3 w-3" />
@@ -129,17 +118,18 @@ export function ChatMessages({
           </div>
         ))}
 
-        {/* Suggested questions — shown after welcome message only */}
+        {/* Suggested questions */}
         {messages.length === 1 && messages[0]?.role === 'assistant' && (
-          <div className="mx-auto grid max-w-2xl gap-2.5 pt-4 sm:grid-cols-2">
+          <div className="mx-auto grid max-w-3xl gap-2 pt-6 sm:grid-cols-2">
             {t.suggestedQuestions.map((q) => (
               <button
                 key={q}
                 onClick={() => onSendMessage(q)}
                 disabled={isGenerating}
-                className="group rounded-xl border border-white/[0.06] bg-[#12141f] px-4 py-3.5 text-left text-xs leading-relaxed text-gray-400 transition-all hover:border-cyan-500/20 hover:bg-cyan-500/5 hover:text-cyan-300 hover:shadow-lg hover:shadow-cyan-500/5"
+                className="group rounded-lg border border-emerald-500/10 bg-[#0a0a0a] px-4 py-3 text-left font-mono text-[11px] leading-relaxed text-emerald-700 transition-all hover:border-emerald-500/30 hover:bg-emerald-500/5 hover:text-emerald-400 hover:shadow-lg hover:shadow-emerald-500/5"
               >
-                <span className="group-hover:text-cyan-400">{q}</span>
+                <span className="text-emerald-600 group-hover:text-emerald-400">{'> '}</span>
+                {q}
               </button>
             ))}
           </div>
@@ -153,24 +143,12 @@ export function ChatMessages({
 
 /* ─── Sub-components ─── */
 
-/** Animated thinking dots. */
-function ThinkingDots({ color }: { color: 'cyan' | 'emerald' }) {
-  const dotClass = color === 'cyan' ? 'bg-cyan-400' : 'bg-emerald-400';
+function ThinkingDots() {
   return (
     <span className="inline-flex gap-0.5">
-      <span className={cn('inline-block h-1 w-1 animate-bounce rounded-full', dotClass)} />
-      <span
-        className={cn(
-          'inline-block h-1 w-1 animate-bounce rounded-full [animation-delay:150ms]',
-          dotClass,
-        )}
-      />
-      <span
-        className={cn(
-          'inline-block h-1 w-1 animate-bounce rounded-full [animation-delay:300ms]',
-          dotClass,
-        )}
-      />
+      <span className="inline-block h-1 w-1 animate-bounce rounded-full bg-emerald-500" />
+      <span className="inline-block h-1 w-1 animate-bounce rounded-full bg-emerald-500 [animation-delay:150ms]" />
+      <span className="inline-block h-1 w-1 animate-bounce rounded-full bg-emerald-500 [animation-delay:300ms]" />
     </span>
   );
 }

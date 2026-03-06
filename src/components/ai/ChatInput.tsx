@@ -1,11 +1,7 @@
 /**
- * ChatInput — Input footer with textarea, voice mic, and send/stop controls.
+ * ChatInput — Input area with textarea, voice mic, and send/stop controls.
  *
- * Features:
- * - Modern glassmorphic input area
- * - Voice recording with visual feedback
- * - Live transcript appended to input
- * - Wide-screen layout matching ChatMessages
+ * Matrix-inspired terminal aesthetic with neon green accents.
  */
 import { type RefObject, useEffect, useRef } from 'react';
 import { Mic, MicOff, Send, Square } from 'lucide-react';
@@ -28,7 +24,6 @@ interface ChatInputProps {
   language: Language;
 }
 
-/** Chat input footer — textarea + mic + send/stop + message limit banner. */
 export function ChatInput({
   input,
   setInput,
@@ -53,7 +48,6 @@ export function ChatInput({
       const current = inputValueRef.current;
       setInput(current ? `${current} ${voice.transcript}` : voice.transcript);
     }
-    // React to new segments only (version bump)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [voice.transcriptVersion]);
 
@@ -76,21 +70,26 @@ export function ChatInput({
   };
 
   return (
-    <div className="border-t border-white/[0.06] bg-gradient-to-t from-[#0b0d14] via-[#0d0f18]/95 to-transparent px-4 py-3">
-      <div className="mx-auto max-w-4xl">
+    <div className="border-t border-emerald-500/10 bg-[#0a0a0a]/80 px-6 py-3 backdrop-blur-sm">
+      <div className="mx-auto max-w-5xl">
         {isAtLimit ? (
           <div className="flex flex-col items-center gap-3 py-2 text-center">
-            <p className="text-sm text-gray-400">{t.messageLimitReached}</p>
+            <p className="font-mono text-xs text-emerald-700">{t.messageLimitReached}</p>
             <button
               onClick={onClearChat}
-              className="rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-cyan-500/20 transition-all hover:shadow-cyan-500/30"
+              className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-6 py-2.5 font-mono text-xs font-semibold text-emerald-400 shadow-lg shadow-emerald-500/10 transition-all hover:border-emerald-500/50 hover:bg-emerald-500/20 hover:shadow-emerald-500/20"
             >
               {t.startNewChat}
             </button>
           </div>
         ) : (
           <>
-            <div className="flex items-end gap-2 rounded-2xl border border-white/[0.08] bg-[#12141f]/80 px-4 py-3 backdrop-blur-sm transition-all focus-within:border-cyan-500/30 focus-within:shadow-lg focus-within:shadow-cyan-500/5">
+            <div className="flex items-end gap-2 rounded-lg border border-emerald-500/15 bg-black/60 px-4 py-3 transition-all focus-within:border-emerald-500/40 focus-within:shadow-lg focus-within:shadow-emerald-500/5">
+              {/* Terminal prompt indicator */}
+              <span className="mb-0.5 shrink-0 font-mono text-sm font-bold text-emerald-600">
+                {'>'}
+              </span>
+
               <textarea
                 ref={inputRef}
                 value={input}
@@ -110,7 +109,7 @@ export function ChatInput({
                     : t.askPlaceholder
                 }
                 rows={1}
-                className="max-h-32 flex-1 resize-none bg-transparent text-sm leading-relaxed text-gray-100 outline-none placeholder:text-gray-500"
+                className="max-h-32 flex-1 resize-none bg-transparent font-mono text-sm leading-relaxed text-emerald-100 outline-none placeholder:text-emerald-800"
                 disabled={isGenerating}
                 aria-label={t.sendMessage}
                 dir={language === 'he' ? 'rtl' : 'ltr'}
@@ -121,10 +120,10 @@ export function ChatInput({
                 <button
                   onClick={handleMicClick}
                   className={cn(
-                    'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all',
+                    'flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-all',
                     isVoiceActive
                       ? 'animate-pulse bg-red-500/20 text-red-400 shadow-lg shadow-red-500/10 hover:bg-red-500/30'
-                      : 'text-gray-500 hover:bg-white/[0.06] hover:text-cyan-400',
+                      : 'text-emerald-700 hover:bg-emerald-500/10 hover:text-emerald-400',
                   )}
                   aria-label={isVoiceActive ? t.stopRecording : t.startRecording}
                   title={isVoiceActive ? t.stopRecording : t.startRecording}
@@ -137,34 +136,34 @@ export function ChatInput({
               {isGenerating ? (
                 <button
                   onClick={onStop}
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-red-500/10 text-red-400 transition-all hover:bg-red-500/20"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-red-500/10 text-red-400 transition-all hover:bg-red-500/20"
                   aria-label={t.stopGenerating}
                 >
-                  <Square className="h-4 w-4 fill-current" />
+                  <Square className="h-3.5 w-3.5 fill-current" />
                 </button>
               ) : (
                 <button
                   onClick={() => onSend(input)}
                   disabled={!input.trim()}
                   className={cn(
-                    'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all',
+                    'flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-all',
                     input.trim()
-                      ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/30'
-                      : 'cursor-not-allowed text-gray-600',
+                      ? 'border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 shadow-sm shadow-emerald-500/10 hover:bg-emerald-500/20 hover:shadow-emerald-500/20'
+                      : 'cursor-not-allowed text-emerald-900',
                   )}
                   aria-label={t.sendMessage}
                 >
-                  <Send className="h-4 w-4" />
+                  <Send className="h-3.5 w-3.5" />
                 </button>
               )}
             </div>
 
             {/* Voice error */}
             {voice.state === 'error' && voice.errorMessage && (
-              <p className="mt-1.5 px-1 text-[10px] text-red-400">{voice.errorMessage}</p>
+              <p className="mt-1.5 px-1 font-mono text-[10px] text-red-400">{voice.errorMessage}</p>
             )}
 
-            <p className="mt-2 px-1 text-[10px] text-gray-500">
+            <p className="mt-2 px-1 font-mono text-[9px] text-emerald-900">
               {t.poweredBy}
               {userMsgCount > 0 && ` · ${userMsgCount}/${maxMessages}`}
             </p>

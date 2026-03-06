@@ -55,7 +55,7 @@ export function SessionHistory({
                 key={session.id}
                 className={cn(
                   'group flex cursor-pointer items-start justify-between gap-2 px-4 py-3 transition-all',
-                  session.id === activeSessionId ? 'bg-cyan-500/10' : 'hover:bg-white/[0.03]',
+                  session.id === activeSessionId ? 'bg-emerald-500/10' : 'hover:bg-white/[0.03]',
                 )}
                 onClick={() => onSwitchSession(session)}
                 role="button"
