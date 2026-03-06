@@ -1,4 +1,4 @@
-import { type RefObject, useEffect } from 'react';
+import { type RefObject, useEffect, useRef } from 'react';
 import { Mic, MicOff, Send, Square } from 'lucide-react';
 import { cn } from '@lib/utils/cn';
 import type { Language } from '@lib/ai/config';
@@ -35,15 +35,18 @@ export function ChatInput({
 }: ChatInputProps) {
   const t = getTranslations(language);
   const voice = useVoiceChat();
+  const inputValueRef = useRef(input);
+  inputValueRef.current = input;
 
-  // When transcription arrives, append to input
+  // When a new transcript segment arrives, append it to input
   useEffect(() => {
-    if (voice.transcript) {
-      setInput(input ? `${input} ${voice.transcript}` : voice.transcript);
+    if (voice.transcript && voice.transcriptVersion > 0) {
+      const current = inputValueRef.current;
+      setInput(current ? `${current} ${voice.transcript}` : voice.transcript);
     }
-    // Only run when transcript changes
+    // React to new segments only (version bump)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [voice.transcript]);
+  }, [voice.transcriptVersion]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {

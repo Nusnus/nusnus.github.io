@@ -157,6 +157,13 @@ export default {
 
     // ── Ephemeral token endpoint for voice chat ──
     if (postPath === '/v1/realtime/session') {
+      if (!isAllowed) {
+        return jsonResponse({ error: 'Forbidden' }, 403);
+      }
+      const clientIP = request.headers.get('CF-Connecting-IP') ?? 'unknown';
+      if (isRateLimited(clientIP)) {
+        return jsonResponse({ error: 'Rate limit exceeded. Try again shortly.' }, 429, origin);
+      }
       if (!env.XAI_API_KEY) {
         return jsonResponse({ error: 'Server misconfigured' }, 500, origin);
       }

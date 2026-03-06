@@ -36,8 +36,10 @@ interface VoiceDiagnostics {
 interface UseVoiceChatReturn {
   /** Current voice state. */
   state: VoiceState;
-  /** Live transcript text (updated in real-time). */
+  /** Latest transcript segment (only the newest piece, not cumulative). */
   transcript: string;
+  /** Monotonically incrementing counter — changes each time a new segment arrives. */
+  transcriptVersion: number;
   /** Start recording and transcription. */
   startRecording: () => void;
   /** Stop recording and finalize transcription. */
@@ -85,6 +87,7 @@ function downsample(buffer: Float32Array, fromRate: number, toRate: number): Flo
 export function useVoiceChat(): UseVoiceChatReturn {
   const [state, setState] = useState<VoiceState>('idle');
   const [transcript, setTranscript] = useState('');
+  const [transcriptVersion, setTranscriptVersion] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Refs for non-React objects
@@ -295,7 +298,9 @@ export function useVoiceChat(): UseVoiceChatReturn {
           if (eventType === 'conversation.item.input_audio_transcription.completed') {
             const transcriptText = data.transcript as string | undefined;
             if (transcriptText) {
-              setTranscript((prev) => (prev ? `${prev} ${transcriptText}` : transcriptText));
+              // Expose only the latest segment — consumer appends to input
+              setTranscript(transcriptText);
+              setTranscriptVersion((v) => v + 1);
             }
           } else if (eventType === 'input_audio_buffer.speech_started') {
             setState('recording');
@@ -363,6 +368,7 @@ export function useVoiceChat(): UseVoiceChatReturn {
   return {
     state,
     transcript,
+    transcriptVersion,
     startRecording,
     stopRecording,
     errorMessage,
