@@ -46,7 +46,18 @@ const KNOWN_PUBLIC_OWNERS: ReadonlySet<string> = new Set(['nusnus', 'celery', 'm
 
 /** Check if a repo full name (owner/repo) belongs to a known public owner. */
 export function isKnownPublicRepo(repoFullName: string): boolean {
-  const owner = repoFullName.split('/')[0]?.toLowerCase() ?? '';
+  // Security: Validate format is exactly "owner/repo" (one slash, no whitespace)
+  const parts = repoFullName.split('/');
+  if (parts.length !== 2) return false;
+
+  const owner = parts[0]?.toLowerCase().trim() ?? '';
+  const repo = parts[1]?.trim() ?? '';
+
+  // Reject if owner or repo is empty, or if trimming changed the value (had whitespace)
+  if (!owner || !repo || owner !== parts[0]?.toLowerCase() || repo !== parts[1]) {
+    return false;
+  }
+
   return KNOWN_PUBLIC_OWNERS.has(owner);
 }
 
