@@ -173,18 +173,28 @@ export function useSpeechInput(
     r.continuous = false; // stop after a pause — better for chat composition
     r.interimResults = true; // stream words as they're heard
 
+    // Stale-handler guard: `abort()` (from the language-change cleanup or a
+    // rapid re-click) fires `onerror`/`onend` asynchronously. If a new
+    // recognition session starts before those handlers run, they would clobber
+    // the new session's ref and state. Check ownership — `r` is the instance
+    // captured by this closure; if `recogRef.current` no longer points to it,
+    // this handler is stale and must bail.
+    const isStale = () => recogRef.current !== r;
+
     r.onresult = (ev) => {
+      if (isStale()) return;
       // `ev.results` is cumulative — interim results update IN PLACE at the
       // same index, and the list only grows when a new utterance starts.
       // We must rebuild the full transcript from scratch on every event;
       // appending would duplicate every previously-seen interim word.
       // (SpeechRecognitionResultList is array-like, not iterable — hence Array.from.)
-      const full = Array.from(ev.results, (r) => r[0].transcript).join('');
+      const full = Array.from(ev.results, (res) => res[0].transcript).join('');
       bufferRef.current = full;
       setTranscript(full);
     };
 
     r.onerror = (ev) => {
+      if (isStale()) return;
       const label = ERROR_LABELS[ev.error] ?? `Speech error: ${ev.error}`;
       if (label) setError(label);
       setListening(false);
@@ -193,6 +203,7 @@ export function useSpeechInput(
     };
 
     r.onend = () => {
+      if (isStale()) return;
       // Fire the final-transcript callback BEFORE clearing state. This is
       // the handoff point — caller gets the text, we reset to idle.
       const final = bufferRef.current.trim();
