@@ -341,6 +341,7 @@ export default function AiChat({ systemPrompt }: Props) {
         <div className="flex items-center gap-2">
           {sessions.length > 0 && (
             <button
+              type="button"
               onClick={() => setShowHistory(!showHistory)}
               className={`flex items-center gap-1 text-xs transition-colors ${
                 showHistory ? 'text-accent' : 'text-text-muted hover:text-text-secondary'
@@ -366,6 +367,7 @@ export default function AiChat({ systemPrompt }: Props) {
             <>
               <span className="bg-border h-3.5 w-px" />
               <button
+                type="button"
                 onClick={clearChat}
                 className="text-text-muted hover:text-text-secondary flex items-center gap-1 text-xs transition-colors"
                 aria-label="New chat"

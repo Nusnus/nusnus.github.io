@@ -154,6 +154,7 @@ export function ChatInput({
               </p>
             </div>
             <button
+              type="button"
               onClick={onClearChat}
               className="group from-accent to-accent/90 text-bg-base ring-accent/50 focus-visible:ring-accent focus-visible:ring-offset-bg-base relative overflow-hidden rounded-xl bg-gradient-to-r px-8 py-3 font-mono text-sm font-bold shadow-lg ring-1 transition-all duration-150 hover:shadow-[0_0_24px_oklch(0.72_0.17_145_/_0.4)] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
             >
@@ -207,6 +208,7 @@ export function ChatInput({
               {!isGenerating &&
                 (isRecording ? (
                   <button
+                    type="button"
                     onClick={stopRecording}
                     className="focus-visible:ring-offset-bg-surface relative z-10 flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-lg bg-red-500/10 text-red-400 ring-1 ring-red-500/30 transition-all duration-150 hover:bg-red-500/20 hover:shadow-[0_0_12px_oklch(0.5_0.2_25_/_0.3)] hover:ring-red-500/50 focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 focus-visible:outline-none active:scale-95"
                     aria-label="Stop recording"
@@ -215,6 +217,7 @@ export function ChatInput({
                   </button>
                 ) : (
                   <button
+                    type="button"
                     onClick={startRecording}
                     disabled={!!input.trim()}
                     className={cn(
@@ -232,6 +235,7 @@ export function ChatInput({
 
               {isGenerating ? (
                 <button
+                  type="button"
                   onClick={onStop}
                   className="focus-visible:ring-offset-bg-surface relative z-10 flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-lg bg-red-500/10 text-red-400 ring-1 ring-red-500/30 transition-all duration-150 hover:bg-red-500/20 hover:shadow-[0_0_12px_oklch(0.5_0.2_25_/_0.3)] hover:ring-red-500/50 focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 focus-visible:outline-none active:scale-95"
                   aria-label={t('stopGenerating')}
@@ -240,6 +244,7 @@ export function ChatInput({
                 </button>
               ) : (
                 <button
+                  type="button"
                   onClick={() => onSend(input)}
                   disabled={!input.trim()}
                   className={cn(
