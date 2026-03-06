@@ -2,6 +2,11 @@ name = "ai-proxy"
 main = "src/index.ts"
 compatibility_date = "2025-01-01"
 
+# Remove the VoiceSession Durable Object that was previously deployed
+[[migrations]]
+tag = "v1"
+deleted_classes = ["VoiceSession"]
+
 # The XAI_API_KEY is stored as a secret via:
 #   cd worker && npx wrangler secret put XAI_API_KEY
 
