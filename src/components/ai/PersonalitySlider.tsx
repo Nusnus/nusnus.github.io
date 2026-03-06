@@ -13,11 +13,9 @@ interface PersonalitySliderProps {
 const LEVELS: PersonalityLevel[] = [0, 1, 2, 3, 4, 5];
 
 export function PersonalitySlider({ level, onChange }: PersonalitySliderProps) {
-  const config = PERSONALITY_LEVELS[level];
-
   return (
-    <div className="mt-1.5 flex items-center gap-2">
-      <span className="text-text-muted text-[10px] font-medium tracking-wider uppercase">Tone</span>
+    <div className="flex items-center gap-1.5">
+      <span className="text-[9px] font-medium tracking-wider text-gray-500 uppercase">Tone</span>
       <div className="flex items-center gap-0.5">
         {LEVELS.map((l) => {
           const lConfig = PERSONALITY_LEVELS[l];
@@ -26,12 +24,12 @@ export function PersonalitySlider({ level, onChange }: PersonalitySliderProps) {
             <button
               key={l}
               onClick={() => onChange(l)}
-              className={`h-1.5 w-5 rounded-full transition-all duration-200 ${
+              className={`h-1.5 w-4 rounded-full transition-all duration-200 ${
                 isActive
                   ? `${lConfig.bgColorClass} shadow-sm`
                   : l <= level
-                    ? 'bg-green-500/30'
-                    : 'bg-white/10 hover:bg-white/20'
+                    ? 'bg-cyan-500/20'
+                    : 'bg-white/[0.06] hover:bg-white/10'
               }`}
               title={`${lConfig.label}: ${lConfig.description}`}
               aria-label={`Set personality to ${lConfig.label}`}
@@ -39,7 +37,6 @@ export function PersonalitySlider({ level, onChange }: PersonalitySliderProps) {
           );
         })}
       </div>
-      <span className={`text-[10px] font-semibold ${config.colorClass}`}>{config.label}</span>
     </div>
   );
 }

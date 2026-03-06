@@ -235,6 +235,7 @@ export async function cloudChatStream(
   signal?: AbortSignal,
   options?: CloudChatOptions,
 ): Promise<CloudChatResult> {
+  console.log(`[Cloud] Starting stream request: model=${modelId}, messages=${messages.length}`);
   const response = await fetch(CLOUD_PROXY_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -246,10 +247,13 @@ export async function cloudChatStream(
     let errorMessage = `Request failed (${response.status})`;
     try {
       const text = await response.text();
+      console.error(
+        `[Cloud] Stream request failed: status=${response.status}, body=${text.slice(0, 500)}`,
+      );
       const data = JSON.parse(text) as ResponsesAPIResponse;
       if (data.error?.message) errorMessage = data.error.message;
     } catch {
-      // Use default error message
+      console.error(`[Cloud] Stream request failed: status=${response.status}, no parseable body`);
     }
     throw new Error(errorMessage);
   }
@@ -305,6 +309,7 @@ export async function cloudChatStream(
               arguments: '',
             });
           } else if (e.item.type === 'web_search_call') {
+            console.log('[Cloud] Web search triggered by model');
             options?.onWebSearch?.();
           }
         } else if (eventType === 'response.function_call_arguments.delta') {
@@ -314,12 +319,14 @@ export async function cloudChatStream(
         } else if (eventType === 'response.output_item.done') {
           const e = raw as unknown as StreamOutputItemDone;
           if (e.item.type === 'web_search_call') {
+            console.log('[Cloud] Web search completed');
             options?.onWebSearchFound?.();
           }
         } else if (eventType === 'response.failed') {
           const err = (raw as Record<string, unknown>).response as
             | { error?: { message?: string } }
             | undefined;
+          console.error('[Cloud] Response failed:', JSON.stringify(raw).slice(0, 500));
           throw new Error(err?.error?.message ?? 'Response failed');
         } else if (eventType === 'response.incomplete') {
           // The model stopped before finishing — surface a useful message

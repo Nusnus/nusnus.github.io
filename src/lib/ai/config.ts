@@ -144,20 +144,22 @@ export const LANGUAGES: Record<Language, LanguageConfig> = {
     label: 'English',
     flag: '🇺🇸',
     dir: 'ltr',
-    promptInstruction: 'Respond in English.',
+    promptInstruction:
+      'LANGUAGE DIRECTIVE: You MUST respond ENTIRELY in English. Every word of your response must be in English. This overrides any other language in the context.',
   },
   es: {
     label: 'Español',
     flag: '🇨🇴',
     dir: 'ltr',
     promptInstruction:
-      'Respond in Colombian Spanish (casual, warm, natural). Use "tú" not "usted". Think Medellín barista energy.',
+      'DIRECTIVA DE IDIOMA: DEBES responder COMPLETAMENTE en español colombiano (casual, cálido, natural). Usa "tú" en vez de "usted". Energía de barista de Medellín. Cada palabra de tu respuesta debe estar en español. Esto anula cualquier otro idioma en el contexto.',
   },
   he: {
     label: 'עברית',
     flag: '🇮🇱',
     dir: 'rtl',
-    promptInstruction: 'Respond in Hebrew (עברית). Use modern conversational Hebrew.',
+    promptInstruction:
+      'הנחיית שפה: אתה חייב לענות לגמרי בעברית. כל מילה בתגובה שלך חייבת להיות בעברית מודרנית ויומיומית. זה גובר על כל שפה אחרת בהקשר. שמות טכניים ושמות פרויקטים (כמו Celery, pytest-celery) יכולים להישאר באנגלית.',
   },
 };
 

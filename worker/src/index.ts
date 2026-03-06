@@ -174,6 +174,9 @@ export default {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${env.XAI_API_KEY}`,
           },
+          body: JSON.stringify({
+            expires_after: { seconds: 300 },
+          }),
         });
 
         const responseBody = await xaiResponse.text();

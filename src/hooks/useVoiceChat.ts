@@ -9,6 +9,16 @@
  * 5. Server-side VAD detects speech end → transcription is returned
  * 6. Transcription populates the input box for user review before sending
  *
+ * xAI Voice Agent API session config format (per docs):
+ *   session.voice — "Eve" | "Ara" | "Rex" | "Sal" | "Leo"
+ *   session.instructions — system prompt
+ *   session.turn_detection — { type: "server_vad" }
+ *   session.audio.input.format — { type: "audio/pcm", rate: 24000 }
+ *   session.audio.output.format — { type: "audio/pcm", rate: 24000 }
+ *
+ * Ephemeral token endpoint body (per docs):
+ *   { expires_after: { seconds: 300 } }
+ *
  * Critical notes:
  * - DO NOT add input_audio_transcription config (xAI doesn't support it)
  * - DO NOT set connection state before WebSocket actually connects
@@ -195,6 +205,7 @@ export function useVoiceChat(): UseVoiceChatReturn {
 
     const buffered = audioBufferRef.current;
     audioBufferRef.current = [];
+    console.log(`[Voice] Flushing ${buffered.length} buffered audio chunks`);
     for (const chunk of buffered) {
       ws.send(
         JSON.stringify({
@@ -223,8 +234,11 @@ export function useVoiceChat(): UseVoiceChatReturn {
     setState('connecting');
     isRecordingRef.current = true;
 
+    console.log('[Voice] Starting voice recording flow');
+
     try {
       // 1. Get microphone access
+      console.log('[Voice] Requesting microphone access');
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           sampleRate: TARGET_SAMPLE_RATE,
@@ -234,8 +248,10 @@ export function useVoiceChat(): UseVoiceChatReturn {
         },
       });
       mediaStreamRef.current = stream;
+      console.log('[Voice] Microphone access granted');
 
       if (!isRecordingRef.current) {
+        console.log('[Voice] Recording cancelled during mic setup');
         for (const track of stream.getTracks()) track.stop();
         return;
       }
@@ -243,6 +259,7 @@ export function useVoiceChat(): UseVoiceChatReturn {
       // 2. Set up audio context
       const audioContext = new AudioContext({ sampleRate: TARGET_SAMPLE_RATE });
       audioContextRef.current = audioContext;
+      console.log(`[Voice] AudioContext created, sampleRate=${audioContext.sampleRate}`);
       const source = audioContext.createMediaStreamSource(stream);
       sourceRef.current = source;
 
@@ -262,43 +279,60 @@ export function useVoiceChat(): UseVoiceChatReturn {
       processor.connect(audioContext.destination);
 
       // 3. Fetch ephemeral token
+      console.log(`[Voice] Fetching ephemeral token from ${WORKER_REALTIME_URL}`);
       const tokenRes = await fetch(WORKER_REALTIME_URL, { method: 'POST' });
+
       if (!tokenRes.ok) {
-        throw new Error(`Failed to get voice token: ${tokenRes.status}`);
-      }
-      const tokenData = (await tokenRes.json()) as { client_secret?: { value?: string } };
-      const token = tokenData.client_secret?.value;
-      if (!token) {
-        throw new Error('No ephemeral token in response');
+        const errorBody = await tokenRes.text().catch(() => 'Unknown error');
+        console.error(`[Voice] Token fetch failed: status=${tokenRes.status}, body=${errorBody}`);
+        throw new Error(`Failed to get voice token: ${tokenRes.status} — ${errorBody}`);
       }
 
+      const tokenData = (await tokenRes.json()) as { client_secret?: { value?: string } };
+      const token = tokenData.client_secret?.value;
+
+      if (!token) {
+        console.error('[Voice] No ephemeral token in response:', JSON.stringify(tokenData));
+        throw new Error('No ephemeral token in response');
+      }
+      console.log('[Voice] Ephemeral token obtained successfully');
+
       if (!isRecordingRef.current) {
+        console.log('[Voice] Recording cancelled during token fetch');
         cleanup();
         return;
       }
 
       // 4. Connect WebSocket to xAI Realtime API
+      console.log('[Voice] Connecting WebSocket to wss://api.x.ai/v1/realtime');
       const ws = new WebSocket('wss://api.x.ai/v1/realtime', [`xai-client-secret.${token}`]);
       wsRef.current = ws;
 
       ws.onopen = () => {
         if (!isRecordingRef.current) {
+          console.log('[Voice] Recording cancelled during WebSocket connect');
           ws.close();
           return;
         }
         lastEventRef.current = 'ws.open';
+        console.log('[Voice] WebSocket connected, sending session config');
 
-        // Send session configuration
-        ws.send(
-          JSON.stringify({
-            type: 'session.update',
-            session: {
-              modalities: ['text'],
-              input_audio_format: 'pcm16',
-              turn_detection: { type: 'server_vad' },
+        // Send session configuration per xAI Voice Agent API docs
+        const sessionConfig = {
+          type: 'session.update',
+          session: {
+            voice: 'Rex',
+            instructions:
+              "Transcribe the user's speech accurately. Only respond with text transcription.",
+            turn_detection: { type: 'server_vad' },
+            audio: {
+              input: { format: { type: 'audio/pcm', rate: TARGET_SAMPLE_RATE } },
+              output: { format: { type: 'audio/pcm', rate: TARGET_SAMPLE_RATE } },
             },
-          }),
-        );
+          },
+        };
+        ws.send(JSON.stringify(sessionConfig));
+        console.log('[Voice] Session config sent:', JSON.stringify(sessionConfig));
 
         setState('recording');
         // Flush any audio buffered during connection
@@ -311,10 +345,34 @@ export function useVoiceChat(): UseVoiceChatReturn {
           const eventType = data.type as string;
           lastEventRef.current = eventType;
 
+          // Log all events for debugging (abbreviated for common ones)
+          if (eventType === 'input_audio_buffer.append') {
+            // Too noisy to log
+          } else {
+            console.log(`[Voice] Event: ${eventType}`, JSON.stringify(data).slice(0, 200));
+          }
+
           if (eventType === 'conversation.item.input_audio_transcription.completed') {
             const transcriptText = data.transcript as string | undefined;
             if (transcriptText) {
+              console.log(`[Voice] Transcription received: "${transcriptText}"`);
               // Expose only the latest segment — consumer appends to input
+              setTranscript(transcriptText);
+              setTranscriptVersion((v) => v + 1);
+            }
+          } else if (eventType === 'response.output_audio_transcript.delta') {
+            // xAI sends output transcript deltas — extract text
+            const delta = data.delta as string | undefined;
+            if (delta) {
+              console.log(`[Voice] Output transcript delta: "${delta}"`);
+              setTranscript(delta);
+              setTranscriptVersion((v) => v + 1);
+            }
+          } else if (eventType === 'response.output_audio_transcript.done') {
+            // Full output transcript completed
+            const transcriptText = data.transcript as string | undefined;
+            if (transcriptText) {
+              console.log(`[Voice] Output transcript done: "${transcriptText}"`);
               setTranscript(transcriptText);
               setTranscriptVersion((v) => v + 1);
             }
@@ -322,27 +380,36 @@ export function useVoiceChat(): UseVoiceChatReturn {
             setState('recording');
           } else if (eventType === 'input_audio_buffer.speech_stopped') {
             setState('transcribing');
+          } else if (eventType === 'session.updated') {
+            console.log('[Voice] Session updated successfully');
+          } else if (eventType === 'conversation.created') {
+            console.log('[Voice] Conversation session created');
           } else if (eventType === 'error') {
-            const errData = data.error as { message?: string } | undefined;
-            console.error('[Voice] WebSocket error event:', errData?.message);
+            const errData = data.error as { message?: string; code?: string } | undefined;
+            console.error(
+              `[Voice] WebSocket error event: code=${errData?.code}, message=${errData?.message}`,
+            );
             setErrorMessage(errData?.message ?? 'Voice chat error');
             setState('error');
           }
-        } catch {
-          // Ignore malformed messages
+        } catch (parseErr) {
+          console.error('[Voice] Failed to parse WebSocket message:', parseErr);
         }
       };
 
-      ws.onerror = () => {
+      ws.onerror = (event) => {
         if (!isRecordingRef.current) return;
-        console.error('[Voice] WebSocket error');
+        console.error('[Voice] WebSocket error event:', event);
         setErrorMessage('Voice connection error');
         setState('error');
         cleanup();
       };
 
-      ws.onclose = () => {
+      ws.onclose = (event) => {
         lastEventRef.current = 'ws.close';
+        console.log(
+          `[Voice] WebSocket closed: code=${event.code}, reason=${event.reason}, wasClean=${event.wasClean}`,
+        );
         if (isRecordingRef.current) {
           setState('idle');
           isRecordingRef.current = false;
@@ -364,6 +431,7 @@ export function useVoiceChat(): UseVoiceChatReturn {
 
   /* ─── Stop recording ─── */
   const stopRecording = useCallback(() => {
+    console.log('[Voice] Stopping recording');
     isRecordingRef.current = false;
 
     // Immediately release microphone and audio resources
@@ -389,6 +457,7 @@ export function useVoiceChat(): UseVoiceChatReturn {
     // Tell xAI we're done sending audio, keep WebSocket open briefly for final transcription
     const ws = wsRef.current;
     if (ws && ws.readyState === WebSocket.OPEN) {
+      console.log('[Voice] Sending input_audio_buffer.commit');
       ws.send(JSON.stringify({ type: 'input_audio_buffer.commit' }));
       // Cancel any previous pending cleanup timeout before setting a new one
       if (cleanupTimeoutRef.current) {
@@ -397,6 +466,7 @@ export function useVoiceChat(): UseVoiceChatReturn {
       // Wait for final transcription, then close WebSocket
       cleanupTimeoutRef.current = setTimeout(() => {
         cleanupTimeoutRef.current = null;
+        console.log('[Voice] Cleanup timeout — closing WebSocket');
         if (wsRef.current) {
           if (
             wsRef.current.readyState === WebSocket.OPEN ||
@@ -409,8 +479,9 @@ export function useVoiceChat(): UseVoiceChatReturn {
         audioBufferRef.current = [];
         chunksSentRef.current = 0;
         setState('idle');
-      }, 2000);
+      }, 3000);
     } else {
+      console.log('[Voice] No open WebSocket — cleaning up immediately');
       cleanup();
       setState('idle');
     }

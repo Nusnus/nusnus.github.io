@@ -173,18 +173,13 @@ This AI chatbot is a technical showcase built entirely into the website. It offe
 - Supports **Grok 4.1 Fast** (strongest, 2M context) and **Grok Code Fast** (code-specialized with reasoning).
 - Instant start — no download required.
 
-### Local Mode (WebLLM)
-
-- Runs **100% in the visitor's browser** using **WebLLM** and **WebGPU** — the model inference happens on the user's GPU, not on any server.
-- **No data leaves the device.** All processing is local.
-- The model is downloaded once and **cached in the browser** for instant startup on future visits.
-- Uses **Retrieval-Augmented Generation (RAG)** — searches a pre-built index of site content to find relevant context before answering.
-- Uses text-marker actions ([LINK: ...], [NAV: ...]) parsed with regex for tool functionality (local models don't support native function calling).
-
-### Shared Features
+### Additional Features
 
 - Conversation history is **persisted in localStorage** and can be continued or started fresh.
-- The chatbot was designed and built by Tomer as a demonstration of cutting-edge AI technology — both cloud and in-browser.
+- **Voice chat** with live transcription via xAI Realtime API — speak naturally and review the transcript before sending.
+- **Personality spectrum** — 6 levels from Professional to "Gloves Off" for adjustable tone and humor.
+- **Trilingual support** — English, Spanish (Colombian casual), and Hebrew with full RTL layout.
+- The chatbot was designed and built by Tomer as a demonstration of cutting-edge AI technology.
 
 ---
 

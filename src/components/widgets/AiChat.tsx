@@ -2,19 +2,20 @@
  * Cybernus — AI Chat main component.
  *
  * Cloud-only architecture (xAI Grok via Cloudflare Worker proxy).
- * Features: personality slider, trilingual support, Matrix-inspired UI.
+ * Features: personality slider, trilingual support, modern vibrant UI,
+ * tool-use visibility, smooth animations, wide-screen layout.
  */
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, ArrowLeft, Clock, Plus } from 'lucide-react';
 import {
   DEFAULT_CLOUD_MODEL_ID,
-  WELCOME_MESSAGE,
   MAX_USER_MESSAGES,
   PERSONALITY_LEVELS,
   DEFAULT_PERSONALITY,
   LANGUAGES,
   DEFAULT_LANGUAGE,
 } from '@lib/ai/config';
+import { getTranslations } from '@lib/ai/i18n';
 import type { PersonalityLevel, Language } from '@lib/ai/config';
 import type { ChatMessage } from '@lib/ai/types';
 import {
@@ -52,6 +53,8 @@ export default function AiChat({ systemPrompt }: Props) {
   const [activeSessionId, setActiveSessionIdState] = useState<string | null>(null);
   const [personality, setPersonality] = useState<PersonalityLevel>(DEFAULT_PERSONALITY);
   const [language, setLanguage] = useState<Language>(DEFAULT_LANGUAGE);
+  /** Current tool/activity status shown during generation (e.g. "Searching the web…"). */
+  const [thinkingStatus, setThinkingStatus] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -90,8 +93,12 @@ export default function AiChat({ systemPrompt }: Props) {
     }
 
     // Load saved language preference
+    let activeLang: Language = DEFAULT_LANGUAGE;
     const savedLang = localStorage.getItem('cybernus-language') as Language | null;
-    if (savedLang && savedLang in LANGUAGES) setLanguage(savedLang);
+    if (savedLang && savedLang in LANGUAGES) {
+      setLanguage(savedLang);
+      activeLang = savedLang;
+    }
 
     // Load saved personality
     const savedPersonality = localStorage.getItem('cybernus-personality');
@@ -109,7 +116,8 @@ export default function AiChat({ systemPrompt }: Props) {
       if (saved.length > 0) {
         setMessages(saved);
       } else {
-        setMessages([{ id: crypto.randomUUID(), role: 'assistant', content: WELCOME_MESSAGE }]);
+        const t = getTranslations(activeLang);
+        setMessages([{ id: crypto.randomUUID(), role: 'assistant', content: t.welcomeMessage }]);
       }
     }
 
@@ -162,6 +170,7 @@ export default function AiChat({ systemPrompt }: Props) {
       setInput('');
       if (inputRef.current) inputRef.current.style.height = 'auto';
       setIsGenerating(true);
+      setThinkingStatus('Thinking…');
       abortRef.current = false;
 
       try {
@@ -170,28 +179,35 @@ export default function AiChat({ systemPrompt }: Props) {
           import('@lib/ai/cloud-context'),
         ]);
 
+        setThinkingStatus('Loading context…');
+
         const personalityConfig = PERSONALITY_LEVELS[personality];
         const langConfig = LANGUAGES[language];
 
         const cloudContext = await buildCloudContext();
         const personalityPrompt = personalityConfig.promptModifier;
         const langPrompt = langConfig.promptInstruction;
-        const augmentedPrompt = `${personalityPrompt}\n\n${langPrompt}\n\n${cloudContext}\n\n${systemPrompt}`;
+        const augmentedPrompt = `${langPrompt}\n\n${personalityPrompt}\n\n${cloudContext}\n\n${systemPrompt}\n\n---\nREMINDER: ${langPrompt}`;
 
         const chatHistory = [...messages, userMsg]
-          .filter(
-            (m) => m.role === 'user' || (m.role === 'assistant' && m.content !== WELCOME_MESSAGE),
-          )
+          .filter((m) => {
+            const t = getTranslations(language);
+            return m.role === 'user' || (m.role === 'assistant' && m.content !== t.welcomeMessage);
+          })
           .map((m) => ({
             role: m.role as 'system' | 'user' | 'assistant',
             content: m.content,
           }));
+
+        setThinkingStatus('Generating response…');
 
         const result = await cloudChatStream(
           [{ role: 'system', content: augmentedPrompt }, ...chatHistory],
           DEFAULT_CLOUD_MODEL_ID,
           (_token, accumulated) => {
             if (abortRef.current) return;
+            // Clear thinking status once content starts streaming
+            setThinkingStatus(null);
             setMessages((prev) =>
               prev.map((m) => {
                 if (m.id !== asstMsg.id) return m;
@@ -207,6 +223,7 @@ export default function AiChat({ systemPrompt }: Props) {
             temperature: personalityConfig.temperature,
             onWebSearch: () => {
               if (!abortRef.current) {
+                setThinkingStatus('Searching the web…');
                 setMessages((prev) =>
                   prev.map((m) =>
                     m.id === asstMsg.id ? { ...m, searchStatus: 'searching' as const } : m,
@@ -216,6 +233,7 @@ export default function AiChat({ systemPrompt }: Props) {
             },
             onWebSearchFound: () => {
               if (!abortRef.current) {
+                setThinkingStatus('Synthesizing results…');
                 setMessages((prev) =>
                   prev.map((m) =>
                     m.id === asstMsg.id ? { ...m, searchStatus: 'found' as const } : m,
@@ -256,6 +274,7 @@ export default function AiChat({ systemPrompt }: Props) {
         );
       } finally {
         setIsGenerating(false);
+        setThinkingStatus(null);
         requestAnimationFrame(() => inputRef.current?.focus());
       }
     },
@@ -267,14 +286,17 @@ export default function AiChat({ systemPrompt }: Props) {
   const clearChat = useCallback(() => {
     abortRef.current = true;
     setIsGenerating(false);
+    setThinkingStatus(null);
     clearMessages();
     setActiveSessionIdState(null);
-    setMessages([{ id: crypto.randomUUID(), role: 'assistant', content: WELCOME_MESSAGE }]);
-  }, []);
+    const t = getTranslations(language);
+    setMessages([{ id: crypto.randomUUID(), role: 'assistant', content: t.welcomeMessage }]);
+  }, [language]);
 
   const switchSession = useCallback((session: ChatSession) => {
     abortRef.current = true;
     setIsGenerating(false);
+    setThinkingStatus(null);
     setActiveSessionId(session.id);
     setActiveSessionIdState(session.id);
     setMessages(session.messages);
@@ -301,6 +323,7 @@ export default function AiChat({ systemPrompt }: Props) {
   const handleStop = useCallback(() => {
     abortRef.current = true;
     setIsGenerating(false);
+    setThinkingStatus(null);
   }, []);
 
   /* ─── Derived state ─── */
@@ -311,94 +334,70 @@ export default function AiChat({ systemPrompt }: Props) {
 
   /* ─── Render ─── */
   return (
-    <div className="relative flex h-full flex-col" dir={langConfig.dir}>
+    <div className="relative flex h-full flex-col bg-[#0b0d14]" dir={langConfig.dir}>
       {/* Header bar */}
-      <header className="cybernus-header border-b border-green-500/20 bg-gradient-to-r from-[#0a0f0a] to-[#0f1a0f] px-4 py-2.5">
-        <div className="flex items-center justify-between">
+      <header className="relative z-10 border-b border-white/[0.06] bg-[#0d0f18]/90 px-4 py-2.5 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-6xl items-center justify-between">
           {/* Left: Back + Branding */}
           <div className="flex items-center gap-3">
             <a
               href="/"
-              className="text-text-muted flex items-center gap-1.5 text-sm transition-colors hover:text-green-400"
+              className="text-text-muted flex items-center gap-1.5 text-sm transition-colors hover:text-cyan-400"
               aria-label="Back to portfolio"
             >
-              <svg
-                className="h-4 w-4"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="m12 19-7-7 7-7" />
-                <path d="M19 12H5" />
-              </svg>
+              <ArrowLeft className="h-4 w-4" />
             </a>
-            <div className="h-5 w-px bg-green-500/20" />
-            <div className="flex items-center gap-2">
-              <div className="relative flex h-6 w-6 items-center justify-center">
-                <div className="absolute inset-0 animate-pulse rounded-full bg-green-500/20" />
+            <div className="h-5 w-px bg-white/10" />
+            <div className="flex items-center gap-2.5">
+              <div className="relative flex h-7 w-7 items-center justify-center">
+                <div className="absolute inset-0 rounded-full bg-cyan-500/20 blur-sm" />
+                <div className="absolute inset-0.5 rounded-full bg-gradient-to-br from-cyan-400/30 to-blue-500/20" />
                 <span className="relative text-sm">🧠</span>
               </div>
-              <span className="font-mono text-sm font-bold text-green-400">CYBERNUS</span>
-              <span className={`text-[10px] font-medium ${personalityConfig.colorClass}`}>
-                {personalityConfig.label}
-              </span>
+              <div className="flex flex-col">
+                <span className="font-mono text-sm font-bold tracking-wide text-cyan-400">
+                  CYBERNUS
+                </span>
+                <span
+                  className={`text-[9px] leading-none font-medium ${personalityConfig.colorClass}`}
+                >
+                  {personalityConfig.label}
+                </span>
+              </div>
             </div>
           </div>
 
           {/* Right: Controls */}
           <div className="flex items-center gap-2">
+            <PersonalitySlider level={personality} onChange={handlePersonalityChange} />
+            <div className="h-5 w-px bg-white/10" />
             <LanguageToggle language={language} onChange={handleLanguageChange} />
             {sessions.length > 0 && (
               <button
                 onClick={() => setShowHistory(!showHistory)}
-                className={`flex items-center gap-1 rounded-md px-2 py-1 text-xs transition-colors ${
+                className={`flex h-8 w-8 items-center justify-center rounded-lg transition-all ${
                   showHistory
-                    ? 'bg-green-500/20 text-green-400'
-                    : 'text-text-muted hover:bg-green-500/10 hover:text-green-400'
+                    ? 'bg-cyan-500/20 text-cyan-400'
+                    : 'text-text-muted hover:bg-white/[0.06] hover:text-cyan-400'
                 }`}
                 aria-label="Toggle chat history"
+                title="Chat history"
               >
-                <svg
-                  className="h-3.5 w-3.5"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M12 8v4l3 3" />
-                  <circle cx="12" cy="12" r="10" />
-                </svg>
+                <Clock className="h-4 w-4" />
               </button>
             )}
             {messages.length > 0 && (
               <button
                 onClick={clearChat}
-                className="text-text-muted flex items-center gap-1 rounded-md px-2 py-1 text-xs transition-colors hover:bg-green-500/10 hover:text-green-400"
+                className="text-text-muted flex h-8 w-8 items-center justify-center rounded-lg transition-all hover:bg-white/[0.06] hover:text-cyan-400"
                 aria-label="New chat"
+                title="New chat"
               >
-                <svg
-                  className="h-3.5 w-3.5"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M12 5v14M5 12h14" />
-                </svg>
+                <Plus className="h-4 w-4" />
               </button>
             )}
           </div>
         </div>
-
-        {/* Personality slider */}
-        <PersonalitySlider level={personality} onChange={handlePersonalityChange} />
       </header>
 
       {/* Session history overlay */}
@@ -417,6 +416,7 @@ export default function AiChat({ systemPrompt }: Props) {
       <ChatMessages
         messages={messages}
         isGenerating={isGenerating}
+        thinkingStatus={thinkingStatus}
         messagesEndRef={messagesEndRef}
         onSendMessage={sendMessage}
         language={language}
@@ -441,8 +441,8 @@ export default function AiChat({ systemPrompt }: Props) {
       {messages.length > 0 &&
         messages[messages.length - 1]?.role === 'assistant' &&
         messages[messages.length - 1]?.content.startsWith('Something went wrong') && (
-          <div className="absolute bottom-20 left-1/2 z-20 -translate-x-1/2">
-            <div className="flex items-center gap-2 rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-2 text-xs text-red-400">
+          <div className="animate-in fade-in slide-in-from-bottom-2 absolute bottom-20 left-1/2 z-20 -translate-x-1/2">
+            <div className="flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-2.5 text-xs text-red-400 shadow-lg shadow-red-500/5 backdrop-blur-sm">
               <AlertCircle className="h-3.5 w-3.5" />
               <span>An error occurred</span>
             </div>

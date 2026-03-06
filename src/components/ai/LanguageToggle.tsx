@@ -13,7 +13,7 @@ const LANG_ORDER: Language[] = ['en', 'es', 'he'];
 
 export function LanguageToggle({ language, onChange }: LanguageToggleProps) {
   return (
-    <div className="flex items-center gap-0.5 rounded-md border border-green-500/20 bg-green-500/5 px-1 py-0.5">
+    <div className="flex items-center gap-0.5 rounded-lg border border-white/[0.06] bg-white/[0.03] px-1 py-0.5">
       {LANG_ORDER.map((lang) => {
         const config = LANGUAGES[lang];
         const isActive = lang === language;
@@ -21,10 +21,10 @@ export function LanguageToggle({ language, onChange }: LanguageToggleProps) {
           <button
             key={lang}
             onClick={() => onChange(lang)}
-            className={`rounded px-1.5 py-0.5 text-xs transition-all ${
+            className={`rounded-md px-1.5 py-0.5 text-xs transition-all ${
               isActive
-                ? 'bg-green-500/20 text-green-400'
-                : 'text-text-muted hover:text-text-secondary hover:bg-white/5'
+                ? 'bg-cyan-500/15 text-cyan-400'
+                : 'text-gray-500 hover:bg-white/[0.06] hover:text-gray-300'
             }`}
             title={config.label}
             aria-label={`Switch to ${config.label}`}
