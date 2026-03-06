@@ -24,6 +24,8 @@ export interface CloudChatOptions {
   tools?: ToolDefinition[];
   /** Tool choice strategy: 'auto' lets the model decide. */
   tool_choice?: 'auto' | 'none' | 'required';
+  /** Override temperature for personality levels. */
+  temperature?: number;
   /** Called when the model triggers a web search (before content streams). */
   onWebSearch?: () => void;
   /** Called when a web search completes and the model starts synthesizing. */
@@ -129,6 +131,7 @@ function buildRequestBody(
     input: messages,
     stream,
     ...CLOUD_GENERATION_CONFIG,
+    ...(options?.temperature !== undefined && { temperature: options.temperature }),
     ...(options?.tools && { tools: options.tools }),
     ...(options?.tool_choice && { tool_choice: options.tool_choice }),
   };
