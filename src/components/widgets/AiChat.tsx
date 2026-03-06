@@ -19,6 +19,7 @@ import { ModelPicker } from '@components/ai/ModelPicker';
 import { SessionHistory } from '@components/ai/SessionHistory';
 import { ChatMessages } from '@components/ai/ChatMessages';
 import { ChatInput } from '@components/ai/ChatInput';
+import { getPersonalityLevel } from '@components/ai/PersonalitySlider';
 
 /* ─── Constants ─── */
 
@@ -135,9 +136,10 @@ export default function AiChat({ systemPrompt }: Props) {
           import('@lib/ai/cloud-context'),
         ]);
 
-        // Inject page context so the agent knows where it's running
+        // Inject page context and personality level
         const pageContext = getCurrentPageContext();
-        const cloudContext = await buildCloudContext(pageContext);
+        const personalityLevel = getPersonalityLevel();
+        const cloudContext = await buildCloudContext(pageContext, personalityLevel);
         const augmentedPrompt = cloudContext + '\n\n' + systemPrompt;
 
         const chatHistory = [...messages, userMsg]

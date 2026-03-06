@@ -18,7 +18,6 @@ export function ModelPicker({
   onContinue,
   onNewChat,
 }: ModelPickerProps) {
-
   return (
     <div className="flex h-full flex-col">
       {/* Header */}

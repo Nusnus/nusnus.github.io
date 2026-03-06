@@ -35,7 +35,7 @@ import {
   WORKER_BASE_URL,
 } from '@config';
 import { relativeTime } from '@lib/utils/date';
-import { getCollection } from 'astro:content';
+import { buildPersonalityInstruction } from './personality';
 
 /** Format a number with commas (full precision for AI context). */
 const fmt = (n: number) => n.toLocaleString('en-US');
@@ -93,9 +93,18 @@ async function fetchContextFile(path: string): Promise<string> {
  * @param additionalContext Optional situational context appended at the end
  *   (e.g. roast widget tells Grok it's running on the homepage while the
  *   visitor is watching the portfolio).
+ * @param personalityLevel Optional personality level (0-4) for tone control
  */
-export async function buildCloudContext(additionalContext?: string): Promise<string> {
+export async function buildCloudContext(
+  additionalContext?: string,
+  personalityLevel?: number,
+): Promise<string> {
   const sections: string[] = [];
+
+  // Add personality instruction if provided
+  if (personalityLevel !== undefined) {
+    sections.push(buildPersonalityInstruction(personalityLevel));
+  }
 
   // Fetch all data sources in parallel — context files + Worker data (static fallback)
   const [persona, knowledge, profileRes, reposRes, orgReposRes, activityRes, graphRes] =
@@ -215,30 +224,34 @@ export async function buildCloudContext(additionalContext?: string): Promise<str
   );
   sections.push(`# Articles & Writing (Published on LinkedIn)\n${articleLines.join('\n')}`);
 
-  // Blog posts (if any exist)
-  try {
-    const blogPosts = await getCollection('blog');
-    const publishedPosts = blogPosts.filter((post) => !post.data.draft);
-    if (publishedPosts.length > 0) {
-      const blogLines = publishedPosts
-        .sort((a, b) => b.data.publishedAt.getTime() - a.data.publishedAt.getTime())
-        .map((post) => {
-          const tags = post.data.tags.length > 0 ? ` · Tags: ${post.data.tags.join(', ')}` : '';
-          const crossPosted =
-            post.data.crossPostedTo && post.data.crossPostedTo.length > 0
-              ? ` · Cross-posted to: ${post.data.crossPostedTo.join(', ')}`
-              : '';
-          return (
-            `- **${post.data.title}** (${post.data.publishedAt.toISOString().split('T')[0]})\n` +
-            `  ${post.data.description}${tags}${crossPosted}\n` +
-            `  URL: ${SITE_URL}/blog/${post.id}`
-          );
-        });
-      sections.push(`# Blog Posts\n${blogLines.join('\n')}`);
+  // Blog posts (if any exist) — only available server-side
+  // Skip on client-side (import will fail)
+  if (typeof window === 'undefined') {
+    try {
+      // Use Function constructor to hide import from Vite's static analysis
+      const getCollection = (await new Function('return import("astro:content")')()).getCollection;
+      const blogPosts = await getCollection('blog');
+      const publishedPosts = blogPosts.filter((post: any) => !post.data.draft);
+      if (publishedPosts.length > 0) {
+        const blogLines = publishedPosts
+          .sort((a: any, b: any) => b.data.publishedAt.getTime() - a.data.publishedAt.getTime())
+          .map((post: any) => {
+            const tags = post.data.tags.length > 0 ? ` · Tags: ${post.data.tags.join(', ')}` : '';
+            const crossPosted =
+              post.data.crossPostedTo && post.data.crossPostedTo.length > 0
+                ? ` · Cross-posted to: ${post.data.crossPostedTo.join(', ')}`
+                : '';
+            return (
+              `- **${post.data.title}** (${post.data.publishedAt.toISOString().split('T')[0]})\n` +
+              `  ${post.data.description}${tags}${crossPosted}\n` +
+              `  URL: ${SITE_URL}/blog/${post.id}`
+            );
+          });
+        sections.push(`# Blog Posts\n${blogLines.join('\n')}`);
+      }
+    } catch {
+      // Blog collection might not be available — skip silently
     }
-  } catch {
-    // Blog collection might not be available in all contexts (e.g., client-side)
-    // Skip silently if unavailable
   }
 
   // Collaborations

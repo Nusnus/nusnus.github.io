@@ -36,23 +36,45 @@ export function ChatInput({
   };
 
   return (
-    <div className="border-border border-t px-4 py-3">
-      <div className="mx-auto max-w-2xl">
+    <div className="border-accent/20 from-bg-base to-bg-surface/30 relative border-t bg-gradient-to-t px-6 py-4 backdrop-blur-md lg:px-12">
+      {/* Top glow line */}
+      <div
+        className="pointer-events-none absolute top-0 right-0 left-0 h-px"
+        style="background: linear-gradient(90deg, transparent, oklch(0.72 0.17 145 / 0.3) 50%, transparent); box-shadow: 0 0 8px oklch(0.72 0.17 145 / 0.2);"
+        aria-hidden="true"
+      ></div>
+
+      <div className="mx-auto max-w-5xl">
         {isAtLimit ? (
-          <div className="flex flex-col items-center gap-3 py-2 text-center">
-            <p className="text-text-secondary text-sm">
-              You've reached the {maxMessages}-message limit for this chat.
-            </p>
+          <div className="flex flex-col items-center gap-4 py-4 text-center">
+            <div className="bg-accent/5 ring-accent/20 rounded-lg px-4 py-3 ring-1">
+              <p className="text-accent font-mono text-sm font-medium">SESSION LIMIT REACHED</p>
+              <p className="text-text-muted mt-1 text-xs">
+                Maximum {maxMessages} messages per session
+              </p>
+            </div>
             <button
               onClick={onClearChat}
-              className="bg-accent text-bg-base hover:bg-accent-hover rounded-xl px-6 py-2.5 text-sm font-semibold transition-colors"
+              className="group from-accent to-accent/90 text-bg-base ring-accent/50 focus-visible:ring-accent focus-visible:ring-offset-bg-base relative overflow-hidden rounded-xl bg-gradient-to-r px-8 py-3 font-mono text-sm font-bold shadow-lg ring-1 transition-all duration-150 hover:shadow-[0_0_24px_oklch(0.72_0.17_145_/_0.4)] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
             >
-              Start New Chat
+              <span className="relative z-10">INITIALIZE NEW SESSION</span>
+              <div
+                className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-150 group-hover:opacity-100"
+                style="background: linear-gradient(90deg, transparent, oklch(1 0 0 / 0.1) 50%, transparent);"
+                aria-hidden="true"
+              ></div>
             </button>
           </div>
         ) : (
           <>
-            <div className="bg-bg-surface border-border flex items-end gap-2 rounded-xl border px-4 py-3">
+            <div className="group border-accent/20 bg-bg-surface/50 ring-accent/10 focus-within:border-accent/40 focus-within:ring-accent/20 relative flex items-end gap-3 rounded-xl border px-5 py-4 shadow-lg ring-1 backdrop-blur-sm transition-all duration-150 focus-within:shadow-[0_0_24px_oklch(0.72_0.17_145_/_0.15)]">
+              {/* Animated border glow on focus */}
+              <div
+                className="pointer-events-none absolute inset-0 rounded-xl opacity-0 transition-opacity duration-150 group-focus-within:opacity-100"
+                style="box-shadow: inset 0 0 12px oklch(0.72 0.17 145 / 0.1);"
+                aria-hidden="true"
+              ></div>
+
               <textarea
                 ref={inputRef}
                 value={input}
@@ -63,40 +85,53 @@ export function ChatInput({
                   e.target.style.height = `${Math.min(e.target.scrollHeight, 128)}px`;
                 }}
                 onKeyDown={handleKeyDown}
-                placeholder="Ask me anything…"
+                placeholder="Enter your query..."
                 rows={1}
-                className="text-text-primary placeholder:text-text-muted max-h-32 flex-1 resize-none bg-transparent text-sm leading-relaxed outline-none"
+                className="text-text-primary placeholder:text-text-muted/60 relative z-10 max-h-32 flex-1 resize-none bg-transparent font-mono text-base leading-relaxed outline-none md:text-sm"
                 disabled={isGenerating}
                 aria-label="Chat message input"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="sentences"
+                spellCheck="true"
               />
+
               {isGenerating ? (
                 <button
                   onClick={onStop}
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-500/10 text-red-400 transition-colors hover:bg-red-500/20"
+                  className="focus-visible:ring-offset-bg-surface relative z-10 flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-lg bg-red-500/10 text-red-400 ring-1 ring-red-500/30 transition-all duration-150 hover:bg-red-500/20 hover:shadow-[0_0_12px_oklch(0.5_0.2_25_/_0.3)] hover:ring-red-500/50 focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 focus-visible:outline-none active:scale-95"
                   aria-label="Stop generating"
                 >
-                  <Square className="h-4 w-4 fill-current" />
+                  <Square className="h-5 w-5 fill-current" />
                 </button>
               ) : (
                 <button
                   onClick={() => onSend(input)}
                   disabled={!input.trim()}
                   className={cn(
-                    'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors',
+                    'relative z-10 flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-lg ring-1 transition-all duration-150 focus-visible:outline-none',
                     input.trim()
-                      ? 'bg-accent text-bg-base hover:bg-accent-hover'
-                      : 'text-text-muted cursor-not-allowed',
+                      ? 'from-accent to-accent/90 text-bg-base ring-accent/50 focus-visible:ring-accent focus-visible:ring-offset-bg-surface bg-gradient-to-br shadow-lg hover:shadow-[0_0_20px_oklch(0.72_0.17_145_/_0.4)] focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-95'
+                      : 'bg-bg-elevated text-text-muted ring-border cursor-not-allowed opacity-50',
                   )}
                   aria-label="Send message"
                 >
-                  <Send className="h-4 w-4" />
+                  <Send className="h-5 w-5" />
                 </button>
               )}
             </div>
-            <p className="text-text-muted mt-2 px-1 text-[10px]">
-              Powered by xAI Grok · Responses may be inaccurate
-              {userMsgCount > 0 && ` · ${userMsgCount}/${maxMessages} messages`}
-            </p>
+
+            <div className="mt-3 flex items-center justify-between px-1">
+              <p className="text-text-muted font-mono text-[10px] tracking-wider uppercase">
+                <span className="text-accent">xAI Grok</span> Neural Interface
+                {userMsgCount > 0 && (
+                  <span className="ml-2 opacity-60">
+                    · {userMsgCount}/{maxMessages} queries
+                  </span>
+                )}
+              </p>
+              <p className="text-text-muted/60 text-[10px]">Responses may be inaccurate</p>
+            </div>
           </>
         )}
       </div>
