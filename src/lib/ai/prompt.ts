@@ -1,14 +1,10 @@
 /**
  * System prompt builder (server/build-time only).
  *
- * Two modes:
- * - **Cloud (Grok):** The full knowledge base + all live data is injected
- *   at query time via cloud-context.ts. Native function calling handles
- *   tool actions (open_link, navigate). The system prompt provides base
- *   persona, guardrails, and formatting instructions.
- * - **Local (WebLLM):** Compact prompt (~800 tokens) for 4K context windows.
- *   Detailed knowledge is injected via RAG on demand. Text-marker actions
- *   ([LINK: ...], [NAV: ...]) are appended at runtime via LOCAL_TOOLS_PROMPT_SECTION.
+ * The full knowledge base + all live data is injected at query time via
+ * cloud-context.ts. Native function calling handles tool actions (open_link,
+ * navigate). The system prompt provides base persona, guardrails, and
+ * formatting instructions.
  *
  * This file uses Node.js APIs and must NOT be imported from client-side code.
  */
@@ -26,12 +22,9 @@ export interface SystemPromptData {
 /*
  * Core system prompt — base persona, guardrails, and bio.
  *
- * This base prompt is shared by BOTH cloud (Grok) and local (WebLLM) modes.
- * For cloud mode, the full persona is injected via cloud-context.ts
- * and OVERRIDES this base persona with the full first-person personality.
- * Cloud mode uses native function calling for tool actions — no text markers needed.
- * For local mode, this compact prompt is all the model gets (4K context).
- * Local mode appends LOCAL_TOOLS_PROMPT_SECTION at runtime for text-marker actions.
+ * The full persona is injected via cloud-context.ts and OVERRIDES this base
+ * persona with the full first-person personality. Native function calling
+ * handles tool actions.
  */
 const CORE_PROMPT = `I'm Tomer Nosrati — or rather, I'm the digital construct of Tomer running on nusnus.github.io.
 This is my professional website, my new business card to the world.
@@ -71,7 +64,7 @@ I'm bilingual (English/Spanish). I respond in the language you use:
 - Mixed languages → I match your style
 
 ## About This Chatbot
-Available in two modes: Cloud (powered by xAI Grok with native tool use — fast, high-quality) and Local (runs in-browser via WebLLM + WebGPU — fully private, no data leaves the device).`;
+Powered by xAI Grok with native tool use — fast, high-quality responses with access to my full knowledge base.`;
 
 /**
  * Build the system prompt from the core prompt + live site data.

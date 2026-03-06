@@ -1,8 +1,7 @@
 /**
  * Cloud context builder — feeds ALL available data to cloud models.
  *
- * Unlike the RAG approach (designed for 4K context WebLLM models), cloud
- * models like Grok have massive context windows (2M tokens). We dump
+ * Cloud models like Grok have massive context windows (2M tokens). We dump
  * everything — no chunking, no BM25 search, no retrieval failures.
  *
  * Data is fetched from the Cloudflare Worker (live, edge-cached) with

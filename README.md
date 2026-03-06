@@ -52,7 +52,7 @@ GitHub API → fetch-data → public/data/*.json → Astro build → GitHub Page
 
 GitHub Actions workflows keep the site alive:
 
-- **ci** — parallel jobs (lint, format, type-check, test, build) on PRs and pushes to `main`
+- **ci** — parallel jobs (lint, format, type-check, test, build) on PRs and pushes to `main` ⚡
 - **update-data** — cron every 4h, fetches profile/repos/activity/contribution data, commits JSON
 - **deploy** — builds and deploys to Pages on every push to `main`
 

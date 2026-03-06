@@ -116,7 +116,7 @@ export function formatPageContextForPrompt(context: PageContext): string {
       sections.push(
         'This is the dedicated chat interface. The visitor came here specifically to have a conversation with you. ' +
           'You have access to the full conversation history and can provide detailed, in-depth responses. ' +
-          'The visitor can switch between cloud models (Grok) and local models (WebLLM).',
+          'Powered by xAI Grok with native tool use.',
       );
       break;
 
