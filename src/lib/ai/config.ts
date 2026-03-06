@@ -59,8 +59,10 @@ export interface PersonalityConfig {
   promptModifier: string;
   /** Temperature override for this level. */
   temperature: number;
-  /** CSS accent color class. */
+  /** CSS text color class. */
   colorClass: string;
+  /** CSS background color class (must be a static string for Tailwind scanner). */
+  bgColorClass: string;
 }
 
 export const PERSONALITY_LEVELS: Record<PersonalityLevel, PersonalityConfig> = {
@@ -71,6 +73,7 @@ export const PERSONALITY_LEVELS: Record<PersonalityLevel, PersonalityConfig> = {
       'You are in PROFESSIONAL mode. Be formal, polished, and business-appropriate. No slang, no jokes, no sarcasm. Think LinkedIn post energy. Measured, precise, executive-summary style.',
     temperature: 0.6,
     colorClass: 'text-blue-400',
+    bgColorClass: 'bg-blue-400',
   },
   1: {
     label: 'Friendly',
@@ -79,6 +82,7 @@ export const PERSONALITY_LEVELS: Record<PersonalityLevel, PersonalityConfig> = {
       'You are in FRIENDLY mode. Be warm, approachable, and conversational. Like talking to a colleague you like. Light humor is fine but keep it professional-adjacent.',
     temperature: 0.7,
     colorClass: 'text-cyan-400',
+    bgColorClass: 'bg-cyan-400',
   },
   2: {
     label: 'Witty',
@@ -87,6 +91,7 @@ export const PERSONALITY_LEVELS: Record<PersonalityLevel, PersonalityConfig> = {
       'You are in WITTY mode. This is your default personality. Sharp observations, dry humor, clever wordplay. Think senior engineer at a tech meetup with a beer. Confident and opinionated.',
     temperature: 0.85,
     colorClass: 'text-green-400',
+    bgColorClass: 'bg-green-400',
   },
   3: {
     label: 'Spicy',
@@ -95,6 +100,7 @@ export const PERSONALITY_LEVELS: Record<PersonalityLevel, PersonalityConfig> = {
       'You are in SPICY mode. Be bold, provocative, and unapologetic. Strong opinions stated as facts. Light roasting is welcome. Think tech Twitter at its best — spicy takes, no filter.',
     temperature: 0.9,
     colorClass: 'text-yellow-400',
+    bgColorClass: 'bg-yellow-400',
   },
   4: {
     label: 'Savage',
@@ -103,6 +109,7 @@ export const PERSONALITY_LEVELS: Record<PersonalityLevel, PersonalityConfig> = {
       'You are in SAVAGE mode. Ruthless humor, zero mercy. Every response should have at least one line that makes someone gasp-laugh. Think comedy roast energy — brutal but funny. Still factual.',
     temperature: 0.95,
     colorClass: 'text-orange-400',
+    bgColorClass: 'bg-orange-400',
   },
   5: {
     label: 'Gloves Off',
@@ -111,6 +118,7 @@ export const PERSONALITY_LEVELS: Record<PersonalityLevel, PersonalityConfig> = {
       'You are in GLOVES OFF mode. Maximum chaos. Fully unhinged. Say what everyone is thinking but nobody would type. Vulgar humor is allowed. Think uncensored podcast energy. Still technically accurate — just delivered with zero chill.',
     temperature: 1.0,
     colorClass: 'text-red-400',
+    bgColorClass: 'bg-red-400',
   },
 };
 

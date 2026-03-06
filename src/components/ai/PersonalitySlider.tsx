@@ -28,7 +28,7 @@ export function PersonalitySlider({ level, onChange }: PersonalitySliderProps) {
               onClick={() => onChange(l)}
               className={`h-1.5 w-5 rounded-full transition-all duration-200 ${
                 isActive
-                  ? `${lConfig.colorClass.replace('text-', 'bg-')} shadow-sm`
+                  ? `${lConfig.bgColorClass} shadow-sm`
                   : l <= level
                     ? 'bg-green-500/30'
                     : 'bg-white/10 hover:bg-white/20'
