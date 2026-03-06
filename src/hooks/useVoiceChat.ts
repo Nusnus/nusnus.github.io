@@ -100,6 +100,7 @@ export function useVoiceChat(): UseVoiceChatReturn {
   const chunksSentRef = useRef(0);
   const lastEventRef = useRef<string | null>(null);
   const isRecordingRef = useRef(false);
+  const cleanupTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /* ─── Diagnostics ─── */
   const diagnostics: VoiceDiagnostics = {
@@ -117,6 +118,12 @@ export function useVoiceChat(): UseVoiceChatReturn {
   /* ─── Cleanup ─── */
   const cleanup = useCallback(() => {
     isRecordingRef.current = false;
+
+    // Cancel any pending delayed cleanup from a previous stopRecording
+    if (cleanupTimeoutRef.current) {
+      clearTimeout(cleanupTimeoutRef.current);
+      cleanupTimeoutRef.current = null;
+    }
 
     // Stop audio processing
     if (processorRef.current) {
@@ -202,6 +209,12 @@ export function useVoiceChat(): UseVoiceChatReturn {
   /* ─── Start recording ─── */
   const startRecording = useCallback(async () => {
     if (isRecordingRef.current) return;
+
+    // Cancel any pending delayed cleanup from previous session
+    if (cleanupTimeoutRef.current) {
+      clearTimeout(cleanupTimeoutRef.current);
+      cleanupTimeoutRef.current = null;
+    }
 
     // Reset state
     cleanup();
@@ -355,7 +368,8 @@ export function useVoiceChat(): UseVoiceChatReturn {
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({ type: 'input_audio_buffer.commit' }));
       // Wait a moment for final transcription before cleanup
-      setTimeout(() => {
+      cleanupTimeoutRef.current = setTimeout(() => {
+        cleanupTimeoutRef.current = null;
         cleanup();
         setState('idle');
       }, 2000);

@@ -421,7 +421,7 @@ function renderCallout(block: string, key: number): ReactNode {
   if (!headerMatch) return null;
 
   const calloutType = headerMatch[1]?.toLowerCase() ?? 'note';
-  const title = headerMatch[2] ?? calloutType.charAt(0).toUpperCase() + calloutType.slice(1);
+  const title = headerMatch[2] || calloutType.charAt(0).toUpperCase() + calloutType.slice(1);
   const style = CALLOUT_STYLES[calloutType] ?? CALLOUT_STYLES.note;
   if (!style) return null;
 
