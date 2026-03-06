@@ -150,3 +150,71 @@
     animation: none;
   }
 }
+
+/* ─── Cybernus animations ─── */
+@keyframes cybernus-rain-fall {
+  from {
+    transform: translateY(-110%);
+    opacity: 0.4;
+  }
+  to {
+    transform: translateY(110vh);
+    opacity: 0;
+  }
+}
+
+.cybernus-rain-col {
+  animation: cybernus-rain-fall var(--dur, 8s) linear infinite;
+  animation-delay: var(--delay, 0s);
+}
+
+@keyframes cybernus-think {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.cybernus-think-dot {
+  animation: cybernus-think 1.2s ease-in-out infinite;
+}
+
+.cybernus-think-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.cybernus-think-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+.cybernus-band-active {
+  box-shadow: 0 0 12px var(--band-glow, var(--color-accent));
+}
+
+@keyframes cybernus-msg-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.cybernus-msg-in {
+  animation: cybernus-msg-in 0.2s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cybernus-rain-col,
+  .cybernus-think-dot,
+  .cybernus-msg-in {
+    animation: none;
+  }
+}
