@@ -71,11 +71,8 @@ export function ChatInput({
       };
 
       mediaRecorder.onstop = () => {
-        // Create audio blob for future use
-        // @ts-expect-error - audioBlob will be used for future voice chat integration
-        const _audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-
-        // FUTURE: Send _audioBlob to transcription service or Eleven Labs
+        // FUTURE: Create audio blob and send to transcription service or Eleven Labs
+        // const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         // For now, just show confirmation
         setShowVoiceConfirmation(true);
         setTimeout(() => setShowVoiceConfirmation(false), 3000);

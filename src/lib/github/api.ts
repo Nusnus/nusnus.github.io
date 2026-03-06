@@ -1,6 +1,6 @@
 import type { GitHubEvent, GitHubProfile } from './types';
 import { cache } from '../data/cache';
-import { GITHUB_USERNAME } from '../utils/constants';
+import { GITHUB_USERNAME } from '@config';
 
 const BASE_URL = 'https://api.github.com';
 const HEADERS = {
