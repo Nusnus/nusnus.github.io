@@ -24,12 +24,13 @@ export function SessionHistory({
   const { t } = useLanguage();
 
   return (
-    <div className="border-border bg-bg-base absolute inset-0 z-10 flex flex-col overflow-hidden">
+    <div className="border-border bg-bg-base absolute inset-0 z-20 flex flex-col overflow-hidden">
       <div className="border-border flex items-center justify-between border-b px-4 py-2.5">
         <h3 className="text-text-primary text-sm font-semibold">{t('chatHistory')}</h3>
         <div className="flex items-center gap-2">
           {sessions.length > 0 && (
             <button
+              type="button"
               onClick={onClearAll}
               className="text-text-muted text-xs transition-colors hover:text-red-400"
             >
@@ -37,6 +38,7 @@ export function SessionHistory({
             </button>
           )}
           <button
+            type="button"
             onClick={onClose}
             className="text-text-muted hover:text-text-primary transition-colors"
             aria-label={t('closeHistory')}
