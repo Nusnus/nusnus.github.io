@@ -42,14 +42,14 @@ const LEVEL_COLORS: Record<DebugLogEntry['level'], string> = {
   info: 'text-cyan-400',
   warn: 'text-yellow-400',
   error: 'text-red-400',
-  debug: 'text-[#00ff41]/60',
+  debug: 'text-accent/60',
 };
 
 const LEVEL_BG: Record<DebugLogEntry['level'], string> = {
   info: 'bg-cyan-400/10',
   warn: 'bg-yellow-400/10',
   error: 'bg-red-400/10',
-  debug: 'bg-[#00ff41]/5',
+  debug: 'bg-accent/5',
 };
 
 const CATEGORY_LABELS: Record<DebugLogEntry['category'], string> = {
@@ -118,7 +118,7 @@ export function DebugPanel({ state, onClearLogs }: DebugPanelProps) {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed right-4 bottom-20 z-50 flex h-10 w-10 items-center justify-center rounded-full border border-[#00ff41]/20 bg-black/80 text-[#00ff41]/50 shadow-lg backdrop-blur-sm transition-all hover:border-[#00ff41]/40 hover:text-[#00ff41] hover:shadow-[0_0_15px_rgba(0,255,65,0.15)]"
+        className="border-border bg-bg-base/90 text-text-muted hover:border-accent/40 hover:text-accent hover:shadow-accent/20 fixed right-4 bottom-20 z-50 flex h-10 w-10 items-center justify-center rounded-full border shadow-lg backdrop-blur-sm transition-all"
         aria-label="Open debug panel"
         title="Debug Panel"
       >
@@ -131,12 +131,12 @@ export function DebugPanel({ state, onClearLogs }: DebugPanelProps) {
   }
 
   return (
-    <div className="fixed right-0 bottom-0 z-50 flex w-full flex-col border-t border-[#00ff41]/20 bg-black/95 shadow-[0_-4px_30px_rgba(0,0,0,0.8)] backdrop-blur-md sm:right-4 sm:bottom-4 sm:w-[420px] sm:rounded-xl sm:border">
+    <div className="border-border bg-bg-base fixed right-0 bottom-0 z-50 flex w-full flex-col border-t shadow-2xl sm:right-4 sm:bottom-4 sm:w-[420px] sm:rounded-xl sm:border">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-[#00ff41]/10 px-3 py-2">
+      <div className="border-border flex items-center justify-between border-b px-3 py-2">
         <div className="flex items-center gap-2">
-          <Bug className="h-3.5 w-3.5 text-[#00ff41]" />
-          <span className="text-xs font-semibold tracking-wider text-[#00ff41]">DEBUG</span>
+          <Bug className="text-accent h-3.5 w-3.5" />
+          <span className="text-text-primary text-xs font-semibold tracking-wider">DEBUG</span>
           {state.isGenerating && (
             <span className="flex items-center gap-1 rounded-full bg-cyan-400/10 px-2 py-0.5 text-[10px] text-cyan-400">
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-cyan-400" />
@@ -147,14 +147,14 @@ export function DebugPanel({ state, onClearLogs }: DebugPanelProps) {
         <div className="flex items-center gap-1">
           <button
             onClick={onClearLogs}
-            className="rounded p-1 text-[#00ff41]/30 transition-colors hover:bg-[#00ff41]/10 hover:text-[#00ff41]/60"
+            className="text-text-muted hover:bg-bg-elevated hover:text-text-secondary rounded p-1 transition-colors"
             title="Clear logs"
           >
             <Trash2 className="h-3 w-3" />
           </button>
           <button
             onClick={() => setIsOpen(false)}
-            className="rounded p-1 text-[#00ff41]/30 transition-colors hover:bg-[#00ff41]/10 hover:text-[#00ff41]/60"
+            className="text-text-muted hover:bg-bg-elevated hover:text-text-secondary rounded p-1 transition-colors"
             title="Close"
           >
             <X className="h-3.5 w-3.5" />
@@ -163,36 +163,36 @@ export function DebugPanel({ state, onClearLogs }: DebugPanelProps) {
       </div>
 
       {/* Quick stats bar */}
-      <div className="flex items-center gap-3 border-b border-[#00ff41]/5 px-3 py-1.5 text-[10px]">
-        <span className="text-[#00ff41]/40">
-          Tokens: <span className="text-[#00ff41]/70">{state.streamTokenCount}</span>
+      <div className="border-border/50 flex items-center gap-3 border-b px-3 py-1.5 text-[10px]">
+        <span className="text-text-muted">
+          Tokens: <span className="text-text-secondary">{state.streamTokenCount}</span>
         </span>
         {tokensPerSecond && (
-          <span className="text-[#00ff41]/40">
-            Speed: <span className="text-[#00ff41]/70">{tokensPerSecond} t/s</span>
+          <span className="text-text-muted">
+            Speed: <span className="text-text-secondary">{tokensPerSecond} t/s</span>
           </span>
         )}
         {streamDuration && (
-          <span className="text-[#00ff41]/40">
-            Time: <span className="text-[#00ff41]/70">{streamDuration}s</span>
+          <span className="text-text-muted">
+            Time: <span className="text-text-secondary">{streamDuration}s</span>
           </span>
         )}
         {state.lastApiLatency !== null && (
-          <span className="text-[#00ff41]/40">
-            Latency: <span className="text-[#00ff41]/70">{state.lastApiLatency}ms</span>
+          <span className="text-text-muted">
+            Latency: <span className="text-text-secondary">{state.lastApiLatency}ms</span>
           </span>
         )}
       </div>
 
       {/* Tab switcher */}
-      <div className="flex border-b border-[#00ff41]/5">
+      <div className="border-border/50 flex border-b">
         <button
           onClick={() => setShowSection('logs')}
           className={cn(
             'flex-1 py-1.5 text-[10px] font-medium tracking-wider transition-colors',
             showSection === 'logs'
-              ? 'border-b border-[#00ff41] text-[#00ff41]'
-              : 'text-[#00ff41]/30 hover:text-[#00ff41]/60',
+              ? 'border-accent text-accent border-b'
+              : 'text-text-muted hover:text-text-secondary',
           )}
         >
           LOGS ({filteredLogs.length})
@@ -202,8 +202,8 @@ export function DebugPanel({ state, onClearLogs }: DebugPanelProps) {
           className={cn(
             'flex-1 py-1.5 text-[10px] font-medium tracking-wider transition-colors',
             showSection === 'state'
-              ? 'border-b border-[#00ff41] text-[#00ff41]'
-              : 'text-[#00ff41]/30 hover:text-[#00ff41]/60',
+              ? 'border-accent text-accent border-b'
+              : 'text-text-muted hover:text-text-secondary',
           )}
         >
           STATE
@@ -213,14 +213,14 @@ export function DebugPanel({ state, onClearLogs }: DebugPanelProps) {
       {showSection === 'logs' && (
         <>
           {/* Search bar */}
-          <div className="flex items-center gap-2 border-b border-[#00ff41]/5 px-3 py-1.5">
-            <Search className="h-3 w-3 text-[#00ff41]/30" />
+          <div className="border-border/50 flex items-center gap-2 border-b px-3 py-1.5">
+            <Search className="text-text-muted h-3 w-3" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Filter logs..."
-              className="flex-1 bg-transparent text-[10px] text-[#00ff41]/70 outline-none placeholder:text-[#00ff41]/20"
+              className="text-text-secondary placeholder:text-text-muted flex-1 bg-transparent text-[10px] outline-none"
             />
           </div>
 
@@ -230,7 +230,7 @@ export function DebugPanel({ state, onClearLogs }: DebugPanelProps) {
             onScroll={handleScroll}
           >
             {filteredLogs.length === 0 ? (
-              <p className="px-3 py-4 text-center text-[#00ff41]/20">No logs yet</p>
+              <p className="text-text-muted px-3 py-4 text-center">No logs yet</p>
             ) : (
               filteredLogs.map((entry) => <LogEntry key={entry.id} entry={entry} />)
             )}
@@ -269,12 +269,12 @@ function LogEntry({ entry }: { entry: DebugLogEntry }) {
   return (
     <div
       className={cn(
-        'border-b border-[#00ff41]/5 px-3 py-1 transition-colors hover:bg-[#00ff41]/[0.02]',
+        'border-border/30 hover:bg-bg-elevated/50 border-b px-3 py-1 transition-colors',
         entry.level === 'error' && 'bg-red-500/[0.03]',
       )}
     >
       <div className="flex items-start gap-1.5">
-        <span className="shrink-0 text-[#00ff41]/20">{formatTime(entry.timestamp)}</span>
+        <span className="text-text-muted shrink-0">{formatTime(entry.timestamp)}</span>
         <span className={cn('shrink-0 font-bold', LEVEL_COLORS[entry.level])}>
           [{entry.level.toUpperCase()}]
         </span>
@@ -287,14 +287,14 @@ function LogEntry({ entry }: { entry: DebugLogEntry }) {
         {hasData && (
           <button
             onClick={() => setExpanded(!expanded)}
-            className="shrink-0 text-[#00ff41]/30 hover:text-[#00ff41]/60"
+            className="text-text-muted hover:text-text-secondary shrink-0"
           >
             {expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
           </button>
         )}
       </div>
       {expanded && hasData && (
-        <pre className="mt-1 overflow-x-auto rounded bg-[#00ff41]/5 p-1.5 text-[9px] text-[#00ff41]/50">
+        <pre className="bg-bg-elevated text-text-muted mt-1 overflow-x-auto rounded p-1.5 text-[9px]">
           {JSON.stringify(entry.data, null, 2)}
         </pre>
       )}
@@ -312,9 +312,9 @@ function StateRow({
   highlight?: boolean;
 }) {
   return (
-    <div className="flex items-center justify-between border-b border-[#00ff41]/5 py-1">
-      <span className="text-[#00ff41]/40">{label}</span>
-      <span className={cn('text-[#00ff41]/70', highlight && 'font-bold text-cyan-400')}>
+    <div className="border-border/30 flex items-center justify-between border-b py-1">
+      <span className="text-text-muted">{label}</span>
+      <span className={cn('text-text-secondary', highlight && 'font-bold text-cyan-400')}>
         {value}
       </span>
     </div>

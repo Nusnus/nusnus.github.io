@@ -13,7 +13,7 @@ interface ModelPickerProps {
   language: Language;
 }
 
-/** Idle-screen model picker — modern 2026 Matrix-inspired design. */
+/** Idle-screen model picker — professional design matching main page. */
 export function ModelPicker({
   selectedCloudModelId,
   setSelectedCloudModelId,
@@ -30,13 +30,15 @@ export function ModelPicker({
         {/* Hero header */}
         <div className="cybernus-fade-in-up mb-8 text-center">
           <div className="relative mx-auto mb-4 flex h-16 w-16 items-center justify-center">
-            <div className="cybernus-glow-pulse absolute inset-0 rounded-2xl border border-[#00ff41]/20" />
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#00ff41]/10 shadow-[0_0_30px_rgba(0,255,65,0.15)]">
-              <Sparkles className="h-7 w-7 text-[#00ff41]" />
+            <div className="cybernus-glow-pulse border-accent/20 absolute inset-0 rounded-2xl border" />
+            <div className="bg-accent-muted flex h-14 w-14 items-center justify-center rounded-2xl">
+              <Sparkles className="text-accent h-7 w-7" />
             </div>
           </div>
-          <h2 className="mb-2 text-xl font-bold tracking-wide text-[#00ff41]">{strings.title}</h2>
-          <p className="text-sm text-[#00ff41]/35">{strings.subtitle}</p>
+          <h2 className="text-text-primary mb-2 text-xl font-bold tracking-wide">
+            {strings.title}
+          </h2>
+          <p className="text-text-muted text-sm">{strings.subtitle}</p>
         </div>
 
         {/* Model cards */}
@@ -53,38 +55,36 @@ export function ModelPicker({
                 className={cn(
                   'group relative flex flex-col rounded-2xl border p-5 text-left transition-all',
                   isSelected
-                    ? 'border-[#00ff41]/40 bg-[#00ff41]/5 shadow-[0_0_25px_rgba(0,255,65,0.08)]'
-                    : 'border-[#00ff41]/8 bg-black/20 hover:border-[#00ff41]/20 hover:bg-[#00ff41]/[0.03]',
+                    ? 'border-accent/40 bg-accent-muted'
+                    : 'border-border bg-bg-surface hover:border-accent/20 hover:bg-bg-elevated',
                 )}
               >
                 {/* Selection indicator */}
                 {isSelected && (
-                  <div className="absolute -top-px -right-px h-3 w-3 rounded-full rounded-tr-2xl bg-[#00ff41] shadow-[0_0_8px_rgba(0,255,65,0.5)]" />
+                  <div className="bg-accent absolute -top-px -right-px h-3 w-3 rounded-full rounded-tr-2xl" />
                 )}
 
                 <div className="mb-2 flex items-center gap-2">
-                  <Zap
-                    className={cn('h-4 w-4', isSelected ? 'text-[#00ff41]' : 'text-[#00ff41]/50')}
-                  />
+                  <Zap className={cn('h-4 w-4', isSelected ? 'text-accent' : 'text-text-muted')} />
                   <h3
                     className={cn(
                       'text-sm font-semibold',
-                      isSelected ? 'text-[#00ff41]' : 'text-[#00ff41]/80',
+                      isSelected ? 'text-text-primary' : 'text-text-secondary',
                     )}
                   >
                     {cm.name}
                   </h3>
                   {cm.recommended && (
-                    <span className="rounded-full bg-[#00ff41] px-2 py-0.5 text-[9px] font-bold text-black">
+                    <span className="bg-accent text-bg-base rounded-full px-2 py-0.5 text-[9px] font-bold">
                       {strings.recommended}
                     </span>
                   )}
                 </div>
-                <span className="mb-2 inline-block w-fit rounded-md bg-[#00ff41]/8 px-2 py-0.5 text-[10px] font-medium text-[#00ff41]/50">
+                <span className="bg-bg-elevated text-text-muted mb-2 inline-block w-fit rounded-md px-2 py-0.5 text-[10px] font-medium">
                   xAI
                 </span>
-                <p className="text-xs leading-relaxed text-[#00ff41]/40">{cm.description}</p>
-                <div className="mt-3 flex items-center gap-3 text-[10px] text-[#00ff41]/25">
+                <p className="text-text-muted text-xs leading-relaxed">{cm.description}</p>
+                <div className="text-text-muted mt-3 flex items-center gap-3 text-[10px]">
                   <span className="flex items-center gap-1">
                     <Cloud className="h-3 w-3 opacity-50" /> Cloud
                   </span>
@@ -98,7 +98,7 @@ export function ModelPicker({
           })}
         </div>
 
-        <p className="mb-6 text-center text-[10px] text-[#00ff41]/20">{strings.poweredBy}</p>
+        <p className="text-text-muted mb-6 text-center text-[10px]">{strings.poweredBy}</p>
 
         {/* Action buttons */}
         <div
@@ -108,7 +108,7 @@ export function ModelPicker({
           {hasSavedChat && (
             <button
               onClick={onContinue}
-              className="rounded-xl bg-[#00ff41] px-8 py-3 text-sm font-semibold text-black transition-all hover:bg-[#00cc33] hover:shadow-[0_0_25px_rgba(0,255,65,0.35)]"
+              className="bg-accent text-bg-base hover:bg-accent-hover rounded-xl px-8 py-3 text-sm font-semibold transition-all"
             >
               {strings.continueChat}
             </button>
@@ -118,8 +118,8 @@ export function ModelPicker({
             className={cn(
               'rounded-xl px-8 py-3 text-sm font-semibold transition-all',
               hasSavedChat
-                ? 'border border-[#00ff41]/20 text-[#00ff41] hover:border-[#00ff41]/40 hover:bg-[#00ff41]/10'
-                : 'bg-[#00ff41] text-black hover:bg-[#00cc33] hover:shadow-[0_0_25px_rgba(0,255,65,0.35)]',
+                ? 'border-border text-text-primary hover:border-accent/40 hover:bg-accent-muted border'
+                : 'bg-accent text-bg-base hover:bg-accent-hover',
             )}
           >
             {strings.newChat}

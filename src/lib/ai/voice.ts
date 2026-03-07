@@ -54,6 +54,7 @@ export interface VoiceCallbacks {
 const TARGET_SAMPLE_RATE = 24000;
 const RECONNECT_MAX_ATTEMPTS = 3;
 const RECONNECT_BASE_DELAY_MS = 1000;
+const XAI_REALTIME_WS_URL = 'wss://api.x.ai/v1/realtime';
 
 /* ── Float32 → PCM16 conversion ── */
 
@@ -270,37 +271,53 @@ export class VoiceSession {
     this.isWsReady = false;
 
     try {
-      // Get ephemeral token from worker
-      const tokenRes = await fetch(`${WORKER_BASE_URL}/v1/realtime/token`, {
+      // Get ephemeral token from worker proxy
+      this.log('Fetching ephemeral token from worker...');
+      const tokenRes = await fetch(`${WORKER_BASE_URL}/v1/realtime/client_secrets`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });
 
       if (!tokenRes.ok) {
-        throw new Error(`Failed to get ephemeral token (${tokenRes.status})`);
+        const errorBody = await tokenRes.text().catch(() => '');
+        throw new Error(
+          `Failed to get ephemeral token (${tokenRes.status}): ${errorBody || 'Unknown error'}`,
+        );
       }
 
-      const tokenData = (await tokenRes.json()) as { url: string; token: string };
+      const tokenData = (await tokenRes.json()) as { client_secret?: { value?: string } };
+      const token = tokenData.client_secret?.value;
+
+      if (!token) {
+        throw new Error('Invalid token response: missing client_secret.value');
+      }
 
       // Bail out if stop() or destroy() was called while awaiting token
       if (this.destroyed || this.stopped) return;
 
-      // Connect WebSocket to xAI Realtime API via worker proxy
-      const wsUrl = `${WORKER_BASE_URL.replace('https://', 'wss://').replace('http://', 'ws://')}/v1/realtime?token=${encodeURIComponent(tokenData.token)}`;
-      this.ws = new WebSocket(wsUrl);
+      this.log('Ephemeral token obtained, connecting to xAI Realtime API...');
+
+      // Connect WebSocket directly to xAI Realtime API using sec-websocket-protocol
+      // for browser-compatible auth (browsers can't set Authorization headers on WebSocket)
+      this.ws = new WebSocket(XAI_REALTIME_WS_URL, [`xai-client-secret.${token}`]);
 
       this.ws.onopen = () => {
         // DO NOT set state to connected yet — wait for session.created event
         this.log('WebSocket opened, waiting for session.created...');
 
-        // Send session configuration
+        // Send session configuration matching xAI's expected format
         this.ws?.send(
           JSON.stringify({
             type: 'session.update',
             session: {
               modalities: ['text'],
-              input_audio_format: 'pcm16',
-              input_audio_transcription: null,
+              voice: 'Sal',
+              instructions: 'Transcribe the user audio input. Return the transcription as text.',
+              audio: {
+                input: {
+                  format: { type: 'audio/pcm', rate: TARGET_SAMPLE_RATE },
+                },
+              },
               turn_detection: {
                 type: 'server_vad',
                 threshold: 0.5,
@@ -411,6 +428,32 @@ export class VoiceSession {
         }
         break;
       }
+
+      case 'response.text.delta': {
+        // Text response delta (for transcription via text modality)
+        const delta = (event.delta as string) ?? '';
+        if (delta) {
+          this.transcript += delta;
+          this.callbacks.onTranscript(this.transcript, false);
+        }
+        break;
+      }
+
+      case 'response.text.done': {
+        // Text response complete
+        const text = (event.text as string) ?? '';
+        if (text.trim()) {
+          this.transcript = text.trim();
+          this.callbacks.onTranscript(this.transcript, true);
+        }
+        break;
+      }
+
+      case 'response.done':
+        // Response fully complete — reset transcript for next utterance
+        this.transcript = '';
+        this.setState('recording');
+        break;
 
       case 'error': {
         const errorMsg =

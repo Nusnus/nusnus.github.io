@@ -50,7 +50,7 @@ function VoiceWaveform({ audioLevel }: { audioLevel: number }) {
   );
 }
 
-/** Chat input footer — full-width modern design with voice waveform. */
+/** Chat input footer — professional design with voice waveform. */
 export function ChatInput({
   input,
   setInput,
@@ -79,17 +79,14 @@ export function ChatInput({
   };
 
   return (
-    <div
-      className="border-t border-[#00ff41]/8 px-4 py-3 backdrop-blur-sm md:px-8 lg:px-12"
-      style={{ background: 'rgba(0, 0, 0, 0.4)' }}
-    >
+    <div className="border-border border-t px-4 py-3 md:px-8 lg:px-12">
       <div className="mx-auto max-w-4xl">
         {isAtLimit ? (
           <div className="flex flex-col items-center gap-3 py-2 text-center">
-            <p className="text-sm text-gray-400">{strings.messageLimitReached}</p>
+            <p className="text-text-secondary text-sm">{strings.messageLimitReached}</p>
             <button
               onClick={onClearChat}
-              className="rounded-xl bg-[#00ff41] px-6 py-2.5 text-sm font-semibold text-black transition-all hover:bg-[#00cc33] hover:shadow-[0_0_20px_rgba(0,255,65,0.3)]"
+              className="bg-accent text-bg-base hover:bg-accent-hover rounded-xl px-6 py-2.5 text-sm font-semibold transition-all"
             >
               {strings.startNewChat}
             </button>
@@ -108,10 +105,10 @@ export function ChatInput({
 
             <div
               className={cn(
-                'flex items-end gap-3 rounded-2xl border bg-black/30 px-4 py-3 transition-all',
+                'flex items-end gap-3 rounded-2xl border px-4 py-3 transition-all',
                 isRecording
-                  ? 'border-red-500/30 shadow-[0_0_20px_rgba(239,68,68,0.1)]'
-                  : 'border-[#00ff41]/15 focus-within:border-[#00ff41]/35 focus-within:shadow-[0_0_20px_rgba(0,255,65,0.08)]',
+                  ? 'border-red-500/30 bg-red-500/5'
+                  : 'border-border bg-bg-surface focus-within:border-accent/35',
               )}
             >
               {/* Voice button with waveform */}
@@ -124,7 +121,7 @@ export function ChatInput({
                       'relative flex h-10 w-10 items-center justify-center rounded-xl transition-all',
                       isRecording
                         ? 'bg-red-500/20 text-red-400'
-                        : 'text-[#00ff41]/50 hover:bg-[#00ff41]/10 hover:text-[#00ff41]',
+                        : 'text-text-muted hover:bg-bg-elevated hover:text-text-secondary',
                     )}
                     aria-label={isRecording ? strings.voiceStop : strings.voiceStart}
                     title={isRecording ? strings.voiceStop : strings.voiceStart}
@@ -162,7 +159,7 @@ export function ChatInput({
                   'max-h-32 flex-1 resize-none bg-transparent text-sm leading-relaxed outline-none',
                   isRecording
                     ? 'text-red-300/80 placeholder:text-red-400/30'
-                    : 'text-[#00ff41] placeholder:text-[#00ff41]/25',
+                    : 'text-text-primary placeholder:text-text-muted',
                 )}
                 disabled={isGenerating || isRecording}
                 dir={language === 'he' ? 'rtl' : 'ltr'}
@@ -173,7 +170,7 @@ export function ChatInput({
               {isGenerating ? (
                 <button
                   onClick={onStop}
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-500/15 text-red-400 transition-all hover:bg-red-500/25 hover:shadow-[0_0_12px_rgba(239,68,68,0.2)]"
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-500/15 text-red-400 transition-all hover:bg-red-500/25"
                   aria-label={strings.stop}
                 >
                   <Square className="h-4 w-4 fill-current" />
@@ -185,8 +182,8 @@ export function ChatInput({
                   className={cn(
                     'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all',
                     input.trim()
-                      ? 'bg-[#00ff41] text-black shadow-[0_0_15px_rgba(0,255,65,0.2)] hover:shadow-[0_0_25px_rgba(0,255,65,0.4)]'
-                      : 'cursor-not-allowed text-[#00ff41]/15',
+                      ? 'bg-accent text-bg-base hover:bg-accent-hover'
+                      : 'text-text-muted cursor-not-allowed',
                   )}
                   aria-label={strings.send}
                 >
@@ -196,11 +193,11 @@ export function ChatInput({
             </div>
 
             {/* Footer info */}
-            <div className="mt-2 flex items-center justify-center gap-2 px-1 text-[10px] text-[#00ff41]/25">
+            <div className="text-text-muted mt-2 flex items-center justify-center gap-2 px-1 text-[10px]">
               <span>{strings.poweredBy}</span>
               {userMsgCount > 0 && (
                 <>
-                  <span className="text-[#00ff41]/10">·</span>
+                  <span className="text-border">·</span>
                   <span>
                     {userMsgCount}/{maxMessages}
                   </span>

@@ -20,9 +20,9 @@ interface ChatMessagesProps {
 function SkeletonLoader() {
   return (
     <div className="space-y-2.5 py-1">
-      <div className="cybernus-shimmer h-3 w-3/4 rounded bg-[#00ff41]/5" />
-      <div className="cybernus-shimmer h-3 w-1/2 rounded bg-[#00ff41]/5 [animation-delay:200ms]" />
-      <div className="cybernus-shimmer h-3 w-2/3 rounded bg-[#00ff41]/5 [animation-delay:400ms]" />
+      <div className="cybernus-shimmer bg-bg-elevated h-3 w-3/4 rounded" />
+      <div className="cybernus-shimmer bg-bg-elevated h-3 w-1/2 rounded [animation-delay:200ms]" />
+      <div className="cybernus-shimmer bg-bg-elevated h-3 w-2/3 rounded [animation-delay:400ms]" />
     </div>
   );
 }
@@ -31,9 +31,9 @@ function SkeletonLoader() {
 function TypingIndicator() {
   return (
     <span className="inline-flex items-center gap-1.5 py-1">
-      <span className="h-2 w-2 animate-bounce rounded-full bg-cyan-400/70 [animation-delay:0ms]" />
-      <span className="h-2 w-2 animate-bounce rounded-full bg-cyan-400/60 [animation-delay:150ms]" />
-      <span className="h-2 w-2 animate-bounce rounded-full bg-cyan-400/50 [animation-delay:300ms]" />
+      <span className="bg-accent/70 h-2 w-2 animate-bounce rounded-full [animation-delay:0ms]" />
+      <span className="bg-accent/60 h-2 w-2 animate-bounce rounded-full [animation-delay:150ms]" />
+      <span className="bg-accent/50 h-2 w-2 animate-bounce rounded-full [animation-delay:300ms]" />
     </span>
   );
 }
@@ -51,7 +51,7 @@ function SearchIndicator({
     <span
       className={cn(
         'inline-flex items-center gap-2 text-xs',
-        isSearching ? 'text-cyan-400/80' : 'text-[#00ff41]/80',
+        isSearching ? 'text-text-secondary' : 'text-accent',
       )}
     >
       <Globe className={cn('h-4 w-4', isSearching && 'animate-spin')} />
@@ -62,7 +62,7 @@ function SearchIndicator({
             key={delay}
             className={cn(
               'inline-block h-1.5 w-1.5 rounded-full',
-              isSearching ? 'animate-bounce bg-cyan-400/60' : 'animate-pulse bg-[#00ff41]/60',
+              isSearching ? 'bg-text-secondary animate-bounce' : 'bg-accent/60 animate-pulse',
             )}
             style={{ animationDelay: `${delay}ms` }}
           />
@@ -72,7 +72,7 @@ function SearchIndicator({
   );
 }
 
-/** Renders the scrollable message list with modern 2026 UI — full-width. */
+/** Renders the scrollable message list — professional wide-screen layout. */
 export function ChatMessages({
   messages,
   isGenerating,
@@ -89,7 +89,7 @@ export function ChatMessages({
   );
 
   return (
-    <div className="cybernus-scrollbar flex-1 overflow-y-auto px-4 py-6 md:px-8 lg:px-12" dir={dir}>
+    <div className="scrollbar-thin flex-1 overflow-y-auto px-4 py-6 md:px-8 lg:px-12" dir={dir}>
       <div className="mx-auto max-w-4xl space-y-5">
         {messages.map((msg, msgIndex) => {
           const isUser = msg.role === 'user';
@@ -100,7 +100,7 @@ export function ChatMessages({
             <div
               key={msg.id}
               className={cn(
-                'cybernus-fade-in-up flex gap-4',
+                'cybernus-fade-in-up flex gap-3',
                 isUser ? 'flex-row-reverse' : 'flex-row',
               )}
               style={{ animationDelay: `${Math.min(msgIndex * 50, 300)}ms` }}
@@ -109,10 +109,8 @@ export function ChatMessages({
               <div className="relative shrink-0 pt-1">
                 <div
                   className={cn(
-                    'flex h-9 w-9 items-center justify-center rounded-xl text-xs font-bold transition-all',
-                    isUser
-                      ? 'bg-[#00ff41]/15 text-[#00ff41] shadow-[0_0_12px_rgba(0,255,65,0.15)]'
-                      : 'bg-cyan-500/10 text-cyan-400 shadow-[0_0_12px_rgba(0,200,255,0.1)]',
+                    'flex h-8 w-8 items-center justify-center rounded-lg text-xs font-bold transition-all',
+                    isUser ? 'bg-accent-muted text-accent' : 'bg-bg-elevated text-text-secondary',
                   )}
                 >
                   {isUser ? (
@@ -124,18 +122,18 @@ export function ChatMessages({
                   )}
                 </div>
                 {isStreaming && (
-                  <div className="cybernus-glow-pulse absolute -inset-1 rounded-xl border border-cyan-400/20" />
+                  <div className="cybernus-glow-pulse border-accent/20 absolute -inset-0.5 rounded-lg border" />
                 )}
               </div>
 
               {/* Message content */}
               <div
                 className={cn(
-                  'group relative max-w-[85%] min-w-0 rounded-2xl px-5 py-3.5 text-sm leading-relaxed transition-all lg:max-w-[75%]',
+                  'group relative max-w-[85%] min-w-0 rounded-2xl px-4 py-3 text-sm leading-relaxed transition-all lg:max-w-[75%]',
                   isUser
-                    ? 'rounded-tr-md border border-[#00ff41]/20 bg-[#00ff41]/10 text-[#00ff41]'
-                    : 'rounded-tl-md border border-cyan-500/8 bg-black/30 text-gray-200',
-                  isStreaming && 'border-cyan-400/15',
+                    ? 'border-accent/20 bg-accent-muted text-text-primary rounded-tr-md border'
+                    : 'border-border bg-bg-surface text-text-primary rounded-tl-md border',
+                  isStreaming && 'border-accent/15',
                 )}
               >
                 {/* Scan-line effect on streaming assistant messages */}
@@ -161,13 +159,13 @@ export function ChatMessages({
 
                 {/* Tool action buttons */}
                 {msg.actions && msg.actions.length > 0 && (
-                  <div className="relative z-10 mt-3 flex flex-wrap gap-2 border-t border-[#00ff41]/10 pt-3">
+                  <div className="border-border relative z-10 mt-3 flex flex-wrap gap-2 border-t pt-3">
                     {msg.actions.map((action, idx) => (
                       <button
                         key={idx}
                         onClick={() => executeAction(action)}
                         title={action.url}
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-[#00ff41]/20 px-3 py-1.5 text-xs font-medium text-[#00ff41] transition-all hover:border-[#00ff41]/40 hover:bg-[#00ff41]/10 hover:shadow-[0_0_12px_rgba(0,255,65,0.15)]"
+                        className="border-border text-accent hover:border-accent/40 hover:bg-accent-muted inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all"
                       >
                         {action.type === 'open_link' ? (
                           <ExternalLink className="h-3 w-3" />
@@ -195,7 +193,7 @@ export function ChatMessages({
                 key={q}
                 onClick={() => onSendMessage(q)}
                 disabled={isGenerating}
-                className="group rounded-xl border border-[#00ff41]/12 bg-black/20 px-4 py-3.5 text-left text-xs leading-relaxed text-[#00ff41]/60 transition-all hover:border-[#00ff41]/30 hover:bg-[#00ff41]/5 hover:text-[#00ff41] hover:shadow-[0_0_20px_rgba(0,255,65,0.05)]"
+                className="group border-border bg-bg-surface text-text-secondary hover:border-accent/30 hover:bg-accent-muted hover:text-text-primary rounded-xl border px-4 py-3.5 text-left text-xs leading-relaxed transition-all"
               >
                 <span className="opacity-70 transition-opacity group-hover:opacity-100">{q}</span>
               </button>

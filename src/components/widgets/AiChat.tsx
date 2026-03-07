@@ -2,7 +2,7 @@
  * Cybernus AI Chat — cloud-only orchestrator.
  *
  * Manages: cloud streaming via xAI Grok, session memory, personality,
- * language, voice, debug panel, and the Matrix-inspired UI shell.
+ * language, voice, debug panel, and the professional chat UI.
  */
 
 import { useState, useCallback, useRef, useEffect } from 'react';
@@ -49,7 +49,7 @@ function isWelcomeMessage(content: string): boolean {
   return LANGUAGES.some((l) => t(l.code).welcome === content);
 }
 
-/** Main Cybernus chat component — cloud-only architecture with debug panel. */
+/** Main Cybernus chat component — cloud-only architecture with professional UI. */
 export default function AiChat({ systemPrompt }: AiChatProps) {
   /* ─── Core state ─── */
   const [engineState, setEngineState] = useState<EngineState>('idle');
@@ -67,7 +67,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
   /* ─── Session history ─── */
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [activeSessionId, setActiveSession] = useState<string | null>(null);
-  const [showHistory, setShowHistory] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(false);
 
   /* ─── Voice state ─── */
   const [voiceState, setVoiceState] = useState<VoiceState>('idle');
@@ -421,7 +421,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       setActiveSessionId(session.id);
       setActiveSession(session.id);
       setMessages(session.messages);
-      setShowHistory(false);
+      setShowSidebar(false);
       addLog('info', 'session', 'Switched session', { id: session.id });
     },
     [addLog],
@@ -451,7 +451,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
     setMessages([]);
     setActiveSession(null);
     setSessions([]);
-    setShowHistory(false);
+    setShowSidebar(false);
     setEngineState('idle');
     addLog('info', 'session', 'All sessions cleared');
   }, [addLog]);
@@ -530,7 +530,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
   /* ─── Idle screen ─── */
   if (engineState === 'idle') {
     return (
-      <div className="flex h-full flex-col" style={{ background: 'rgba(0, 0, 0, 0.6)' }}>
+      <div className="bg-bg-base flex h-full flex-col">
         <ModelPicker
           selectedCloudModelId={selectedCloudModelId}
           setSelectedCloudModelId={setSelectedCloudModelId}
@@ -552,168 +552,183 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
   const currentPersonality = PERSONALITY_LEVELS[personality];
   const strings = t(language);
   const isRecording =
-    voiceState === 'recording' || voiceState === 'connecting' || voiceState === 'transcribing';
+    voiceState === 'requesting-mic' ||
+    voiceState === 'recording' ||
+    voiceState === 'connecting' ||
+    voiceState === 'transcribing';
 
   return (
-    <div className="relative flex h-full flex-col" style={{ background: 'rgba(0, 0, 0, 0.6)' }}>
-      {/* Status bar — full-width modern design */}
-      <div
-        className="flex items-center justify-between border-b border-[#00ff41]/8 px-4 py-2.5 backdrop-blur-sm md:px-8 lg:px-12"
-        style={{ background: 'rgba(0, 0, 0, 0.3)' }}
-      >
-        <div className="flex items-center gap-3">
-          {/* Personality indicator dot with glow */}
-          <div className="relative">
-            <span
-              className="cybernus-glow-pulse block h-2.5 w-2.5 rounded-full"
-              style={{
-                backgroundColor: currentPersonality?.color ?? '#00ff41',
-                boxShadow: `0 0 8px ${currentPersonality?.glowColor ?? '#00ff41'}`,
-              }}
+    <div className="bg-bg-base relative flex h-full">
+      {/* Sidebar — session history (desktop: persistent, mobile: overlay) */}
+      {showSidebar && (
+        <>
+          {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- backdrop overlay dismisses sidebar on tap */}
+          <div
+            className="fixed inset-0 z-20 bg-black/50 md:hidden"
+            onClick={() => setShowSidebar(false)}
+          />
+          <aside className="border-border bg-bg-base absolute inset-y-0 left-0 z-30 w-72 border-r md:relative md:z-auto">
+            <SessionHistory
+              sessions={sessions}
+              activeSessionId={activeSessionId}
+              onSwitchSession={switchSession}
+              onDeleteSession={handleDeleteSession}
+              onClearAll={handleClearAll}
+              onClose={() => setShowSidebar(false)}
             />
-          </div>
-          <span className="text-xs font-medium text-[#00ff41]/60">{statusLabel}</span>
-          {currentPersonality && (
-            <span className="hidden text-[10px] text-[#00ff41]/35 sm:inline">
-              {currentPersonality.emoji} {currentPersonality.name}
-            </span>
-          )}
-          {/* Voice state indicator */}
-          {isRecording && (
-            <span className="flex items-center gap-1.5 rounded-full bg-red-500/10 px-2 py-0.5 text-[10px] font-medium text-red-400">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-400" />
-              {strings.recording}
-            </span>
-          )}
-        </div>
-
-        <div className="flex items-center gap-1.5 sm:gap-2">
-          {/* Language toggle */}
-          <div className="flex items-center">
-            {LANGUAGES.map((l) => (
-              <button
-                key={l.code}
-                onClick={() => handleLanguageChange(l.code)}
-                className={`rounded-lg px-1.5 py-1 text-xs transition-all ${
-                  language === l.code
-                    ? 'bg-[#00ff41]/12 text-[#00ff41]'
-                    : 'text-[#00ff41]/25 hover:text-[#00ff41]/50'
-                }`}
-                title={l.nativeName}
-              >
-                {l.flag}
-              </button>
-            ))}
-          </div>
-
-          <span className="hidden h-4 w-px bg-[#00ff41]/8 sm:block" />
-
-          {/* Personality slider */}
-          <div className="hidden items-center gap-1.5 sm:flex">
-            <span className="text-[10px] text-[#00ff41]/25">{currentPersonality?.emoji}</span>
-            <input
-              type="range"
-              min={0}
-              max={5}
-              value={personality}
-              onChange={(e) => handlePersonalityChange(Number(e.target.value) as PersonalityLevel)}
-              className="h-1 w-20 cursor-pointer appearance-none rounded-full bg-[#00ff41]/15 accent-[#00ff41] [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#00ff41] [&::-webkit-slider-thumb]:shadow-[0_0_6px_rgba(0,255,65,0.4)]"
-              title={`${strings.personalityLevel}: ${currentPersonality?.name ?? ''}`}
-            />
-          </div>
-
-          <span className="hidden h-4 w-px bg-[#00ff41]/8 sm:block" />
-
-          {/* History toggle */}
-          {sessions.length > 0 && (
-            <button
-              onClick={() => setShowHistory(!showHistory)}
-              className={`flex items-center gap-1 rounded-lg px-2 py-1 text-xs transition-all ${
-                showHistory
-                  ? 'bg-[#00ff41]/10 text-[#00ff41]'
-                  : 'text-[#00ff41]/35 hover:bg-[#00ff41]/5 hover:text-[#00ff41]/60'
-              }`}
-              aria-label="Toggle chat history"
-            >
-              <svg
-                className="h-3.5 w-3.5"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M12 8v4l3 3" />
-                <circle cx="12" cy="12" r="10" />
-              </svg>
-              <span className="hidden sm:inline">{strings.history}</span>
-            </button>
-          )}
-
-          {messages.length > 0 && (
-            <button
-              onClick={clearChat}
-              className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs text-[#00ff41]/35 transition-all hover:bg-[#00ff41]/5 hover:text-[#00ff41]/60"
-              aria-label="New chat"
-            >
-              <svg
-                className="h-3.5 w-3.5"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M12 5v14M5 12h14" />
-              </svg>
-              <span className="hidden sm:inline">{strings.newChat}</span>
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Chat history panel */}
-      {showHistory && (
-        <SessionHistory
-          sessions={sessions}
-          activeSessionId={activeSessionId}
-          onSwitchSession={switchSession}
-          onDeleteSession={handleDeleteSession}
-          onClearAll={handleClearAll}
-          onClose={() => setShowHistory(false)}
-        />
+          </aside>
+        </>
       )}
 
-      {/* Messages area */}
-      <ChatMessages
-        messages={messages}
-        isGenerating={isGenerating}
-        messagesEndRef={messagesEndRef}
-        onSendMessage={sendMessage}
-        language={language}
-      />
+      {/* Main chat column */}
+      <div className="flex min-w-0 flex-1 flex-col">
+        {/* Toolbar */}
+        <div className="border-border flex items-center justify-between border-b px-4 py-2 md:px-6">
+          <div className="flex items-center gap-3">
+            {/* Sidebar toggle */}
+            <button
+              onClick={() => setShowSidebar(!showSidebar)}
+              className={`rounded-lg p-1.5 transition-colors ${
+                showSidebar
+                  ? 'bg-bg-elevated text-text-primary'
+                  : 'text-text-muted hover:bg-bg-elevated hover:text-text-secondary'
+              }`}
+              aria-label="Toggle session history"
+            >
+              <svg
+                className="h-4 w-4"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <path d="M9 3v18" />
+              </svg>
+            </button>
 
-      {/* Input area */}
-      <ChatInput
-        input={input}
-        setInput={setInput}
-        isGenerating={isGenerating}
-        isAtLimit={isAtLimit}
-        userMsgCount={userMsgCount}
-        maxMessages={MAX_USER_MESSAGES}
-        language={language}
-        inputRef={inputRef}
-        onSend={sendMessage}
-        onStop={handleStop}
-        onClearChat={clearChat}
-        isRecording={isRecording}
-        onVoiceToggle={handleVoiceToggle}
-        voiceSupported={voiceSupported}
-        audioLevel={audioLevel}
-        transcriptPreview={transcriptPreview}
-      />
+            {/* New chat button */}
+            {messages.length > 0 && (
+              <button
+                onClick={clearChat}
+                className="text-text-muted hover:bg-bg-elevated hover:text-text-secondary flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs transition-colors"
+                aria-label="New chat"
+              >
+                <svg
+                  className="h-3.5 w-3.5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
+                <span className="hidden sm:inline">{strings.newChat}</span>
+              </button>
+            )}
+
+            <div className="bg-border hidden h-4 w-px sm:block" />
+
+            {/* Status */}
+            <div className="hidden items-center gap-2 sm:flex">
+              <div className="relative">
+                <span
+                  className="block h-2 w-2 rounded-full"
+                  style={{
+                    backgroundColor: currentPersonality?.color ?? 'var(--color-accent)',
+                    boxShadow: `0 0 6px ${currentPersonality?.glowColor ?? 'var(--color-accent)'}`,
+                  }}
+                />
+              </div>
+              <span className="text-text-muted text-xs">{statusLabel}</span>
+              {currentPersonality && (
+                <span className="text-text-muted text-[10px]">
+                  {currentPersonality.emoji} {currentPersonality.name}
+                </span>
+              )}
+            </div>
+
+            {/* Voice state indicator */}
+            {isRecording && (
+              <span className="flex items-center gap-1.5 rounded-full bg-red-500/10 px-2 py-0.5 text-[10px] font-medium text-red-400">
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-400" />
+                {strings.recording}
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            {/* Language toggle */}
+            <div className="bg-bg-surface flex items-center rounded-lg p-0.5">
+              {LANGUAGES.map((l) => (
+                <button
+                  key={l.code}
+                  onClick={() => handleLanguageChange(l.code)}
+                  className={`rounded-md px-1.5 py-1 text-xs transition-all ${
+                    language === l.code
+                      ? 'bg-bg-elevated text-text-primary shadow-sm'
+                      : 'text-text-muted hover:text-text-secondary'
+                  }`}
+                  title={l.nativeName}
+                >
+                  {l.flag}
+                </button>
+              ))}
+            </div>
+
+            <span className="bg-border hidden h-4 w-px sm:block" />
+
+            {/* Personality slider */}
+            <div className="hidden items-center gap-2 sm:flex">
+              <span className="text-text-muted text-xs">{currentPersonality?.emoji}</span>
+              <input
+                type="range"
+                min={0}
+                max={5}
+                value={personality}
+                onChange={(e) =>
+                  handlePersonalityChange(Number(e.target.value) as PersonalityLevel)
+                }
+                className="bg-border accent-accent [&::-webkit-slider-thumb]:bg-accent h-1 w-20 cursor-pointer appearance-none rounded-full [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full"
+                title={`${strings.personalityLevel}: ${currentPersonality?.name ?? ''}`}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Messages area */}
+        <ChatMessages
+          messages={messages}
+          isGenerating={isGenerating}
+          messagesEndRef={messagesEndRef}
+          onSendMessage={sendMessage}
+          language={language}
+        />
+
+        {/* Input area */}
+        <ChatInput
+          input={input}
+          setInput={setInput}
+          isGenerating={isGenerating}
+          isAtLimit={isAtLimit}
+          userMsgCount={userMsgCount}
+          maxMessages={MAX_USER_MESSAGES}
+          language={language}
+          inputRef={inputRef}
+          onSend={sendMessage}
+          onStop={handleStop}
+          onClearChat={clearChat}
+          isRecording={isRecording}
+          onVoiceToggle={handleVoiceToggle}
+          voiceSupported={voiceSupported}
+          audioLevel={audioLevel}
+          transcriptPreview={transcriptPreview}
+        />
+      </div>
 
       {/* Debug panel */}
       <DebugPanel state={debugState} onClearLogs={() => setDebugLogs([])} />
