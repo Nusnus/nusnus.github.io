@@ -35,7 +35,7 @@ import { getPersonalityLevel, setPersonalityLevel, PERSONALITY_LEVELS } from '@l
 import type { PersonalityLevel } from '@lib/ai/personality';
 import { getLanguage, setLanguage as setStoredLanguage, LANGUAGES, t } from '@lib/ai/i18n';
 import type { Language } from '@lib/ai/i18n';
-import { VoiceSession } from '@lib/ai/voice';
+import { VoiceSession, isVoiceSupported } from '@lib/ai/voice';
 import type { VoiceState } from '@lib/ai/voice';
 
 interface AiChatProps {
@@ -505,41 +505,46 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
   );
 
   /* ─── Voice handlers ─── */
-  const voiceSupported = typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getUserMedia;
+  const voiceSupported = isVoiceSupported();
 
   const handleVoiceToggle = useCallback(() => {
     if (voiceState === 'idle' || voiceState === 'error') {
       // Start recording
-      const session = new VoiceSession({
-        onStateChange: (state) => {
-          setVoiceState(state);
-          addLog('info', 'voice', `Voice state: ${state}`);
+      const session = new VoiceSession(
+        {
+          onStateChange: (state) => {
+            setVoiceState(state);
+            addLog('info', 'voice', `Voice state: ${state}`);
+          },
+          onTranscript: (text, isFinal) => {
+            setTranscriptPreview(text);
+            if (isFinal) {
+              setInput((prev) => (prev ? `${prev} ${text}` : text));
+              setTranscriptPreview('');
+              addLog('info', 'voice', 'Transcript received', { text, isFinal });
+            }
+          },
+          onDiagnosticsUpdate: (diag) => {
+            addLog(
+              'debug',
+              'voice',
+              'Diagnostics update',
+              diag as unknown as Record<string, unknown>,
+            );
+          },
+          onError: (error) => {
+            addLog('error', 'voice', error);
+          },
+          onAudioLevel: (level) => {
+            setAudioLevel(level);
+          },
         },
-        onTranscript: (text, isFinal) => {
-          setTranscriptPreview(text);
-          if (isFinal) {
-            setInput((prev) => (prev ? `${prev} ${text}` : text));
-            setTranscriptPreview('');
-            addLog('info', 'voice', 'Transcript received', { text, isFinal });
-          }
-        },
-        onDiagnosticsUpdate: (diag) => {
-          addLog(
-            'debug',
-            'voice',
-            'Diagnostics update',
-            diag as unknown as Record<string, unknown>,
-          );
-        },
-        onError: (error) => {
-          addLog('error', 'voice', error);
-        },
-        onAudioLevel: (level) => {
-          setAudioLevel(level);
-        },
-      });
+        language,
+      );
       voiceSessionRef.current = session;
-      session.start();
+      session.start().catch(() => {
+        /* handled via onError callback */
+      });
     } else {
       // Stop recording
       voiceSessionRef.current?.stop();
@@ -548,7 +553,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       setAudioLevel(0);
       setTranscriptPreview('');
     }
-  }, [voiceState, addLog]);
+  }, [voiceState, addLog, language]);
 
   /* ─── Idle screen ─── */
   if (engineState === 'idle') {
