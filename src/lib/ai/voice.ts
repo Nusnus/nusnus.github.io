@@ -114,6 +114,7 @@ export class VoiceSession {
   private reconnectAttempts = 0;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private destroyed = false;
+  private stopped = false;
   private transcript = '';
 
   // Diagnostics
@@ -131,6 +132,7 @@ export class VoiceSession {
   /** Start a voice recording session. */
   async start(): Promise<void> {
     if (this.destroyed) return;
+    this.stopped = false;
     this.transcript = '';
     this.audioBuffer = [];
     this.totalChunksSent = 0;
@@ -150,6 +152,12 @@ export class VoiceSession {
           noiseSuppression: true,
         },
       });
+
+      // Bail out if stop() or destroy() was called while awaiting getUserMedia
+      if (this.destroyed || this.stopped) {
+        this.cleanup();
+        return;
+      }
 
       // Step 2: Set up audio capture
       this.audioContext = new AudioContext({ sampleRate: TARGET_SAMPLE_RATE });
@@ -192,6 +200,12 @@ export class VoiceSession {
       this.sourceNode.connect(this.processorNode);
       this.processorNode.connect(this.audioContext.destination);
 
+      // Bail out if stop() or destroy() was called during audio setup
+      if (this.destroyed || this.stopped) {
+        this.cleanup();
+        return;
+      }
+
       // Step 3: Connect WebSocket (audio is buffered until ready)
       this.setState('connecting');
       await this.connectWebSocket();
@@ -208,6 +222,7 @@ export class VoiceSession {
 
   /** Stop the current voice session and clean up resources. */
   stop(): void {
+    this.stopped = true;
     this.cleanup();
     this.setState('idle');
   }
@@ -266,6 +281,9 @@ export class VoiceSession {
       }
 
       const tokenData = (await tokenRes.json()) as { url: string; token: string };
+
+      // Bail out if stop() or destroy() was called while awaiting token
+      if (this.destroyed || this.stopped) return;
 
       // Connect WebSocket to xAI Realtime API via worker proxy
       const wsUrl = `${WORKER_BASE_URL.replace('https://', 'wss://').replace('http://', 'ws://')}/v1/realtime?token=${encodeURIComponent(tokenData.token)}`;
