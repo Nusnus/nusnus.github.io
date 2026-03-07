@@ -187,7 +187,7 @@ export const ChatComposer = memo(
           ) : (
             <button
               type="submit"
-              disabled={!value.trim()}
+              disabled={!value.trim() || speech.listening}
               aria-label="Send message"
               className="bg-accent text-bg-base hover:bg-accent-hover disabled:bg-bg-elevated disabled:text-text-muted flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors"
             >
