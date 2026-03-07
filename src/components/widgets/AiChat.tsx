@@ -351,6 +351,14 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       } catch (err) {
         if (controller.signal.aborted) {
           addLog('warn', 'stream', 'Stream aborted by user');
+          // Remove empty assistant placeholder if no tokens were streamed
+          setMessages((prev) => {
+            const last = prev[prev.length - 1];
+            if (last?.role === 'assistant' && !last.content) {
+              return prev.slice(0, -1);
+            }
+            return prev;
+          });
           return;
         }
 
