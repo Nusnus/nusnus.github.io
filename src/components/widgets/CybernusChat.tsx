@@ -166,12 +166,20 @@ export default function CybernusChat() {
     setSessions(loadSessions());
     setActiveSessionIdState(getActiveSessionId());
 
-    // Initial messages — handoff > saved session > fresh welcome.
+    // Initial messages — handoff > ?roast=1 > saved session > fresh welcome.
+    // Roast (either flavor) is always a fresh session.
     if (roastHandoffRef.current) {
-      clearMessages(); // roast is always a fresh session
+      clearMessages();
       setActiveSessionIdState(null);
       setMessages(roastHandoffRef.current);
       roastHandoffRef.current = null;
+    } else if (pendingRoast.current) {
+      // ?roast=1 without sessionStorage handoff — old AiChat called
+      // initEngine(true) here. Clear the session so the auto-sent roast
+      // doesn't append into a restored conversation.
+      clearMessages();
+      setActiveSessionIdState(null);
+      setMessages(freshWelcome(loadedLang));
     } else {
       const saved = loadMessages();
       if (saved.length > 0) {
