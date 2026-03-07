@@ -317,6 +317,8 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       deleteSession(sessionId);
       setSessions(loadSessions());
       if (activeSessionId === sessionId) {
+        abortRef.current?.abort();
+        setIsGenerating(false);
         clearMessages();
         setMessages([]);
         setActiveSession(null);
