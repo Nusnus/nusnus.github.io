@@ -408,7 +408,9 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       } finally {
         setIsGenerating(false);
         setStreamEndTime(Date.now());
-        abortRef.current = null;
+        if (abortRef.current === controller) {
+          abortRef.current = null;
+        }
       }
     },
     [
