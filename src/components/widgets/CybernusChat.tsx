@@ -331,10 +331,16 @@ export default function CybernusChat() {
       } catch (err) {
         if (controller.signal.aborted) {
           // User hit stop — leave whatever content accumulated.
-          patchAsst((m) => {
-            const { thinking: _t, searchStatus: _s, ...rest } = m;
-            return rest.content ? rest : { ...rest, content: '*(stopped)*' };
-          });
+          // Can't use patchAsst here: handleStop set abortRef.current = true
+          // before aborting, so the guard would silently drop this cleanup
+          // and leave thinking/searchStatus indicators stuck on screen.
+          setMessages((prev) =>
+            prev.map((m) => {
+              if (m.id !== asstMsg.id) return m;
+              const { thinking: _t, searchStatus: _s, ...rest } = m;
+              return rest.content ? rest : { ...rest, content: '*(stopped)*' };
+            }),
+          );
         } else {
           console.error('[Cybernus] Generation error:', err);
           const errText = err instanceof Error ? err.message : 'Something went wrong';
