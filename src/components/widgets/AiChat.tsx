@@ -1,521 +1,433 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { Loader2, AlertCircle, Cpu } from 'lucide-react';
+/**
+ * Cybernus AI Chat — cloud-only orchestrator.
+ *
+ * Manages: cloud streaming via xAI Grok, session memory, personality,
+ * language, and the Matrix-inspired UI shell. No local WebLLM.
+ */
+
+import { useState, useCallback, useRef, useEffect } from 'react';
+import type { ChatMessage } from '@lib/ai/types';
 import {
-  DEFAULT_MODEL_ID,
-  AVAILABLE_MODELS,
   CLOUD_MODELS,
   DEFAULT_CLOUD_MODEL_ID,
-  GENERATION_CONFIG,
-  WELCOME_MESSAGE,
-  isWebGPUSupported,
+  MAX_USER_MESSAGES,
   trimHistory,
 } from '@lib/ai/config';
-import type { ChatProvider } from '@lib/ai/config';
-import type { MLCEngineInterface } from '@mlc-ai/web-llm';
-import type { ChatMessage, SearchIndex } from '@lib/ai/types';
+import { CLOUD_TOOLS, mapToolCallsToActions } from '@lib/ai/tools';
 import {
   saveMessages,
   loadMessages,
-  clearMessages,
   loadSessions,
+  getActiveSessionId,
+  setActiveSessionId,
+  clearMessages,
   deleteSession,
   clearAllSessions,
-  setActiveSessionId,
 } from '@lib/ai/memory';
 import type { ChatSession } from '@lib/ai/memory';
-import { fetchRuntimeContext } from '@lib/ai/context';
-import { searchIndex, formatRetrievedContext } from '@lib/ai/rag';
-import {
-  CLOUD_TOOLS,
-  LOCAL_TOOLS_PROMPT_SECTION,
-  mapToolCallsToActions,
-  parseActions,
-} from '@lib/ai/tools';
-import { maybeSummarize } from '@lib/ai/summarize';
-import { CenterCard } from '@components/ai/CenterCard';
-import { ModelPicker } from '@components/ai/ModelPicker';
-import { SessionHistory } from '@components/ai/SessionHistory';
 import { ChatMessages } from '@components/ai/ChatMessages';
 import { ChatInput } from '@components/ai/ChatInput';
+import { ModelPicker } from '@components/ai/ModelPicker';
+import { SessionHistory } from '@components/ai/SessionHistory';
+import { getPersonalityLevel, setPersonalityLevel, PERSONALITY_LEVELS } from '@lib/ai/personality';
+import type { PersonalityLevel } from '@lib/ai/personality';
+import { getLanguage, setLanguage as setStoredLanguage, LANGUAGES, t } from '@lib/ai/i18n';
+import type { Language } from '@lib/ai/i18n';
 
-/* ─── Constants ─── */
-
-/** Maximum number of user messages per chat session before prompting new chat. */
-const MAX_USER_MESSAGES = 10;
-
-/* ─── Types ─── */
-
-type EngineState = 'checking' | 'unsupported' | 'idle' | 'loading' | 'ready' | 'error';
-
-interface Props {
+interface AiChatProps {
   systemPrompt: string;
-  searchIndex: SearchIndex;
 }
 
-/* ─── Component ─── */
+type EngineState = 'idle' | 'ready';
 
-export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
-  const [provider, setProvider] = useState<ChatProvider>('cloud');
-  const [engineState, setEngineState] = useState<EngineState>('checking');
-  const [loadProgress, setLoadProgress] = useState({ text: '', progress: 0 });
+const WELCOME_MESSAGE =
+  "I'm **Cybernus** — the digital construct of Tomer Nosrati. I have access to all of Tomer's GitHub data, projects, and knowledge base.\n\nAsk me anything about his open source work, the **Celery** ecosystem, **pytest-celery**, or his technical journey. I can also search the web for current information.";
+
+/** Main Cybernus chat component — cloud-only architecture. */
+export default function AiChat({ systemPrompt }: AiChatProps) {
+  /* ─── Core state ─── */
+  const [engineState, setEngineState] = useState<EngineState>('idle');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
-  const [selectedModelId, setSelectedModelId] = useState(DEFAULT_MODEL_ID);
+
+  /* ─── Cloud model ─── */
   const [selectedCloudModelId, setSelectedCloudModelId] = useState(DEFAULT_CLOUD_MODEL_ID);
-  const [cacheMap, setCacheMap] = useState<Record<string, boolean>>({});
-  const [isDeletingModel, setIsDeletingModel] = useState<string | null>(null);
-  const [webGPUSupported, setWebGPUSupported] = useState(true);
-  const [showHistory, setShowHistory] = useState(false);
+
+  /* ─── Personality & Language ─── */
+  const [personality, setPersonality] = useState<PersonalityLevel>(getPersonalityLevel);
+  const [language, setLang] = useState<Language>(getLanguage);
+
+  /* ─── Session history ─── */
   const [sessions, setSessions] = useState<ChatSession[]>([]);
-  const [activeSessionId, setActiveSessionIdState] = useState<string | null>(null);
+  const [activeSessionId, setActiveSession] = useState<string | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
 
-  const engineRef = useRef<MLCEngineInterface | null>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  /* ─── Refs ─── */
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const abortRef = useRef(false);
-  const activeModelRef = useRef<string | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
+  const roastHandoffRef = useRef(false);
 
-  /** Detect ?roast=1 query param for 1-click roast from FAB. */
-  const pendingRoast = useRef(false);
-  /** Roast conversation passed from RoastWidget via sessionStorage. */
-  const roastHandoffRef = useRef<ChatMessage[] | null>(null);
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('roast') === '1') {
-      pendingRoast.current = true;
-      window.history.replaceState({}, '', window.location.pathname);
-    }
-    const handoff = sessionStorage.getItem('grok-roast-handoff');
-    if (handoff) {
-      sessionStorage.removeItem('grok-roast-handoff');
-      try {
-        const data = JSON.parse(handoff) as { messages: ChatMessage[] };
-        if (Array.isArray(data.messages) && data.messages.length > 0) {
-          roastHandoffRef.current = [
-            { id: crypto.randomUUID(), role: 'user', content: 'Roast Tomer Nosrati 🔥' },
-            ...data.messages,
-          ];
-        }
-      } catch {
-        /* ignore malformed handoff */
-      }
-    }
-  }, []);
-
-  /** Check WebGPU support and probe cache status for all models. */
-  useEffect(() => {
-    isWebGPUSupported().then(async (supported) => {
-      setWebGPUSupported(supported);
-      if (!supported) {
-        setEngineState('idle');
-        return;
-      }
-      const { hasModelInCache } = await import('@mlc-ai/web-llm');
-      const entries = await Promise.all(
-        AVAILABLE_MODELS.map(async (m) => [m.id, await hasModelInCache(m.id)] as const),
-      );
-      setCacheMap(Object.fromEntries(entries));
-      setEngineState('idle');
-    });
-  }, []);
-
+  /* ─── Scroll to bottom on new messages ─── */
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  /* ─── Check for roast widget handoff ─── */
   useEffect(() => {
-    if (engineState === 'ready') inputRef.current?.focus();
-  }, [engineState]);
-
-  /** Whether there's a saved chat in localStorage. */
-  const hasSavedChat = useRef(false);
-  useEffect(() => {
-    hasSavedChat.current = loadMessages().length > 0;
-    setSessions(loadSessions());
-  }, []);
-
-  const initEngine = useCallback(
-    async (startFresh = false) => {
-      if (startFresh) {
-        clearMessages();
-        setActiveSessionIdState(null);
+    try {
+      const handoff = sessionStorage.getItem('grok-roast-handoff');
+      if (handoff) {
+        roastHandoffRef.current = true;
+        const parsed = JSON.parse(handoff) as ChatMessage[];
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setMessages(parsed);
+          setEngineState('ready');
+          sessionStorage.removeItem('grok-roast-handoff');
+          return;
+        }
       }
+    } catch {
+      // Ignore invalid handoff data
+    }
 
-      const restoreMessages = () => {
-        if (!startFresh) {
-          const saved = loadMessages();
-          if (saved.length > 0) {
-            setMessages(saved);
-            return;
-          }
-        }
-        setMessages([{ id: crypto.randomUUID(), role: 'assistant', content: WELCOME_MESSAGE }]);
-      };
-
-      if (provider === 'cloud') {
-        if (roastHandoffRef.current) {
-          setMessages(roastHandoffRef.current);
-          roastHandoffRef.current = null;
-        } else {
-          restoreMessages();
-        }
+    // Load session on mount
+    const allSessions = loadSessions();
+    setSessions(allSessions);
+    const activeId = getActiveSessionId();
+    if (activeId) {
+      setActiveSession(activeId);
+      const restored = loadMessages();
+      if (restored.length > 0) {
+        setMessages(restored);
         setEngineState('ready');
         return;
       }
-
-      setEngineState('loading');
-      setErrorMsg('');
-      setLoadProgress({ text: 'Initializing…', progress: 0 });
-      try {
-        const webllm = await import('@mlc-ai/web-llm');
-        const engine = await webllm.CreateWebWorkerMLCEngine(
-          new Worker(new URL('../../lib/ai/worker.ts', import.meta.url), { type: 'module' }),
-          selectedModelId,
-          { initProgressCallback: (r) => setLoadProgress({ text: r.text, progress: r.progress }) },
-        );
-        engineRef.current = engine;
-        activeModelRef.current = selectedModelId;
-        restoreMessages();
-        setEngineState('ready');
-        setCacheMap((prev) => ({ ...prev, [selectedModelId]: true }));
-      } catch (err) {
-        console.error('[AiChat] Engine init failed:', err);
-        setErrorMsg(err instanceof Error ? err.message : 'Failed to load AI model');
-        setEngineState('error');
-      }
-    },
-    [provider, selectedModelId],
-  );
-
-  const deleteModel = useCallback(async (modelId: string) => {
-    setIsDeletingModel(modelId);
-    try {
-      const { deleteModelAllInfoInCache } = await import('@mlc-ai/web-llm');
-      await deleteModelAllInfoInCache(modelId);
-      setCacheMap((prev) => ({ ...prev, [modelId]: false }));
-    } catch (err) {
-      console.error('[AiChat] Failed to delete model:', err);
-    } finally {
-      setIsDeletingModel(null);
     }
   }, []);
 
+  /* ─── Init engine (start new/continue chat) ─── */
+  const initEngine = useCallback((resumeExisting: boolean) => {
+    if (resumeExisting) {
+      const restored = loadMessages();
+      if (restored.length > 0) {
+        setMessages(restored);
+        setEngineState('ready');
+        inputRef.current?.focus();
+        return;
+      }
+    }
+
+    // Start new session
+    const welcomeMsg: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: 'assistant',
+      content: WELCOME_MESSAGE,
+    };
+    setMessages([welcomeMsg]);
+    setActiveSession(null);
+    setActiveSessionId(null);
+    setEngineState('ready');
+
+    setTimeout(() => inputRef.current?.focus(), 100);
+  }, []);
+
+  /* ─── Send message ─── */
   const sendMessage = useCallback(
     async (text: string) => {
-      if (!text.trim() || isGenerating) return;
-      if (provider === 'local' && !engineRef.current) return;
+      const trimmed = text.trim();
+      if (!trimmed || isGenerating) return;
 
-      const userMessageCount = messages.filter((m) => m.role === 'user').length;
-      if (userMessageCount >= MAX_USER_MESSAGES) return;
-
-      const userMsg: ChatMessage = { id: crypto.randomUUID(), role: 'user', content: text.trim() };
-      const asstMsg: ChatMessage = { id: crypto.randomUUID(), role: 'assistant', content: '' };
-      setMessages((prev) => [...prev, userMsg, asstMsg]);
       setInput('');
-      if (inputRef.current) inputRef.current.style.height = 'auto';
+
+      const userMsg: ChatMessage = {
+        id: crypto.randomUUID(),
+        role: 'user',
+        content: trimmed,
+      };
+      const assistantMsg: ChatMessage = {
+        id: crypto.randomUUID(),
+        role: 'assistant',
+        content: '',
+      };
+
+      const updated = [...messages, userMsg, assistantMsg];
+      setMessages(updated);
       setIsGenerating(true);
-      abortRef.current = false;
+
+      const controller = new AbortController();
+      abortRef.current = controller;
 
       try {
-        let full = '';
+        // Lazy-load cloud modules
+        const [{ cloudChatStream }, { buildCloudContext }] = await Promise.all([
+          import('@lib/ai/cloud'),
+          import('@lib/ai/cloud-context'),
+        ]);
 
-        if (provider === 'cloud') {
-          const [{ cloudChatStream }, { buildCloudContext }] = await Promise.all([
-            import('@lib/ai/cloud'),
-            import('@lib/ai/cloud-context'),
-          ]);
+        // Build chat history for the API
+        const chatHistory = trimHistory(
+          updated
+            .filter((m) => m.content.length > 0)
+            .map((m) => ({ role: m.role, content: m.content })),
+        );
 
-          const cloudContext = await buildCloudContext();
-          const augmentedPrompt = cloudContext + '\n\n' + systemPrompt;
+        // Build full context with personality & language
+        const context = await buildCloudContext(undefined, personality, language);
 
-          const chatHistory = [...messages, userMsg]
-            .filter(
-              (m) => m.role === 'user' || (m.role === 'assistant' && m.content !== WELCOME_MESSAGE),
-            )
-            .map((m) => ({
-              role: m.role as 'system' | 'user' | 'assistant',
-              content: m.content,
-            }));
+        const fullHistory = [
+          { role: 'system' as const, content: systemPrompt + context },
+          ...chatHistory,
+        ];
 
-          const result = await cloudChatStream(
-            [{ role: 'system', content: augmentedPrompt }, ...chatHistory],
-            selectedCloudModelId,
-            (_token, accumulated) => {
-              if (abortRef.current) return;
-              setMessages((prev) =>
-                prev.map((m) => {
-                  if (m.id !== asstMsg.id) return m;
-                  const { searchStatus: _removed, ...rest } = m;
-                  return { ...rest, content: accumulated };
-                }),
-              );
-            },
-            undefined,
-            {
-              tools: CLOUD_TOOLS,
-              tool_choice: 'auto',
-              onWebSearch: () => {
-                if (!abortRef.current) {
-                  setMessages((prev) =>
-                    prev.map((m) =>
-                      m.id === asstMsg.id ? { ...m, searchStatus: 'searching' as const } : m,
-                    ),
-                  );
+        // Stream response
+        const result = await cloudChatStream(
+          fullHistory,
+          selectedCloudModelId,
+          (_token, accumulated) => {
+            setMessages((prev) => {
+              const copy = [...prev];
+              const last = copy[copy.length - 1];
+              if (last?.role === 'assistant') {
+                const updated = { ...last, content: accumulated };
+                delete updated.searchStatus;
+                copy[copy.length - 1] = updated;
+              }
+              return copy;
+            });
+          },
+          controller.signal,
+          {
+            tools: CLOUD_TOOLS,
+            tool_choice: 'auto',
+            onWebSearch: () => {
+              setMessages((prev) => {
+                const copy = [...prev];
+                const last = copy[copy.length - 1];
+                if (last?.role === 'assistant') {
+                  copy[copy.length - 1] = { ...last, searchStatus: 'searching' };
                 }
-              },
-              onWebSearchFound: () => {
-                if (!abortRef.current) {
-                  setMessages((prev) =>
-                    prev.map((m) =>
-                      m.id === asstMsg.id ? { ...m, searchStatus: 'found' as const } : m,
-                    ),
-                  );
-                }
-              },
+                return copy;
+              });
             },
-          );
+            onWebSearchFound: () => {
+              setMessages((prev) => {
+                const copy = [...prev];
+                const last = copy[copy.length - 1];
+                if (last?.role === 'assistant') {
+                  copy[copy.length - 1] = { ...last, searchStatus: 'found' };
+                }
+                return copy;
+              });
+            },
+          },
+        );
 
-          full = result.content;
+        // Map tool calls to actions
+        const actions = mapToolCallsToActions(result.toolCalls);
 
-          const actions =
-            result.toolCalls.length > 0 ? mapToolCallsToActions(result.toolCalls) : [];
-
-          if (actions.length > 0 || !full) {
-            setMessages((prev) =>
-              prev.map((m) =>
-                m.id === asstMsg.id ? { ...m, content: full || '*(used tools only)*', actions } : m,
-              ),
-            );
-          }
-        } else {
-          const engine = engineRef.current as MLCEngineInterface;
-
-          const ragResults = searchIndex(text.trim(), ragIndex);
-          const ragContext = formatRetrievedContext(ragResults);
-          const runtimeContext = await fetchRuntimeContext();
-
-          const augmentedPrompt =
-            systemPrompt + LOCAL_TOOLS_PROMPT_SECTION + ragContext + runtimeContext;
-
-          const currentMessages = await maybeSummarize(engine, [...messages, userMsg]);
-
-          const fullHistory = currentMessages.map((m) => ({
-            role: m.role as 'user' | 'assistant',
-            content: m.content,
-          }));
-          const history = trimHistory(fullHistory);
-
-          const chunks = await engine.chat.completions.create({
-            messages: [{ role: 'system', content: augmentedPrompt }, ...history],
-            stream: true,
-            ...GENERATION_CONFIG,
-          });
-
-          for await (const chunk of chunks) {
-            if (abortRef.current) break;
-            full += chunk.choices[0]?.delta?.content ?? '';
-            const content = full;
-            setMessages((prev) => prev.map((m) => (m.id === asstMsg.id ? { ...m, content } : m)));
-          }
-
-          const { text: cleanText, actions } = parseActions(full);
-          if (actions.length > 0 || cleanText !== full) {
-            setMessages((prev) =>
-              prev.map((m) => (m.id === asstMsg.id ? { ...m, content: cleanText, actions } : m)),
-            );
-          }
-        }
-
+        // Final update
         setMessages((prev) => {
-          const sid = saveMessages(prev, activeSessionId ?? undefined);
-          setActiveSessionIdState(sid);
+          const copy = [...prev];
+          const last = copy[copy.length - 1];
+          if (last?.role === 'assistant') {
+            const finalMsg = {
+              ...last,
+              content: result.content,
+            };
+            if (actions.length > 0) finalMsg.actions = actions;
+            else delete finalMsg.actions;
+            delete finalMsg.searchStatus;
+            copy[copy.length - 1] = finalMsg;
+          }
+
+          // Save to memory
+          const sid = saveMessages(copy, activeSessionId ?? undefined);
+          setActiveSession(sid);
           setSessions(loadSessions());
-          return prev;
+
+          return copy;
         });
       } catch (err) {
-        console.error('[AiChat] Generation error:', err);
-        const errText = err instanceof Error ? err.message : 'Something went wrong';
-        const friendlyMsg = errText.includes('429')
-          ? 'Rate limited — please wait a moment and try again.'
-          : errText.includes('Empty response')
-            ? 'Got an empty response. Try rephrasing or starting a new chat.'
-            : `Something went wrong: ${errText}`;
-        setMessages((prev) =>
-          prev.map((m) => (m.id === asstMsg.id ? { ...m, content: friendlyMsg } : m)),
-        );
+        if (controller.signal.aborted) return;
+
+        const errorMessage =
+          err instanceof Error ? err.message : 'Something went wrong. Please try again.';
+
+        const friendlyMsg =
+          errorMessage.includes('429') || errorMessage.includes('rate')
+            ? "I'm getting too many requests right now. Please wait a moment and try again."
+            : errorMessage.includes('500') || errorMessage.includes('502')
+              ? "The AI service is temporarily unavailable. Let's try again in a moment."
+              : `I ran into an issue: ${errorMessage}`;
+
+        setMessages((prev) => {
+          const copy = [...prev];
+          const last = copy[copy.length - 1];
+          if (last?.role === 'assistant') {
+            const errMsg = { ...last, content: friendlyMsg };
+            delete errMsg.searchStatus;
+            copy[copy.length - 1] = errMsg;
+          }
+          return copy;
+        });
       } finally {
         setIsGenerating(false);
-        requestAnimationFrame(() => inputRef.current?.focus());
+        abortRef.current = null;
       }
     },
     [
       messages,
       isGenerating,
-      provider,
-      selectedCloudModelId,
       systemPrompt,
-      ragIndex,
+      selectedCloudModelId,
       activeSessionId,
+      personality,
+      language,
     ],
   );
 
-  /** Auto-init cloud + auto-send roast when triggered via ?roast=1 FAB. */
-  const roastAutoInitDone = useRef(false);
-  useEffect(() => {
-    if (roastHandoffRef.current && engineState === 'idle' && !roastAutoInitDone.current) {
-      roastAutoInitDone.current = true;
-      initEngine(true);
-      return;
-    }
-    if (!pendingRoast.current) return;
-    if (engineState === 'idle' && !roastAutoInitDone.current) {
-      roastAutoInitDone.current = true;
-      initEngine(true);
-    }
-    if (engineState === 'ready' && pendingRoast.current) {
-      pendingRoast.current = false;
-      sendMessage('Roast Tomer Nosrati 🔥');
-    }
-  }, [engineState, initEngine, sendMessage]);
-
-  const clearChat = () => {
-    abortRef.current = true;
-    setIsGenerating(false);
+  /* ─── Session management ─── */
+  const clearChat = useCallback(() => {
     clearMessages();
-    setActiveSessionIdState(null);
-    setMessages([{ id: crypto.randomUUID(), role: 'assistant', content: WELCOME_MESSAGE }]);
-  };
+    setMessages([]);
+    setActiveSession(null);
+    setSessions(loadSessions());
+    setEngineState('idle');
+  }, []);
 
-  const switchSession = (session: ChatSession) => {
-    abortRef.current = true;
-    setIsGenerating(false);
+  const switchSession = useCallback((session: ChatSession) => {
     setActiveSessionId(session.id);
-    setActiveSessionIdState(session.id);
+    setActiveSession(session.id);
     setMessages(session.messages);
     setShowHistory(false);
-  };
+  }, []);
 
-  const handleDeleteSession = (sessionId: string) => {
-    deleteSession(sessionId);
-    setSessions(loadSessions());
-    if (sessionId === activeSessionId) {
-      clearChat();
-    }
-  };
+  const handleDeleteSession = useCallback(
+    (sessionId: string) => {
+      deleteSession(sessionId);
+      setSessions(loadSessions());
+      if (activeSessionId === sessionId) {
+        clearMessages();
+        setMessages([]);
+        setActiveSession(null);
+        setEngineState('idle');
+      }
+    },
+    [activeSessionId],
+  );
 
-  const handleClearAll = () => {
+  const handleClearAll = useCallback(() => {
     clearAllSessions();
+    setMessages([]);
+    setActiveSession(null);
     setSessions([]);
-    clearChat();
-  };
+    setShowHistory(false);
+    setEngineState('idle');
+  }, []);
 
-  const handleStop = () => {
-    abortRef.current = true;
+  const handleStop = useCallback(() => {
+    abortRef.current?.abort();
     setIsGenerating(false);
-  };
+  }, []);
 
-  /* ─── Render ─── */
-  const pct = Math.round(loadProgress.progress * 100);
+  /* ─── Personality & Language handlers ─── */
+  const handlePersonalityChange = useCallback((level: PersonalityLevel) => {
+    setPersonality(level);
+    setPersonalityLevel(level);
+  }, []);
 
-  if (engineState === 'checking') {
-    return (
-      <CenterCard>
-        <Loader2 className="text-accent h-8 w-8 animate-spin" />
-      </CenterCard>
-    );
-  }
+  const handleLanguageChange = useCallback((lang: Language) => {
+    setLang(lang);
+    setStoredLanguage(lang);
+  }, []);
 
+  /* ─── Idle screen ─── */
   if (engineState === 'idle') {
     return (
-      <ModelPicker
-        provider={provider}
-        setProvider={setProvider}
-        webGPUSupported={webGPUSupported}
-        selectedModelId={selectedModelId}
-        setSelectedModelId={setSelectedModelId}
-        selectedCloudModelId={selectedCloudModelId}
-        setSelectedCloudModelId={setSelectedCloudModelId}
-        cacheMap={cacheMap}
-        isDeletingModel={isDeletingModel}
-        deleteModel={deleteModel}
-        hasSavedChat={hasSavedChat.current}
-        onContinue={() => initEngine(false)}
-        onNewChat={() => initEngine(true)}
-      />
+      <div className="flex h-full flex-col" style={{ background: 'rgba(0, 0, 0, 0.6)' }}>
+        <ModelPicker
+          selectedCloudModelId={selectedCloudModelId}
+          setSelectedCloudModelId={setSelectedCloudModelId}
+          hasSavedChat={loadMessages().length > 0}
+          onContinue={() => initEngine(true)}
+          onNewChat={() => initEngine(false)}
+          language={language}
+        />
+      </div>
     );
   }
 
-  if (engineState === 'loading') {
-    const loadingModel = AVAILABLE_MODELS.find((m) => m.id === selectedModelId);
-    return (
-      <CenterCard>
-        <Cpu className="text-accent mb-4 h-10 w-10 animate-pulse" />
-        <h2 className="text-text-primary mb-1 text-lg font-semibold">
-          Loading {loadingModel?.name ?? 'AI Model'}
-        </h2>
-        <p className="text-text-muted mb-4 text-xs">
-          {cacheMap[selectedModelId] ? 'Initializing from cache…' : 'Downloading and compiling…'}
-        </p>
-        <div className="bg-bg-elevated mb-2 h-2.5 w-full max-w-xs overflow-hidden rounded-full">
-          <div
-            className="bg-accent h-full rounded-full transition-all duration-300 ease-out"
-            style={{ width: `${pct}%` }}
-          />
-        </div>
-        <p className="text-text-muted font-mono text-xs">{pct}%</p>
-        <p className="text-text-muted mt-2 max-w-xs text-center text-[10px] leading-relaxed">
-          {loadProgress.text}
-        </p>
-      </CenterCard>
-    );
-  }
-
-  if (engineState === 'error') {
-    return (
-      <CenterCard>
-        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-red-500/10">
-          <AlertCircle className="h-7 w-7 text-red-400" />
-        </div>
-        <h2 className="text-text-primary mb-2 text-lg font-semibold">Failed to Load</h2>
-        <p className="text-text-secondary mb-4 max-w-sm text-center text-xs leading-relaxed">
-          {errorMsg}
-        </p>
-        <button
-          onClick={() => initEngine(true)}
-          className="bg-accent text-bg-base hover:bg-accent-hover rounded-xl px-6 py-2.5 text-sm font-semibold transition-colors"
-        >
-          Try Again
-        </button>
-      </CenterCard>
-    );
-  }
-
-  /* ─── Chat UI (engineState === 'ready') ─── */
+  /* ─── Chat UI ─── */
   const activeCloudModel = CLOUD_MODELS.find((m) => m.id === selectedCloudModelId);
-  const activeModel = AVAILABLE_MODELS.find((m) => m.id === activeModelRef.current);
-  const statusLabel =
-    provider === 'cloud'
-      ? `${activeCloudModel?.name ?? 'Cloud AI'} · Cloud`
-      : `${activeModel?.name ?? 'AI'} · Local`;
+  const statusLabel = `${activeCloudModel?.name ?? 'Grok'} · Cloud`;
   const userMsgCount = messages.filter((m) => m.role === 'user').length;
   const isAtLimit = userMsgCount >= MAX_USER_MESSAGES;
+  const currentPersonality = PERSONALITY_LEVELS[personality];
+  const strings = t(language);
 
   return (
-    <div className="relative flex h-full flex-col">
+    <div className="relative flex h-full flex-col" style={{ background: 'rgba(0, 0, 0, 0.6)' }}>
       {/* Status bar */}
-      <div className="border-border flex items-center justify-between border-b px-4 py-2">
+      <div className="flex items-center justify-between border-b border-[#00ff41]/10 px-4 py-2">
         <div className="flex items-center gap-2">
-          <span className="bg-status-active h-2 w-2 rounded-full" />
-          <span className="text-text-muted text-xs">{statusLabel}</span>
+          <span
+            className="h-2 w-2 rounded-full shadow-[0_0_6px]"
+            style={{
+              backgroundColor: currentPersonality?.color ?? '#00ff41',
+              boxShadow: `0 0 6px ${currentPersonality?.glowColor ?? '#00ff41'}`,
+            }}
+          />
+          <span className="text-xs text-[#00ff41]/50">{statusLabel}</span>
+          {currentPersonality && (
+            <span className="text-[10px] text-[#00ff41]/30">
+              {currentPersonality.emoji} {currentPersonality.name}
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-2">
+          {/* Language toggle */}
+          <div className="flex items-center gap-1">
+            {LANGUAGES.map((l) => (
+              <button
+                key={l.code}
+                onClick={() => handleLanguageChange(l.code)}
+                className={`rounded px-1.5 py-0.5 text-xs transition-all ${
+                  language === l.code
+                    ? 'bg-[#00ff41]/15 text-[#00ff41]'
+                    : 'text-[#00ff41]/30 hover:text-[#00ff41]/60'
+                }`}
+                title={l.nativeName}
+              >
+                {l.flag}
+              </button>
+            ))}
+          </div>
+
+          <span className="h-3.5 w-px bg-[#00ff41]/10" />
+
+          {/* Personality slider */}
+          <div className="flex items-center gap-1">
+            <input
+              type="range"
+              min={0}
+              max={5}
+              value={personality}
+              onChange={(e) => handlePersonalityChange(Number(e.target.value) as PersonalityLevel)}
+              className="h-1 w-16 cursor-pointer appearance-none rounded-full bg-[#00ff41]/20 accent-[#00ff41] [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#00ff41]"
+              title={`${strings.personalityLevel}: ${currentPersonality?.name ?? ''}`}
+            />
+          </div>
+
+          <span className="h-3.5 w-px bg-[#00ff41]/10" />
+
+          {/* History toggle */}
           {sessions.length > 0 && (
             <button
               onClick={() => setShowHistory(!showHistory)}
               className={`flex items-center gap-1 text-xs transition-colors ${
-                showHistory ? 'text-accent' : 'text-text-muted hover:text-text-secondary'
+                showHistory ? 'text-[#00ff41]' : 'text-[#00ff41]/40 hover:text-[#00ff41]/70'
               }`}
               aria-label="Toggle chat history"
             >
@@ -531,15 +443,16 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
                 <path d="M12 8v4l3 3" />
                 <circle cx="12" cy="12" r="10" />
               </svg>
-              History
+              {strings.history}
             </button>
           )}
+
           {messages.length > 0 && (
             <>
-              <span className="bg-border h-3.5 w-px" />
+              <span className="h-3.5 w-px bg-[#00ff41]/10" />
               <button
                 onClick={clearChat}
-                className="text-text-muted hover:text-text-secondary flex items-center gap-1 text-xs transition-colors"
+                className="flex items-center gap-1 text-xs text-[#00ff41]/40 transition-colors hover:text-[#00ff41]/70"
                 aria-label="New chat"
               >
                 <svg
@@ -553,7 +466,7 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
                 >
                   <path d="M12 5v14M5 12h14" />
                 </svg>
-                New
+                {strings.newChat}
               </button>
             </>
           )}
@@ -578,6 +491,7 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
         isGenerating={isGenerating}
         messagesEndRef={messagesEndRef}
         onSendMessage={sendMessage}
+        language={language}
       />
 
       {/* Input area */}
@@ -588,7 +502,7 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
         isAtLimit={isAtLimit}
         userMsgCount={userMsgCount}
         maxMessages={MAX_USER_MESSAGES}
-        provider={provider}
+        language={language}
         inputRef={inputRef}
         onSend={sendMessage}
         onStop={handleStop}

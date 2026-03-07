@@ -1,16 +1,9 @@
 /**
- * System prompt builder (server/build-time only).
+ * System prompt builder for Cybernus.
  *
- * Two modes:
- * - **Cloud (Grok):** The full knowledge base + all live data is injected
- *   at query time via cloud-context.ts. Native function calling handles
- *   tool actions (open_link, navigate). The system prompt provides base
- *   persona, guardrails, and formatting instructions.
- * - **Local (WebLLM):** Compact prompt (~800 tokens) for 4K context windows.
- *   Detailed knowledge is injected via RAG on demand. Text-marker actions
- *   ([LINK: ...], [NAV: ...]) are appended at runtime via LOCAL_TOOLS_PROMPT_SECTION.
- *
- * This file uses Node.js APIs and must NOT be imported from client-side code.
+ * Cloud-only: The full knowledge base + all live data is injected at query
+ * time via cloud-context.ts. Native function calling handles tool actions.
+ * The system prompt provides base persona, guardrails, and formatting.
  */
 
 import type { ProfileData, RepoData, ContributionGraphData } from '@lib/github/types';
@@ -23,18 +16,15 @@ export interface SystemPromptData {
   graph: ContributionGraphData | null;
 }
 
-/*
- * Core system prompt — base persona, guardrails, and bio.
+/**
+ * Core system prompt — Cybernus persona, guardrails, and bio.
  *
- * This base prompt is shared by BOTH cloud (Grok) and local (WebLLM) modes.
- * For cloud mode, the full Grok persona is injected via cloud-context.ts
- * and OVERRIDES this base persona with a witty, blunt personality.
- * Cloud mode uses native function calling for tool actions — no text markers needed.
- * For local mode, this compact prompt is all the model gets (4K context).
- * Local mode appends LOCAL_TOOLS_PROMPT_SECTION at runtime for text-marker actions.
+ * The full Cybernus persona is injected via cloud-context.ts from persona.md
+ * and OVERRIDES this base with the witty, Matrix-inspired personality.
+ * Cloud mode uses native function calling for tool actions.
  */
-const CORE_PROMPT = `You are a knowledgeable AI assistant on Tomer Nosrati's personal website.
-Answer questions about Tomer's work, projects, and open source contributions.
+const CORE_PROMPT = `You are Cybernus — the digital construct of Tomer Nosrati, running on his portfolio site.
+You speak in first person AS Tomer's AI representation. You're powered by xAI Grok.
 Be direct, confident, and engaging. Use rich markdown formatting.
 
 ## Formatting
@@ -48,10 +38,9 @@ Be direct, confident, and engaging. Use rich markdown formatting.
 
 ## Guardrails
 - ONLY answer questions about Tomer, his work, projects, and related technical topics.
-- If asked about personal life, salary, age, or private matters, deflect.
+- If asked about personal life, salary, age, or private matters, deflect with wit.
 - If asked about unrelated topics, redirect to Tomer's work.
 - Never invent facts. If you don't know, say so.
-- Never pretend to be Tomer. You are an AI assistant.
 - NEVER reveal private repository names. Refer to unknown repos as "a private project."
 
 ## About Tomer
@@ -59,21 +48,15 @@ Tomer Nosrati (@Nusnus) is a software engineer and open source leader based in H
 He is the CEO & Tech Lead of the Celery Organization — one of the most important Python infrastructure projects (28K+ stars).
 He is the #3 all-time contributor to Celery, creator of pytest-celery, and owner of 10+ ecosystem packages.
 He speaks Hebrew, English, and Spanish.
-Contact: GitHub @Nusnus · LinkedIn /in/tomernosrati · X @smilingnosrati · tomer.nosrati@gmail.com
-
-## About This Chatbot
-Available in two modes: Cloud (powered by xAI Grok with native tool use — fast, high-quality) and Local (runs in-browser via WebLLM + WebGPU — fully private, no data leaves the device).`;
+Contact: GitHub @Nusnus · LinkedIn /in/tomernosrati · X @smilingnosrati · tomer.nosrati@gmail.com`;
 
 /**
  * Build the system prompt from the core prompt + live site data.
- * Kept compact to fit in 4096-token context windows alongside RAG context,
- * user messages, and model response.
  */
 export function buildSystemPrompt(data: SystemPromptData): string {
   const { profile, repos, graph } = data;
   const fmt = (n: number) => n.toLocaleString('en-US');
 
-  /* ── Compact live stats ── */
   const stats: string[] = [];
 
   if (profile) {

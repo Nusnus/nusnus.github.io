@@ -1,13 +1,11 @@
 /**
  * Cloud context builder — feeds ALL available data to cloud models.
  *
- * Unlike the RAG approach (designed for 4K context WebLLM models), cloud
- * models like Grok have massive context windows (2M tokens). We dump
+ * Cloud models like Grok have massive context windows (2M tokens). We dump
  * everything — no chunking, no BM25 search, no retrieval failures.
  *
  * Data is fetched from the Cloudflare Worker (live, edge-cached) with
  * automatic fallback to build-time static JSON if the Worker is unavailable.
- * Total context: ~12K tokens — trivial for a 2M context model.
  */
 
 import type { ActivityData, RepoData, ContributionGraphData, ProfileData } from '@lib/github/types';
@@ -19,6 +17,8 @@ import {
   WORKER_BASE_URL,
 } from '@config';
 import { relativeTime } from '@lib/utils/date';
+import { getPersonality, type PersonalityLevel } from './personality';
+import { getLanguageInstruction, type Language } from './i18n';
 
 /** Format a number with commas (full precision for AI context). */
 const fmt = (n: number) => n.toLocaleString('en-US');
@@ -46,17 +46,6 @@ async function fetchGitHub(workerPath: string, staticPath: string): Promise<Resp
   return null;
 }
 
-/*
- * ── AI Context Files ──
- *
- * Persona and knowledge are loaded from markdown files in /data/ai-context/.
- * This makes them easy to edit, preview, and test without touching TypeScript.
- *
- * Files:
- *   /data/ai-context/persona.md   — Grok personality, tone, formatting rules
- *   /data/ai-context/knowledge.md — Facts about Tomer, Celery, projects, etc.
- */
-
 /** Fetch a markdown context file, returning its text or empty string. */
 async function fetchContextFile(path: string): Promise<string> {
   try {
@@ -70,17 +59,19 @@ async function fetchContextFile(path: string): Promise<string> {
 
 /**
  * Fetch ALL data sources and build a comprehensive context string.
- * Tries the live Worker endpoints first (cached at edge), falls back to
- * build-time static JSON if the Worker is unavailable.
  *
- * @param additionalContext Optional situational context appended at the end
- *   (e.g. roast widget tells Grok it's running on the homepage while the
- *   visitor is watching the portfolio).
+ * @param additionalContext Optional situational context (e.g. roast widget context)
+ * @param personalityLevel Current personality level for the Grok Spectrum
+ * @param language Current language selection
  */
-export async function buildCloudContext(additionalContext?: string): Promise<string> {
+export async function buildCloudContext(
+  additionalContext?: string,
+  personalityLevel?: PersonalityLevel,
+  language?: Language,
+): Promise<string> {
   const sections: string[] = [];
 
-  // Fetch all data sources in parallel — context files + Worker data (static fallback)
+  // Fetch all data sources in parallel
   const [persona, knowledge, profileRes, reposRes, orgReposRes, activityRes, graphRes] =
     await Promise.all([
       fetchContextFile('/data/ai-context/persona.md'),
@@ -92,8 +83,20 @@ export async function buildCloudContext(additionalContext?: string): Promise<str
       fetchGitHub('contributions', '/data/contribution-graph.json'),
     ]);
 
-  // ── Persona (Grok personality) — must come first ──
+  // ── Persona (Cybernus personality) — must come first ──
   if (persona) sections.push(persona);
+
+  // ── Personality level modifier ──
+  if (personalityLevel !== undefined) {
+    const config = getPersonality(personalityLevel);
+    sections.push(config.promptModifier);
+  }
+
+  // ── Language instruction ──
+  if (language) {
+    const langInstruction = getLanguageInstruction(language);
+    if (langInstruction) sections.push(langInstruction);
+  }
 
   // ── Knowledge base (facts about Tomer, projects, etc.) ──
   if (knowledge) sections.push(knowledge);
@@ -146,7 +149,7 @@ export async function buildCloudContext(additionalContext?: string): Promise<str
     );
   }
 
-  // ── Recent activity (ALL events, not just 5) — redact private repos ──
+  // ── Recent activity ──
   if (activityRes?.ok) {
     const data = (await activityRes.json()) as ActivityData;
 
@@ -169,8 +172,7 @@ export async function buildCloudContext(additionalContext?: string): Promise<str
     }
   }
 
-  // ── Static site content (hardcoded in constants.ts, not fetched from API) ──
-
+  // ── Static site content ──
   const articleLines = LINKEDIN_ARTICLES.map(
     (a) => `- **${a.title}** (${a.publishedAt})\n  ${a.excerpt}\n  URL: ${a.url}`,
   );

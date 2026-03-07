@@ -1,6 +1,5 @@
 ---
 import BaseLayout from '@layouts/BaseLayout.astro';
-import ThemeToggle from '@components/widgets/ThemeToggle';
 import AiChat from '@components/widgets/AiChat';
 import {
   loadProfile,
@@ -9,7 +8,6 @@ import {
   loadContributionGraph,
 } from '@lib/data/loader';
 import { buildSystemPrompt } from '@lib/ai/prompt';
-import { buildSearchIndex } from '@lib/ai/rag-index';
 
 const repos = (await loadRepos()) ?? [];
 const orgRepos = (await loadCeleryOrgRepos()) ?? [];
@@ -20,20 +18,22 @@ const systemPrompt = buildSystemPrompt({
   orgRepos,
   graph: await loadContributionGraph(),
 });
-
-const searchIndex = buildSearchIndex(repos, orgRepos);
 ---
 
-<BaseLayout title="AI Chat — Tomer Nosrati">
-  <div class="flex h-screen flex-col">
+<BaseLayout title="Cybernus — AI Chat">
+  <div
+    class="flex h-screen flex-col"
+    style="background: linear-gradient(135deg, #0a0a0a 0%, #001a00 50%, #0a0a0a 100%);"
+  >
     <!-- Header -->
     <header
-      class="border-accent/30 bg-bg-base/95 flex shrink-0 items-center justify-between border-b px-4 py-3 backdrop-blur-sm"
+      class="flex shrink-0 items-center justify-between border-b border-[#00ff41]/15 px-4 py-3 backdrop-blur-sm"
+      style="background: rgba(0, 0, 0, 0.7);"
     >
       <div class="flex items-center gap-3">
         <a
           href="/"
-          class="text-text-muted hover:text-text-primary flex items-center gap-1.5 text-sm transition-colors"
+          class="flex items-center gap-1.5 text-sm text-[#00ff41]/50 transition-colors hover:text-[#00ff41]"
           aria-label="Back to portfolio"
         >
           <svg
@@ -51,29 +51,23 @@ const searchIndex = buildSearchIndex(repos, orgRepos);
           </svg>
           Back
         </a>
-        <div class="bg-border h-5 w-px"></div>
+        <div class="h-5 w-px bg-[#00ff41]/10"></div>
         <div class="flex items-center gap-2">
-          <svg
-            class="text-accent h-5 w-5"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path>
-          </svg>
-          <h1 class="text-text-primary text-sm font-semibold">AI Chat</h1>
+          <span class="relative flex h-5 w-5 items-center justify-center">
+            <span
+              class="absolute h-full w-full animate-ping rounded-full bg-[#00ff41]/20 opacity-30"
+            ></span>
+            <span class="relative h-2.5 w-2.5 rounded-full bg-[#00ff41] shadow-[0_0_8px_#00ff41]"
+            ></span>
+          </span>
+          <h1 class="text-sm font-bold tracking-wider text-[#00ff41]">CYBERNUS</h1>
         </div>
       </div>
-      <ThemeToggle client:load />
     </header>
 
     <!-- Chat area (full remaining height) -->
     <main class="min-h-0 flex-1">
-      <AiChat client:load systemPrompt={systemPrompt} searchIndex={searchIndex} />
+      <AiChat client:load systemPrompt={systemPrompt} />
     </main>
   </div>
 </BaseLayout>
