@@ -88,6 +88,8 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
   const roastHandoffRef = useRef(false);
+  const activeSessionIdRef = useRef(activeSessionId);
+  activeSessionIdRef.current = activeSessionId;
 
   /* ─── Debug logging helper ─── */
   const addLog = useCallback(
@@ -210,6 +212,9 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
 
       const userMessageCount = messages.filter((m) => m.role === 'user').length;
       if (userMessageCount >= MAX_USER_MESSAGES) return;
+
+      // Capture session ID at start so we can detect if it changes during streaming
+      const sessionIdAtStart = activeSessionId;
 
       setInput('');
       addLog('info', 'ui', 'User message sent', { length: trimmed.length });
@@ -345,9 +350,12 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
         });
 
         // Side effects outside the updater (localStorage writes, state updates)
-        const sid = saveMessages(finalMessages, activeSessionId ?? undefined);
-        setActiveSession(sid);
-        setSessions(loadSessions());
+        // Skip save if the session changed (e.g. user switched sessions during streaming)
+        if (activeSessionIdRef.current === sessionIdAtStart) {
+          const sid = saveMessages(finalMessages, activeSessionId ?? undefined);
+          setActiveSession(sid);
+          setSessions(loadSessions());
+        }
       } catch (err) {
         if (controller.signal.aborted) {
           addLog('warn', 'stream', 'Stream aborted by user');
@@ -363,7 +371,11 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
             abortMessages = prev;
             return prev;
           });
-          if (abortMessages.length > 0 && abortMessages[abortMessages.length - 1]?.content) {
+          if (
+            activeSessionIdRef.current === sessionIdAtStart &&
+            abortMessages.length > 0 &&
+            abortMessages[abortMessages.length - 1]?.content
+          ) {
             const sid = saveMessages(abortMessages, activeSessionId ?? undefined);
             setActiveSession(sid);
             setSessions(loadSessions());
