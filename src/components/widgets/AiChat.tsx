@@ -139,6 +139,9 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       const trimmed = text.trim();
       if (!trimmed || isGenerating) return;
 
+      const userMessageCount = messages.filter((m) => m.role === 'user').length;
+      if (userMessageCount >= MAX_USER_MESSAGES) return;
+
       setInput('');
 
       const userMsg: ChatMessage = {
@@ -290,6 +293,8 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
 
   /* ─── Session management ─── */
   const clearChat = useCallback(() => {
+    abortRef.current?.abort();
+    setIsGenerating(false);
     clearMessages();
     setMessages([]);
     setActiveSession(null);
