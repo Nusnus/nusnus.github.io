@@ -353,16 +353,21 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
           addLog('warn', 'stream', 'Stream aborted by user');
           // Remove empty assistant placeholder if no tokens were streamed,
           // otherwise save the partial response so it survives page refresh
+          let abortMessages: ChatMessage[] = [];
           setMessages((prev) => {
             const last = prev[prev.length - 1];
             if (last?.role === 'assistant' && !last.content) {
-              return prev.slice(0, -1);
+              abortMessages = prev.slice(0, -1);
+              return abortMessages;
             }
-            const sid = saveMessages(prev, activeSessionId ?? undefined);
-            setActiveSession(sid);
-            setSessions(loadSessions());
+            abortMessages = prev;
             return prev;
           });
+          if (abortMessages.length > 0 && abortMessages[abortMessages.length - 1]?.content) {
+            const sid = saveMessages(abortMessages, activeSessionId ?? undefined);
+            setActiveSession(sid);
+            setSessions(loadSessions());
+          }
           return;
         }
 

@@ -292,12 +292,13 @@ function renderCallout(type: string, content: string, key: number): ReactNode {
 /* ── Table support ── */
 
 function renderTable(lines: string[], key: number): ReactNode {
-  const rows = lines.map((line) =>
-    line
-      .split('|')
-      .map((cell) => cell.trim())
-      .filter((cell) => cell !== ''),
-  );
+  const rows = lines.map((line) => {
+    const cells = line.split('|').map((cell) => cell.trim());
+    // Remove leading/trailing empty strings from pipe-delimited lines
+    if (cells[0] === '') cells.shift();
+    if (cells[cells.length - 1] === '') cells.pop();
+    return cells;
+  });
 
   if (rows.length < 2) return null;
 
