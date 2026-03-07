@@ -301,7 +301,13 @@ export default function CybernusChat() {
             tool_choice: 'auto',
             onReasoning: (tokens) => setReasoningTokens(tokens),
             onToolActivity: (label, phase) => {
-              setIsThinking(true); // tool calls happen pre-output, same state
+              // Only assert `isThinking` on 'start'. A 'done' event means the
+              // tool just FINISHED — if we're already mid-output (multi-hop:
+              // text → tool → text), re-setting `true` here would flicker the
+              // ThinkingIndicator below the streaming bubble until the next
+              // text delta resets it. If we're pre-output, `isThinking` is
+              // already true from the 'start' event — 'done' is a no-op.
+              if (phase === 'start') setIsThinking(true);
               setToolActivity((prev) => {
                 if (phase === 'start') return [...prev, label];
                 // Remove first matching label (same tool can run twice concurrently).
