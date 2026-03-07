@@ -325,7 +325,8 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
         // Map tool calls to actions
         const actions = mapToolCallsToActions(result.toolCalls);
 
-        // Final update
+        // Final update — compute final messages, then persist outside the updater
+        let finalMessages: ChatMessage[] = [];
         setMessages((prev) => {
           const copy = [...prev];
           const last = copy[copy.length - 1];
@@ -339,14 +340,14 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
             delete finalMsg.searchStatus;
             copy[copy.length - 1] = finalMsg;
           }
-
-          // Save to memory
-          const sid = saveMessages(copy, activeSessionId ?? undefined);
-          setActiveSession(sid);
-          setSessions(loadSessions());
-
+          finalMessages = copy;
           return copy;
         });
+
+        // Side effects outside the updater (localStorage writes, state updates)
+        const sid = saveMessages(finalMessages, activeSessionId ?? undefined);
+        setActiveSession(sid);
+        setSessions(loadSessions());
       } catch (err) {
         if (controller.signal.aborted) {
           addLog('warn', 'stream', 'Stream aborted by user');
