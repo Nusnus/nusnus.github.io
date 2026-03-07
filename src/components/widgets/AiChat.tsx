@@ -44,8 +44,10 @@ interface AiChatProps {
 
 type EngineState = 'idle' | 'ready';
 
-const WELCOME_MESSAGE =
-  "I'm **Cybernus** — the digital construct of Tomer Nosrati. I have access to all of Tomer's GitHub data, projects, and knowledge base.\n\nAsk me anything about his open source work, the **Celery** ecosystem, **pytest-celery**, or his technical journey. I can also search the web for current information.";
+/** Check if a message is any translated welcome message. */
+function isWelcomeMessage(content: string): boolean {
+  return LANGUAGES.some((l) => t(l.code).welcome === content);
+}
 
 /** Main Cybernus chat component — cloud-only architecture with debug panel. */
 export default function AiChat({ systemPrompt }: AiChatProps) {
@@ -139,12 +141,12 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       const handoff = sessionStorage.getItem('grok-roast-handoff');
       if (handoff) {
         roastHandoffRef.current = true;
+        sessionStorage.removeItem('grok-roast-handoff');
         const parsed = JSON.parse(handoff) as { messages?: ChatMessage[] } | ChatMessage[];
         const msgs = Array.isArray(parsed) ? parsed : parsed.messages;
         if (Array.isArray(msgs) && msgs.length > 0) {
           setMessages(msgs);
           setEngineState('ready');
-          sessionStorage.removeItem('grok-roast-handoff');
           addLog('info', 'session', 'Roast handoff loaded', { messageCount: msgs.length });
           return;
         }
@@ -183,11 +185,11 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
         }
       }
 
-      // Start new session
+      // Start new session with translated welcome
       const welcomeMsg: ChatMessage = {
         id: crypto.randomUUID(),
         role: 'assistant',
-        content: WELCOME_MESSAGE,
+        content: t(language).welcome,
       };
       setMessages([welcomeMsg]);
       setActiveSession(null);
@@ -197,7 +199,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
 
       setTimeout(() => inputRef.current?.focus(), 100);
     },
-    [addLog],
+    [addLog, language],
   );
 
   /* ─── Send message ─── */
@@ -247,7 +249,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
         // Build chat history for the API
         const chatHistory = trimHistory(
           updated
-            .filter((m) => m.content.length > 0 && m.content !== WELCOME_MESSAGE)
+            .filter((m) => m.content.length > 0 && !isWelcomeMessage(m.content))
             .map((m) => ({ role: m.role, content: m.content })),
         );
 
@@ -434,6 +436,8 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
   );
 
   const handleClearAll = useCallback(() => {
+    abortRef.current?.abort();
+    setIsGenerating(false);
     clearAllSessions();
     setMessages([]);
     setActiveSession(null);
