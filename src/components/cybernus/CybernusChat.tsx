@@ -246,7 +246,7 @@ export default function CybernusChat() {
             tool_choice: 'auto',
             onReasoning: (tokens) => setReasoningTokens(tokens),
             onToolActivity: (label, phase) => {
-              setIsThinking(true);
+              if (phase === 'start') setIsThinking(true);
               setToolActivity((prev) => {
                 if (phase === 'start') return [...prev, label];
                 const idx = prev.indexOf(label);
