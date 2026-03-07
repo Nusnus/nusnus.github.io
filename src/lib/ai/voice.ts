@@ -505,6 +505,7 @@ export class VoiceSession {
   }
 
   private handleError(message: string): void {
+    if (this.stopped || this.destroyed) return;
     this.lastError = message;
     this.setState('error');
     this.callbacks.onError(message);
