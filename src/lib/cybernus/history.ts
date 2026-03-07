@@ -23,18 +23,19 @@ export const MAX_HISTORY_MESSAGES = 50;
  * Always returns a fresh array (never the input reference).
  *
  * Algorithm:
- *   1. If already short enough → return a copy as-is.
- *   2. Cut to the last `max` messages.
- *   3. If the cut landed on an assistant message, advance until it lands
- *      on a user message (or runs out).
+ *   1. Cut to the last `max` messages (clamped — a short list starts at 0).
+ *   2. If the cut landed on an assistant message, advance until it lands
+ *      on a user message (or runs out → empty).
+ *
+ * Step 2 runs even when no trim was needed: a session loaded from
+ * localStorage may already be assistant-headed (see file header), and
+ * we want a single enforcement point for the user-turn invariant.
  */
 export function trimHistoryForRequest(
   messages: readonly ChatMessage[],
   max: number = MAX_HISTORY_MESSAGES,
 ): ChatMessage[] {
-  if (messages.length <= max) return [...messages];
-
-  let start = messages.length - max;
+  let start = Math.max(0, messages.length - max);
   // Advance past any orphaned assistant messages at the head of the cut.
   // A conversation tail starting with "assistant said X" confuses the model
   // about who spoke first.
