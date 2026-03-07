@@ -150,3 +150,199 @@
     animation: none;
   }
 }
+
+/* ─── Cybernus Matrix Animations ─── */
+
+@keyframes matrix-rain {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh);
+    opacity: 0;
+  }
+}
+
+@keyframes scan-line {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100vh);
+  }
+}
+
+@keyframes glow-pulse {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes typing-cursor {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes voice-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+}
+
+@keyframes wave-bar {
+  0%,
+  100% {
+    height: 4px;
+  }
+  50% {
+    height: 20px;
+  }
+}
+
+.cybernus-fade-in-up {
+  animation: fade-in-up 400ms ease-out both;
+}
+
+.cybernus-fade-in {
+  animation: fade-in 300ms ease-out both;
+}
+
+.cybernus-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(0, 255, 65, 0.08), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2s ease-in-out infinite;
+}
+
+/* Matrix digital rain column */
+.matrix-rain-char {
+  animation: matrix-rain var(--rain-duration, 8s) linear infinite;
+  animation-delay: var(--rain-delay, 0s);
+}
+
+/* Scan line effect */
+.cybernus-scan-line {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 1;
+}
+.cybernus-scan-line::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(0, 255, 65, 0.15), transparent);
+  animation: scan-line 8s linear infinite;
+}
+
+/* Glow pulse for personality dot */
+.cybernus-glow-pulse {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+/* Voice recording ring animation */
+.voice-ring {
+  animation: voice-ring 1.5s ease-out infinite;
+}
+
+/* Voice waveform bar */
+.wave-bar {
+  animation: wave-bar 0.8s ease-in-out infinite;
+}
+
+/* Custom scrollbar for chat */
+.cybernus-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 255, 65, 0.15) transparent;
+}
+.cybernus-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.cybernus-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.cybernus-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 65, 0.15);
+  border-radius: 3px;
+}
+.cybernus-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 255, 65, 0.3);
+}
+
+/* Typing cursor */
+.typing-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  background: #00ff41;
+  margin-left: 2px;
+  animation: typing-cursor 1s step-end infinite;
+  vertical-align: text-bottom;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .matrix-rain-char,
+  .cybernus-scan-line::after,
+  .cybernus-glow-pulse,
+  .cybernus-shimmer,
+  .voice-ring,
+  .wave-bar {
+    animation: none;
+  }
+  .cybernus-fade-in-up,
+  .cybernus-fade-in {
+    animation: none;
+    opacity: 1;
+  }
+}

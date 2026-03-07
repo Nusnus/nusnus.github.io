@@ -22,22 +22,22 @@ const systemPrompt = buildSystemPrompt({
 
 <BaseLayout title="Cybernus — AI Chat">
   <div
-    class="flex h-screen flex-col"
+    class="flex h-screen flex-col overflow-hidden"
     style="background: linear-gradient(135deg, #0a0a0a 0%, #001a00 50%, #0a0a0a 100%);"
   >
-    <!-- Header -->
+    <!-- Compact header — full-width -->
     <header
-      class="flex shrink-0 items-center justify-between border-b border-[#00ff41]/15 px-4 py-3 backdrop-blur-sm"
-      style="background: rgba(0, 0, 0, 0.7);"
+      class="flex shrink-0 items-center justify-between border-b border-[#00ff41]/10 px-4 py-2.5 md:px-8 lg:px-12"
+      style="background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(12px);"
     >
       <div class="flex items-center gap-3">
         <a
           href="/"
-          class="flex items-center gap-1.5 text-sm text-[#00ff41]/50 transition-colors hover:text-[#00ff41]"
+          class="flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs text-[#00ff41]/40 transition-all hover:bg-[#00ff41]/5 hover:text-[#00ff41]/80"
           aria-label="Back to portfolio"
         >
           <svg
-            class="h-4 w-4"
+            class="h-3.5 w-3.5"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -49,23 +49,23 @@ const systemPrompt = buildSystemPrompt({
             <path d="m12 19-7-7 7-7"></path>
             <path d="M19 12H5"></path>
           </svg>
-          Back
+          <span class="hidden sm:inline">Back</span>
         </a>
-        <div class="h-5 w-px bg-[#00ff41]/10"></div>
+        <div class="h-4 w-px bg-[#00ff41]/8"></div>
         <div class="flex items-center gap-2">
           <span class="relative flex h-5 w-5 items-center justify-center">
             <span
-              class="absolute h-full w-full animate-ping rounded-full bg-[#00ff41]/20 opacity-30"
+              class="absolute h-full w-full animate-ping rounded-full bg-[#00ff41]/15 opacity-25"
             ></span>
-            <span class="relative h-2.5 w-2.5 rounded-full bg-[#00ff41] shadow-[0_0_8px_#00ff41]"
+            <span class="relative h-2 w-2 rounded-full bg-[#00ff41] shadow-[0_0_10px_#00ff41]"
             ></span>
           </span>
-          <h1 class="text-sm font-bold tracking-wider text-[#00ff41]">CYBERNUS</h1>
+          <h1 class="text-sm font-bold tracking-[0.2em] text-[#00ff41]">CYBERNUS</h1>
         </div>
       </div>
     </header>
 
-    <!-- Chat area (full remaining height) -->
+    <!-- Chat area — maximized -->
     <main class="min-h-0 flex-1">
       <AiChat client:load systemPrompt={systemPrompt} />
     </main>

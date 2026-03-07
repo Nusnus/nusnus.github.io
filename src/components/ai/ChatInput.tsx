@@ -20,9 +20,37 @@ interface ChatInputProps {
   isRecording?: boolean;
   onVoiceToggle?: () => void;
   voiceSupported?: boolean;
+  /** Audio level 0-1 for waveform visualization. */
+  audioLevel?: number;
+  /** Live transcription preview text. */
+  transcriptPreview?: string;
 }
 
-/** Chat input footer — textarea + send/stop + voice + message limit banner. */
+/** Voice waveform visualization bars. */
+function VoiceWaveform({ audioLevel }: { audioLevel: number }) {
+  const bars = 5;
+  return (
+    <div className="flex items-center gap-0.5">
+      {Array.from({ length: bars }).map((_, i) => {
+        const delay = i * 0.1;
+        const height = Math.max(4, audioLevel * 24 * (1 - Math.abs(i - 2) * 0.2));
+        return (
+          <div
+            key={i}
+            className="w-[3px] rounded-full bg-red-400 transition-all duration-100"
+            style={{
+              height: `${height}px`,
+              opacity: 0.5 + audioLevel * 0.5,
+              animationDelay: `${delay}s`,
+            }}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+/** Chat input footer — full-width modern design with voice waveform. */
 export function ChatInput({
   input,
   setInput,
@@ -38,6 +66,8 @@ export function ChatInput({
   isRecording = false,
   onVoiceToggle,
   voiceSupported = false,
+  audioLevel = 0,
+  transcriptPreview,
 }: ChatInputProps) {
   const strings = t(language);
 
@@ -50,13 +80,13 @@ export function ChatInput({
 
   return (
     <div
-      className="border-border/50 border-t px-4 py-3"
-      style={{ background: 'rgba(0, 0, 0, 0.3)' }}
+      className="border-t border-[#00ff41]/8 px-4 py-3 backdrop-blur-sm md:px-8 lg:px-12"
+      style={{ background: 'rgba(0, 0, 0, 0.4)' }}
     >
-      <div className="mx-auto max-w-2xl">
+      <div className="mx-auto max-w-4xl">
         {isAtLimit ? (
           <div className="flex flex-col items-center gap-3 py-2 text-center">
-            <p className="text-text-secondary text-sm">{strings.messageLimitReached}</p>
+            <p className="text-sm text-gray-400">{strings.messageLimitReached}</p>
             <button
               onClick={onClearChat}
               className="rounded-xl bg-[#00ff41] px-6 py-2.5 text-sm font-semibold text-black transition-all hover:bg-[#00cc33] hover:shadow-[0_0_20px_rgba(0,255,65,0.3)]"
@@ -66,23 +96,55 @@ export function ChatInput({
           </div>
         ) : (
           <>
-            <div className="flex items-end gap-2 rounded-xl border border-[#00ff41]/20 bg-black/40 px-4 py-3 transition-all focus-within:border-[#00ff41]/40 focus-within:shadow-[0_0_15px_rgba(0,255,65,0.1)]">
-              {/* Voice button */}
+            {/* Transcript preview overlay */}
+            {isRecording && transcriptPreview && (
+              <div className="cybernus-fade-in mb-2 rounded-lg border border-red-500/20 bg-red-500/5 px-4 py-2 text-sm text-red-300/80">
+                <span className="mr-2 text-[10px] font-medium tracking-wider text-red-400/60 uppercase">
+                  {strings.transcribing}
+                </span>
+                {transcriptPreview}
+              </div>
+            )}
+
+            <div
+              className={cn(
+                'flex items-end gap-3 rounded-2xl border bg-black/30 px-4 py-3 transition-all',
+                isRecording
+                  ? 'border-red-500/30 shadow-[0_0_20px_rgba(239,68,68,0.1)]'
+                  : 'border-[#00ff41]/15 focus-within:border-[#00ff41]/35 focus-within:shadow-[0_0_20px_rgba(0,255,65,0.08)]',
+              )}
+            >
+              {/* Voice button with waveform */}
               {voiceSupported && onVoiceToggle && (
-                <button
-                  onClick={onVoiceToggle}
-                  disabled={isGenerating}
-                  className={cn(
-                    'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-all',
-                    isRecording
-                      ? 'bg-red-500/20 text-red-400 shadow-[0_0_10px_rgba(239,68,68,0.3)]'
-                      : 'text-[#00ff41]/60 hover:bg-[#00ff41]/10 hover:text-[#00ff41]',
+                <div className="relative shrink-0">
+                  <button
+                    onClick={onVoiceToggle}
+                    disabled={isGenerating}
+                    className={cn(
+                      'relative flex h-10 w-10 items-center justify-center rounded-xl transition-all',
+                      isRecording
+                        ? 'bg-red-500/20 text-red-400'
+                        : 'text-[#00ff41]/50 hover:bg-[#00ff41]/10 hover:text-[#00ff41]',
+                    )}
+                    aria-label={isRecording ? strings.voiceStop : strings.voiceStart}
+                    title={isRecording ? strings.voiceStop : strings.voiceStart}
+                  >
+                    {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+                    {/* Pulsing ring animation when recording */}
+                    {isRecording && (
+                      <>
+                        <span className="voice-ring absolute inset-0 rounded-xl border-2 border-red-500/40" />
+                        <span className="voice-ring absolute inset-0 rounded-xl border-2 border-red-500/20 [animation-delay:0.5s]" />
+                      </>
+                    )}
+                  </button>
+                  {/* Waveform bars next to mic */}
+                  {isRecording && (
+                    <div className="absolute top-1/2 -right-1 translate-x-full -translate-y-1/2">
+                      <VoiceWaveform audioLevel={audioLevel} />
+                    </div>
                   )}
-                  aria-label={isRecording ? strings.voiceStop : strings.voiceStart}
-                  title={isRecording ? strings.voiceStop : strings.voiceStart}
-                >
-                  {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-                </button>
+                </div>
               )}
 
               <textarea
@@ -94,18 +156,24 @@ export function ChatInput({
                   e.target.style.height = `${Math.min(e.target.scrollHeight, 128)}px`;
                 }}
                 onKeyDown={handleKeyDown}
-                placeholder={strings.placeholder}
+                placeholder={isRecording ? strings.recording : strings.placeholder}
                 rows={1}
-                className="max-h-32 flex-1 resize-none bg-transparent text-sm leading-relaxed text-[#00ff41] outline-none placeholder:text-[#00ff41]/30"
-                disabled={isGenerating}
+                className={cn(
+                  'max-h-32 flex-1 resize-none bg-transparent text-sm leading-relaxed outline-none',
+                  isRecording
+                    ? 'text-red-300/80 placeholder:text-red-400/30'
+                    : 'text-[#00ff41] placeholder:text-[#00ff41]/25',
+                )}
+                disabled={isGenerating || isRecording}
                 dir={language === 'he' ? 'rtl' : 'ltr'}
                 aria-label="Chat message input"
               />
 
+              {/* Send / Stop button */}
               {isGenerating ? (
                 <button
                   onClick={onStop}
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-500/10 text-red-400 transition-colors hover:bg-red-500/20"
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-500/15 text-red-400 transition-all hover:bg-red-500/25 hover:shadow-[0_0_12px_rgba(239,68,68,0.2)]"
                   aria-label={strings.stop}
                 >
                   <Square className="h-4 w-4 fill-current" />
@@ -115,10 +183,10 @@ export function ChatInput({
                   onClick={() => onSend(input)}
                   disabled={!input.trim()}
                   className={cn(
-                    'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-all',
+                    'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all',
                     input.trim()
-                      ? 'bg-[#00ff41] text-black hover:shadow-[0_0_15px_rgba(0,255,65,0.4)]'
-                      : 'cursor-not-allowed text-[#00ff41]/20',
+                      ? 'bg-[#00ff41] text-black shadow-[0_0_15px_rgba(0,255,65,0.2)] hover:shadow-[0_0_25px_rgba(0,255,65,0.4)]'
+                      : 'cursor-not-allowed text-[#00ff41]/15',
                   )}
                   aria-label={strings.send}
                 >
@@ -126,10 +194,19 @@ export function ChatInput({
                 </button>
               )}
             </div>
-            <p className="mt-2 px-1 text-center text-[10px] text-[#00ff41]/30">
-              {strings.poweredBy}
-              {userMsgCount > 0 && ` · ${userMsgCount}/${maxMessages}`}
-            </p>
+
+            {/* Footer info */}
+            <div className="mt-2 flex items-center justify-center gap-2 px-1 text-[10px] text-[#00ff41]/25">
+              <span>{strings.poweredBy}</span>
+              {userMsgCount > 0 && (
+                <>
+                  <span className="text-[#00ff41]/10">·</span>
+                  <span>
+                    {userMsgCount}/{maxMessages}
+                  </span>
+                </>
+              )}
+            </div>
           </>
         )}
       </div>
