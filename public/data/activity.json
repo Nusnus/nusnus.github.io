@@ -753,7 +753,7 @@
       "createdAt": "2026-03-02T17:51:15Z"
     },
     {
-      "id": "7012851342",
+      "id": "7012851343",
       "type": "PullRequestEvent",
       "repo": "celery/pytest-celery",
       "title": "Pull Request",
@@ -761,7 +761,7 @@
       "createdAt": "2026-03-02T17:48:37Z"
     },
     {
-      "id": "7012851343",
+      "id": "7012851342",
       "type": "PullRequestEvent",
       "repo": "celery/pytest-celery",
       "title": "Pull Request",
@@ -1033,20 +1033,20 @@
       "createdAt": "2026-02-28T00:17:06Z"
     },
     {
-      "id": "6964929097",
-      "type": "PullRequestEvent",
-      "repo": "Nusnus/Nusnus",
-      "title": "Pull Request",
-      "url": "https://github.com/Nusnus/Nusnus",
-      "createdAt": "2026-02-28T00:11:06Z"
-    },
-    {
       "id": "6964929098",
       "type": "PullRequestEvent",
       "repo": "Nusnus/Nusnus",
       "title": "Pull Request",
       "url": "https://github.com/Nusnus/Nusnus",
       "createdAt": "2026-02-27T23:57:15Z"
+    },
+    {
+      "id": "6964929097",
+      "type": "PullRequestEvent",
+      "repo": "Nusnus/Nusnus",
+      "title": "Pull Request",
+      "url": "https://github.com/Nusnus/Nusnus",
+      "createdAt": "2026-02-28T00:11:06Z"
     },
     {
       "id": "6964929094",
@@ -1263,22 +1263,6 @@
       "title": "Push",
       "url": "https://github.com/Nusnus/billiard",
       "createdAt": "2026-02-23T19:20:47Z"
-    },
-    {
-      "id": "6321306341",
-      "type": "PullRequestReviewEvent",
-      "repo": "celery/py-amqp",
-      "title": "Review: PR",
-      "url": "https://github.com/celery/py-amqp",
-      "createdAt": "2026-02-04T21:49:17Z"
-    },
-    {
-      "id": "6320560663",
-      "type": "PullRequestReviewEvent",
-      "repo": "celery/django-celery-beat",
-      "title": "Review: PR",
-      "url": "https://github.com/celery/django-celery-beat",
-      "createdAt": "2026-02-04T21:17:35Z"
     }
   ],
   "todaySummary": {
