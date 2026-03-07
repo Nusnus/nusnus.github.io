@@ -173,7 +173,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
         // Build chat history for the API
         const chatHistory = trimHistory(
           updated
-            .filter((m) => m.content.length > 0)
+            .filter((m) => m.content.length > 0 && m.content !== WELCOME_MESSAGE)
             .map((m) => ({ role: m.role, content: m.content })),
         );
 
