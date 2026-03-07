@@ -259,8 +259,13 @@ export default function CybernusChat() {
         // Summarize old messages if the conversation is getting long.
         // Done before building history so the summary is sent to the model.
         const summarizedBase = await maybeSummarizeCloud(messages);
-        if (summarizedBase !== messages) {
+        if (summarizedBase !== messages && !abortRef.current) {
           // Keep the summarized base + the new user+asst bubbles in state.
+          // Abort guard: maybeSummarizeCloud makes an unabortable network
+          // call — if clearChat/switchSession replaced messages during it,
+          // this wholesale setMessages would restore the stale conversation.
+          // (Stop-only is safe to fall through: cloudChatStream aborts
+          // immediately and the catch block shows *(stopped)*.)
           setMessages([...summarizedBase, userMsg, asstMsg]);
         }
 
