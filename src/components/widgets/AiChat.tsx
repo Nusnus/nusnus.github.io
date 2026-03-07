@@ -80,9 +80,10 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       const handoff = sessionStorage.getItem('grok-roast-handoff');
       if (handoff) {
         roastHandoffRef.current = true;
-        const parsed = JSON.parse(handoff) as ChatMessage[];
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setMessages(parsed);
+        const parsed = JSON.parse(handoff) as { messages?: ChatMessage[] } | ChatMessage[];
+        const msgs = Array.isArray(parsed) ? parsed : parsed.messages;
+        if (Array.isArray(msgs) && msgs.length > 0) {
+          setMessages(msgs);
           setEngineState('ready');
           sessionStorage.removeItem('grok-roast-handoff');
           return;
@@ -303,6 +304,8 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
   }, []);
 
   const switchSession = useCallback((session: ChatSession) => {
+    abortRef.current?.abort();
+    setIsGenerating(false);
     setActiveSessionId(session.id);
     setActiveSession(session.id);
     setMessages(session.messages);
