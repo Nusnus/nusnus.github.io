@@ -90,6 +90,10 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
   const abortRef = useRef<AbortController | null>(null);
   const activeSessionIdRef = useRef(activeSessionId);
   activeSessionIdRef.current = activeSessionId;
+  /** Incremented on every session-changing operation (clear, switch, delete, clearAll)
+   *  so the sendMessage abort handler can detect stale contexts even when
+   *  activeSessionId is null on both sides (null === null). */
+  const sessionGenRef = useRef(0);
 
   /* ─── Debug logging helper ─── */
   const addLog = useCallback(
@@ -214,8 +218,9 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       const userMessageCount = messages.filter((m) => m.role === 'user').length;
       if (userMessageCount >= MAX_USER_MESSAGES) return;
 
-      // Capture session ID at start so we can detect if it changes during streaming
-      const sessionIdAtStart = activeSessionId;
+      // Capture generation counter so we can detect session-changing operations
+      // during streaming (handles the null === null edge case for new sessions)
+      const genAtStart = sessionGenRef.current;
 
       setInput('');
       if (inputRef.current) inputRef.current.style.height = 'auto';
@@ -352,8 +357,8 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
         setMessages(finalMessages);
 
         // Persist to localStorage
-        // Skip save if the session changed (e.g. user switched sessions during streaming)
-        if (activeSessionIdRef.current === sessionIdAtStart) {
+        // Skip save if a session-changing operation occurred during streaming
+        if (sessionGenRef.current === genAtStart) {
           const sid = saveMessages(finalMessages, activeSessionIdRef.current ?? undefined);
           setActiveSession(sid);
           setSessions(loadSessions());
@@ -369,8 +374,8 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
               ? updated.slice(0, -1) // Remove empty assistant placeholder
               : [...updated.slice(0, -1), { ...assistantMsg, content: lastAccumulated }];
 
-          // Only update messages/save if session hasn't changed during streaming
-          if (activeSessionIdRef.current === sessionIdAtStart) {
+          // Only update messages/save if no session-changing operation occurred
+          if (sessionGenRef.current === genAtStart) {
             setMessages(abortMessages);
 
             if (tokenCount > 0 && lastAccumulated) {
@@ -430,8 +435,9 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
     if (messages.length > 0 && messages.some((m) => m.role === 'user')) {
       saveMessages(messages, activeSessionId ?? undefined);
     }
-    // Update ref synchronously BEFORE aborting so the sendMessage abort handler
-    // sees the cleared session and skips its re-save logic (race condition fix).
+    // Increment generation counter so any in-flight sendMessage abort handler
+    // detects the session change and skips its re-save logic.
+    sessionGenRef.current++;
     activeSessionIdRef.current = null;
     abortRef.current?.abort();
     setIsGenerating(false);
@@ -445,7 +451,8 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
 
   const switchSession = useCallback(
     (session: ChatSession) => {
-      // Update ref synchronously before aborting (same race condition guard as clearChat)
+      // Increment generation counter and update ref before aborting
+      sessionGenRef.current++;
       activeSessionIdRef.current = session.id;
       abortRef.current?.abort();
       setIsGenerating(false);
@@ -464,6 +471,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       deleteSession(sessionId);
       setSessions(loadSessions());
       if (activeSessionId === sessionId) {
+        sessionGenRef.current++;
         activeSessionIdRef.current = null;
         abortRef.current?.abort();
         setIsGenerating(false);
@@ -478,6 +486,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
   );
 
   const handleClearAll = useCallback(() => {
+    sessionGenRef.current++;
     activeSessionIdRef.current = null;
     abortRef.current?.abort();
     setIsGenerating(false);
