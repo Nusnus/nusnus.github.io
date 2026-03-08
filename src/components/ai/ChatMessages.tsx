@@ -1,4 +1,4 @@
-import { type RefObject, useMemo, useCallback, useState } from 'react';
+import { type RefObject, useMemo, useCallback, useState, useEffect } from 'react';
 import {
   ArrowRight,
   ExternalLink,
@@ -204,6 +204,14 @@ function ExpandedMarkdownView({
     [],
   );
   const handleZoomReset = useCallback(() => setExpandedZoom(DEFAULT_ZOOM), []);
+
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose();
+    }
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [onClose]);
 
   const zoomBtnClass =
     'flex h-8 w-8 items-center justify-center rounded-lg text-white/50 transition-colors hover:bg-white/[0.08] hover:text-white/80 disabled:opacity-30 disabled:cursor-not-allowed';
