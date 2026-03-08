@@ -331,13 +331,37 @@
   vertical-align: text-bottom;
 }
 
+/* Floating thought animation — drifts from top to bottom */
+@keyframes thought-float {
+  0% {
+    top: -5%;
+    opacity: 0;
+  }
+  5% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
+}
+
+.thought-float {
+  animation: thought-float var(--float-duration, 20s) linear forwards;
+  animation-delay: var(--float-delay, 0s);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .matrix-rain-char,
   .cybernus-scan-line::after,
   .cybernus-glow-pulse,
   .cybernus-shimmer,
   .voice-ring,
-  .wave-bar {
+  .wave-bar,
+  .thought-float {
     animation: none;
   }
   .cybernus-fade-in-up,

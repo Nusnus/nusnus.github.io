@@ -30,6 +30,7 @@ import { ChatMessages } from '@components/ai/ChatMessages';
 import { ChatInput } from '@components/ai/ChatInput';
 import { ModelPicker } from '@components/ai/ModelPicker';
 import { SessionHistory } from '@components/ai/SessionHistory';
+import { ThoughtsPanel } from '@components/ai/ThoughtsPanel';
 import { DebugPanel, createLogEntry } from '@components/ai/DebugPanel';
 import type { DebugLogEntry, DebugState } from '@components/ai/DebugPanel';
 import { getPersonalityLevel, setPersonalityLevel, PERSONALITY_LEVELS } from '@lib/ai/personality';
@@ -849,6 +850,9 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
           </>
         )}
       </div>
+
+      {/* Floating thoughts panel — visible on xl+ screens */}
+      <ThoughtsPanel />
 
       {/* Debug panel — only in development */}
       {import.meta.env.DEV && (
