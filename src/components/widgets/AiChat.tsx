@@ -428,12 +428,15 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
 
   /* ─── Session management ─── */
   const clearChat = useCallback(() => {
-    abortRef.current?.abort();
-    setIsGenerating(false);
     // Save current messages before clearing so the session persists in history
     if (messages.length > 0 && messages.some((m) => m.role === 'user')) {
       saveMessages(messages, activeSessionId ?? undefined);
     }
+    // Update ref synchronously BEFORE aborting so the sendMessage abort handler
+    // sees the cleared session and skips its re-save logic (race condition fix).
+    activeSessionIdRef.current = null;
+    abortRef.current?.abort();
+    setIsGenerating(false);
     clearMessages();
     setMessages([]);
     setActiveSession(null);
@@ -444,6 +447,8 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
 
   const switchSession = useCallback(
     (session: ChatSession) => {
+      // Update ref synchronously before aborting (same race condition guard as clearChat)
+      activeSessionIdRef.current = session.id;
       abortRef.current?.abort();
       setIsGenerating(false);
       setActiveSessionId(session.id);
@@ -461,6 +466,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       deleteSession(sessionId);
       setSessions(loadSessions());
       if (activeSessionId === sessionId) {
+        activeSessionIdRef.current = null;
         abortRef.current?.abort();
         setIsGenerating(false);
         clearMessages();
