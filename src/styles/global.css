@@ -258,7 +258,7 @@
 }
 
 .cybernus-shimmer {
-  background: linear-gradient(90deg, transparent, var(--color-accent-muted), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.04), transparent);
   background-size: 200% 100%;
   animation: shimmer 2s ease-in-out infinite;
 }
@@ -325,7 +325,7 @@
   display: inline-block;
   width: 2px;
   height: 1em;
-  background: var(--color-accent);
+  background: #34d399;
   margin-left: 2px;
   animation: typing-cursor 1s step-end infinite;
   vertical-align: text-bottom;

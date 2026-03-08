@@ -36,7 +36,7 @@ function VoiceWaveform({ audioLevel }: { audioLevel: number }) {
         return (
           <div
             key={i}
-            className="wave-bar bg-accent w-[3px] rounded-full transition-[height] duration-75"
+            className="wave-bar w-[3px] rounded-full bg-red-400 transition-[height] duration-75"
             style={{
               height: `${height}px`,
               animationDelay: `${i * 0.12}s`,
@@ -78,14 +78,14 @@ export function ChatInput({
   };
 
   return (
-    <div className="shrink-0 px-4 pt-2 pb-4 md:px-6 lg:px-8">
+    <div className="shrink-0 px-4 pt-2 pb-4 md:px-8 lg:px-12">
       <div className="mx-auto max-w-3xl">
         {isAtLimit ? (
-          <div className="flex flex-col items-center gap-3 rounded-2xl border border-yellow-500/20 bg-yellow-500/5 py-4 text-center">
-            <p className="text-text-secondary text-sm">{strings.messageLimitReached}</p>
+          <div className="flex flex-col items-center gap-3 rounded-2xl border border-amber-500/20 bg-amber-500/[0.04] py-4 text-center backdrop-blur-sm">
+            <p className="text-sm text-white/60">{strings.messageLimitReached}</p>
             <button
               onClick={onClearChat}
-              className="bg-accent text-bg-base hover:bg-accent-hover rounded-xl px-6 py-2 text-sm font-semibold transition-all"
+              className="rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-6 py-2 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition-all hover:shadow-emerald-500/30"
             >
               {strings.startNewChat}
             </button>
@@ -94,20 +94,23 @@ export function ChatInput({
           <>
             {/* Recording indicator bar */}
             {isRecording && (
-              <div className="cybernus-fade-in mb-2 flex items-center gap-3 rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-2.5">
+              <div className="cybernus-fade-in mb-2.5 flex items-center gap-3 rounded-xl border border-red-500/20 bg-red-500/[0.04] px-4 py-3 backdrop-blur-sm">
                 <div className="flex items-center gap-2">
-                  <span className="h-2 w-2 animate-pulse rounded-full bg-red-400" />
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-50" />
+                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-400" />
+                  </span>
                   <span className="text-xs font-medium text-red-400">{strings.recording}</span>
                 </div>
                 <VoiceWaveform audioLevel={audioLevel} />
                 {transcriptPreview && (
-                  <p className="min-w-0 flex-1 truncate text-sm text-red-300/70 italic">
+                  <p className="min-w-0 flex-1 truncate text-sm text-red-300/60 italic">
                     {transcriptPreview}
                   </p>
                 )}
                 <button
                   onClick={onVoiceToggle}
-                  className="shrink-0 rounded-lg bg-red-500/15 px-3 py-1 text-xs font-medium text-red-400 transition-all hover:bg-red-500/25"
+                  className="shrink-0 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-1.5 text-xs font-medium text-red-400 transition-all hover:bg-red-500/20"
                 >
                   {strings.voiceStop}
                 </button>
@@ -117,10 +120,10 @@ export function ChatInput({
             {/* Main input bar */}
             <div
               className={cn(
-                'relative flex items-end gap-2 rounded-2xl border px-3 py-2 shadow-lg shadow-black/10 transition-all',
+                'relative flex items-end gap-2 rounded-2xl border px-3 py-2.5 shadow-xl transition-all',
                 isRecording
-                  ? 'border-red-500/25 bg-red-500/[0.03]'
-                  : 'border-border bg-bg-surface focus-within:border-accent/30 focus-within:shadow-accent/5',
+                  ? 'border-red-500/25 bg-red-500/[0.03] shadow-red-500/5'
+                  : 'border-white/[0.08] bg-white/[0.03] shadow-black/20 backdrop-blur-sm focus-within:border-emerald-500/30 focus-within:shadow-emerald-500/5',
               )}
             >
               {/* Voice button */}
@@ -128,7 +131,7 @@ export function ChatInput({
                 <button
                   onClick={onVoiceToggle}
                   disabled={isGenerating}
-                  className="text-text-muted hover:text-accent hover:bg-accent-muted flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-white/30 transition-all hover:bg-white/[0.05] hover:text-emerald-400"
                   aria-label={strings.voiceStart}
                   title={strings.voiceStart}
                 >
@@ -151,7 +154,7 @@ export function ChatInput({
                   'max-h-40 min-h-[36px] flex-1 resize-none bg-transparent py-1.5 text-sm leading-relaxed outline-none',
                   isRecording
                     ? 'text-red-300/70 placeholder:text-red-400/20'
-                    : 'text-text-primary placeholder:text-text-muted',
+                    : 'text-white/90 placeholder:text-white/25',
                 )}
                 disabled={isGenerating || isRecording}
                 dir={language === 'he' ? 'rtl' : 'ltr'}
@@ -174,8 +177,8 @@ export function ChatInput({
                   className={cn(
                     'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all',
                     input.trim()
-                      ? 'bg-accent text-bg-base hover:bg-accent-hover'
-                      : 'bg-bg-elevated text-text-muted cursor-not-allowed',
+                      ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30'
+                      : 'cursor-not-allowed bg-white/[0.05] text-white/20',
                   )}
                   aria-label={strings.send}
                 >
@@ -185,11 +188,11 @@ export function ChatInput({
             </div>
 
             {/* Footer info */}
-            <div className="text-text-muted mt-2 flex items-center justify-center gap-2 text-[10px]">
+            <div className="mt-2.5 flex items-center justify-center gap-2 text-[10px] text-white/20">
               <span>{strings.poweredBy}</span>
               {userMsgCount > 0 && (
                 <>
-                  <span className="text-border">·</span>
+                  <span className="text-white/10">·</span>
                   <span>
                     {userMsgCount}/{maxMessages}
                   </span>

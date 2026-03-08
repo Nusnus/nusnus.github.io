@@ -19,10 +19,10 @@ interface ChatMessagesProps {
 /** Skeleton loading shimmer for streaming messages. */
 function SkeletonLoader() {
   return (
-    <div className="space-y-2 py-1">
-      <div className="cybernus-shimmer bg-bg-elevated h-3.5 w-4/5 rounded" />
-      <div className="cybernus-shimmer bg-bg-elevated h-3.5 w-3/5 rounded [animation-delay:200ms]" />
-      <div className="cybernus-shimmer bg-bg-elevated h-3.5 w-2/3 rounded [animation-delay:400ms]" />
+    <div className="space-y-2.5 py-1">
+      <div className="cybernus-shimmer h-3.5 w-4/5 rounded-md bg-white/[0.04]" />
+      <div className="cybernus-shimmer h-3.5 w-3/5 rounded-md bg-white/[0.04] [animation-delay:200ms]" />
+      <div className="cybernus-shimmer h-3.5 w-2/3 rounded-md bg-white/[0.04] [animation-delay:400ms]" />
     </div>
   );
 }
@@ -30,10 +30,10 @@ function SkeletonLoader() {
 /** Animated typing indicator dots. */
 function TypingIndicator() {
   return (
-    <span className="inline-flex items-center gap-1 py-1">
-      <span className="bg-accent/60 h-1.5 w-1.5 animate-bounce rounded-full [animation-delay:0ms]" />
-      <span className="bg-accent/50 h-1.5 w-1.5 animate-bounce rounded-full [animation-delay:150ms]" />
-      <span className="bg-accent/40 h-1.5 w-1.5 animate-bounce rounded-full [animation-delay:300ms]" />
+    <span className="inline-flex items-center gap-1.5 py-1">
+      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-emerald-400/60 [animation-delay:0ms]" />
+      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-emerald-400/50 [animation-delay:150ms]" />
+      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-emerald-400/40 [animation-delay:300ms]" />
     </span>
   );
 }
@@ -50,8 +50,10 @@ function SearchIndicator({
   return (
     <div
       className={cn(
-        'inline-flex items-center gap-2 rounded-lg px-3 py-2 text-xs',
-        isSearching ? 'bg-bg-elevated text-text-secondary' : 'bg-accent-muted text-accent',
+        'inline-flex items-center gap-2.5 rounded-xl px-4 py-2.5 text-xs font-medium backdrop-blur-sm',
+        isSearching
+          ? 'border border-white/[0.06] bg-white/[0.03] text-white/60'
+          : 'border border-emerald-500/20 bg-emerald-500/[0.06] text-emerald-400',
       )}
     >
       <Globe className={cn('h-3.5 w-3.5', isSearching && 'animate-spin')} />
@@ -61,7 +63,7 @@ function SearchIndicator({
           {[0, 150, 300].map((delay) => (
             <span
               key={delay}
-              className="bg-text-muted inline-block h-1 w-1 animate-bounce rounded-full"
+              className="inline-block h-1 w-1 animate-bounce rounded-full bg-white/30"
               style={{ animationDelay: `${delay}ms` }}
             />
           ))}
@@ -97,29 +99,33 @@ export function ChatMessages({
         return (
           <div
             key={msg.id}
-            className={cn('group px-4 py-5 md:px-6 lg:px-8', isUser && 'bg-bg-surface/40')}
+            className={cn('group px-4 py-6 md:px-8 lg:px-12', isUser ? 'bg-white/[0.015]' : '')}
           >
             <div className="mx-auto flex max-w-3xl gap-4">
               {/* Avatar */}
               <div className="relative shrink-0 pt-0.5">
                 <div
                   className={cn(
-                    'flex h-7 w-7 items-center justify-center rounded-full',
+                    'flex h-8 w-8 items-center justify-center rounded-lg',
                     isUser
-                      ? 'bg-accent/15 text-accent'
-                      : 'border-accent/20 bg-bg-base text-accent border',
+                      ? 'bg-gradient-to-br from-white/10 to-white/5 ring-1 ring-white/10'
+                      : 'bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 ring-1 ring-emerald-500/20',
                   )}
                 >
                   {isUser ? (
-                    <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
+                    <svg
+                      className="h-3.5 w-3.5 text-white/70"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
                       <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
                     </svg>
                   ) : (
-                    <Sparkles className="h-3.5 w-3.5" />
+                    <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
                   )}
                 </div>
                 {isStreaming && (
-                  <div className="cybernus-glow-pulse border-accent/30 absolute -inset-0.5 rounded-full border" />
+                  <div className="absolute -inset-1 animate-pulse rounded-lg ring-1 ring-emerald-500/30" />
                 )}
               </div>
 
@@ -128,15 +134,15 @@ export function ChatMessages({
                 {/* Role label */}
                 <p
                   className={cn(
-                    'mb-1.5 text-xs font-semibold',
-                    isUser ? 'text-text-secondary' : 'text-accent',
+                    'mb-2 text-xs font-semibold tracking-wide',
+                    isUser ? 'text-white/50' : 'text-emerald-400/80',
                   )}
                 >
                   {isUser ? 'You' : 'Cybernus'}
                 </p>
 
                 {/* Content */}
-                <div className="text-text-primary text-sm leading-relaxed">
+                <div className="text-sm leading-relaxed text-white/85">
                   {msg.searchStatus ? (
                     <SearchIndicator status={msg.searchStatus} strings={strings} />
                   ) : !msg.content ? (
@@ -157,13 +163,13 @@ export function ChatMessages({
 
                 {/* Tool action buttons */}
                 {msg.actions && msg.actions.length > 0 && (
-                  <div className="mt-3 flex flex-wrap gap-2">
+                  <div className="mt-4 flex flex-wrap gap-2">
                     {msg.actions.map((action, idx) => (
                       <button
                         key={idx}
                         onClick={() => executeAction(action)}
                         title={action.url}
-                        className="border-border text-accent hover:border-accent/40 hover:bg-accent-muted inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all"
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-1.5 text-xs font-medium text-emerald-400/90 transition-all hover:border-emerald-500/30 hover:bg-emerald-500/[0.06]"
                       >
                         {action.type === 'open_link' ? (
                           <ExternalLink className="h-3 w-3" />
@@ -183,9 +189,9 @@ export function ChatMessages({
 
       {/* Suggested questions — shown after welcome message only */}
       {isWelcomeOnly && (
-        <div className="px-4 py-2 md:px-6 lg:px-8">
+        <div className="px-4 py-4 md:px-8 lg:px-12">
           <div
-            className="cybernus-fade-in-up mx-auto grid max-w-3xl gap-2 sm:grid-cols-2"
+            className="cybernus-fade-in-up mx-auto grid max-w-3xl gap-2.5 sm:grid-cols-2"
             style={{ animationDelay: '200ms' }}
           >
             {SUGGESTED_QUESTIONS.map((q) => (
@@ -193,16 +199,16 @@ export function ChatMessages({
                 key={q}
                 onClick={() => onSendMessage(q)}
                 disabled={isGenerating}
-                className="group border-border text-text-secondary hover:border-accent/30 hover:text-text-primary rounded-xl border bg-transparent px-4 py-3 text-left text-[13px] leading-relaxed transition-all hover:bg-white/[0.02]"
+                className="group rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3.5 text-left text-[13px] leading-relaxed text-white/50 transition-all hover:border-emerald-500/20 hover:bg-emerald-500/[0.03] hover:text-white/70"
               >
-                <span className="opacity-60 transition-opacity group-hover:opacity-100">{q}</span>
+                <span>{q}</span>
               </button>
             ))}
           </div>
         </div>
       )}
 
-      <div ref={messagesEndRef} className="h-4" />
+      <div ref={messagesEndRef} className="h-6" />
     </div>
   );
 }

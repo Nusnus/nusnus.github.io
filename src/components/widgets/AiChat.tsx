@@ -593,25 +593,24 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
   const sidebarContent = (
     <div className="flex h-full flex-col">
       {/* Brand header */}
-      <div className="border-border flex shrink-0 items-center gap-2.5 border-b px-4 py-3.5">
-        <div className="relative flex h-5 w-5 items-center justify-center">
-          <span className="bg-accent/15 absolute h-full w-full animate-ping rounded-full opacity-25" />
+      <div className="flex shrink-0 items-center gap-3 border-b border-white/[0.06] px-4 py-4">
+        <div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 ring-1 ring-emerald-500/20">
           <span
-            className="relative h-2 w-2 rounded-full"
+            className="h-2.5 w-2.5 rounded-full"
             style={{
               backgroundColor: currentPersonality?.color ?? 'var(--color-accent)',
-              boxShadow: `0 0 8px ${currentPersonality?.glowColor ?? 'var(--color-accent)'}`,
+              boxShadow: `0 0 10px ${currentPersonality?.glowColor ?? 'var(--color-accent)'}`,
             }}
           />
         </div>
-        <span className="text-text-primary text-sm font-bold tracking-[0.12em]">CYBERNUS</span>
+        <span className="text-sm font-bold tracking-[0.15em] text-white">CYBERNUS</span>
       </div>
 
       {/* New Chat button */}
       <div className="shrink-0 px-3 pt-3 pb-1">
         <button
           onClick={clearChat}
-          className="border-border text-text-secondary hover:border-accent/30 hover:bg-accent-muted hover:text-text-primary flex w-full items-center gap-2 rounded-lg border px-3 py-2 text-[13px] transition-all"
+          className="flex w-full items-center gap-2 rounded-xl border border-white/[0.06] px-3 py-2.5 text-[13px] text-white/60 transition-all hover:border-emerald-500/20 hover:bg-emerald-500/[0.04] hover:text-white/90"
         >
           <svg
             className="h-4 w-4"
@@ -642,13 +641,13 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       </div>
 
       {/* Settings section */}
-      <div className="border-border shrink-0 space-y-3 border-t px-4 py-3">
+      <div className="shrink-0 space-y-4 border-t border-white/[0.06] px-4 py-4">
         {/* Language toggle */}
         <div>
-          <p className="text-text-muted mb-1.5 text-[10px] font-medium tracking-wider uppercase">
+          <p className="mb-2 text-[10px] font-medium tracking-wider text-white/30 uppercase">
             {strings.language}
           </p>
-          <div className="bg-bg-elevated flex items-center gap-0.5 rounded-lg p-0.5">
+          <div className="flex items-center gap-0.5 rounded-lg bg-white/[0.04] p-0.5">
             {LANGUAGES.map((l) => (
               <button
                 key={l.code}
@@ -656,8 +655,8 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
                 className={cn(
                   'flex-1 rounded-md px-1.5 py-1.5 text-center text-xs transition-all',
                   language === l.code
-                    ? 'bg-bg-surface text-text-primary shadow-sm'
-                    : 'text-text-muted hover:text-text-secondary',
+                    ? 'bg-white/[0.08] text-white shadow-sm'
+                    : 'text-white/30 hover:text-white/60',
                 )}
                 title={l.nativeName}
               >
@@ -669,7 +668,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
 
         {/* Personality slider */}
         <div>
-          <p className="text-text-muted mb-1.5 text-[10px] font-medium tracking-wider uppercase">
+          <p className="mb-2 text-[10px] font-medium tracking-wider text-white/30 uppercase">
             {strings.personality}
           </p>
           <div className="flex items-center gap-2">
@@ -680,19 +679,19 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
               max={5}
               value={personality}
               onChange={(e) => handlePersonalityChange(Number(e.target.value) as PersonalityLevel)}
-              className="bg-border accent-accent [&::-webkit-slider-thumb]:bg-accent h-1 flex-1 cursor-pointer appearance-none rounded-full [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full"
+              className="h-1 flex-1 cursor-pointer appearance-none rounded-full bg-white/10 accent-emerald-500 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-emerald-400"
               title={`${strings.personalityLevel}: ${currentPersonality?.name ?? ''}`}
             />
-            <span className="text-text-muted w-16 text-[10px]">{currentPersonality?.name}</span>
+            <span className="w-16 text-[10px] text-white/30">{currentPersonality?.name}</span>
           </div>
         </div>
       </div>
 
       {/* Back to portfolio */}
-      <div className="border-border shrink-0 border-t px-4 py-2.5">
+      <div className="shrink-0 border-t border-white/[0.06] px-4 py-3">
         <a
           href="/"
-          className="text-text-muted hover:text-text-secondary flex items-center gap-2 text-xs transition-colors"
+          className="flex items-center gap-2 text-xs text-white/30 transition-colors hover:text-white/60"
         >
           <svg
             className="h-3.5 w-3.5"
@@ -713,7 +712,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
   );
 
   return (
-    <div className="bg-bg-base flex h-full">
+    <div className="flex h-full bg-[#0a0a0f]">
       {/* Mobile sidebar backdrop */}
       {showSidebar && (
         // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- backdrop overlay
@@ -726,7 +725,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       {/* Sidebar — persistent on desktop, overlay on mobile */}
       <aside
         className={cn(
-          'border-border bg-bg-base flex h-full shrink-0 flex-col border-r',
+          'flex h-full shrink-0 flex-col border-r border-white/[0.06] bg-[#0c0c14]',
           'md:relative md:flex md:w-[260px]',
           showSidebar ? 'fixed inset-y-0 left-0 z-30 w-72' : 'hidden md:flex',
         )}
@@ -740,10 +739,10 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
           /* ─── Idle screen ─── */
           <>
             {/* Mobile header for idle */}
-            <div className="border-border flex items-center justify-between border-b px-4 py-2.5 md:hidden">
+            <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-3 md:hidden">
               <button
                 onClick={() => setShowSidebar(true)}
-                className="text-text-muted hover:bg-bg-elevated rounded-lg p-1.5 transition-colors"
+                className="rounded-lg p-1.5 text-white/40 transition-colors hover:bg-white/[0.05]"
                 aria-label="Open menu"
               >
                 <svg
@@ -756,7 +755,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
                   <path d="M3 12h18M3 6h18M3 18h18" />
                 </svg>
               </button>
-              <span className="text-text-primary text-sm font-bold tracking-wider">CYBERNUS</span>
+              <span className="text-sm font-bold tracking-wider text-white">CYBERNUS</span>
               <div className="w-8" />
             </div>
             <ModelPicker
@@ -772,12 +771,12 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
           /* ─── Chat UI ─── */
           <>
             {/* Minimal chat header */}
-            <div className="border-border flex shrink-0 items-center justify-between border-b px-4 py-2.5">
+            <div className="flex shrink-0 items-center justify-between border-b border-white/[0.06] px-4 py-3">
               <div className="flex items-center gap-3">
                 {/* Mobile hamburger */}
                 <button
                   onClick={() => setShowSidebar(true)}
-                  className="text-text-muted hover:bg-bg-elevated rounded-lg p-1.5 transition-colors md:hidden"
+                  className="rounded-lg p-1.5 text-white/40 transition-colors hover:bg-white/[0.05] md:hidden"
                   aria-label="Open menu"
                 >
                   <svg
@@ -797,13 +796,11 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
                     className="block h-2 w-2 rounded-full"
                     style={{
                       backgroundColor: currentPersonality?.color ?? 'var(--color-accent)',
-                      boxShadow: `0 0 6px ${currentPersonality?.glowColor ?? 'var(--color-accent)'}`,
+                      boxShadow: `0 0 8px ${currentPersonality?.glowColor ?? 'var(--color-accent)'}`,
                     }}
                   />
-                  <span className="text-text-secondary text-xs">
-                    {activeCloudModel?.name ?? 'Grok'}
-                  </span>
-                  <span className="text-text-muted hidden text-[10px] sm:inline">
+                  <span className="text-xs text-white/50">{activeCloudModel?.name ?? 'Grok'}</span>
+                  <span className="hidden text-[10px] text-white/25 sm:inline">
                     {currentPersonality?.emoji} {currentPersonality?.name}
                   </span>
                 </div>
@@ -811,8 +808,11 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
 
               {/* Recording indicator in header */}
               {isRecording && (
-                <span className="flex items-center gap-1.5 rounded-full bg-red-500/10 px-2.5 py-1 text-[10px] font-medium text-red-400">
-                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-400" />
+                <span className="flex items-center gap-1.5 rounded-full border border-red-500/20 bg-red-500/[0.06] px-2.5 py-1 text-[10px] font-medium text-red-400">
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-40" />
+                    <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-red-400" />
+                  </span>
                   {strings.recording}
                 </span>
               )}

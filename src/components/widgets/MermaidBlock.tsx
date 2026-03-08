@@ -154,14 +154,17 @@ export default function MermaidBlock({ code, blockKey }: { code: string; blockKe
   }
 
   return (
-    <div className="bg-bg-elevated my-2 overflow-x-auto rounded-lg p-3">
+    <div className="bg-bg-elevated my-3 overflow-x-auto rounded-xl p-4">
       {rendering && (
         <div className="text-text-muted flex items-center gap-2 text-xs">
           <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
           Rendering diagram…
         </div>
       )}
-      <div ref={containerRef} className="flex justify-center [&_svg]:max-w-full" />
+      <div
+        ref={containerRef}
+        className="flex justify-center [&_svg]:max-w-full [&_svg]:overflow-visible"
+      />
     </div>
   );
 }
