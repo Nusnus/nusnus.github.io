@@ -540,6 +540,7 @@ export function ChatMessages({
                             handleExpand();
                           }}
                           onKeyDown={(e) => {
+                            if ((e.target as HTMLElement).closest('a, button')) return;
                             if (e.key === 'Enter' || e.key === ' ') {
                               e.preventDefault();
                               handleExpand();
