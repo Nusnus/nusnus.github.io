@@ -344,6 +344,8 @@ export default function CybernusChat() {
     setSessions([]);
     setMessages([]);
     setActiveSessionIdState(null);
+    setError('');
+    setSidebarOpen(false);
   }, [abortAndReset]);
 
   /* ── Derived ── */
