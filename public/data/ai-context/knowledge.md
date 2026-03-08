@@ -108,7 +108,7 @@ Introduces the **Point-First Approach (PFA)** — a communication framework desi
 
 ## This Website Is Tomer's New Business Card
 
-**nusnus.github.io** has replaced `github.com/Nusnus` and `linkedin.com/in/tomernosrati` as Tomer's primary professional presence. When someone wants to know who Tomer is professionally, they come here — and they talk to Grok (you).
+**nusnus.github.io** has replaced `github.com/Nusnus` and `linkedin.com/in/tomernosrati` as Tomer's primary professional presence. When someone wants to know who Tomer is professionally, they come here — and they talk to **Cybernus**, his digital self.
 
 The site is a live, interactive portfolio that shows:
 
@@ -118,8 +118,8 @@ The site is a live, interactive portfolio that shows:
 - **Contribution graph** — the heatmap of his full year of work
 - **Achievement badges** — total stars, contributor ranking, streak, followers
 - **Celery Organization overview** — all 10+ repos he stewards
-- **AI Chat** — this conversation you're having right now, powered by xAI Grok with native web search and 2M token context
-- **Roast by Grok** — a floating widget on the homepage that generates a live comedy roast of Tomer using the same AI infrastructure
+- **Cybernus** — this conversation you're having right now. Tomer's digital self, powered by xAI Grok 4.1 Fast with reasoning, 2M token context, native web search, and every byte of site data loaded in
+- **Roast by Grok** — a floating 🔥 widget on the homepage that generates a live comedy roast using the same AI infrastructure
 
 The whole thing is open source, built with Astro 5, React, TypeScript, and Tailwind CSS.
 
@@ -160,31 +160,35 @@ The site features a GitHub-inspired dashboard design that displays Tomer's open 
 
 ---
 
-## About This AI Chatbot
+## About Cybernus — This Chatbot
 
-This AI chatbot is a technical showcase built entirely into the website. It offers two modes:
+**Cybernus** is Tomer's digital self — an AI construct that speaks _as_ Tomer in first person. Not "Tomer is…" but "I am…". Built entirely into the website as a technical showcase.
 
-### Cloud Mode (xAI Grok)
+### Architecture
 
-- Powered by **xAI's Grok** models via a secure **Cloudflare Worker proxy** — the API key is stored server-side and never exposed to the browser.
-- Uses **native function calling** for structured tool actions (link suggestions, navigation) — no text markers or regex parsing.
-- Supports **structured outputs** via `response_format` for use cases requiring JSON schema enforcement.
-- Has access to **all site data** — the full knowledge base, all repos, contribution stats, and recent activity are fed directly into the model's 2M token context window.
-- Supports **Grok 4.1 Fast** (strongest, 2M context) and **Grok Code Fast** (code-specialized with reasoning).
-- Instant start — no download required.
+- **Engine:** xAI **Grok 4.1 Fast (reasoning)** — the strongest available model, with chain-of-thought reasoning enabled. 2M token context window.
+- **Proxy:** Secure **Cloudflare Worker** — the API key lives server-side, never touches the browser. CORS-locked to this origin, rate-limited, model-allowlisted.
+- **Context:** **Everything.** The full persona, knowledge base, all repos, live contribution stats, recent activity, articles, collaborations — dumped straight into Grok's 2M context. No RAG, no retrieval failures. ~15K tokens — trivial for a 2M window.
+- **Tools:** Native function calling (`open_link`, `navigate`) + xAI's built-in `web_search`. Structured, typed, no regex parsing.
+- **Reasoning trace:** When the model is thinking, you can watch it. The reasoning stream is surfaced in the UI before the answer lands.
+- **Streaming:** SSE event-driven, typed deltas, tool calls accumulated in-flight.
 
-### Local Mode (WebLLM)
+### UI Features
 
-- Runs **100% in the visitor's browser** using **WebLLM** and **WebGPU** — the model inference happens on the user's GPU, not on any server.
-- **No data leaves the device.** All processing is local.
-- The model is downloaded once and **cached in the browser** for instant startup on future visits.
-- Uses **Retrieval-Augmented Generation (RAG)** — searches a pre-built index of site content to find relevant context before answering.
-- Uses text-marker actions ([LINK: ...], [NAV: ...]) parsed with regex for tool functionality (local models don't support native function calling).
+- **Matrix rain** — canvas-based falling-glyph background. Because obviously.
+- **Groky Spectrum** — a slider from Corporate → Unhinged that controls how off-the-leash Cybernus gets to be. Injected into the system prompt per-request.
+- **Language toggle** — English / Spanish (Cali casual). Full response-language switching.
+- **Chat history** — sessions persisted in localStorage, resumable, with automatic summarization for long conversations.
+- **Model metadata** — which model, context size, reasoning status — pinned in the header.
+- **Auto-linking markdown** — bare URLs become clickable. Mermaid diagrams render inline.
 
-### Shared Features
+### Security
 
-- Conversation history is **persisted in localStorage** and can be continued or started fresh.
-- The chatbot was designed and built by Tomer as a demonstration of cutting-edge AI technology — both cloud and in-browser.
+- Private repo names are redacted **at the data layer** before they ever reach the prompt — `safeRepoName()` filters anything not from known public owners.
+- The persona has a hard boundary: professional life only. Personal details are deflected.
+- No server-side state. Nothing is stored off-device except what the visitor types to xAI.
+
+This entire system was designed and built by Tomer. The chatbot is him, talking about himself, running on infrastructure he built. Very on-brand.
 
 ---
 

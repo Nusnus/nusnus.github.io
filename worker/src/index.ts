@@ -62,12 +62,17 @@ const ALLOWED_MODELS: ReadonlySet<string> = new Set([
   'grok-code-fast-1',
 ]);
 
-const DEFAULT_MODEL = 'grok-4-1-fast';
+const DEFAULT_MODEL = 'grok-4-1-fast-reasoning';
 
 /** Hard limits to prevent abuse. */
 const MAX_REQUEST_BYTES = 131_072; // 128 KB — accommodates full context + tools + chat history
-const MAX_OUTPUT_TOKENS_CAP = 1024;
-const MAX_INPUT_ITEMS = 30;
+const MAX_OUTPUT_TOKENS_CAP = 2048; // reasoning models spend tokens on chain-of-thought
+/**
+ * Max items in the `input` array. Client-side MAX_USER_MESSAGES is 40
+ * (→ ~81 items with assistant replies + system). The byte cap above is
+ * the real abuse guard — this is a sanity ceiling.
+ */
+const MAX_INPUT_ITEMS = 100;
 
 /** Simple in-memory rate limiter (per-isolate, resets on cold start). */
 const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute

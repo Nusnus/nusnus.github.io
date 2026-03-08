@@ -444,13 +444,16 @@ function renderBlock(block: string, key: number): ReactNode {
   );
 }
 
-/** Render inline markdown: bold, italic, code, links, citations. */
+/** Render inline markdown: bold, italic, code, links, citations, bare URLs. */
 function renderInline(text: string): ReactNode {
   // Split on inline patterns, preserving delimiters
   const parts: ReactNode[] = [];
-  // Groups: 2=bold, 3=italic, 4=code, 5=citation-num, 6=citation-url, 7=link-text, 8=link-url
+  // Groups: 2=bold, 3=italic, 4=code, 5=citation-num, 6=citation-url,
+  //         7=link-text, 8=link-url, 9=bare-url
+  // Bare URL matches http(s):// followed by non-space, non-) chars,
+  // trimmed of trailing punctuation.
   const regex =
-    /(\*\*(.+?)\*\*|\*(.+?)\*|`([^`]+)`|\[\[(\d+)\]\]\(([^)]+)\)|\[([^\]]+)\]\(([^)]+)\))/g;
+    /(\*\*(.+?)\*\*|\*(.+?)\*|`([^`]+)`|\[\[(\d+)\]\]\(([^)]+)\)|\[([^\]]+)\]\(([^)]+)\)|(https?:\/\/[^\s<>)]+[^\s<>).,;:!?]))/g;
 
   let lastIndex = 0;
   let match: RegExpExecArray | null;
@@ -507,6 +510,19 @@ function renderInline(text: string): ReactNode {
           className="text-accent hover:underline"
         >
           {match[7]}
+        </a>,
+      );
+    } else if (match[9]) {
+      // bare https://… URL — auto-link
+      parts.push(
+        <a
+          key={match.index}
+          href={match[9]}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-accent break-all hover:underline"
+        >
+          {match[9]}
         </a>,
       );
     }
