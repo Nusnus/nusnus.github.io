@@ -480,6 +480,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
   );
 
   const handleClearAll = useCallback(() => {
+    activeSessionIdRef.current = null;
     abortRef.current?.abort();
     setIsGenerating(false);
     clearAllSessions();
