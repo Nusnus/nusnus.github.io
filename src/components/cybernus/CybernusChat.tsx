@@ -381,6 +381,12 @@ export default function CybernusChat() {
     setStreaming(false);
     setIsThinking(false);
     setToolActivity([]);
+    // `error` is the terminal result of the abandoned request — clear it
+    // here so every session-context switch (select / new / clear / delete-
+    // active) drops the stale banner in the same batch. Without this,
+    // switching sessions after a failed request left the old error visible
+    // below the new session's messages until the next send() ran.
+    setError('');
   }, []);
 
   const selectSession = useCallback(
@@ -415,7 +421,6 @@ export default function CybernusChat() {
     setActiveSessionId(null);
     setActiveSessionIdState(null);
     setMessages([]);
-    setError('');
     setSidebarOpen(false);
   }, [abortAndReset]);
 
