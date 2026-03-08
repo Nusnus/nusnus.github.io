@@ -726,7 +726,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       {/* Sidebar — persistent on desktop, overlay on mobile */}
       <aside
         className={cn(
-          'bg-bg-base border-accent/30 flex h-full shrink-0 flex-col border-r',
+          'border-border bg-bg-surface flex h-full shrink-0 flex-col border-r',
           'md:relative md:flex md:w-[260px]',
           showSidebar ? 'fixed inset-y-0 left-0 z-30 w-72' : 'hidden md:flex',
         )}
