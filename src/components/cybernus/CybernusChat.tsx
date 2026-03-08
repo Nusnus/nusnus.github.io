@@ -285,7 +285,7 @@ export default function CybernusChat() {
         setStreaming(false);
         setIsThinking(false);
         setToolActivity([]);
-        abortRef.current = null;
+        if (abortRef.current === controller) abortRef.current = null;
       }
     },
     [streaming, viewport],
