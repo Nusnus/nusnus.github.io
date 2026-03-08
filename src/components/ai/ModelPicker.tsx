@@ -30,13 +30,13 @@ export function ModelPicker({
         {/* Hero */}
         <div className="cybernus-fade-in-up mb-10 text-center">
           <div className="relative mx-auto mb-6 flex h-16 w-16 items-center justify-center">
-            <div className="absolute inset-0 animate-pulse rounded-2xl bg-emerald-500/10 blur-xl" />
-            <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 ring-1 ring-emerald-500/20">
-              <Sparkles className="h-7 w-7 text-emerald-400" />
+            <div className="bg-accent/10 absolute inset-0 animate-pulse rounded-2xl blur-xl" />
+            <div className="bg-accent-muted ring-accent/20 relative flex h-14 w-14 items-center justify-center rounded-2xl ring-1">
+              <Sparkles className="text-accent h-7 w-7" />
             </div>
           </div>
-          <h2 className="mb-2 text-2xl font-bold text-white">{strings.title}</h2>
-          <p className="text-sm text-white/40">{strings.subtitle}</p>
+          <h2 className="text-text-primary mb-2 text-2xl font-bold">{strings.title}</h2>
+          <p className="text-text-muted text-sm">{strings.subtitle}</p>
         </div>
 
         {/* Model cards */}
@@ -53,30 +53,30 @@ export function ModelPicker({
                 className={cn(
                   'group relative flex flex-col rounded-xl border p-4 text-left transition-all',
                   isSelected
-                    ? 'border-emerald-500/30 bg-emerald-500/[0.05]'
-                    : 'border-white/[0.06] hover:border-emerald-500/15 hover:bg-white/[0.02]',
+                    ? 'border-accent/30 bg-accent-muted'
+                    : 'border-border hover:border-accent/15 hover:bg-bg-surface',
                 )}
               >
                 <div className="mb-1.5 flex items-center gap-2">
                   <Zap
-                    className={cn('h-3.5 w-3.5', isSelected ? 'text-emerald-400' : 'text-white/30')}
+                    className={cn('h-3.5 w-3.5', isSelected ? 'text-accent' : 'text-text-muted')}
                   />
                   <h3
                     className={cn(
                       'text-sm font-semibold',
-                      isSelected ? 'text-white' : 'text-white/70',
+                      isSelected ? 'text-text-primary' : 'text-text-secondary',
                     )}
                   >
                     {cm.name}
                   </h3>
                   {cm.recommended && (
-                    <span className="rounded-full bg-emerald-500 px-1.5 py-px text-[9px] font-bold text-white">
+                    <span className="bg-accent text-bg-base rounded-full px-1.5 py-px text-[9px] font-bold">
                       {strings.recommended}
                     </span>
                   )}
                 </div>
-                <p className="text-xs leading-relaxed text-white/40">{cm.description}</p>
-                <div className="mt-2.5 flex items-center gap-2 text-[10px] text-white/25">
+                <p className="text-text-muted text-xs leading-relaxed">{cm.description}</p>
+                <div className="text-text-muted mt-2.5 flex items-center gap-2 text-[10px]">
                   <Cloud className="h-3 w-3 opacity-40" />
                   <span>
                     {strings.noDownload} · {strings.instantStart}
@@ -95,7 +95,7 @@ export function ModelPicker({
           {hasSavedChat && (
             <button
               onClick={onContinue}
-              className="w-full rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition-all hover:shadow-emerald-500/30 sm:w-auto"
+              className="bg-accent text-bg-base shadow-accent/20 hover:bg-accent-hover hover:shadow-accent/30 w-full rounded-xl px-8 py-3 text-sm font-semibold shadow-lg transition-all sm:w-auto"
             >
               {strings.continueChat}
             </button>
@@ -105,15 +105,15 @@ export function ModelPicker({
             className={cn(
               'w-full rounded-xl px-8 py-3 text-sm font-semibold transition-all sm:w-auto',
               hasSavedChat
-                ? 'border border-white/[0.08] text-white/80 hover:border-emerald-500/30 hover:bg-emerald-500/[0.05]'
-                : 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30',
+                ? 'border-border text-text-secondary hover:border-accent/30 hover:bg-accent-muted border'
+                : 'bg-accent text-bg-base shadow-accent/20 hover:bg-accent-hover hover:shadow-accent/30 shadow-lg',
             )}
           >
             {strings.newChat}
           </button>
         </div>
 
-        <p className="mt-6 text-center text-[10px] text-white/20">{strings.poweredBy}</p>
+        <p className="text-text-muted mt-6 text-center text-[10px]">{strings.poweredBy}</p>
       </div>
     </div>
   );

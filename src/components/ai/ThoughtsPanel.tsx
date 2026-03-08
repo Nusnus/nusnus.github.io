@@ -184,10 +184,10 @@ export function ThoughtsPanel() {
       <div className="relative z-20 px-4 pt-4 pb-2">
         <div className="flex items-center gap-2">
           <span className="relative flex h-1.5 w-1.5">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/20" />
-            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400/30" />
+            <span className="bg-accent/20 absolute inline-flex h-full w-full animate-ping rounded-full" />
+            <span className="bg-accent/30 relative inline-flex h-1.5 w-1.5 rounded-full" />
           </span>
-          <span className="font-mono text-[10px] tracking-widest text-emerald-500/20 uppercase">
+          <span className="text-accent/20 font-mono text-[10px] tracking-widest uppercase">
             Neural Stream
           </span>
         </div>
