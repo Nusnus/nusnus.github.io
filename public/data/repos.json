@@ -5,9 +5,9 @@
     "description": "Distributed Task Queue (development branch)",
     "htmlUrl": "https://github.com/celery/celery",
     "stars": 28202,
-    "forks": 4983,
-    "openIssues": 773,
-    "lastPush": "2026-03-08T11:10:32Z",
+    "forks": 4985,
+    "openIssues": 771,
+    "lastPush": "2026-03-08T14:01:48Z",
     "language": "Python",
     "role": "owner",
     "contributorRank": 3
