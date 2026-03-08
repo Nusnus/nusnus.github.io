@@ -370,16 +370,15 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
               ? updated.slice(0, -1) // Remove empty assistant placeholder
               : [...updated.slice(0, -1), { ...assistantMsg, content: lastAccumulated }];
 
-          setMessages(abortMessages);
+          // Only update messages/save if session hasn't changed during streaming
+          if (activeSessionIdRef.current === sessionIdAtStart) {
+            setMessages(abortMessages);
 
-          if (
-            activeSessionIdRef.current === sessionIdAtStart &&
-            tokenCount > 0 &&
-            lastAccumulated
-          ) {
-            const sid = saveMessages(abortMessages, activeSessionId ?? undefined);
-            setActiveSession(sid);
-            setSessions(loadSessions());
+            if (tokenCount > 0 && lastAccumulated) {
+              const sid = saveMessages(abortMessages, activeSessionId ?? undefined);
+              setActiveSession(sid);
+              setSessions(loadSessions());
+            }
           }
           return;
         }
