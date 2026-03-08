@@ -125,7 +125,7 @@ export class VoiceSession {
 
   constructor(callbacks: VoiceCallbacks, language = 'en') {
     this.callbacks = callbacks;
-    this.lang = LANG_MAP[language] ?? 'en-US';
+    this.lang = LANG_MAP[language] ?? 'en';
   }
 
   /** Start a voice recording + transcription session. */
