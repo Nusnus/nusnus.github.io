@@ -303,6 +303,7 @@ export default function MermaidBlock({ code, blockKey }: { code: string; blockKe
     <>
       <div
         className="group/diagram bg-bg-elevated relative my-3 cursor-zoom-in overflow-x-auto rounded-xl p-4 transition-colors hover:bg-white/[0.04]"
+        style={isViewerOpen ? { visibility: 'hidden' as const } : undefined}
         role="button"
         tabIndex={0}
         onClick={() => !rendering && setIsViewerOpen(true)}
