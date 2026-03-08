@@ -91,7 +91,7 @@ interface UIStrings {
 const TRANSLATIONS: Record<Language, UIStrings> = {
   en: {
     welcome:
-      "Welcome to the Matrix. I'm **Cybernus** — Tomer Nosrati's digital construct. Ask me anything about his work, projects, or the Celery empire. Or just dare me to roast him.",
+      "Welcome to the Matrix. I'm **Cybernus** — Tomer Nosrati's digital self. You're not talking to an assistant — you're talking to Tomer, rendered in code. Ask me anything about my work, projects, or the Celery empire. Or just dare me to roast myself.",
     placeholder: 'Ask Cybernus anything...',
     poweredBy: 'Powered by xAI Grok · Cybernus v1.0',
     newChat: 'New',
@@ -127,7 +127,7 @@ const TRANSLATIONS: Record<Language, UIStrings> = {
   },
   es: {
     welcome:
-      'Bienvenido a la Matrix. Soy **Cybernus** — el constructo digital de Tomer Nosrati. Preguntame lo que quieras sobre su trabajo, proyectos o el imperio Celery. O atrevete a pedirme que lo rostice.',
+      'Bienvenido a la Matrix. Soy **Cybernus** — el yo digital de Tomer Nosrati. No estas hablando con un asistente — estas hablando con Tomer, renderizado en codigo. Preguntame lo que quieras sobre mi trabajo, proyectos o el imperio Celery. O atrevete a pedirme que me rostice a mi mismo.',
     placeholder: 'Preguntale a Cybernus...',
     poweredBy: 'Impulsado por xAI Grok · Cybernus v1.0',
     newChat: 'Nuevo',
@@ -163,7 +163,7 @@ const TRANSLATIONS: Record<Language, UIStrings> = {
   },
   he: {
     welcome:
-      'ברוכים הבאים למטריקס. אני **סייברנוס** — היצירה הדיגיטלית של תומר נוסרתי. שאלו אותי כל דבר על העבודה שלו, הפרויקטים או אימפריית Celery. או תעזו לבקש ממני לצלות אותו.',
+      'ברוכים הבאים למטריקס. אני **סייברנוס** — העצמי הדיגיטלי של תומר נוסרתי. אתם לא מדברים עם עוזר — אתם מדברים עם תומר, מרונדר בקוד. שאלו אותי כל דבר על העבודה שלי, הפרויקטים או אימפריית Celery. או תעזו לבקש ממני לצלות את עצמי.',
     placeholder: '...שאלו את סייברנוס',
     poweredBy: 'מופעל על ידי xAI Grok · Cybernus v1.0',
     newChat: 'חדש',

@@ -1,4 +1,4 @@
-import { type RefObject, useMemo } from 'react';
+import { type RefObject, useMemo, useCallback } from 'react';
 import { ArrowRight, ExternalLink, Globe, Sparkles } from 'lucide-react';
 import { cn } from '@lib/utils/cn';
 import { SUGGESTED_QUESTIONS } from '@lib/ai/config';
@@ -14,6 +14,36 @@ interface ChatMessagesProps {
   messagesEndRef: RefObject<HTMLDivElement | null>;
   onSendMessage: (text: string) => void;
   language: Language;
+}
+
+/**
+ * Extract follow-up suggestions (lines starting with "→ ") from the end
+ * of an assistant message. Returns the main content and suggestion strings.
+ */
+function extractFollowUps(content: string): { body: string; suggestions: string[] } {
+  const lines = content.split('\n');
+  const suggestions: string[] = [];
+
+  // Walk backwards collecting → lines
+  let i = lines.length - 1;
+  while (i >= 0) {
+    const line = (lines[i] ?? '').trim();
+    if (line.startsWith('→ ')) {
+      suggestions.unshift(line.slice(2).trim());
+      i--;
+    } else if (line === '') {
+      // skip trailing blank lines between content and suggestions
+      i--;
+    } else {
+      break;
+    }
+  }
+
+  const body = lines
+    .slice(0, i + 1)
+    .join('\n')
+    .trimEnd();
+  return { body, suggestions };
 }
 
 /** Skeleton loading shimmer for streaming messages. */
@@ -68,6 +98,55 @@ function SearchIndicator({
             />
           ))}
         </span>
+      )}
+    </div>
+  );
+}
+
+/** Renders assistant message body with follow-up suggestion buttons extracted from → lines. */
+function AssistantContent({
+  content,
+  isStreaming,
+  onSendMessage,
+  isGenerating,
+}: {
+  content: string;
+  isStreaming: boolean;
+  onSendMessage: (text: string) => void;
+  isGenerating: boolean;
+}) {
+  const { body, suggestions } = useMemo(
+    () => (isStreaming ? { body: content, suggestions: [] } : extractFollowUps(content)),
+    [content, isStreaming],
+  );
+
+  const handleSuggestionClick = useCallback(
+    (suggestion: string) => {
+      if (!isGenerating) onSendMessage(suggestion);
+    },
+    [isGenerating, onSendMessage],
+  );
+
+  return (
+    <div className="relative">
+      {renderMarkdown(body, isStreaming)}
+      {isStreaming && content && <span className="typing-cursor" />}
+
+      {/* Follow-up suggestion buttons */}
+      {suggestions.length > 0 && !isStreaming && (
+        <div className="mt-4 flex flex-wrap gap-2">
+          {suggestions.map((s, idx) => (
+            <button
+              key={idx}
+              onClick={() => handleSuggestionClick(s)}
+              disabled={isGenerating}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/15 bg-emerald-500/[0.04] px-3 py-1.5 text-xs font-medium text-emerald-400/80 transition-all hover:border-emerald-500/30 hover:bg-emerald-500/[0.08] hover:text-emerald-300 disabled:opacity-40"
+            >
+              <ArrowRight className="h-3 w-3" />
+              {s}
+            </button>
+          ))}
+        </div>
       )}
     </div>
   );
@@ -152,10 +231,12 @@ export function ChatMessages({
                       <TypingIndicator />
                     )
                   ) : !isUser ? (
-                    <div className="relative">
-                      {renderMarkdown(msg.content, isStreaming)}
-                      {isStreaming && msg.content && <span className="typing-cursor" />}
-                    </div>
+                    <AssistantContent
+                      content={msg.content}
+                      isStreaming={isStreaming}
+                      onSendMessage={onSendMessage}
+                      isGenerating={isGenerating}
+                    />
                   ) : (
                     <p className="whitespace-pre-wrap">{msg.content}</p>
                   )}

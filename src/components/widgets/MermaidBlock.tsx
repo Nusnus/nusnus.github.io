@@ -125,8 +125,22 @@ export default function MermaidBlock({ code, blockKey }: { code: string; blockKe
           const svgEl = containerRef.current.querySelector('svg');
           if (svgEl) {
             svgEl.removeAttribute('height');
-            svgEl.style.maxWidth = '100%';
+            svgEl.style.width = '100%';
             svgEl.style.height = 'auto';
+            // Recalculate viewBox to include all rendered elements (e.g. titles
+            // that extend beyond the default viewBox boundaries)
+            try {
+              const bbox = svgEl.getBBox();
+              if (bbox.width > 0 && bbox.height > 0) {
+                const pad = 16;
+                svgEl.setAttribute(
+                  'viewBox',
+                  `${bbox.x - pad} ${bbox.y - pad} ${bbox.width + pad * 2} ${bbox.height + pad * 2}`,
+                );
+              }
+            } catch {
+              // getBBox may throw if SVG is not in the DOM yet
+            }
           }
           setRendering(false);
         }

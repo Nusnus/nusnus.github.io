@@ -113,7 +113,7 @@ function buildThought(id: number, text: string, delaySeconds: number): FloatingT
     duration: 18 + Math.random() * 14,
     delay: delaySeconds,
     size: SIZES[Math.floor(Math.random() * SIZES.length)] ?? 'sm',
-    opacity: 0.15 + Math.random() * 0.35,
+    opacity: 0.08 + Math.random() * 0.2,
   };
 }
 
@@ -165,20 +165,18 @@ export function ThoughtsPanel() {
 
   return (
     <div className="relative hidden h-full w-[280px] shrink-0 overflow-hidden xl:block">
-      {/* Subtle vertical gradient overlay at edges */}
-      <div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-b from-[#0a0a0f] via-transparent to-[#0a0a0f]" />
+      {/* Gradient overlays blend panel edges seamlessly into the chat background */}
+      <div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-b from-[#0a0a0f] via-[#0a0a0f]/30 to-[#0a0a0f]" />
+      <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-[#0a0a0f] to-transparent" />
 
-      {/* Faint left border line */}
-      <div className="absolute inset-y-0 left-0 w-px bg-gradient-to-b from-transparent via-emerald-500/10 to-transparent" />
-
-      {/* Header */}
+      {/* Header — subtle, blends into background */}
       <div className="relative z-20 px-4 pt-4 pb-2">
         <div className="flex items-center gap-2">
           <span className="relative flex h-1.5 w-1.5">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/40" />
-            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400/60" />
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/20" />
+            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400/30" />
           </span>
-          <span className="font-mono text-[10px] tracking-widest text-emerald-500/40 uppercase">
+          <span className="font-mono text-[10px] tracking-widest text-emerald-500/20 uppercase">
             Neural Stream
           </span>
         </div>
@@ -212,8 +210,8 @@ export function ThoughtsPanel() {
               style={{
                 color: `rgba(52, 211, 153, ${thought.opacity})`,
                 textShadow:
-                  thought.opacity > 0.35
-                    ? `0 0 8px rgba(52, 211, 153, ${thought.opacity * 0.3})`
+                  thought.opacity > 0.2
+                    ? `0 0 12px rgba(52, 211, 153, ${thought.opacity * 0.15})`
                     : 'none',
               }}
             >
@@ -224,7 +222,7 @@ export function ThoughtsPanel() {
       </div>
 
       {/* Bottom fade overlay */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-24 bg-gradient-to-t from-[#0a0a0f] to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-32 bg-gradient-to-t from-[#0a0a0f] to-transparent" />
     </div>
   );
 }

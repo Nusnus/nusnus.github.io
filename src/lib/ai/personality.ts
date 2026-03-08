@@ -20,7 +20,7 @@ export interface PersonalityConfig {
 
 const STORAGE_KEY = 'cybernus-personality';
 
-/** Get the persisted personality level, defaulting to 2 (Balanced). */
+/** Get the persisted personality level, defaulting to 0 (Professional). */
 export function getPersonalityLevel(): PersonalityLevel {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
@@ -31,7 +31,7 @@ export function getPersonalityLevel(): PersonalityLevel {
   } catch {
     // localStorage unavailable
   }
-  return 2;
+  return 0;
 }
 
 /** Persist personality level. */
