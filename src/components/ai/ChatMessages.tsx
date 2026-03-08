@@ -527,7 +527,10 @@ export function ChatMessages({
                         <div
                           role="button"
                           tabIndex={0}
-                          onClick={handleExpand}
+                          onClick={(e) => {
+                            if ((e.target as HTMLElement).closest('a, button')) return;
+                            handleExpand();
+                          }}
                           onKeyDown={(e) => {
                             if (e.key === 'Enter' || e.key === ' ') handleExpand();
                           }}
