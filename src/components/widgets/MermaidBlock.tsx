@@ -239,11 +239,11 @@ function DiagramViewer({ svgHtml, onClose }: { svgHtml: string; onClose: () => v
       </div>
 
       {/* Scrollable diagram area */}
-      <div ref={scrollAreaRef} className="relative z-10 flex-1 overflow-auto p-8">
-        <div
-          className="mx-auto inline-block origin-top-left transition-transform duration-150 ease-out"
-          style={{ zoom }}
-        >
+      <div
+        ref={scrollAreaRef}
+        className="relative z-10 flex flex-1 items-center justify-center overflow-auto p-8"
+      >
+        <div className="transition-transform duration-150 ease-out" style={{ zoom }}>
           <div ref={contentRef} className="[&_svg]:overflow-visible" />
         </div>
       </div>
