@@ -150,8 +150,8 @@ function DiagramViewer({ svgHtml, onClose }: { svgHtml: string; onClose: () => v
         onClose();
       }
     }
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
+    window.addEventListener('keydown', onKeyDown, true);
+    return () => window.removeEventListener('keydown', onKeyDown, true);
   }, [onClose]);
 
   // Inject SVG, remove width constraints, and compute fit-to-screen zoom
