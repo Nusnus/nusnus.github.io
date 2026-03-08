@@ -218,6 +218,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       const sessionIdAtStart = activeSessionId;
 
       setInput('');
+      if (inputRef.current) inputRef.current.style.height = 'auto';
       addLog('info', 'ui', 'User message sent', { length: trimmed.length });
 
       // Track streaming progress in outer scope so catch block can access them
