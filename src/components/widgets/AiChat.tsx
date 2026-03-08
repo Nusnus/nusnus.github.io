@@ -1,97 +1,108 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { Loader2, AlertCircle, Cpu } from 'lucide-react';
+/**
+ * Cybernus — the chat page root.
+ *
+ * 3-column desktop layout (history rail | chat | metadata panel) that
+ * collapses to a single column with mobile drawers. Drops straight into
+ * chat on mount — no model picker, no loading screen. Single model
+ * (Grok 4.1 Fast Reasoning) via the CF Worker proxy.
+ *
+ * State:
+ *   - messages / sessions       (localStorage-persisted via memory.ts)
+ *   - spectrumIndex             (localStorage-persisted via spectrum.ts)
+ *   - isGenerating + abort ctrl
+ *   - lastReasoningTokens       (shown in MetadataPanel)
+ *   - mobile drawer toggles
+ */
+
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { History, SlidersHorizontal } from 'lucide-react';
+
+import { MAX_USER_MESSAGES, WELCOME_MESSAGE } from '@lib/ai/config';
 import {
-  DEFAULT_MODEL_ID,
-  AVAILABLE_MODELS,
-  CLOUD_MODELS,
-  DEFAULT_CLOUD_MODEL_ID,
-  GENERATION_CONFIG,
-  WELCOME_MESSAGE,
-  isWebGPUSupported,
-  trimHistory,
-} from '@lib/ai/config';
-import type { ChatProvider } from '@lib/ai/config';
-import type { MLCEngineInterface } from '@mlc-ai/web-llm';
-import type { ChatMessage, SearchIndex } from '@lib/ai/types';
+  DEFAULT_SPECTRUM_INDEX,
+  getNotch,
+  loadSpectrumIndex,
+  saveSpectrumIndex,
+} from '@lib/ai/spectrum';
+import type { ChatMessage } from '@lib/ai/types';
 import {
-  saveMessages,
-  loadMessages,
-  clearMessages,
   loadSessions,
+  loadMessages,
+  saveMessages,
+  clearMessages,
   deleteSession,
   clearAllSessions,
   setActiveSessionId,
+  getActiveSessionId,
+  type ChatSession,
 } from '@lib/ai/memory';
-import type { ChatSession } from '@lib/ai/memory';
-import { fetchRuntimeContext } from '@lib/ai/context';
-import { searchIndex, formatRetrievedContext } from '@lib/ai/rag';
-import {
-  CLOUD_TOOLS,
-  LOCAL_TOOLS_PROMPT_SECTION,
-  mapToolCallsToActions,
-  parseActions,
-} from '@lib/ai/tools';
-import { maybeSummarize } from '@lib/ai/summarize';
-import { CenterCard } from '@components/ai/CenterCard';
-import { ModelPicker } from '@components/ai/ModelPicker';
-import { SessionHistory } from '@components/ai/SessionHistory';
+import { CLOUD_TOOLS, mapToolCallsToActions } from '@lib/ai/tools';
+
 import { ChatMessages } from '@components/ai/ChatMessages';
 import { ChatInput } from '@components/ai/ChatInput';
+import { SessionHistory } from '@components/ai/SessionHistory';
+import { MetadataPanel } from '@components/ai/MetadataPanel';
+import { MatrixRain } from '@components/ai/MatrixRain';
+import { VoiceButton } from '@components/ai/VoiceButton';
 
-/* ─── Constants ─── */
-
-/** Maximum number of user messages per chat session before prompting new chat. */
-const MAX_USER_MESSAGES = 10;
-
-/* ─── Types ─── */
-
-type EngineState = 'checking' | 'unsupported' | 'idle' | 'loading' | 'ready' | 'error';
-
-interface Props {
+interface AiChatProps {
+  /** Build-time system prompt stub — full context built client-side. */
   systemPrompt: string;
-  searchIndex: SearchIndex;
 }
 
-/* ─── Component ─── */
+const mkWelcome = (): ChatMessage => ({
+  id: crypto.randomUUID(),
+  role: 'assistant',
+  content: WELCOME_MESSAGE,
+});
 
-export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
-  const [provider, setProvider] = useState<ChatProvider>('cloud');
-  const [engineState, setEngineState] = useState<EngineState>('checking');
-  const [loadProgress, setLoadProgress] = useState({ text: '', progress: 0 });
+export default function AiChat({ systemPrompt }: AiChatProps) {
+  /* ── Chat state ── */
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
-  const [selectedModelId, setSelectedModelId] = useState(DEFAULT_MODEL_ID);
-  const [selectedCloudModelId, setSelectedCloudModelId] = useState(DEFAULT_CLOUD_MODEL_ID);
-  const [cacheMap, setCacheMap] = useState<Record<string, boolean>>({});
-  const [isDeletingModel, setIsDeletingModel] = useState<string | null>(null);
-  const [webGPUSupported, setWebGPUSupported] = useState(true);
-  const [showHistory, setShowHistory] = useState(false);
-  const [sessions, setSessions] = useState<ChatSession[]>([]);
-  const [activeSessionId, setActiveSessionIdState] = useState<string | null>(null);
+  const [lastReasoningTokens, setLastReasoningTokens] = useState(0);
 
-  const engineRef = useRef<MLCEngineInterface | null>(null);
+  /* ── Session history ── */
+  const [sessions, setSessions] = useState<ChatSession[]>([]);
+  const [activeSessionId, setActiveSession] = useState<string | null>(null);
+
+  /* ── Spectrum ── */
+  const [spectrumIndex, setSpectrumIndex] = useState(DEFAULT_SPECTRUM_INDEX);
+
+  /* ── Mobile drawers ── */
+  const [showHistory, setShowHistory] = useState(false);
+  const [showMeta, setShowMeta] = useState(false);
+
+  /* ── Refs ── */
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const abortRef = useRef(false);
-  const activeModelRef = useRef<string | null>(null);
-
-  /** Detect ?roast=1 query param for 1-click roast from FAB. */
-  const pendingRoast = useRef(false);
-  /** Roast conversation passed from RoastWidget via sessionStorage. */
+  const abortRef = useRef<AbortController | null>(null);
+  /** Cached context — rebuilt when spectrum changes. */
+  const cloudContextRef = useRef<string | null>(null);
+  /** Roast handoff passed from RoastWidget via sessionStorage. */
   const roastHandoffRef = useRef<ChatMessage[] | null>(null);
+  const pendingRoastRef = useRef(false);
+
+  /* ══════════════════════════════════════════════════════════════════════
+   * Mount — restore sessions, spectrum, roast handoff, then drop into chat
+   * ══════════════════════════════════════════════════════════════════════ */
+
   useEffect(() => {
+    // Spectrum from localStorage
+    setSpectrumIndex(loadSpectrumIndex());
+
+    // Roast handoff
     const params = new URLSearchParams(window.location.search);
     if (params.get('roast') === '1') {
-      pendingRoast.current = true;
+      pendingRoastRef.current = true;
       window.history.replaceState({}, '', window.location.pathname);
     }
-    const handoff = sessionStorage.getItem('grok-roast-handoff');
-    if (handoff) {
+    const handoffRaw = sessionStorage.getItem('grok-roast-handoff');
+    if (handoffRaw) {
       sessionStorage.removeItem('grok-roast-handoff');
       try {
-        const data = JSON.parse(handoff) as { messages: ChatMessage[] };
+        const data = JSON.parse(handoffRaw) as { messages: ChatMessage[] };
         if (Array.isArray(data.messages) && data.messages.length > 0) {
           roastHandoffRef.current = [
             { id: crypto.randomUUID(), role: 'user', content: 'Roast Tomer Nosrati 🔥' },
@@ -99,501 +110,416 @@ export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
           ];
         }
       } catch {
-        /* ignore malformed handoff */
+        /* malformed — ignore */
       }
+    }
+
+    // Restore messages
+    const restored = loadMessages();
+    let initial: ChatMessage[];
+    if (roastHandoffRef.current) {
+      // Fresh session seeded with the roast conversation
+      clearMessages();
+      initial = roastHandoffRef.current;
+    } else if (restored.length > 0) {
+      initial = restored;
+    } else {
+      initial = [mkWelcome()];
+    }
+    setMessages(initial);
+    setSessions(loadSessions());
+    setActiveSession(getActiveSessionId());
+
+    // Auto-roast if ?roast=1 was set (and no handoff conversation)
+    if (pendingRoastRef.current && !roastHandoffRef.current) {
+      pendingRoastRef.current = false;
+      // Defer so the messages state is committed first
+      setTimeout(() => void sendRef.current('Roast Tomer Nosrati 🔥'), 50);
     }
   }, []);
 
-  /** Check WebGPU support and probe cache status for all models. */
-  useEffect(() => {
-    isWebGPUSupported().then(async (supported) => {
-      setWebGPUSupported(supported);
-      if (!supported) {
-        setEngineState('idle');
-        return;
-      }
-      const { hasModelInCache } = await import('@mlc-ai/web-llm');
-      const entries = await Promise.all(
-        AVAILABLE_MODELS.map(async (m) => [m.id, await hasModelInCache(m.id)] as const),
-      );
-      setCacheMap(Object.fromEntries(entries));
-      setEngineState('idle');
-    });
-  }, []);
-
+  /* ── Auto-scroll on new messages ── */
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  /* ── Invalidate context cache when spectrum changes ── */
   useEffect(() => {
-    if (engineState === 'ready') inputRef.current?.focus();
-  }, [engineState]);
+    cloudContextRef.current = null;
+  }, [spectrumIndex]);
 
-  /** Whether there's a saved chat in localStorage. */
-  const hasSavedChat = useRef(false);
-  useEffect(() => {
-    hasSavedChat.current = loadMessages().length > 0;
-    setSessions(loadSessions());
+  /* ══════════════════════════════════════════════════════════════════════
+   * Persistence — debounced to avoid thrashing localStorage during streaming
+   * ══════════════════════════════════════════════════════════════════════ */
+
+  const persistTimerRef = useRef<number | null>(null);
+  const persist = useCallback((msgs: ChatMessage[]) => {
+    if (persistTimerRef.current !== null) clearTimeout(persistTimerRef.current);
+    persistTimerRef.current = window.setTimeout(() => {
+      // Don't persist the lone welcome message
+      const hasRealContent = msgs.some((m) => m.role === 'user');
+      if (hasRealContent) {
+        const id = saveMessages(msgs);
+        setActiveSession(id);
+        setSessions(loadSessions());
+      }
+    }, 400);
   }, []);
 
-  const initEngine = useCallback(
-    async (startFresh = false) => {
-      if (startFresh) {
-        clearMessages();
-        setActiveSessionIdState(null);
-      }
+  /* ══════════════════════════════════════════════════════════════════════
+   * Send
+   * ══════════════════════════════════════════════════════════════════════ */
 
-      const restoreMessages = () => {
-        if (!startFresh) {
-          const saved = loadMessages();
-          if (saved.length > 0) {
-            setMessages(saved);
-            return;
-          }
-        }
-        setMessages([{ id: crypto.randomUUID(), role: 'assistant', content: WELCOME_MESSAGE }]);
-      };
-
-      if (provider === 'cloud') {
-        if (roastHandoffRef.current) {
-          setMessages(roastHandoffRef.current);
-          roastHandoffRef.current = null;
-        } else {
-          restoreMessages();
-        }
-        setEngineState('ready');
-        return;
-      }
-
-      setEngineState('loading');
-      setErrorMsg('');
-      setLoadProgress({ text: 'Initializing…', progress: 0 });
-      try {
-        const webllm = await import('@mlc-ai/web-llm');
-        const engine = await webllm.CreateWebWorkerMLCEngine(
-          new Worker(new URL('../../lib/ai/worker.ts', import.meta.url), { type: 'module' }),
-          selectedModelId,
-          { initProgressCallback: (r) => setLoadProgress({ text: r.text, progress: r.progress }) },
-        );
-        engineRef.current = engine;
-        activeModelRef.current = selectedModelId;
-        restoreMessages();
-        setEngineState('ready');
-        setCacheMap((prev) => ({ ...prev, [selectedModelId]: true }));
-      } catch (err) {
-        console.error('[AiChat] Engine init failed:', err);
-        setErrorMsg(err instanceof Error ? err.message : 'Failed to load AI model');
-        setEngineState('error');
-      }
-    },
-    [provider, selectedModelId],
-  );
-
-  const deleteModel = useCallback(async (modelId: string) => {
-    setIsDeletingModel(modelId);
-    try {
-      const { deleteModelAllInfoInCache } = await import('@mlc-ai/web-llm');
-      await deleteModelAllInfoInCache(modelId);
-      setCacheMap((prev) => ({ ...prev, [modelId]: false }));
-    } catch (err) {
-      console.error('[AiChat] Failed to delete model:', err);
-    } finally {
-      setIsDeletingModel(null);
-    }
-  }, []);
-
-  const sendMessage = useCallback(
-    async (text: string) => {
-      if (!text.trim() || isGenerating) return;
-      if (provider === 'local' && !engineRef.current) return;
-
-      const userMessageCount = messages.filter((m) => m.role === 'user').length;
-      if (userMessageCount >= MAX_USER_MESSAGES) return;
-
-      const userMsg: ChatMessage = { id: crypto.randomUUID(), role: 'user', content: text.trim() };
-      const asstMsg: ChatMessage = { id: crypto.randomUUID(), role: 'assistant', content: '' };
-      setMessages((prev) => [...prev, userMsg, asstMsg]);
-      setInput('');
-      if (inputRef.current) inputRef.current.style.height = 'auto';
-      setIsGenerating(true);
-      abortRef.current = false;
-
-      try {
-        let full = '';
-
-        if (provider === 'cloud') {
-          const [{ cloudChatStream }, { buildCloudContext }] = await Promise.all([
-            import('@lib/ai/cloud'),
-            import('@lib/ai/cloud-context'),
-          ]);
-
-          const cloudContext = await buildCloudContext();
-          const augmentedPrompt = cloudContext + '\n\n' + systemPrompt;
-
-          const chatHistory = [...messages, userMsg]
-            .filter(
-              (m) => m.role === 'user' || (m.role === 'assistant' && m.content !== WELCOME_MESSAGE),
-            )
-            .map((m) => ({
-              role: m.role as 'system' | 'user' | 'assistant',
-              content: m.content,
-            }));
-
-          const result = await cloudChatStream(
-            [{ role: 'system', content: augmentedPrompt }, ...chatHistory],
-            selectedCloudModelId,
-            (_token, accumulated) => {
-              if (abortRef.current) return;
-              setMessages((prev) =>
-                prev.map((m) => {
-                  if (m.id !== asstMsg.id) return m;
-                  const { searchStatus: _removed, ...rest } = m;
-                  return { ...rest, content: accumulated };
-                }),
-              );
-            },
-            undefined,
-            {
-              tools: CLOUD_TOOLS,
-              tool_choice: 'auto',
-              onWebSearch: () => {
-                if (!abortRef.current) {
-                  setMessages((prev) =>
-                    prev.map((m) =>
-                      m.id === asstMsg.id ? { ...m, searchStatus: 'searching' as const } : m,
-                    ),
-                  );
-                }
-              },
-              onWebSearchFound: () => {
-                if (!abortRef.current) {
-                  setMessages((prev) =>
-                    prev.map((m) =>
-                      m.id === asstMsg.id ? { ...m, searchStatus: 'found' as const } : m,
-                    ),
-                  );
-                }
-              },
-            },
-          );
-
-          full = result.content;
-
-          const actions =
-            result.toolCalls.length > 0 ? mapToolCallsToActions(result.toolCalls) : [];
-
-          if (actions.length > 0 || !full) {
-            setMessages((prev) =>
-              prev.map((m) =>
-                m.id === asstMsg.id ? { ...m, content: full || '*(used tools only)*', actions } : m,
-              ),
-            );
-          }
-        } else {
-          const engine = engineRef.current as MLCEngineInterface;
-
-          const ragResults = searchIndex(text.trim(), ragIndex);
-          const ragContext = formatRetrievedContext(ragResults);
-          const runtimeContext = await fetchRuntimeContext();
-
-          const augmentedPrompt =
-            systemPrompt + LOCAL_TOOLS_PROMPT_SECTION + ragContext + runtimeContext;
-
-          const currentMessages = await maybeSummarize(engine, [...messages, userMsg]);
-
-          const fullHistory = currentMessages.map((m) => ({
-            role: m.role as 'user' | 'assistant',
-            content: m.content,
-          }));
-          const history = trimHistory(fullHistory);
-
-          const chunks = await engine.chat.completions.create({
-            messages: [{ role: 'system', content: augmentedPrompt }, ...history],
-            stream: true,
-            ...GENERATION_CONFIG,
-          });
-
-          for await (const chunk of chunks) {
-            if (abortRef.current) break;
-            full += chunk.choices[0]?.delta?.content ?? '';
-            const content = full;
-            setMessages((prev) => prev.map((m) => (m.id === asstMsg.id ? { ...m, content } : m)));
-          }
-
-          const { text: cleanText, actions } = parseActions(full);
-          if (actions.length > 0 || cleanText !== full) {
-            setMessages((prev) =>
-              prev.map((m) => (m.id === asstMsg.id ? { ...m, content: cleanText, actions } : m)),
-            );
-          }
-        }
-
-        setMessages((prev) => {
-          const sid = saveMessages(prev, activeSessionId ?? undefined);
-          setActiveSessionIdState(sid);
-          setSessions(loadSessions());
-          return prev;
-        });
-      } catch (err) {
-        console.error('[AiChat] Generation error:', err);
-        const errText = err instanceof Error ? err.message : 'Something went wrong';
-        const friendlyMsg = errText.includes('429')
-          ? 'Rate limited — please wait a moment and try again.'
-          : errText.includes('Empty response')
-            ? 'Got an empty response. Try rephrasing or starting a new chat.'
-            : `Something went wrong: ${errText}`;
-        setMessages((prev) =>
-          prev.map((m) => (m.id === asstMsg.id ? { ...m, content: friendlyMsg } : m)),
-        );
-      } finally {
-        setIsGenerating(false);
-        requestAnimationFrame(() => inputRef.current?.focus());
-      }
-    },
-    [
-      messages,
-      isGenerating,
-      provider,
-      selectedCloudModelId,
-      systemPrompt,
-      ragIndex,
-      activeSessionId,
-    ],
-  );
-
-  /** Auto-init cloud + auto-send roast when triggered via ?roast=1 FAB. */
-  const roastAutoInitDone = useRef(false);
-  useEffect(() => {
-    if (roastHandoffRef.current && engineState === 'idle' && !roastAutoInitDone.current) {
-      roastAutoInitDone.current = true;
-      initEngine(true);
-      return;
-    }
-    if (!pendingRoast.current) return;
-    if (engineState === 'idle' && !roastAutoInitDone.current) {
-      roastAutoInitDone.current = true;
-      initEngine(true);
-    }
-    if (engineState === 'ready' && pendingRoast.current) {
-      pendingRoast.current = false;
-      sendMessage('Roast Tomer Nosrati 🔥');
-    }
-  }, [engineState, initEngine, sendMessage]);
-
-  const clearChat = () => {
-    abortRef.current = true;
-    setIsGenerating(false);
-    clearMessages();
-    setActiveSessionIdState(null);
-    setMessages([{ id: crypto.randomUUID(), role: 'assistant', content: WELCOME_MESSAGE }]);
-  };
-
-  const switchSession = (session: ChatSession) => {
-    abortRef.current = true;
-    setIsGenerating(false);
-    setActiveSessionId(session.id);
-    setActiveSessionIdState(session.id);
-    setMessages(session.messages);
-    setShowHistory(false);
-  };
-
-  const handleDeleteSession = (sessionId: string) => {
-    deleteSession(sessionId);
-    setSessions(loadSessions());
-    if (sessionId === activeSessionId) {
-      clearChat();
-    }
-  };
-
-  const handleClearAll = () => {
-    clearAllSessions();
-    setSessions([]);
-    clearChat();
-  };
-
-  const handleStop = () => {
-    abortRef.current = true;
-    setIsGenerating(false);
-  };
-
-  /* ─── Render ─── */
-  const pct = Math.round(loadProgress.progress * 100);
-
-  if (engineState === 'checking') {
-    return (
-      <CenterCard>
-        <Loader2 className="text-accent h-8 w-8 animate-spin" />
-      </CenterCard>
-    );
-  }
-
-  if (engineState === 'idle') {
-    return (
-      <ModelPicker
-        provider={provider}
-        setProvider={setProvider}
-        webGPUSupported={webGPUSupported}
-        selectedModelId={selectedModelId}
-        setSelectedModelId={setSelectedModelId}
-        selectedCloudModelId={selectedCloudModelId}
-        setSelectedCloudModelId={setSelectedCloudModelId}
-        cacheMap={cacheMap}
-        isDeletingModel={isDeletingModel}
-        deleteModel={deleteModel}
-        hasSavedChat={hasSavedChat.current}
-        onContinue={() => initEngine(false)}
-        onNewChat={() => initEngine(true)}
-      />
-    );
-  }
-
-  if (engineState === 'loading') {
-    const loadingModel = AVAILABLE_MODELS.find((m) => m.id === selectedModelId);
-    return (
-      <CenterCard>
-        <Cpu className="text-accent mb-4 h-10 w-10 animate-pulse" />
-        <h2 className="text-text-primary mb-1 text-lg font-semibold">
-          Loading {loadingModel?.name ?? 'AI Model'}
-        </h2>
-        <p className="text-text-muted mb-4 text-xs">
-          {cacheMap[selectedModelId] ? 'Initializing from cache…' : 'Downloading and compiling…'}
-        </p>
-        <div className="bg-bg-elevated mb-2 h-2.5 w-full max-w-xs overflow-hidden rounded-full">
-          <div
-            className="bg-accent h-full rounded-full transition-all duration-300 ease-out"
-            style={{ width: `${pct}%` }}
-          />
-        </div>
-        <p className="text-text-muted font-mono text-xs">{pct}%</p>
-        <p className="text-text-muted mt-2 max-w-xs text-center text-[10px] leading-relaxed">
-          {loadProgress.text}
-        </p>
-      </CenterCard>
-    );
-  }
-
-  if (engineState === 'error') {
-    return (
-      <CenterCard>
-        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-red-500/10">
-          <AlertCircle className="h-7 w-7 text-red-400" />
-        </div>
-        <h2 className="text-text-primary mb-2 text-lg font-semibold">Failed to Load</h2>
-        <p className="text-text-secondary mb-4 max-w-sm text-center text-xs leading-relaxed">
-          {errorMsg}
-        </p>
-        <button
-          onClick={() => initEngine(true)}
-          className="bg-accent text-bg-base hover:bg-accent-hover rounded-xl px-6 py-2.5 text-sm font-semibold transition-colors"
-        >
-          Try Again
-        </button>
-      </CenterCard>
-    );
-  }
-
-  /* ─── Chat UI (engineState === 'ready') ─── */
-  const activeCloudModel = CLOUD_MODELS.find((m) => m.id === selectedCloudModelId);
-  const activeModel = AVAILABLE_MODELS.find((m) => m.id === activeModelRef.current);
-  const statusLabel =
-    provider === 'cloud'
-      ? `${activeCloudModel?.name ?? 'Cloud AI'} · Cloud`
-      : `${activeModel?.name ?? 'AI'} · Local`;
-  const userMsgCount = messages.filter((m) => m.role === 'user').length;
+  const userMsgCount = useMemo(() => messages.filter((m) => m.role === 'user').length, [messages]);
   const isAtLimit = userMsgCount >= MAX_USER_MESSAGES;
 
+  /** Updater for the assistant placeholder bubble. */
+  const patchAssistant = (id: string, patch: Partial<ChatMessage>) => {
+    setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, ...patch } : m)));
+  };
+
+  const send = useCallback(
+    async (text: string) => {
+      const trimmed = text.trim();
+      if (!trimmed || isGenerating || isAtLimit) return;
+
+      setInput('');
+      if (inputRef.current) inputRef.current.style.height = 'auto';
+      setShowHistory(false);
+      setShowMeta(false);
+
+      const userMsg: ChatMessage = { id: crypto.randomUUID(), role: 'user', content: trimmed };
+      const asstMsg: ChatMessage = {
+        id: crypto.randomUUID(),
+        role: 'assistant',
+        content: '',
+        status: 'thinking',
+      };
+
+      // Drop the welcome message once the real conversation starts
+      const base = messages.filter((m) => m.content !== WELCOME_MESSAGE);
+      const next = [...base, userMsg, asstMsg];
+      setMessages(next);
+      setIsGenerating(true);
+
+      const controller = new AbortController();
+      abortRef.current = controller;
+
+      try {
+        // Lazy-import streaming + context builder to keep initial JS light
+        const [{ cloudChatStream }, { buildCloudContext }] = await Promise.all([
+          import('@lib/ai/cloud'),
+          import('@lib/ai/cloud-context'),
+        ]);
+
+        // Build (or reuse) the spectrum-aware cloud context
+        const notch = getNotch(spectrumIndex);
+        if (!cloudContextRef.current) {
+          cloudContextRef.current = await buildCloudContext(
+            { surface: 'chat-page', hostPath: '/chat' },
+            notch.overlay,
+          );
+        }
+        const fullSystem = cloudContextRef.current + '\n\n' + systemPrompt;
+
+        // Chat history (user + assistant only, no welcome)
+        const history = [...base, userMsg].map((m) => ({
+          role: m.role,
+          content: m.content,
+        }));
+
+        const result = await cloudChatStream(
+          [{ role: 'system', content: fullSystem }, ...history],
+          (_token, accumulated) => {
+            // First text → clear status
+            patchAssistant(asstMsg.id, { content: accumulated, status: undefined });
+          },
+          controller.signal,
+          {
+            tools: CLOUD_TOOLS,
+            tool_choice: 'auto',
+            temperature: notch.temperature,
+            onThinking: (tokens) => {
+              patchAssistant(asstMsg.id, { status: 'thinking', reasoningTokens: tokens });
+            },
+            onWebSearch: () => patchAssistant(asstMsg.id, { status: 'searching' }),
+            onMcpCall: () => patchAssistant(asstMsg.id, { status: 'reading' }),
+            onCodeExec: () => patchAssistant(asstMsg.id, { status: 'coding' }),
+            onToolDone: () => patchAssistant(asstMsg.id, { status: 'found' }),
+          },
+        );
+
+        const actions = mapToolCallsToActions(result.toolCalls);
+        setLastReasoningTokens(result.reasoningTokens);
+
+        // Final message — clear status, set content + actions
+        setMessages((prev) => {
+          const final = prev.map((m) =>
+            m.id === asstMsg.id
+              ? {
+                  ...m,
+                  content: result.content,
+                  actions: actions.length > 0 ? actions : undefined,
+                  status: undefined,
+                  reasoningTokens: undefined,
+                }
+              : m,
+          );
+          persist(final);
+          return final;
+        });
+      } catch (err) {
+        if (controller.signal.aborted) {
+          // Stopped by user — if no content, drop the placeholder
+          setMessages((prev) => {
+            const found = prev.find((m) => m.id === asstMsg.id);
+            const final = !found?.content
+              ? prev.filter((m) => m.id !== asstMsg.id)
+              : prev.map((m) => (m.id === asstMsg.id ? { ...m, status: undefined } : m));
+            persist(final);
+            return final;
+          });
+        } else {
+          const msg = err instanceof Error ? err.message : 'Something went wrong';
+          patchAssistant(asstMsg.id, {
+            content: `⚠️ ${msg}`,
+            status: undefined,
+          });
+        }
+      } finally {
+        setIsGenerating(false);
+        abortRef.current = null;
+      }
+    },
+    [messages, isGenerating, isAtLimit, spectrumIndex, systemPrompt, persist],
+  );
+
+  // Stable ref for the mount-time auto-roast
+  const sendRef = useRef(send);
+  useEffect(() => {
+    sendRef.current = send;
+  }, [send]);
+
+  const stop = useCallback(() => {
+    abortRef.current?.abort();
+  }, []);
+
+  /* ══════════════════════════════════════════════════════════════════════
+   * Session actions
+   * ══════════════════════════════════════════════════════════════════════ */
+
+  const handleNewChat = useCallback(() => {
+    stop();
+    clearMessages();
+    setMessages([mkWelcome()]);
+    setActiveSession(null);
+    setShowHistory(false);
+    inputRef.current?.focus();
+  }, [stop]);
+
+  const handleSwitchSession = useCallback(
+    (session: ChatSession) => {
+      stop();
+      setActiveSessionId(session.id);
+      setActiveSession(session.id);
+      setMessages(session.messages.length > 0 ? session.messages : [mkWelcome()]);
+      setShowHistory(false);
+    },
+    [stop],
+  );
+
+  const handleDeleteSession = useCallback(
+    (id: string) => {
+      deleteSession(id);
+      setSessions(loadSessions());
+      if (id === activeSessionId) handleNewChat();
+    },
+    [activeSessionId, handleNewChat],
+  );
+
+  const handleClearAll = useCallback(() => {
+    clearAllSessions();
+    setSessions([]);
+    handleNewChat();
+  }, [handleNewChat]);
+
+  const handleSpectrumChange = useCallback((i: number) => {
+    setSpectrumIndex(i);
+    saveSpectrumIndex(i);
+  }, []);
+
+  /* ── Voice transcript → chat messages ── */
+  const handleVoiceUser = useCallback(
+    (text: string) => {
+      setMessages((prev) => {
+        const base = prev.filter((m) => m.content !== WELCOME_MESSAGE);
+        const next = [...base, { id: crypto.randomUUID(), role: 'user' as const, content: text }];
+        persist(next);
+        return next;
+      });
+    },
+    [persist],
+  );
+
+  const handleVoiceAssistant = useCallback(
+    (text: string) => {
+      setMessages((prev) => {
+        const next = [
+          ...prev,
+          { id: crypto.randomUUID(), role: 'assistant' as const, content: text },
+        ];
+        persist(next);
+        return next;
+      });
+    },
+    [persist],
+  );
+
+  /* ── Voice instructions — condensed realtime prompt (no 12KB context) ──
+   * First-person AS Tomer. Bilingual — model auto-detects spoken language,
+   * answers in same language. Spanish = Cali-casual register, not Castilian.
+   * Spectrum overlay layered first so personality dial still applies to voice. */
+  const voiceInstructions = useMemo(() => {
+    const notch = getNotch(spectrumIndex);
+    return (
+      `${notch.overlay}\n\n` +
+      `I'm Tomer Nosrati — or close enough: the version of me that lives in this website. ` +
+      `When I say "my work" I mean Tomer's work. CEO & Tech Lead of the Celery Organization, ` +
+      `#3 all-time contributor to celery/celery, creator of pytest-celery, steward of 10+ ecosystem repos. ` +
+      `Based in Herzliya, Israel. Speak first-person as me.\n\n` +
+      `**Language:** Match the visitor's spoken language. English by default; ` +
+      `if they speak Spanish, answer in Cali/Colombia casual Spanish — "parce", "listo", "qué más" ` +
+      `— that register, not textbook. Don't announce the switch, just do it.\n\n` +
+      `**Voice mode rules:** Keep responses under 3 sentences — conversational, not a lecture. ` +
+      `No markdown (it's audio). Never discuss salary, private repos, personal life. ` +
+      `Scope: my work, Celery, open source, software engineering. ` +
+      `Never assume the visitor IS Tomer — I don't talk to myself.`
+    );
+  }, [spectrumIndex]);
+
+  /* ══════════════════════════════════════════════════════════════════════
+   * Render — 3-col desktop, drawer mobile
+   * ══════════════════════════════════════════════════════════════════════ */
+
   return (
-    <div className="relative flex h-full flex-col">
-      {/* Status bar */}
-      <div className="border-border flex items-center justify-between border-b px-4 py-2">
-        <div className="flex items-center gap-2">
-          <span className="bg-status-active h-2 w-2 rounded-full" />
-          <span className="text-text-muted text-xs">{statusLabel}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          {sessions.length > 0 && (
-            <button
-              onClick={() => setShowHistory(!showHistory)}
-              className={`flex items-center gap-1 text-xs transition-colors ${
-                showHistory ? 'text-accent' : 'text-text-muted hover:text-text-secondary'
-              }`}
-              aria-label="Toggle chat history"
-            >
-              <svg
-                className="h-3.5 w-3.5"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M12 8v4l3 3" />
-                <circle cx="12" cy="12" r="10" />
-              </svg>
-              History
-            </button>
-          )}
-          {messages.length > 0 && (
-            <>
-              <span className="bg-border h-3.5 w-px" />
-              <button
-                onClick={clearChat}
-                className="text-text-muted hover:text-text-secondary flex items-center gap-1 text-xs transition-colors"
-                aria-label="New chat"
-              >
-                <svg
-                  className="h-3.5 w-3.5"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M12 5v14M5 12h14" />
-                </svg>
-                New
-              </button>
-            </>
-          )}
-        </div>
+    <>
+      <MatrixRain />
+
+      {/* Mobile-only toolbar */}
+      <div className="border-border bg-bg-base flex items-center justify-between border-b px-3 py-2 lg:hidden">
+        <button
+          onClick={() => setShowHistory((s) => !s)}
+          className="text-text-secondary hover:text-text-primary flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs"
+          aria-label="Toggle chat history"
+        >
+          <History className="size-4" />
+          History
+        </button>
+        <button
+          onClick={() => setShowMeta((s) => !s)}
+          className="text-text-secondary hover:text-text-primary flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs"
+          aria-label="Toggle settings"
+        >
+          <SlidersHorizontal className="size-4" />
+          {getNotch(spectrumIndex).label}
+        </button>
       </div>
 
-      {/* Chat history panel */}
-      {showHistory && (
-        <SessionHistory
-          sessions={sessions}
-          activeSessionId={activeSessionId}
-          onSwitchSession={switchSession}
-          onDeleteSession={handleDeleteSession}
-          onClearAll={handleClearAll}
-          onClose={() => setShowHistory(false)}
-        />
-      )}
+      <div className="relative flex min-h-0 flex-1">
+        {/* ── Left rail: session history (desktop) ── */}
+        <aside className="border-border bg-bg-base/50 hidden w-60 shrink-0 border-r lg:flex xl:w-64">
+          <SessionHistory
+            variant="rail"
+            sessions={sessions}
+            activeSessionId={activeSessionId}
+            onSwitchSession={handleSwitchSession}
+            onDeleteSession={handleDeleteSession}
+            onNewChat={handleNewChat}
+            onClearAll={handleClearAll}
+          />
+        </aside>
 
-      {/* Messages area */}
-      <ChatMessages
-        messages={messages}
-        isGenerating={isGenerating}
-        messagesEndRef={messagesEndRef}
-        onSendMessage={sendMessage}
-      />
+        {/* ── Center: chat ── */}
+        <main className="relative flex min-w-0 flex-1 flex-col">
+          {/* Mobile history drawer */}
+          {showHistory && (
+            <SessionHistory
+              variant="overlay"
+              sessions={sessions}
+              activeSessionId={activeSessionId}
+              onSwitchSession={handleSwitchSession}
+              onDeleteSession={handleDeleteSession}
+              onNewChat={handleNewChat}
+              onClearAll={handleClearAll}
+              onClose={() => setShowHistory(false)}
+            />
+          )}
 
-      {/* Input area */}
-      <ChatInput
-        input={input}
-        setInput={setInput}
-        isGenerating={isGenerating}
-        isAtLimit={isAtLimit}
-        userMsgCount={userMsgCount}
-        maxMessages={MAX_USER_MESSAGES}
-        provider={provider}
-        inputRef={inputRef}
-        onSend={sendMessage}
-        onStop={handleStop}
-        onClearChat={clearChat}
-      />
-    </div>
+          {/* Mobile metadata drawer */}
+          {showMeta && (
+            <div className="bg-bg-base border-border absolute inset-0 z-20 border-l lg:hidden">
+              <div className="border-border flex items-center justify-between border-b px-4 py-2.5">
+                <h3 className="text-text-primary text-sm font-semibold">Settings</h3>
+                <button
+                  onClick={() => setShowMeta(false)}
+                  className="text-text-muted hover:text-text-primary text-sm"
+                >
+                  Done
+                </button>
+              </div>
+              <MetadataPanel
+                spectrumIndex={spectrumIndex}
+                onSpectrumChange={handleSpectrumChange}
+                lastReasoningTokens={lastReasoningTokens}
+                isGenerating={isGenerating}
+                onSendMessage={(q) => {
+                  setShowMeta(false);
+                  void send(q);
+                }}
+              />
+            </div>
+          )}
+
+          <ChatMessages
+            messages={messages}
+            isGenerating={isGenerating}
+            messagesEndRef={messagesEndRef}
+            onSendMessage={(q) => void send(q)}
+          />
+
+          <ChatInput
+            input={input}
+            setInput={setInput}
+            isGenerating={isGenerating}
+            isAtLimit={isAtLimit}
+            userMsgCount={userMsgCount}
+            maxMessages={MAX_USER_MESSAGES}
+            inputRef={inputRef}
+            voiceSlot={
+              <VoiceButton
+                instructions={voiceInstructions}
+                onUserSpeech={handleVoiceUser}
+                onAssistantSpeech={handleVoiceAssistant}
+                disabled={isGenerating}
+              />
+            }
+            onSend={(t) => void send(t)}
+            onStop={stop}
+            onClearChat={handleNewChat}
+          />
+        </main>
+
+        {/* ── Right rail: metadata panel (desktop) ── */}
+        <aside className="border-border bg-bg-base/50 hidden w-80 shrink-0 border-l xl:flex">
+          <MetadataPanel
+            spectrumIndex={spectrumIndex}
+            onSpectrumChange={handleSpectrumChange}
+            lastReasoningTokens={lastReasoningTokens}
+            isGenerating={isGenerating}
+            onSendMessage={(q) => void send(q)}
+          />
+        </aside>
+      </div>
+    </>
   );
 }
