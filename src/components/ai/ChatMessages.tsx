@@ -192,6 +192,7 @@ function ExpandedMarkdownView({
   language: Language;
 }) {
   const [expandedZoom, setExpandedZoom] = useState(DEFAULT_ZOOM);
+  const strings = t(language);
   const dir = language === 'he' ? 'rtl' : 'ltr';
 
   const handleZoomIn = useCallback(
@@ -260,9 +261,12 @@ function ExpandedMarkdownView({
           className="origin-top-left transition-transform duration-150 ease-out"
           style={{ zoom: expandedZoom }}
         >
-          {messages.map((msg) => {
+          {messages.map((msg, msgIndex) => {
             const isUser = msg.role === 'user';
-            if (!msg.content) return null;
+            const isLastAssistant = !isUser && msgIndex === messages.length - 1;
+            const isStreamingMsg = isGenerating && isLastAssistant;
+
+            if (!msg.content && !msg.searchStatus && !isStreamingMsg) return null;
 
             return (
               <div
@@ -305,12 +309,20 @@ function ExpandedMarkdownView({
                       {isUser ? 'You' : 'Cybernus'}
                     </p>
                     <div className="text-[15px] leading-relaxed text-white/85">
-                      {isUser ? (
+                      {msg.searchStatus ? (
+                        <SearchIndicator status={msg.searchStatus} strings={strings} />
+                      ) : !msg.content ? (
+                        isStreamingMsg ? (
+                          <SkeletonLoader />
+                        ) : (
+                          <TypingIndicator />
+                        )
+                      ) : isUser ? (
                         <p className="whitespace-pre-wrap">{msg.content}</p>
                       ) : (
                         <AssistantContent
                           content={msg.content}
-                          isStreaming={false}
+                          isStreaming={isStreamingMsg}
                           onSendMessage={onSendMessage}
                           isGenerating={isGenerating}
                         />
