@@ -203,7 +203,13 @@ export function useSpeechInput(
       if (isStale()) return;
       const label = ERROR_LABELS[ev.error] ?? `Speech error: ${ev.error}`;
       if (label) setError(label);
+      // Full reset — `onend` fires next per spec, but nulling `recogRef` below
+      // makes it stale (isStale() → true), so we can't rely on its cleanup.
+      // Same orphaning pattern as b05ebea. Visible symptom: ChatComposer's
+      // autosize effect deps on `speech.transcript`; if it doesn't change,
+      // the textarea stays at the grown interim height until the user types.
       setListening(false);
+      setTranscript('');
       recogRef.current = null;
       bufferRef.current = '';
     };
