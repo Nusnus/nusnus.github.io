@@ -10,8 +10,9 @@ interface Props {
 const { class: className, href, hover = true } = Astro.props;
 
 const baseClasses = cn(
-  'border-border bg-bg-surface rounded-xl border p-5',
-  hover && 'hover:border-accent/40 transition-all duration-150 hover:-translate-y-0.5',
+  'glass-subtle ring-border/50 rounded-xl border p-5 ring-1',
+  hover &&
+    'hover:ring-accent/30 hover:glow-accent-sm transition-all duration-200 hover:-translate-y-0.5',
   'motion-reduce:transition-none motion-reduce:hover:translate-y-0',
   className,
 );

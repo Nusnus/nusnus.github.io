@@ -179,20 +179,15 @@ export function executeAction(action: ToolAction): void {
  * use text-marker actions. Not used by cloud models (they use native tools).
  */
 export const LOCAL_TOOLS_PROMPT_SECTION = `
-# Available Actions
-When your answer references a specific link, page, or project, include action markers at the END of your response (after your text). Only include actions that are directly relevant.
+# Actions
+Include action markers at the END of your response when referencing specific links or pages.
 
 Format:
-[LINK: url | label]  — Suggest opening an external link
-[NAV: path | label]  — Suggest navigating to a page on this site
+[LINK: url | label]  — External link (GitHub, LinkedIn, articles)
+[NAV: path | label]  — Site navigation (/, /chat)
 
 Examples:
 [LINK: https://github.com/celery/celery | View Celery on GitHub]
-[LINK: https://www.linkedin.com/in/tomernosrati | Tomer's LinkedIn]
 [NAV: / | Back to Portfolio]
 
-Rules:
-- Only include actions for URLs mentioned in your knowledge base
-- Maximum 2 actions per response
-- Always place actions at the very end, after your text
-- Do not invent URLs — only use URLs from the provided data`;
+Rules: Only use URLs from your knowledge base. Max 2 per response. Place after all text.`;

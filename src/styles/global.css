@@ -12,6 +12,7 @@
   --color-accent: oklch(0.72 0.17 145);
   --color-accent-hover: oklch(0.78 0.15 145);
   --color-accent-muted: oklch(0.72 0.17 145 / 0.15);
+  --color-accent-glow: oklch(0.72 0.17 145 / 0.25);
 
   /* Text */
   --color-text-primary: oklch(0.93 0.005 255);
@@ -22,6 +23,10 @@
   --color-status-active: oklch(0.72 0.2 145);
   --color-status-warning: oklch(0.72 0.17 85);
   --color-status-inactive: oklch(0.45 0.005 255);
+
+  /* Glass */
+  --color-glass-border: oklch(0.93 0.005 255 / 0.08);
+  --color-glass-bg: oklch(0.15 0.01 255 / 0.6);
 
   /* Typography */
   --font-sans: 'Inter var', 'Inter', system-ui, sans-serif;
@@ -88,7 +93,10 @@
     --color-accent: oklch(0.52 0.17 145);
     --color-accent-hover: oklch(0.45 0.17 145);
     --color-accent-muted: oklch(0.52 0.17 145 / 0.12);
+    --color-accent-glow: oklch(0.52 0.17 145 / 0.2);
     --color-status-active: oklch(0.5 0.2 145);
+    --color-glass-border: oklch(0.15 0.01 255 / 0.1);
+    --color-glass-bg: oklch(0.95 0.005 255 / 0.6);
   }
 }
 
@@ -97,6 +105,75 @@
   .scrollbar-thin {
     scrollbar-width: thin;
     scrollbar-color: var(--color-border) transparent;
+  }
+
+  /* Glassmorphism */
+  .glass {
+    background: var(--color-glass-bg);
+    backdrop-filter: blur(16px) saturate(1.4);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    border-color: var(--color-glass-border);
+  }
+
+  .glass-subtle {
+    background: var(--color-glass-bg);
+    backdrop-filter: blur(8px) saturate(1.2);
+    -webkit-backdrop-filter: blur(8px) saturate(1.2);
+    border-color: var(--color-glass-border);
+  }
+
+  /* Glow effects — use Tailwind shadow composition to avoid overwriting ring and shadow */
+  .glow-accent {
+    --tw-shadow: 0 0 20px var(--color-accent-glow), 0 0 60px oklch(0.72 0.17 145 / 0.08);
+    box-shadow:
+      var(--tw-inset-shadow,), var(--tw-inset-ring-shadow,), var(--tw-ring-offset-shadow,),
+      var(--tw-ring-shadow,), var(--tw-shadow,);
+  }
+
+  .glow-accent-sm {
+    --tw-shadow: 0 0 10px var(--color-accent-glow);
+    box-shadow:
+      var(--tw-inset-shadow,), var(--tw-inset-ring-shadow,), var(--tw-ring-offset-shadow,),
+      var(--tw-ring-shadow,), var(--tw-shadow,);
+  }
+
+  /* Gradient text */
+  .text-gradient-accent {
+    background: linear-gradient(
+      135deg,
+      var(--color-accent) 0%,
+      var(--color-accent-hover) 50%,
+      oklch(0.68 0.15 160) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* Section reveal on scroll — only hide when JS is available */
+  .js .reveal-section {
+    opacity: 0;
+    transform: translateY(16px);
+    transition:
+      opacity 0.6s ease-out,
+      transform 0.6s ease-out;
+  }
+
+  .js .reveal-section.revealed {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Shimmer skeleton loader */
+  .skeleton-shimmer {
+    background: linear-gradient(
+      90deg,
+      var(--color-bg-elevated) 25%,
+      var(--color-bg-surface) 50%,
+      var(--color-bg-elevated) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
   }
 }
 
@@ -124,6 +201,69 @@
   }
 }
 
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes gradient-shift {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes border-glow {
+  0%,
+  100% {
+    border-color: oklch(from var(--color-accent) l c h / 0.3);
+    box-shadow: 0 0 8px oklch(from var(--color-accent) l c h / 0.1);
+  }
+  50% {
+    border-color: oklch(from var(--color-accent) l c h / 0.6);
+    box-shadow: 0 0 16px oklch(from var(--color-accent) l c h / 0.2);
+  }
+}
+
 @keyframes data-refresh {
   0% {
     opacity: 0.4;
@@ -146,7 +286,15 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .data-refresh {
-    animation: none;
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .js .reveal-section {
+    opacity: 1;
+    transform: none;
   }
 }

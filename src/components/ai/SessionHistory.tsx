@@ -21,7 +21,7 @@ export function SessionHistory({
   onClose,
 }: SessionHistoryProps) {
   return (
-    <div className="border-border bg-bg-base absolute inset-0 z-10 flex flex-col overflow-hidden">
+    <div className="glass border-border/50 absolute inset-0 z-10 flex flex-col overflow-hidden border-l">
       <div className="border-border flex items-center justify-between border-b px-4 py-2.5">
         <h3 className="text-text-primary text-sm font-semibold">Chat History</h3>
         <div className="flex items-center gap-2">
@@ -51,8 +51,10 @@ export function SessionHistory({
               <div
                 key={session.id}
                 className={cn(
-                  'group flex cursor-pointer items-start justify-between gap-2 px-4 py-3 transition-colors',
-                  session.id === activeSessionId ? 'bg-accent/10' : 'hover:bg-bg-surface',
+                  'group flex cursor-pointer items-start justify-between gap-2 px-4 py-3 transition-all duration-150',
+                  session.id === activeSessionId
+                    ? 'bg-accent/10 border-accent border-l-2'
+                    : 'hover:bg-bg-surface/60 border-l-2 border-transparent',
                 )}
                 onClick={() => onSwitchSession(session)}
                 role="button"

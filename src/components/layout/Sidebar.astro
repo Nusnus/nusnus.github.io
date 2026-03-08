@@ -20,16 +20,22 @@ const celeryStars = repos?.find((r) => r.fullName === 'celery/celery')?.stars ??
 const totalContributions = graph?.totalContributions ?? 0;
 ---
 
-<aside class="border-accent/30 bg-bg-base hidden h-screen flex-col border-r px-5 py-6 md:flex">
+<aside class="glass border-accent/20 hidden h-screen flex-col border-r px-5 py-6 md:flex">
   <!-- Avatar + Status -->
   <div class="mb-4 flex items-center gap-3">
     <div class="group relative">
+      <div
+        class="absolute -inset-1 rounded-full opacity-0 blur-sm transition-opacity duration-300 group-hover:opacity-100"
+        style="background: conic-gradient(var(--color-accent), var(--color-accent-hover), var(--color-accent))"
+        aria-hidden="true"
+      >
+      </div>
       <img
         src={profile?.avatarUrl ?? 'https://avatars.githubusercontent.com/u/4662342?v=4'}
         alt="Tomer Nosrati"
         width="64"
         height="64"
-        class="group-hover:ring-accent/50 rounded-full ring-2 ring-transparent transition-shadow duration-200"
+        class="ring-accent/30 group-hover:ring-accent/60 relative rounded-full ring-2 transition-shadow duration-300"
         loading="eager"
       />
       <div class="absolute -right-0.5 -bottom-0.5" id="status-dot-container">
@@ -68,7 +74,10 @@ const totalContributions = graph?.totalContributions ?? 0;
   </div>
 
   <!-- Quick Stats -->
-  <div class="border-border mb-5 border-t pt-4">
+  <div
+    class="border-accent/10 mb-5 border-t pt-4"
+    style="border-image: linear-gradient(to right, var(--color-accent-glow), transparent) 1"
+  >
     <p class="text-text-primary mb-3 font-mono text-sm font-semibold">
       <span data-live="totalContributions">{formatCompactNumber(totalContributions)}</span> contributions
       this year

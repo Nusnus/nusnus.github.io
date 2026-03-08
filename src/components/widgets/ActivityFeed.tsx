@@ -117,7 +117,7 @@ export default function ActivityFeed({ initialEvents }: Props) {
             href={event.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="group hover:bg-bg-surface flex gap-3 rounded-lg p-2.5 transition-colors duration-100 motion-reduce:transition-none"
+            className="group hover:bg-bg-surface/60 hover:border-accent/50 flex gap-3 rounded-lg border-l-2 border-transparent p-2.5 transition-all duration-150 motion-reduce:transition-none"
             style={{
               animation: `slide-in-right 200ms ease-out ${index * 50}ms both`,
             }}
