@@ -110,7 +110,7 @@ const trophies: Trophy[] = [
     <!-- Contribution heatmap -->
     {
       weeks.length > 0 && (
-        <div class="bg-bg-surface/50 ring-border/50 mb-6 overflow-x-auto rounded-xl p-4 ring-1">
+        <div class="glass-subtle border-border/50 ring-border/30 mb-6 overflow-x-auto rounded-xl border p-4 ring-1">
           <ContributionGraph client:visible weeks={weeks} totalContributions={totalContributions} />
         </div>
       )
@@ -118,21 +118,21 @@ const trophies: Trophy[] = [
 
     <!-- Summary stats -->
     <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
-      <div class="bg-bg-surface/50 ring-border/40 rounded-lg p-3 ring-1">
+      <div class="glass-subtle border-border/50 ring-border/30 rounded-lg border p-3 ring-1">
         <p class="text-accent font-mono text-xl font-bold" data-live="totalContributions">
           {formatCompactNumber(totalContributions)}
         </p>
         <p class="text-text-muted text-xs">contributions</p>
       </div>
-      <div class="bg-bg-surface/50 ring-border/40 rounded-lg p-3 ring-1">
+      <div class="glass-subtle border-border/50 ring-border/30 rounded-lg border p-3 ring-1">
         <p class="text-accent font-mono text-xl font-bold">
-          🔥 <span data-live="streak">{streak}</span>
+          <span data-live="streak">{streak}</span>
         </p>
         <p class="text-text-muted text-xs">day streak</p>
       </div>
       {
         graph && (
-          <div class="bg-bg-surface/50 ring-border/40 rounded-lg p-3 ring-1">
+          <div class="glass-subtle border-border/50 ring-border/30 rounded-lg border p-3 ring-1">
             <p class="text-accent font-mono text-xl font-bold" data-live="totalCommits">
               {formatCompactNumber(graph.totalCommits)}
             </p>
@@ -142,7 +142,7 @@ const trophies: Trophy[] = [
       }
       {
         graph && (
-          <div class="bg-bg-surface/50 ring-border/40 rounded-lg p-3 ring-1">
+          <div class="glass-subtle border-border/50 ring-border/30 rounded-lg border p-3 ring-1">
             <p class="text-accent font-mono text-xl font-bold" data-live="totalPRs">
               {formatCompactNumber(graph.totalPRs)}
             </p>
@@ -165,9 +165,9 @@ const trophies: Trophy[] = [
               return (
                 <Tag
                   class:list={[
-                    'bg-bg-surface/50 ring-border/40 flex flex-col items-center rounded-lg p-3 text-center ring-1',
+                    'glass-subtle border-border/50 ring-border/30 flex flex-col items-center rounded-lg border p-3 text-center ring-1',
                     trophy.link &&
-                      'hover:ring-accent/60 cursor-pointer transition-all duration-150 hover:-translate-y-0.5',
+                      'hover:ring-accent/40 hover:glow-accent-sm cursor-pointer transition-all duration-200 hover:-translate-y-0.5',
                   ]}
                   href={trophy.link}
                   target={trophy.link ? '_blank' : undefined}

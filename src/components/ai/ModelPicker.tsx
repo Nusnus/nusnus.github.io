@@ -48,10 +48,13 @@ export function ModelPicker({
     <div className="flex h-full flex-col">
       {/* Header */}
       <div className="border-border shrink-0 border-b px-6 py-5 text-center">
-        <div className="bg-accent/10 mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl">
+        <div
+          className="bg-accent/10 ring-accent/20 mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl ring-1"
+          style={{ animation: 'border-glow 3s ease-in-out infinite' }}
+        >
           <Sparkles className="text-accent h-6 w-6" />
         </div>
-        <h2 className="text-text-primary mb-1 text-lg font-bold">Ask AI about Tomer</h2>
+        <h2 className="text-gradient-accent mb-1 text-lg font-bold">Ask AI about Tomer</h2>
         <p className="text-text-secondary text-xs">Choose how you want to chat</p>
       </div>
 
@@ -99,17 +102,17 @@ export function ModelPicker({
                   key={cm.id}
                   onClick={() => setSelectedCloudModelId(cm.id)}
                   className={cn(
-                    'border-border bg-bg-surface relative flex flex-col rounded-xl border p-4 text-left transition-all',
+                    'glass-subtle border-border/50 relative flex flex-col rounded-xl border p-4 text-left ring-1 transition-all duration-200',
                     selectedCloudModelId === cm.id
-                      ? 'border-accent ring-accent/30 ring-2'
-                      : 'hover:bg-bg-elevated hover:border-text-muted',
+                      ? 'border-accent ring-accent/30 glow-accent-sm ring-2'
+                      : 'ring-border/30 hover:bg-bg-elevated hover:ring-accent/20',
                   )}
                 >
                   <div className="mb-1.5 flex items-center gap-2">
                     <Zap className="text-accent h-4 w-4" />
                     <h3 className="text-text-primary text-sm font-semibold">{cm.name}</h3>
                     {cm.recommended && (
-                      <span className="bg-accent text-bg-base rounded-full px-2 py-0.5 text-[9px] font-bold">
+                      <span className="bg-accent text-bg-base shadow-accent/30 rounded-full px-2 py-0.5 text-[9px] font-bold shadow-sm">
                         ★ Recommended
                       </span>
                     )}
@@ -176,7 +179,7 @@ export function ModelPicker({
           {hasSavedChat && (
             <button
               onClick={onContinue}
-              className="bg-accent text-bg-base hover:bg-accent-hover rounded-xl px-8 py-3 text-sm font-semibold transition-colors"
+              className="bg-accent text-bg-base hover:bg-accent-hover glow-accent-sm hover:shadow-accent/20 rounded-xl px-8 py-3 text-sm font-semibold transition-all duration-200 hover:shadow-lg"
             >
               Continue Chat
             </button>
@@ -184,10 +187,10 @@ export function ModelPicker({
           <button
             onClick={onNewChat}
             className={cn(
-              'rounded-xl px-8 py-3 text-sm font-semibold transition-colors',
+              'rounded-xl px-8 py-3 text-sm font-semibold transition-all duration-200',
               hasSavedChat
                 ? 'border-border text-text-primary hover:bg-bg-elevated border'
-                : 'bg-accent text-bg-base hover:bg-accent-hover',
+                : 'bg-accent text-bg-base hover:bg-accent-hover glow-accent-sm hover:shadow-accent/20 hover:shadow-lg',
             )}
           >
             {provider === 'local' && !cacheMap[selectedModelId] ? 'Download & Start' : 'New Chat'}

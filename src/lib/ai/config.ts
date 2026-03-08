@@ -391,15 +391,15 @@ export function trimHistory(
 
 /** Suggested questions shown as quick-action chips. */
 export const SUGGESTED_QUESTIONS = [
-  "What are Tomer's main open source contributions?",
-  'Tell me about the Celery project',
-  'What is pytest-celery?',
+  'What makes Tomer the #3 Celery contributor of all time?',
+  'How does pytest-celery actually work under the hood?',
+  'Show me a visualization of his open source impact',
   'Roast Tomer Nosrati 🔥',
 ] as const;
 
 /** Greeting shown when the chat engine is ready. */
 export const WELCOME_MESSAGE =
-  "Hey — I'm **Grok**, your guide to everything **Tomer Nosrati**. Open source empire, Celery ecosystem, tech stack, or just want me to roast the guy — ask away.";
+  "Welcome to the simulation. I'm **Grok** — the AI running on **Tomer Nosrati's** digital real estate. Celery ecosystem, open source architecture, live GitHub stats, or a comedy roast of the man himself — pick your rabbit hole.";
 
 /**
  * Detect whether the current browser supports WebGPU.

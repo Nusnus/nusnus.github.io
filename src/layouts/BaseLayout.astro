@@ -52,6 +52,7 @@ const ogImageUrl = new URL(ogImage, SITE_URL).href;
     <!-- FOUC Prevention: apply theme BEFORE any paint -->
     <script is:inline>
       (function () {
+        document.documentElement.classList.add('js');
         const stored = localStorage.getItem('theme');
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         const isDark = stored ? stored === 'dark' : prefersDark;
@@ -72,6 +73,27 @@ const ogImageUrl = new URL(ogImage, SITE_URL).href;
 
     <!-- Roast Widget — floating 🔥 FAB with inline streaming chat bubble -->
     {Astro.url.pathname !== '/chat' && <RoastWidget client:idle />}
+
+    <!-- Section reveal animation — IntersectionObserver-powered -->
+    <script is:inline>
+      (function () {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        const observer = new IntersectionObserver(
+          function (entries) {
+            entries.forEach(function (entry) {
+              if (entry.isIntersecting) {
+                entry.target.classList.add('revealed');
+                observer.unobserve(entry.target);
+              }
+            });
+          },
+          { threshold: 0.1, rootMargin: '0px 0px -40px 0px' },
+        );
+        document.querySelectorAll('.reveal-section').forEach(function (el) {
+          observer.observe(el);
+        });
+      })();
+    </script>
 
     <style>
       .roast-fab {

@@ -27,13 +27,16 @@ export function ChatMessages({
           <div
             key={msg.id}
             className={cn('flex gap-3', msg.role === 'user' ? 'flex-row-reverse' : 'flex-row')}
+            style={{
+              animation: 'fade-in-up 0.3s ease-out both',
+            }}
           >
             <div
               className={cn(
-                'flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-medium',
+                'flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-medium ring-1',
                 msg.role === 'user'
-                  ? 'bg-accent/20 text-accent'
-                  : 'bg-bg-elevated text-text-secondary',
+                  ? 'bg-accent/20 text-accent ring-accent/30'
+                  : 'bg-bg-elevated text-text-secondary ring-border/50',
               )}
             >
               {msg.role === 'user' ? 'You' : <Bot className="h-4 w-4" />}
@@ -42,8 +45,8 @@ export function ChatMessages({
               className={cn(
                 'max-w-[75%] rounded-2xl px-4 py-3 text-sm leading-relaxed',
                 msg.role === 'user'
-                  ? 'bg-accent text-bg-base rounded-br-md'
-                  : 'bg-bg-surface text-text-primary rounded-bl-md',
+                  ? 'from-accent to-accent-hover text-bg-base shadow-accent/10 rounded-br-md bg-gradient-to-br shadow-lg'
+                  : 'glass-subtle border-border/50 ring-border/30 text-text-primary rounded-bl-md border ring-1',
               )}
             >
               {msg.searchStatus === 'searching' ? (
@@ -104,15 +107,17 @@ export function ChatMessages({
 
         {/* Suggested questions — shown after welcome message only */}
         {messages.length === 1 && messages[0]?.role === 'assistant' && (
-          <div className="mx-auto grid max-w-lg gap-2 pt-2 sm:grid-cols-2">
+          <div className="mx-auto grid max-w-lg gap-2 pt-4 sm:grid-cols-2">
             {SUGGESTED_QUESTIONS.map((q) => (
               <button
                 key={q}
                 onClick={() => onSendMessage(q)}
                 disabled={isGenerating}
-                className="bg-bg-surface hover:bg-bg-elevated border-border text-text-secondary hover:text-text-primary rounded-xl border px-4 py-3 text-left text-xs leading-relaxed transition-colors"
+                className="glass-subtle group border-border/50 ring-border/30 hover:ring-accent/30 hover:glow-accent-sm rounded-xl border px-4 py-3.5 text-left text-xs leading-relaxed ring-1 transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-50"
               >
-                {q}
+                <span className="text-text-secondary group-hover:text-text-primary transition-colors">
+                  {q}
+                </span>
               </button>
             ))}
           </div>
