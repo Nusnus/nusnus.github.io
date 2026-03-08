@@ -376,6 +376,29 @@ function renderBlock(block: string, key: number): ReactNode {
 
   const lines = trimmed.split('\n');
 
+  // Table: |...| rows with a |---|---| alignment separator as the second line.
+  // Grok likes tables for comparisons — rendering them as paragraphs is
+  // unreadable. We require the strict GFM shape (pipe-wrapped rows + sep).
+  if (lines.length >= 2 && lines.every((l) => /^\s*\|.*\|\s*$/.test(l))) {
+    const sep = lines[1] ?? '';
+    if (/^\s*\|[\s:|-]+\|\s*$/.test(sep)) {
+      return renderTable(lines, key);
+    }
+  }
+
+  // Blockquote: lines starting with >
+  if (lines.every((l) => l.trimStart().startsWith('>'))) {
+    return (
+      <blockquote key={key} className="border-accent/40 text-text-secondary my-2 border-l-2 pl-3">
+        {lines.map((line, j) => (
+          <p key={j} className="my-0.5">
+            {renderInline(line.replace(/^\s*>\s?/, ''))}
+          </p>
+        ))}
+      </blockquote>
+    );
+  }
+
   // Heading: # ## ###
   if (lines.length === 1) {
     const headingMatch = trimmed.match(/^(#{1,3})\s+(.+)$/);
@@ -441,6 +464,46 @@ function renderBlock(block: string, key: number): ReactNode {
         </span>
       ))}
     </p>
+  );
+}
+
+/** Split a pipe-delimited table row into trimmed cells, dropping leading/trailing empties. */
+function splitTableRow(line: string): string[] {
+  const cells = line.split('|').map((c) => c.trim());
+  if (cells.length > 0 && cells[0] === '') cells.shift();
+  if (cells.length > 0 && cells[cells.length - 1] === '') cells.pop();
+  return cells;
+}
+
+/** Render a GFM table: first line = header, second = separator (dropped), rest = body. */
+function renderTable(lines: string[], key: number): ReactNode {
+  const header = splitTableRow(lines[0] ?? '');
+  const body = lines.slice(2).map(splitTableRow);
+  return (
+    <div key={key} className="scrollbar-thin my-2 overflow-x-auto">
+      <table className="border-border w-full border-collapse text-xs">
+        <thead>
+          <tr className="border-border border-b">
+            {header.map((cell, j) => (
+              <th key={j} className="px-2 py-1 text-left font-semibold">
+                {renderInline(cell)}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {body.map((row, i) => (
+            <tr key={i} className="border-border/50 border-b last:border-0">
+              {row.map((cell, j) => (
+                <td key={j} className="px-2 py-1 align-top">
+                  {renderInline(cell)}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 

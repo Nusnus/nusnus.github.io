@@ -48,6 +48,7 @@ interface ResponsesAPIRequest {
 const ALLOWED_ORIGINS: ReadonlySet<string> = new Set([
   'https://nusnus.github.io',
   'http://localhost:4321',
+  'http://127.0.0.1:4321',
   'http://localhost:3000',
 ]);
 
@@ -58,20 +59,18 @@ const ALLOWED_MODELS: ReadonlySet<string> = new Set([
   'grok-4-1-fast',
   'grok-4-1-fast-reasoning',
   'grok-4-1-fast-non-reasoning',
-  'grok-code-fast',
-  'grok-code-fast-1',
 ]);
 
-const DEFAULT_MODEL = 'grok-4-1-fast';
+const DEFAULT_MODEL = 'grok-4-1-fast-reasoning';
 
-/** Hard limits to prevent abuse. */
-const MAX_REQUEST_BYTES = 131_072; // 128 KB — accommodates full context + tools + chat history
-const MAX_OUTPUT_TOKENS_CAP = 1024;
-const MAX_INPUT_ITEMS = 30;
+/** Hard limits to prevent abuse. Sized for Cybernus's full context + 50-message history. */
+const MAX_REQUEST_BYTES = 262_144; // 256 KB — persona + knowledge + live GitHub stats + 50-msg history
+const MAX_OUTPUT_TOKENS_CAP = 4096; // long-form answers with code blocks and diagrams
+const MAX_INPUT_ITEMS = 60; // system + ~50 history msgs (trimmed client-side, aligned to user turn)
 
 /** Simple in-memory rate limiter (per-isolate, resets on cold start). */
 const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
-const RATE_LIMIT_MAX_REQUESTS = 20; // per IP per window
+const RATE_LIMIT_MAX_REQUESTS = 30; // per IP per window
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 
 // ─── Helpers ─────────────────────────────────────────────────────────
