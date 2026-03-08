@@ -346,7 +346,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
         // the empty content doesn't trigger a permanent TypingIndicator.
         const finalAssistant: ChatMessage = {
           ...assistantMsg,
-          content: result.content || (actions.length > 0 ? '*(used tools only)*' : ''),
+          content: result.content || (result.toolCalls.length > 0 ? '*(used tools only)*' : ''),
         };
         if (actions.length > 0) finalAssistant.actions = actions;
 
