@@ -178,9 +178,11 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
   const initEngine = useCallback(
     (resumeExisting: boolean) => {
       if (resumeExisting) {
+        const activeId = getActiveSessionId();
         const restored = loadMessages();
         if (restored.length > 0) {
           setMessages(restored);
+          if (activeId) setActiveSession(activeId);
           setEngineState('ready');
           addLog('info', 'session', 'Resumed existing chat', { messages: restored.length });
           inputRef.current?.focus();
@@ -430,13 +432,17 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
   const clearChat = useCallback(() => {
     abortRef.current?.abort();
     setIsGenerating(false);
+    // Save current messages before clearing so the session persists in history
+    if (messages.length > 0 && messages.some((m) => m.role === 'user')) {
+      saveMessages(messages, activeSessionId ?? undefined);
+    }
     clearMessages();
     setMessages([]);
     setActiveSession(null);
     setSessions(loadSessions());
     setEngineState('idle');
     addLog('info', 'session', 'Chat cleared');
-  }, [addLog]);
+  }, [addLog, messages, activeSessionId]);
 
   const switchSession = useCallback(
     (session: ChatSession) => {
