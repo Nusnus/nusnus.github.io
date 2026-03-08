@@ -5,7 +5,9 @@
  * the AI actually produces a diagram. Renders are sandboxed per-block
  * using unique IDs to avoid collisions when multiple diagrams appear.
  */
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
+import { X, ZoomIn, ZoomOut, RotateCcw, Maximize2 } from 'lucide-react';
 
 let mermaidInitialized = false;
 
@@ -119,10 +121,146 @@ function sanitize(src: string): string {
 
 let blockCounter = 0;
 
+/* ── Diagram zoom constants ── */
+const DIAGRAM_ZOOM_STEP = 0.15;
+const DIAGRAM_MIN_ZOOM = 0.3;
+const DIAGRAM_MAX_ZOOM = 3.0;
+const DIAGRAM_DEFAULT_ZOOM = 1.0;
+
+/** Fullscreen diagram viewer overlay. */
+function DiagramViewer({ svgHtml, onClose }: { svgHtml: string; onClose: () => void }) {
+  const [zoom, setZoom] = useState(DIAGRAM_DEFAULT_ZOOM);
+  const [fitZoom, setFitZoom] = useState(DIAGRAM_DEFAULT_ZOOM);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+
+  const handleZoomIn = useCallback(
+    () => setZoom((z) => Math.min(z + DIAGRAM_ZOOM_STEP, DIAGRAM_MAX_ZOOM)),
+    [],
+  );
+  const handleZoomOut = useCallback(
+    () => setZoom((z) => Math.max(z - DIAGRAM_ZOOM_STEP, DIAGRAM_MIN_ZOOM)),
+    [],
+  );
+  const handleZoomReset = useCallback(() => setZoom(fitZoom), [fitZoom]);
+
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        e.stopImmediatePropagation();
+        onClose();
+      }
+    }
+    window.addEventListener('keydown', onKeyDown, true);
+    return () => window.removeEventListener('keydown', onKeyDown, true);
+  }, [onClose]);
+
+  // Inject SVG, remove width constraints, and compute fit-to-screen zoom
+  useEffect(() => {
+    if (!contentRef.current || !scrollAreaRef.current) return;
+    contentRef.current.innerHTML = svgHtml;
+    const svgEl = contentRef.current.querySelector('svg');
+    if (svgEl) {
+      svgEl.style.width = '';
+      svgEl.style.maxWidth = 'none';
+      svgEl.style.height = 'auto';
+      svgEl.style.minWidth = '';
+
+      // Measure the SVG's natural dimensions
+      const svgRect = svgEl.getBoundingClientRect();
+      const svgW = svgRect.width || 800;
+      const svgH = svgRect.height || 600;
+
+      // Measure available space (scroll area minus padding)
+      const areaRect = scrollAreaRef.current.getBoundingClientRect();
+      const padding = 64; // 32px padding on each side
+      const availW = areaRect.width - padding;
+      const availH = areaRect.height - padding;
+
+      // Calculate fit-to-screen zoom
+      const computed = Math.min(availW / svgW, availH / svgH);
+      const clamped = Math.min(Math.max(computed, DIAGRAM_MIN_ZOOM), DIAGRAM_MAX_ZOOM);
+      setFitZoom(clamped);
+      setZoom(clamped);
+    }
+  }, [svgHtml]);
+
+  const zoomBtnClass =
+    'flex h-8 w-8 items-center justify-center rounded-lg text-white/50 transition-colors hover:bg-white/[0.08] hover:text-white/80 disabled:opacity-30 disabled:cursor-not-allowed';
+
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col">
+      {/* Backdrop */}
+      <button
+        className="absolute inset-0 bg-black/90 backdrop-blur-sm"
+        onClick={onClose}
+        aria-label="Close diagram viewer"
+        tabIndex={-1}
+      />
+      {/* Header */}
+      <div className="relative z-10 flex shrink-0 items-center justify-between border-b border-white/[0.06] bg-black/60 px-6 py-3">
+        <span className="text-sm font-medium text-white/70">Diagram Viewer</span>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={handleZoomOut}
+            className={zoomBtnClass}
+            title="Zoom out"
+            disabled={zoom <= DIAGRAM_MIN_ZOOM}
+            aria-label="Zoom out"
+          >
+            <ZoomOut className="h-4 w-4" />
+          </button>
+          <span className="min-w-[3rem] text-center text-xs text-white/40">
+            {Math.round(zoom * 100)}%
+          </span>
+          <button
+            onClick={handleZoomIn}
+            className={zoomBtnClass}
+            title="Zoom in"
+            disabled={zoom >= DIAGRAM_MAX_ZOOM}
+            aria-label="Zoom in"
+          >
+            <ZoomIn className="h-4 w-4" />
+          </button>
+          <button
+            onClick={handleZoomReset}
+            className={zoomBtnClass}
+            title="Reset zoom"
+            aria-label="Reset zoom"
+          >
+            <RotateCcw className="h-3.5 w-3.5" />
+          </button>
+          <div className="mx-1 h-5 w-px bg-white/10" />
+          <button
+            onClick={onClose}
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-white/50 transition-colors hover:bg-white/[0.08] hover:text-white/80"
+            title="Close (Esc)"
+            aria-label="Close diagram viewer"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Scrollable diagram area */}
+      <div
+        ref={scrollAreaRef}
+        className="relative z-10 flex flex-1 items-center justify-center overflow-auto p-8"
+      >
+        <div className="transition-transform duration-150 ease-out" style={{ zoom }}>
+          <div ref={contentRef} className="[&_svg]:overflow-visible" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function MermaidBlock({ code, blockKey }: { code: string; blockKey: number }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [rendering, setRendering] = useState(true);
+  const [isViewerOpen, setIsViewerOpen] = useState(false);
+  const [svgHtml, setSvgHtml] = useState<string>('');
   const idRef = useRef(`mermaid-${blockKey}-${++blockCounter}`);
 
   useEffect(() => {
@@ -158,6 +296,8 @@ export default function MermaidBlock({ code, blockKey }: { code: string; blockKe
               // getBBox may throw if SVG is not in the DOM yet
             }
           }
+          // Store final SVG after all DOM modifications (viewBox, height, etc.)
+          setSvgHtml(containerRef.current.innerHTML);
           setRendering(false);
         }
       } catch (err) {
@@ -184,17 +324,47 @@ export default function MermaidBlock({ code, blockKey }: { code: string; blockKe
   }
 
   return (
-    <div className="bg-bg-elevated my-3 overflow-x-auto rounded-xl p-4">
-      {rendering && (
-        <div className="text-text-muted flex items-center gap-2 text-xs">
-          <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
-          Rendering diagram…
-        </div>
-      )}
+    <>
       <div
-        ref={containerRef}
-        className="flex justify-center [&_svg]:max-w-full [&_svg]:overflow-visible"
-      />
-    </div>
+        className="group/diagram bg-bg-elevated relative my-3 cursor-zoom-in overflow-x-auto rounded-xl p-4 transition-colors hover:bg-white/[0.04]"
+        style={isViewerOpen ? { visibility: 'hidden' as const } : undefined}
+        role="button"
+        tabIndex={0}
+        onClick={() => !rendering && setIsViewerOpen(true)}
+        onKeyDown={(e) => {
+          if ((e.key === 'Enter' || e.key === ' ') && !rendering) {
+            e.preventDefault();
+            setIsViewerOpen(true);
+          }
+        }}
+        title="Click to expand diagram"
+      >
+        {rendering && (
+          <div className="text-text-muted flex items-center gap-2 text-xs">
+            <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+            Rendering diagram…
+          </div>
+        )}
+        <div
+          ref={containerRef}
+          className="flex justify-center [&_svg]:max-w-full [&_svg]:overflow-visible"
+        />
+        {/* Expand indicator on hover */}
+        {!rendering && (
+          <div className="pointer-events-none absolute top-3 right-3 flex items-center gap-1.5 rounded-lg bg-black/60 px-2.5 py-1.5 text-white/0 opacity-0 backdrop-blur-sm transition-all group-hover/diagram:text-white/70 group-hover/diagram:opacity-100">
+            <Maximize2 className="h-3.5 w-3.5" />
+            <span className="text-[11px] font-medium">Click to expand</span>
+          </div>
+        )}
+      </div>
+
+      {/* Fullscreen diagram viewer — rendered via portal to escape CSS zoom context */}
+      {isViewerOpen &&
+        svgHtml &&
+        createPortal(
+          <DiagramViewer svgHtml={svgHtml} onClose={() => setIsViewerOpen(false)} />,
+          document.body,
+        )}
+    </>
   );
 }
