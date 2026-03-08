@@ -1,599 +1,863 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { Loader2, AlertCircle, Cpu } from 'lucide-react';
+/**
+ * Cybernus AI Chat — cloud-only orchestrator.
+ *
+ * Manages: cloud streaming via xAI Grok, session memory, personality,
+ * language, voice, debug panel, and the professional chat UI.
+ */
+
+import { useState, useCallback, useRef, useEffect } from 'react';
+import { cn } from '@lib/utils/cn';
+import type { ChatMessage } from '@lib/ai/types';
 import {
-  DEFAULT_MODEL_ID,
-  AVAILABLE_MODELS,
   CLOUD_MODELS,
   DEFAULT_CLOUD_MODEL_ID,
-  GENERATION_CONFIG,
-  WELCOME_MESSAGE,
-  isWebGPUSupported,
+  MAX_USER_MESSAGES,
   trimHistory,
 } from '@lib/ai/config';
-import type { ChatProvider } from '@lib/ai/config';
-import type { MLCEngineInterface } from '@mlc-ai/web-llm';
-import type { ChatMessage, SearchIndex } from '@lib/ai/types';
+import { CLOUD_TOOLS, mapToolCallsToActions } from '@lib/ai/tools';
 import {
   saveMessages,
   loadMessages,
-  clearMessages,
   loadSessions,
+  getActiveSessionId,
+  setActiveSessionId,
+  clearMessages,
   deleteSession,
   clearAllSessions,
-  setActiveSessionId,
 } from '@lib/ai/memory';
 import type { ChatSession } from '@lib/ai/memory';
-import { fetchRuntimeContext } from '@lib/ai/context';
-import { searchIndex, formatRetrievedContext } from '@lib/ai/rag';
-import {
-  CLOUD_TOOLS,
-  LOCAL_TOOLS_PROMPT_SECTION,
-  mapToolCallsToActions,
-  parseActions,
-} from '@lib/ai/tools';
-import { maybeSummarize } from '@lib/ai/summarize';
-import { CenterCard } from '@components/ai/CenterCard';
-import { ModelPicker } from '@components/ai/ModelPicker';
-import { SessionHistory } from '@components/ai/SessionHistory';
 import { ChatMessages } from '@components/ai/ChatMessages';
 import { ChatInput } from '@components/ai/ChatInput';
+import { ModelPicker } from '@components/ai/ModelPicker';
+import { SessionHistory } from '@components/ai/SessionHistory';
+import { ThoughtsPanel } from '@components/ai/ThoughtsPanel';
+import { DebugPanel, createLogEntry } from '@components/ai/DebugPanel';
+import type { DebugLogEntry, DebugState } from '@components/ai/DebugPanel';
+import { getPersonalityLevel, setPersonalityLevel, PERSONALITY_LEVELS } from '@lib/ai/personality';
+import type { PersonalityLevel } from '@lib/ai/personality';
+import { getLanguage, setLanguage as setStoredLanguage, LANGUAGES, t } from '@lib/ai/i18n';
+import type { Language } from '@lib/ai/i18n';
+import { VoiceSession, isVoiceSupported } from '@lib/ai/voice';
+import type { VoiceState } from '@lib/ai/voice';
 
-/* ─── Constants ─── */
-
-/** Maximum number of user messages per chat session before prompting new chat. */
-const MAX_USER_MESSAGES = 10;
-
-/* ─── Types ─── */
-
-type EngineState = 'checking' | 'unsupported' | 'idle' | 'loading' | 'ready' | 'error';
-
-interface Props {
+interface AiChatProps {
   systemPrompt: string;
-  searchIndex: SearchIndex;
 }
 
-/* ─── Component ─── */
+type EngineState = 'idle' | 'ready';
 
-export default function AiChat({ systemPrompt, searchIndex: ragIndex }: Props) {
-  const [provider, setProvider] = useState<ChatProvider>('cloud');
-  const [engineState, setEngineState] = useState<EngineState>('checking');
-  const [loadProgress, setLoadProgress] = useState({ text: '', progress: 0 });
+/** Check if a message is any translated welcome message. */
+function isWelcomeMessage(content: string): boolean {
+  return LANGUAGES.some((l) => t(l.code).welcome === content);
+}
+
+/** Main Cybernus chat component — cloud-only architecture with professional UI. */
+export default function AiChat({ systemPrompt }: AiChatProps) {
+  /* ─── Core state ─── */
+  const [engineState, setEngineState] = useState<EngineState>('idle');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
-  const [selectedModelId, setSelectedModelId] = useState(DEFAULT_MODEL_ID);
+
+  /* ─── Cloud model ─── */
   const [selectedCloudModelId, setSelectedCloudModelId] = useState(DEFAULT_CLOUD_MODEL_ID);
-  const [cacheMap, setCacheMap] = useState<Record<string, boolean>>({});
-  const [isDeletingModel, setIsDeletingModel] = useState<string | null>(null);
-  const [webGPUSupported, setWebGPUSupported] = useState(true);
-  const [showHistory, setShowHistory] = useState(false);
+
+  /* ─── Personality & Language ─── */
+  const [personality, setPersonality] = useState<PersonalityLevel>(getPersonalityLevel);
+  const [language, setLang] = useState<Language>(getLanguage);
+
+  /* ─── Session history ─── */
   const [sessions, setSessions] = useState<ChatSession[]>([]);
-  const [activeSessionId, setActiveSessionIdState] = useState<string | null>(null);
+  const [activeSessionId, setActiveSession] = useState<string | null>(null);
+  const [showSidebar, setShowSidebar] = useState(false);
 
-  const engineRef = useRef<MLCEngineInterface | null>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  /* ─── Voice state ─── */
+  const [voiceState, setVoiceState] = useState<VoiceState>('idle');
+  const [audioLevel, setAudioLevel] = useState(0);
+  const [transcriptPreview, setTranscriptPreview] = useState('');
+  const voiceSessionRef = useRef<VoiceSession | null>(null);
+
+  /* ─── Debug state ─── */
+  const [debugLogs, setDebugLogs] = useState<DebugLogEntry[]>([]);
+  const [streamTokenCount, setStreamTokenCount] = useState(0);
+  const [streamStartTime, setStreamStartTime] = useState<number | null>(null);
+  const [streamEndTime, setStreamEndTime] = useState<number | null>(null);
+  const [apiRequestCount, setApiRequestCount] = useState(0);
+  const [lastApiLatency, setLastApiLatency] = useState<number | null>(null);
+
+  /* ─── Refs ─── */
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const abortRef = useRef(false);
-  const activeModelRef = useRef<string | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
+  const activeSessionIdRef = useRef(activeSessionId);
+  activeSessionIdRef.current = activeSessionId;
+  /** Incremented on every session-changing operation (clear, switch, delete, clearAll)
+   *  so the sendMessage abort handler can detect stale contexts even when
+   *  activeSessionId is null on both sides (null === null). */
+  const sessionGenRef = useRef(0);
 
-  /** Detect ?roast=1 query param for 1-click roast from FAB. */
-  const pendingRoast = useRef(false);
-  /** Roast conversation passed from RoastWidget via sessionStorage. */
-  const roastHandoffRef = useRef<ChatMessage[] | null>(null);
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('roast') === '1') {
-      pendingRoast.current = true;
-      window.history.replaceState({}, '', window.location.pathname);
-    }
-    const handoff = sessionStorage.getItem('grok-roast-handoff');
-    if (handoff) {
-      sessionStorage.removeItem('grok-roast-handoff');
-      try {
-        const data = JSON.parse(handoff) as { messages: ChatMessage[] };
-        if (Array.isArray(data.messages) && data.messages.length > 0) {
-          roastHandoffRef.current = [
-            { id: crypto.randomUUID(), role: 'user', content: 'Roast Tomer Nosrati 🔥' },
-            ...data.messages,
-          ];
-        }
-      } catch {
-        /* ignore malformed handoff */
-      }
-    }
-  }, []);
+  /* ─── Debug logging helper ─── */
+  const addLog = useCallback(
+    (
+      level: DebugLogEntry['level'],
+      category: DebugLogEntry['category'],
+      message: string,
+      data?: Record<string, unknown>,
+    ) => {
+      setDebugLogs((prev) => {
+        const entry = createLogEntry(level, category, message, data);
+        const updated = [...prev, entry];
+        // Keep last 200 logs
+        return updated.length > 200 ? updated.slice(-200) : updated;
+      });
+    },
+    [],
+  );
 
-  /** Check WebGPU support and probe cache status for all models. */
-  useEffect(() => {
-    isWebGPUSupported().then(async (supported) => {
-      setWebGPUSupported(supported);
-      if (!supported) {
-        setEngineState('idle');
-        return;
-      }
-      const { hasModelInCache } = await import('@mlc-ai/web-llm');
-      const entries = await Promise.all(
-        AVAILABLE_MODELS.map(async (m) => [m.id, await hasModelInCache(m.id)] as const),
-      );
-      setCacheMap(Object.fromEntries(entries));
-      setEngineState('idle');
-    });
-  }, []);
+  /* ─── Debug state object ─── */
+  const debugState: DebugState = {
+    logs: debugLogs,
+    streamTokenCount,
+    streamStartTime,
+    streamEndTime,
+    apiRequestCount,
+    lastApiLatency,
+    activeSessionId,
+    messageCount: messages.length,
+    personalityLevel: personality,
+    language,
+    isGenerating,
+    engineState,
+  };
 
+  /* ─── Scroll to bottom on new messages ─── */
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  /* ─── Voice session setup ─── */
   useEffect(() => {
-    if (engineState === 'ready') inputRef.current?.focus();
-  }, [engineState]);
-
-  /** Whether there's a saved chat in localStorage. */
-  const hasSavedChat = useRef(false);
-  useEffect(() => {
-    hasSavedChat.current = loadMessages().length > 0;
-    setSessions(loadSessions());
+    return () => {
+      voiceSessionRef.current?.destroy();
+    };
   }, []);
 
-  const initEngine = useCallback(
-    async (startFresh = false) => {
-      if (startFresh) {
-        clearMessages();
-        setActiveSessionIdState(null);
+  /* ─── Check for roast widget handoff ─── */
+  useEffect(() => {
+    try {
+      const handoff = sessionStorage.getItem('grok-roast-handoff');
+      if (handoff) {
+        sessionStorage.removeItem('grok-roast-handoff');
+        const parsed = JSON.parse(handoff) as { messages?: ChatMessage[] } | ChatMessage[];
+        const msgs = Array.isArray(parsed) ? parsed : parsed.messages;
+        if (Array.isArray(msgs) && msgs.length > 0) {
+          setMessages(msgs);
+          setEngineState('ready');
+          addLog('info', 'session', 'Roast handoff loaded', { messageCount: msgs.length });
+          return;
+        }
       }
+    } catch {
+      // Ignore invalid handoff data
+    }
 
-      const restoreMessages = () => {
-        if (!startFresh) {
-          const saved = loadMessages();
-          if (saved.length > 0) {
-            setMessages(saved);
-            return;
-          }
-        }
-        setMessages([{ id: crypto.randomUUID(), role: 'assistant', content: WELCOME_MESSAGE }]);
-      };
-
-      if (provider === 'cloud') {
-        if (roastHandoffRef.current) {
-          setMessages(roastHandoffRef.current);
-          roastHandoffRef.current = null;
-        } else {
-          restoreMessages();
-        }
+    // Load session on mount
+    const allSessions = loadSessions();
+    setSessions(allSessions);
+    const activeId = getActiveSessionId();
+    if (activeId) {
+      setActiveSession(activeId);
+      const restored = loadMessages();
+      if (restored.length > 0) {
+        setMessages(restored);
         setEngineState('ready');
+        addLog('info', 'session', 'Session restored', { id: activeId, messages: restored.length });
         return;
       }
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-      setEngineState('loading');
-      setErrorMsg('');
-      setLoadProgress({ text: 'Initializing…', progress: 0 });
-      try {
-        const webllm = await import('@mlc-ai/web-llm');
-        const engine = await webllm.CreateWebWorkerMLCEngine(
-          new Worker(new URL('../../lib/ai/worker.ts', import.meta.url), { type: 'module' }),
-          selectedModelId,
-          { initProgressCallback: (r) => setLoadProgress({ text: r.text, progress: r.progress }) },
-        );
-        engineRef.current = engine;
-        activeModelRef.current = selectedModelId;
-        restoreMessages();
-        setEngineState('ready');
-        setCacheMap((prev) => ({ ...prev, [selectedModelId]: true }));
-      } catch (err) {
-        console.error('[AiChat] Engine init failed:', err);
-        setErrorMsg(err instanceof Error ? err.message : 'Failed to load AI model');
-        setEngineState('error');
+  /* ─── Init engine (start new/continue chat) ─── */
+  const initEngine = useCallback(
+    (resumeExisting: boolean) => {
+      if (resumeExisting) {
+        const activeId = getActiveSessionId();
+        const restored = loadMessages();
+        if (restored.length > 0) {
+          setMessages(restored);
+          if (activeId) setActiveSession(activeId);
+          setEngineState('ready');
+          addLog('info', 'session', 'Resumed existing chat', { messages: restored.length });
+          inputRef.current?.focus();
+          return;
+        }
       }
+
+      // Start new session with translated welcome
+      const welcomeMsg: ChatMessage = {
+        id: crypto.randomUUID(),
+        role: 'assistant',
+        content: t(language).welcome,
+      };
+      setMessages([welcomeMsg]);
+      setActiveSession(null);
+      setActiveSessionId(null);
+      setEngineState('ready');
+      addLog('info', 'session', 'New chat started');
+
+      setTimeout(() => inputRef.current?.focus(), 100);
     },
-    [provider, selectedModelId],
+    [addLog, language],
   );
 
-  const deleteModel = useCallback(async (modelId: string) => {
-    setIsDeletingModel(modelId);
-    try {
-      const { deleteModelAllInfoInCache } = await import('@mlc-ai/web-llm');
-      await deleteModelAllInfoInCache(modelId);
-      setCacheMap((prev) => ({ ...prev, [modelId]: false }));
-    } catch (err) {
-      console.error('[AiChat] Failed to delete model:', err);
-    } finally {
-      setIsDeletingModel(null);
-    }
-  }, []);
-
+  /* ─── Send message ─── */
   const sendMessage = useCallback(
     async (text: string) => {
-      if (!text.trim() || isGenerating) return;
-      if (provider === 'local' && !engineRef.current) return;
+      const trimmed = text.trim();
+      if (!trimmed || isGenerating) return;
 
       const userMessageCount = messages.filter((m) => m.role === 'user').length;
       if (userMessageCount >= MAX_USER_MESSAGES) return;
 
-      const userMsg: ChatMessage = { id: crypto.randomUUID(), role: 'user', content: text.trim() };
-      const asstMsg: ChatMessage = { id: crypto.randomUUID(), role: 'assistant', content: '' };
-      setMessages((prev) => [...prev, userMsg, asstMsg]);
+      // Capture generation counter so we can detect session-changing operations
+      // during streaming (handles the null === null edge case for new sessions)
+      const genAtStart = sessionGenRef.current;
+
       setInput('');
       if (inputRef.current) inputRef.current.style.height = 'auto';
+      addLog('info', 'ui', 'User message sent', { length: trimmed.length });
+
+      // Track streaming progress in outer scope so catch block can access them
+      let tokenCount = 0;
+      let lastAccumulated = '';
+
+      const userMsg: ChatMessage = {
+        id: crypto.randomUUID(),
+        role: 'user',
+        content: trimmed,
+      };
+      const assistantMsg: ChatMessage = {
+        id: crypto.randomUUID(),
+        role: 'assistant',
+        content: '',
+      };
+
+      const updated = [...messages, userMsg, assistantMsg];
+      setMessages(updated);
       setIsGenerating(true);
-      abortRef.current = false;
+      setStreamTokenCount(0);
+      setStreamStartTime(Date.now());
+      setStreamEndTime(null);
+
+      const controller = new AbortController();
+      abortRef.current = controller;
+      const requestStart = Date.now();
 
       try {
-        let full = '';
+        // Lazy-load cloud modules
+        const [{ cloudChatStream }, { buildCloudContext }] = await Promise.all([
+          import('@lib/ai/cloud'),
+          import('@lib/ai/cloud-context'),
+        ]);
 
-        if (provider === 'cloud') {
-          const [{ cloudChatStream }, { buildCloudContext }] = await Promise.all([
-            import('@lib/ai/cloud'),
-            import('@lib/ai/cloud-context'),
-          ]);
+        addLog('debug', 'api', 'Cloud modules loaded');
+        setApiRequestCount((c) => c + 1);
 
-          const cloudContext = await buildCloudContext();
-          const augmentedPrompt = cloudContext + '\n\n' + systemPrompt;
+        // Build chat history for the API
+        const chatHistory = trimHistory(
+          updated
+            .filter((m) => m.content.length > 0 && !isWelcomeMessage(m.content))
+            .map((m) => ({ role: m.role, content: m.content })),
+        );
 
-          const chatHistory = [...messages, userMsg]
-            .filter(
-              (m) => m.role === 'user' || (m.role === 'assistant' && m.content !== WELCOME_MESSAGE),
-            )
-            .map((m) => ({
-              role: m.role as 'system' | 'user' | 'assistant',
-              content: m.content,
-            }));
+        // Build full context with personality & language
+        const context = await buildCloudContext(undefined, personality, language);
+        addLog('debug', 'api', 'Context built', {
+          historyMessages: chatHistory.length,
+          contextLength: context.length,
+        });
 
-          const result = await cloudChatStream(
-            [{ role: 'system', content: augmentedPrompt }, ...chatHistory],
-            selectedCloudModelId,
-            (_token, accumulated) => {
-              if (abortRef.current) return;
-              setMessages((prev) =>
-                prev.map((m) => {
-                  if (m.id !== asstMsg.id) return m;
-                  const { searchStatus: _removed, ...rest } = m;
-                  return { ...rest, content: accumulated };
-                }),
-              );
-            },
-            undefined,
-            {
-              tools: CLOUD_TOOLS,
-              tool_choice: 'auto',
-              onWebSearch: () => {
-                if (!abortRef.current) {
-                  setMessages((prev) =>
-                    prev.map((m) =>
-                      m.id === asstMsg.id ? { ...m, searchStatus: 'searching' as const } : m,
-                    ),
-                  );
+        const fullHistory = [
+          { role: 'system' as const, content: systemPrompt + context },
+          ...chatHistory,
+        ];
+
+        // Stream response
+        const result = await cloudChatStream(
+          fullHistory,
+          selectedCloudModelId,
+          (_token, accumulated) => {
+            tokenCount++;
+            lastAccumulated = accumulated;
+            setStreamTokenCount(tokenCount);
+            setMessages((prev) => {
+              const copy = [...prev];
+              const last = copy[copy.length - 1];
+              if (last?.role === 'assistant') {
+                const patched = { ...last, content: accumulated };
+                delete patched.searchStatus;
+                copy[copy.length - 1] = patched;
+              }
+              return copy;
+            });
+          },
+          controller.signal,
+          {
+            tools: CLOUD_TOOLS,
+            tool_choice: 'auto',
+            onWebSearch: () => {
+              addLog('info', 'api', 'Web search triggered');
+              setMessages((prev) => {
+                const copy = [...prev];
+                const last = copy[copy.length - 1];
+                if (last?.role === 'assistant') {
+                  copy[copy.length - 1] = { ...last, searchStatus: 'searching' };
                 }
-              },
-              onWebSearchFound: () => {
-                if (!abortRef.current) {
-                  setMessages((prev) =>
-                    prev.map((m) =>
-                      m.id === asstMsg.id ? { ...m, searchStatus: 'found' as const } : m,
-                    ),
-                  );
-                }
-              },
+                return copy;
+              });
             },
-          );
+            onWebSearchFound: () => {
+              addLog('info', 'api', 'Web search results found');
+              setMessages((prev) => {
+                const copy = [...prev];
+                const last = copy[copy.length - 1];
+                if (last?.role === 'assistant') {
+                  copy[copy.length - 1] = { ...last, searchStatus: 'found' };
+                }
+                return copy;
+              });
+            },
+          },
+        );
 
-          full = result.content;
+        const latency = Date.now() - requestStart;
+        setLastApiLatency(latency);
+        setStreamEndTime(Date.now());
+        addLog('info', 'stream', 'Stream completed', {
+          tokens: tokenCount,
+          latencyMs: latency,
+          toolCalls: result.toolCalls.length,
+        });
 
-          const actions =
-            result.toolCalls.length > 0 ? mapToolCallsToActions(result.toolCalls) : [];
+        // Map tool calls to actions
+        const actions = mapToolCallsToActions(result.toolCalls);
 
-          if (actions.length > 0 || !full) {
-            setMessages((prev) =>
-              prev.map((m) =>
-                m.id === asstMsg.id ? { ...m, content: full || '*(used tools only)*', actions } : m,
-              ),
-            );
+        // Build final assistant message
+        // If the API returned only tool calls with no text, use a fallback so
+        // the empty content doesn't trigger a permanent TypingIndicator.
+        const finalAssistant: ChatMessage = {
+          ...assistantMsg,
+          content: result.content || (result.toolCalls.length > 0 ? '*(used tools only)*' : ''),
+        };
+        if (actions.length > 0) finalAssistant.actions = actions;
+
+        // Compute final messages directly (don't rely on React state updater
+        // timing — in React 18 batched updates, the updater runs during render,
+        // not synchronously when setState is called)
+        const finalMessages = [...updated.slice(0, -1), finalAssistant];
+
+        // Update UI state
+        setMessages(finalMessages);
+
+        // Persist to localStorage
+        // Skip save if a session-changing operation occurred during streaming
+        if (sessionGenRef.current === genAtStart) {
+          const sid = saveMessages(finalMessages, activeSessionIdRef.current ?? undefined);
+          setActiveSession(sid);
+          setSessions(loadSessions());
+        }
+      } catch (err) {
+        if (controller.signal.aborted) {
+          addLog('warn', 'stream', 'Stream aborted by user');
+          // Build abort messages directly (same React 18 batching concern)
+          // If no tokens were streamed, remove the empty assistant placeholder;
+          // otherwise keep the partial response so it survives page refresh.
+          const abortMessages =
+            tokenCount === 0
+              ? updated.slice(0, -1) // Remove empty assistant placeholder
+              : [...updated.slice(0, -1), { ...assistantMsg, content: lastAccumulated }];
+
+          // Only update messages/save if no session-changing operation occurred
+          if (sessionGenRef.current === genAtStart) {
+            setMessages(abortMessages);
+
+            if (tokenCount > 0 && lastAccumulated) {
+              const sid = saveMessages(abortMessages, activeSessionIdRef.current ?? undefined);
+              setActiveSession(sid);
+              setSessions(loadSessions());
+            }
           }
-        } else {
-          const engine = engineRef.current as MLCEngineInterface;
-
-          const ragResults = searchIndex(text.trim(), ragIndex);
-          const ragContext = formatRetrievedContext(ragResults);
-          const runtimeContext = await fetchRuntimeContext();
-
-          const augmentedPrompt =
-            systemPrompt + LOCAL_TOOLS_PROMPT_SECTION + ragContext + runtimeContext;
-
-          const currentMessages = await maybeSummarize(engine, [...messages, userMsg]);
-
-          const fullHistory = currentMessages.map((m) => ({
-            role: m.role as 'user' | 'assistant',
-            content: m.content,
-          }));
-          const history = trimHistory(fullHistory);
-
-          const chunks = await engine.chat.completions.create({
-            messages: [{ role: 'system', content: augmentedPrompt }, ...history],
-            stream: true,
-            ...GENERATION_CONFIG,
-          });
-
-          for await (const chunk of chunks) {
-            if (abortRef.current) break;
-            full += chunk.choices[0]?.delta?.content ?? '';
-            const content = full;
-            setMessages((prev) => prev.map((m) => (m.id === asstMsg.id ? { ...m, content } : m)));
-          }
-
-          const { text: cleanText, actions } = parseActions(full);
-          if (actions.length > 0 || cleanText !== full) {
-            setMessages((prev) =>
-              prev.map((m) => (m.id === asstMsg.id ? { ...m, content: cleanText, actions } : m)),
-            );
-          }
+          return;
         }
 
+        const errorMessage =
+          err instanceof Error ? err.message : 'Something went wrong. Please try again.';
+
+        addLog('error', 'api', 'Request failed', { error: errorMessage });
+
+        const friendlyMsg =
+          errorMessage.includes('429') || errorMessage.includes('rate')
+            ? "I'm getting too many requests right now. Please wait a moment and try again."
+            : errorMessage.includes('500') || errorMessage.includes('502')
+              ? "The AI service is temporarily unavailable. Let's try again in a moment."
+              : `I ran into an issue: ${errorMessage}`;
+
         setMessages((prev) => {
-          const sid = saveMessages(prev, activeSessionId ?? undefined);
-          setActiveSessionIdState(sid);
-          setSessions(loadSessions());
-          return prev;
+          const copy = [...prev];
+          const last = copy[copy.length - 1];
+          if (last?.role === 'assistant') {
+            const errMsg = { ...last, content: friendlyMsg };
+            delete errMsg.searchStatus;
+            copy[copy.length - 1] = errMsg;
+          }
+          return copy;
         });
-      } catch (err) {
-        console.error('[AiChat] Generation error:', err);
-        const errText = err instanceof Error ? err.message : 'Something went wrong';
-        const friendlyMsg = errText.includes('429')
-          ? 'Rate limited — please wait a moment and try again.'
-          : errText.includes('Empty response')
-            ? 'Got an empty response. Try rephrasing or starting a new chat.'
-            : `Something went wrong: ${errText}`;
-        setMessages((prev) =>
-          prev.map((m) => (m.id === asstMsg.id ? { ...m, content: friendlyMsg } : m)),
-        );
       } finally {
         setIsGenerating(false);
-        requestAnimationFrame(() => inputRef.current?.focus());
+        setStreamEndTime(Date.now());
+        if (abortRef.current === controller) {
+          abortRef.current = null;
+        }
       }
     },
     [
       messages,
       isGenerating,
-      provider,
-      selectedCloudModelId,
       systemPrompt,
-      ragIndex,
+      selectedCloudModelId,
       activeSessionId,
+      personality,
+      language,
+      addLog,
     ],
   );
 
-  /** Auto-init cloud + auto-send roast when triggered via ?roast=1 FAB. */
-  const roastAutoInitDone = useRef(false);
-  useEffect(() => {
-    if (roastHandoffRef.current && engineState === 'idle' && !roastAutoInitDone.current) {
-      roastAutoInitDone.current = true;
-      initEngine(true);
-      return;
+  /* ─── Session management ─── */
+  const clearChat = useCallback(() => {
+    // Save current messages before clearing so the session persists in history
+    if (messages.length > 0 && messages.some((m) => m.role === 'user')) {
+      saveMessages(messages, activeSessionId ?? undefined);
     }
-    if (!pendingRoast.current) return;
-    if (engineState === 'idle' && !roastAutoInitDone.current) {
-      roastAutoInitDone.current = true;
-      initEngine(true);
-    }
-    if (engineState === 'ready' && pendingRoast.current) {
-      pendingRoast.current = false;
-      sendMessage('Roast Tomer Nosrati 🔥');
-    }
-  }, [engineState, initEngine, sendMessage]);
-
-  const clearChat = () => {
-    abortRef.current = true;
+    // Increment generation counter so any in-flight sendMessage abort handler
+    // detects the session change and skips its re-save logic.
+    sessionGenRef.current++;
+    activeSessionIdRef.current = null;
+    abortRef.current?.abort();
     setIsGenerating(false);
     clearMessages();
-    setActiveSessionIdState(null);
-    setMessages([{ id: crypto.randomUUID(), role: 'assistant', content: WELCOME_MESSAGE }]);
-  };
-
-  const switchSession = (session: ChatSession) => {
-    abortRef.current = true;
-    setIsGenerating(false);
-    setActiveSessionId(session.id);
-    setActiveSessionIdState(session.id);
-    setMessages(session.messages);
-    setShowHistory(false);
-  };
-
-  const handleDeleteSession = (sessionId: string) => {
-    deleteSession(sessionId);
+    setMessages([]);
+    setActiveSession(null);
     setSessions(loadSessions());
-    if (sessionId === activeSessionId) {
-      clearChat();
-    }
-  };
+    setEngineState('idle');
+    addLog('info', 'session', 'Chat cleared');
+  }, [addLog, messages, activeSessionId]);
 
-  const handleClearAll = () => {
-    clearAllSessions();
-    setSessions([]);
-    clearChat();
-  };
+  const switchSession = useCallback(
+    (session: ChatSession) => {
+      // Increment generation counter and update ref before aborting
+      sessionGenRef.current++;
+      activeSessionIdRef.current = session.id;
+      abortRef.current?.abort();
+      setIsGenerating(false);
+      setActiveSessionId(session.id);
+      setActiveSession(session.id);
+      setMessages(session.messages);
+      setShowSidebar(false);
+      setEngineState('ready');
+      addLog('info', 'session', 'Switched session', { id: session.id });
+    },
+    [addLog],
+  );
 
-  const handleStop = () => {
-    abortRef.current = true;
+  const handleDeleteSession = useCallback(
+    (sessionId: string) => {
+      deleteSession(sessionId);
+      setSessions(loadSessions());
+      if (activeSessionId === sessionId) {
+        sessionGenRef.current++;
+        activeSessionIdRef.current = null;
+        abortRef.current?.abort();
+        setIsGenerating(false);
+        clearMessages();
+        setMessages([]);
+        setActiveSession(null);
+        setEngineState('idle');
+      }
+      addLog('info', 'session', 'Session deleted', { id: sessionId });
+    },
+    [activeSessionId, addLog],
+  );
+
+  const handleClearAll = useCallback(() => {
+    sessionGenRef.current++;
+    activeSessionIdRef.current = null;
+    abortRef.current?.abort();
     setIsGenerating(false);
-  };
+    clearAllSessions();
+    setMessages([]);
+    setActiveSession(null);
+    setSessions([]);
+    setShowSidebar(false);
+    setEngineState('idle');
+    addLog('info', 'session', 'All sessions cleared');
+  }, [addLog]);
 
-  /* ─── Render ─── */
-  const pct = Math.round(loadProgress.progress * 100);
+  const handleStop = useCallback(() => {
+    abortRef.current?.abort();
+    setIsGenerating(false);
+    addLog('info', 'stream', 'Generation stopped by user');
+  }, [addLog]);
 
-  if (engineState === 'checking') {
-    return (
-      <CenterCard>
-        <Loader2 className="text-accent h-8 w-8 animate-spin" />
-      </CenterCard>
-    );
-  }
+  /* ─── Personality & Language handlers ─── */
+  const handlePersonalityChange = useCallback(
+    (level: PersonalityLevel) => {
+      setPersonality(level);
+      setPersonalityLevel(level);
+      addLog('info', 'ui', 'Personality changed', { level });
+    },
+    [addLog],
+  );
 
-  if (engineState === 'idle') {
-    return (
-      <ModelPicker
-        provider={provider}
-        setProvider={setProvider}
-        webGPUSupported={webGPUSupported}
-        selectedModelId={selectedModelId}
-        setSelectedModelId={setSelectedModelId}
-        selectedCloudModelId={selectedCloudModelId}
-        setSelectedCloudModelId={setSelectedCloudModelId}
-        cacheMap={cacheMap}
-        isDeletingModel={isDeletingModel}
-        deleteModel={deleteModel}
-        hasSavedChat={hasSavedChat.current}
-        onContinue={() => initEngine(false)}
-        onNewChat={() => initEngine(true)}
-      />
-    );
-  }
+  const handleLanguageChange = useCallback(
+    (lang: Language) => {
+      setLang(lang);
+      setStoredLanguage(lang);
+      addLog('info', 'ui', 'Language changed', { language: lang });
+    },
+    [addLog],
+  );
 
-  if (engineState === 'loading') {
-    const loadingModel = AVAILABLE_MODELS.find((m) => m.id === selectedModelId);
-    return (
-      <CenterCard>
-        <Cpu className="text-accent mb-4 h-10 w-10 animate-pulse" />
-        <h2 className="text-text-primary mb-1 text-lg font-semibold">
-          Loading {loadingModel?.name ?? 'AI Model'}
-        </h2>
-        <p className="text-text-muted mb-4 text-xs">
-          {cacheMap[selectedModelId] ? 'Initializing from cache…' : 'Downloading and compiling…'}
-        </p>
-        <div className="bg-bg-elevated mb-2 h-2.5 w-full max-w-xs overflow-hidden rounded-full">
-          <div
-            className="bg-accent h-full rounded-full transition-all duration-300 ease-out"
-            style={{ width: `${pct}%` }}
-          />
-        </div>
-        <p className="text-text-muted font-mono text-xs">{pct}%</p>
-        <p className="text-text-muted mt-2 max-w-xs text-center text-[10px] leading-relaxed">
-          {loadProgress.text}
-        </p>
-      </CenterCard>
-    );
-  }
+  /* ─── Voice handlers ─── */
+  const voiceSupported = isVoiceSupported();
 
-  if (engineState === 'error') {
-    return (
-      <CenterCard>
-        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-red-500/10">
-          <AlertCircle className="h-7 w-7 text-red-400" />
-        </div>
-        <h2 className="text-text-primary mb-2 text-lg font-semibold">Failed to Load</h2>
-        <p className="text-text-secondary mb-4 max-w-sm text-center text-xs leading-relaxed">
-          {errorMsg}
-        </p>
-        <button
-          onClick={() => initEngine(true)}
-          className="bg-accent text-bg-base hover:bg-accent-hover rounded-xl px-6 py-2.5 text-sm font-semibold transition-colors"
-        >
-          Try Again
-        </button>
-      </CenterCard>
-    );
-  }
+  const handleVoiceToggle = useCallback(() => {
+    if (voiceState === 'idle' || voiceState === 'error') {
+      // Start recording
+      const session = new VoiceSession(
+        {
+          onStateChange: (state) => {
+            setVoiceState(state);
+            addLog('info', 'voice', `Voice state: ${state}`);
+          },
+          onTranscript: (text, isFinal) => {
+            setTranscriptPreview(text);
+            if (isFinal) {
+              setInput((prev) => (prev ? `${prev} ${text}` : text));
+              setTranscriptPreview('');
+              addLog('info', 'voice', 'Transcript received', { text, isFinal });
+            }
+          },
+          onDiagnosticsUpdate: (diag) => {
+            addLog(
+              'debug',
+              'voice',
+              'Diagnostics update',
+              diag as unknown as Record<string, unknown>,
+            );
+          },
+          onError: (error) => {
+            addLog('error', 'voice', error);
+          },
+          onAudioLevel: (level) => {
+            setAudioLevel(level);
+          },
+        },
+        language,
+      );
+      voiceSessionRef.current = session;
+      session.start().catch(() => {
+        /* handled via onError callback */
+      });
+    } else {
+      // Stop recording
+      voiceSessionRef.current?.stop();
+      voiceSessionRef.current = null;
+      setVoiceState('idle');
+      setAudioLevel(0);
+      setTranscriptPreview('');
+    }
+  }, [voiceState, addLog, language]);
 
-  /* ─── Chat UI (engineState === 'ready') ─── */
+  /* ─── Derived values ─── */
   const activeCloudModel = CLOUD_MODELS.find((m) => m.id === selectedCloudModelId);
-  const activeModel = AVAILABLE_MODELS.find((m) => m.id === activeModelRef.current);
-  const statusLabel =
-    provider === 'cloud'
-      ? `${activeCloudModel?.name ?? 'Cloud AI'} · Cloud`
-      : `${activeModel?.name ?? 'AI'} · Local`;
   const userMsgCount = messages.filter((m) => m.role === 'user').length;
   const isAtLimit = userMsgCount >= MAX_USER_MESSAGES;
+  const currentPersonality = PERSONALITY_LEVELS[personality];
+  const strings = t(language);
+  const isRecording =
+    voiceState === 'requesting-mic' ||
+    voiceState === 'recording' ||
+    voiceState === 'connecting' ||
+    voiceState === 'transcribing';
 
-  return (
-    <div className="relative flex h-full flex-col">
-      {/* Status bar */}
-      <div className="border-border flex items-center justify-between border-b px-4 py-2">
-        <div className="flex items-center gap-2">
-          <span className="bg-status-active h-2 w-2 rounded-full" />
-          <span className="text-text-muted text-xs">{statusLabel}</span>
+  /* ─── Sidebar content (shared between desktop persistent & mobile overlay) ─── */
+  const sidebarContent = (
+    <div className="flex h-full flex-col">
+      {/* Brand header */}
+      <div className="flex shrink-0 items-center gap-3 border-b border-white/[0.06] px-4 py-4">
+        <div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 ring-1 ring-emerald-500/20">
+          <span
+            className="h-2.5 w-2.5 rounded-full"
+            style={{
+              backgroundColor: currentPersonality?.color ?? 'var(--color-accent)',
+              boxShadow: `0 0 10px ${currentPersonality?.glowColor ?? 'var(--color-accent)'}`,
+            }}
+          />
         </div>
-        <div className="flex items-center gap-2">
-          {sessions.length > 0 && (
-            <button
-              onClick={() => setShowHistory(!showHistory)}
-              className={`flex items-center gap-1 text-xs transition-colors ${
-                showHistory ? 'text-accent' : 'text-text-muted hover:text-text-secondary'
-              }`}
-              aria-label="Toggle chat history"
-            >
-              <svg
-                className="h-3.5 w-3.5"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M12 8v4l3 3" />
-                <circle cx="12" cy="12" r="10" />
-              </svg>
-              History
-            </button>
-          )}
-          {messages.length > 0 && (
-            <>
-              <span className="bg-border h-3.5 w-px" />
-              <button
-                onClick={clearChat}
-                className="text-text-muted hover:text-text-secondary flex items-center gap-1 text-xs transition-colors"
-                aria-label="New chat"
-              >
-                <svg
-                  className="h-3.5 w-3.5"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M12 5v14M5 12h14" />
-                </svg>
-                New
-              </button>
-            </>
-          )}
-        </div>
+        <span className="text-sm font-bold tracking-[0.15em] text-white">CYBERNUS</span>
       </div>
 
-      {/* Chat history panel */}
-      {showHistory && (
+      {/* New Chat button */}
+      <div className="shrink-0 px-3 pt-3 pb-1">
+        <button
+          onClick={clearChat}
+          className="flex w-full items-center gap-2 rounded-xl border border-white/[0.06] px-3 py-2.5 text-[13px] text-white/60 transition-all hover:border-emerald-500/20 hover:bg-emerald-500/[0.04] hover:text-white/90"
+        >
+          <svg
+            className="h-4 w-4"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+          {strings.newChat}
+        </button>
+      </div>
+
+      {/* Session list */}
+      <div className="min-h-0 flex-1">
         <SessionHistory
           sessions={sessions}
           activeSessionId={activeSessionId}
           onSwitchSession={switchSession}
           onDeleteSession={handleDeleteSession}
           onClearAll={handleClearAll}
-          onClose={() => setShowHistory(false)}
+          onClose={() => setShowSidebar(false)}
+          language={language}
+        />
+      </div>
+
+      {/* Settings section */}
+      <div className="shrink-0 space-y-4 border-t border-white/[0.06] px-4 py-4">
+        {/* Language toggle */}
+        <div>
+          <p className="mb-2 text-[10px] font-medium tracking-wider text-white/30 uppercase">
+            {strings.language}
+          </p>
+          <div className="flex items-center gap-0.5 rounded-lg bg-white/[0.04] p-0.5">
+            {LANGUAGES.map((l) => (
+              <button
+                key={l.code}
+                onClick={() => handleLanguageChange(l.code)}
+                className={cn(
+                  'flex-1 rounded-md px-1.5 py-1.5 text-center text-xs transition-all',
+                  language === l.code
+                    ? 'bg-white/[0.08] text-white shadow-sm'
+                    : 'text-white/30 hover:text-white/60',
+                )}
+                title={l.nativeName}
+              >
+                {l.flag}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Personality slider */}
+        <div>
+          <p className="mb-2 text-[10px] font-medium tracking-wider text-white/30 uppercase">
+            {strings.personality}
+          </p>
+          <div className="flex items-center gap-2">
+            <span className="text-sm">{currentPersonality?.emoji}</span>
+            <input
+              type="range"
+              min={0}
+              max={5}
+              value={personality}
+              onChange={(e) => handlePersonalityChange(Number(e.target.value) as PersonalityLevel)}
+              className="h-1 flex-1 cursor-pointer appearance-none rounded-full bg-white/10 accent-emerald-500 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-emerald-400"
+              title={`${strings.personalityLevel}: ${currentPersonality?.name ?? ''}`}
+            />
+            <span className="w-16 text-[10px] text-white/30">{currentPersonality?.name}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Back to portfolio */}
+      <div className="shrink-0 border-t border-white/[0.06] px-4 py-3">
+        <a
+          href="/"
+          className="flex items-center gap-2 text-xs text-white/30 transition-colors hover:text-white/60"
+        >
+          <svg
+            className="h-3.5 w-3.5"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="m12 19-7-7 7-7" />
+            <path d="M19 12H5" />
+          </svg>
+          Back to portfolio
+        </a>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="bg-bg-base flex h-full">
+      {/* Mobile sidebar backdrop */}
+      {showSidebar && (
+        // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- backdrop overlay
+        <div
+          className="fixed inset-0 z-20 bg-black/50 md:hidden"
+          onClick={() => setShowSidebar(false)}
         />
       )}
 
-      {/* Messages area */}
-      <ChatMessages
-        messages={messages}
-        isGenerating={isGenerating}
-        messagesEndRef={messagesEndRef}
-        onSendMessage={sendMessage}
-      />
+      {/* Sidebar — persistent on desktop, overlay on mobile */}
+      <aside
+        className={cn(
+          'bg-bg-surface flex h-full shrink-0 flex-col border-r border-white/[0.06]',
+          'md:relative md:flex md:w-[260px]',
+          showSidebar ? 'fixed inset-y-0 left-0 z-30 w-72' : 'hidden md:flex',
+        )}
+      >
+        {sidebarContent}
+      </aside>
 
-      {/* Input area */}
-      <ChatInput
-        input={input}
-        setInput={setInput}
-        isGenerating={isGenerating}
-        isAtLimit={isAtLimit}
-        userMsgCount={userMsgCount}
-        maxMessages={MAX_USER_MESSAGES}
-        provider={provider}
-        inputRef={inputRef}
-        onSend={sendMessage}
-        onStop={handleStop}
-        onClearChat={clearChat}
-      />
+      {/* Main content area */}
+      <div className="flex min-w-0 flex-1 flex-col">
+        {engineState === 'idle' ? (
+          /* ─── Idle screen ─── */
+          <>
+            {/* Mobile header for idle */}
+            <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-3 md:hidden">
+              <button
+                onClick={() => setShowSidebar(true)}
+                className="rounded-lg p-1.5 text-white/40 transition-colors hover:bg-white/[0.05]"
+                aria-label="Open menu"
+              >
+                <svg
+                  className="h-5 w-5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M3 12h18M3 6h18M3 18h18" />
+                </svg>
+              </button>
+              <span className="text-sm font-bold tracking-wider text-white">CYBERNUS</span>
+              <div className="w-8" />
+            </div>
+            <ModelPicker
+              selectedCloudModelId={selectedCloudModelId}
+              setSelectedCloudModelId={setSelectedCloudModelId}
+              hasSavedChat={getActiveSessionId() !== null}
+              onContinue={() => initEngine(true)}
+              onNewChat={() => initEngine(false)}
+              language={language}
+            />
+          </>
+        ) : (
+          /* ─── Chat UI ─── */
+          <>
+            {/* Minimal chat header */}
+            <div className="flex shrink-0 items-center justify-between border-b border-white/[0.06] px-4 py-3">
+              <div className="flex items-center gap-3">
+                {/* Mobile hamburger */}
+                <button
+                  onClick={() => setShowSidebar(true)}
+                  className="rounded-lg p-1.5 text-white/40 transition-colors hover:bg-white/[0.05] md:hidden"
+                  aria-label="Open menu"
+                >
+                  <svg
+                    className="h-5 w-5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M3 12h18M3 6h18M3 18h18" />
+                  </svg>
+                </button>
+
+                {/* Model status */}
+                <div className="flex items-center gap-2">
+                  <span
+                    className="block h-2 w-2 rounded-full"
+                    style={{
+                      backgroundColor: currentPersonality?.color ?? 'var(--color-accent)',
+                      boxShadow: `0 0 8px ${currentPersonality?.glowColor ?? 'var(--color-accent)'}`,
+                    }}
+                  />
+                  <span className="text-xs text-white/50">{activeCloudModel?.name ?? 'Grok'}</span>
+                  <span className="hidden text-[10px] text-white/25 sm:inline">
+                    {currentPersonality?.emoji} {currentPersonality?.name}
+                  </span>
+                </div>
+              </div>
+
+              {/* Recording indicator in header */}
+              {isRecording && (
+                <span className="flex items-center gap-1.5 rounded-full border border-red-500/20 bg-red-500/[0.06] px-2.5 py-1 text-[10px] font-medium text-red-400">
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-40" />
+                    <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-red-400" />
+                  </span>
+                  {strings.recording}
+                </span>
+              )}
+            </div>
+
+            {/* Messages */}
+            <ChatMessages
+              messages={messages}
+              isGenerating={isGenerating}
+              messagesEndRef={messagesEndRef}
+              onSendMessage={sendMessage}
+              language={language}
+            />
+
+            {/* Input */}
+            <ChatInput
+              input={input}
+              setInput={setInput}
+              isGenerating={isGenerating}
+              isAtLimit={isAtLimit}
+              userMsgCount={userMsgCount}
+              maxMessages={MAX_USER_MESSAGES}
+              language={language}
+              inputRef={inputRef}
+              onSend={sendMessage}
+              onStop={handleStop}
+              onClearChat={clearChat}
+              isRecording={isRecording}
+              onVoiceToggle={handleVoiceToggle}
+              voiceSupported={voiceSupported}
+              audioLevel={audioLevel}
+              transcriptPreview={transcriptPreview}
+            />
+          </>
+        )}
+      </div>
+
+      {/* Floating thoughts panel — visible on xl+ screens */}
+      <ThoughtsPanel />
+
+      {/* Debug panel — only in development */}
+      {import.meta.env.DEV && (
+        <DebugPanel state={debugState} onClearLogs={() => setDebugLogs([])} />
+      )}
     </div>
   );
 }

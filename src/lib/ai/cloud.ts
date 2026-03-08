@@ -193,6 +193,14 @@ function parseResponsesOutput(output: ResponsesOutputItem[]): CloudChatResult {
   return { content, toolCalls };
 }
 
+/** Sentinel error class for intentional throws inside the SSE parser. */
+class StreamEventError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'StreamEventError';
+  }
+}
+
 /* ─── Responses API streaming event types ─── */
 
 interface StreamOutputTextDelta {
@@ -311,7 +319,7 @@ export async function cloudChatStream(
             const err = (raw as Record<string, unknown>).response as
               | { error?: { message?: string } }
               | undefined;
-            throw new Error(err?.error?.message ?? 'Response failed');
+            throw new StreamEventError(err?.error?.message ?? 'Response failed');
           } else if (eventType === 'response.incomplete') {
             // The model stopped before finishing — surface a useful message
             const reason = (
@@ -320,13 +328,16 @@ export async function cloudChatStream(
                 | undefined
             )?.incomplete_details?.reason;
             if (!accumulated) {
-              throw new Error(reason ? `Incomplete response: ${reason}` : 'Incomplete response');
+              throw new StreamEventError(
+                reason ? `Incomplete response: ${reason}` : 'Incomplete response',
+              );
             }
           }
           // All other events (response.created, response.in_progress,
           // response.completed, etc.) — skip
-        } catch {
-          // Skip malformed JSON chunks
+        } catch (parseErr) {
+          // Re-throw intentional stream event errors; skip malformed JSON
+          if (parseErr instanceof StreamEventError) throw parseErr;
         }
       }
     }

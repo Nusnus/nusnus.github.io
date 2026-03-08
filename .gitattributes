@@ -1,0 +1,5 @@
+# Auto-resolve merge conflicts for generated data files.
+# These are fetched live from the Cloudflare Worker at runtime;
+# the committed copies are only fallbacks. Accepting either side
+# is always safe — the next scheduled run will refresh them anyway.
+public/data/*.json merge=ours
