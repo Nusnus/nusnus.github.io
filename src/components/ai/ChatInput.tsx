@@ -1,7 +1,7 @@
 import { type RefObject } from 'react';
 import { Send, Square } from 'lucide-react';
 import { cn } from '@lib/utils/cn';
-import type { ChatProvider } from '@lib/ai/config';
+import { getStrings, type ChatLanguage } from '@lib/ai/config';
 
 interface ChatInputProps {
   input: string;
@@ -10,7 +10,7 @@ interface ChatInputProps {
   isAtLimit: boolean;
   userMsgCount: number;
   maxMessages: number;
-  provider: ChatProvider;
+  language: ChatLanguage;
   inputRef: RefObject<HTMLTextAreaElement | null>;
   onSend: (text: string) => void;
   onStop: () => void;
@@ -25,12 +25,14 @@ export function ChatInput({
   isAtLimit,
   userMsgCount,
   maxMessages,
-  provider,
+  language,
   inputRef,
   onSend,
   onStop,
   onClearChat,
 }: ChatInputProps) {
+  const strings = getStrings(language);
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -39,23 +41,21 @@ export function ChatInput({
   };
 
   return (
-    <div className="border-border border-t px-4 py-3">
-      <div className="mx-auto max-w-2xl">
+    <div className="border-border/50 border-t px-4 py-3">
+      <div className="mx-auto max-w-4xl">
         {isAtLimit ? (
           <div className="flex flex-col items-center gap-3 py-2 text-center">
-            <p className="text-text-secondary text-sm">
-              You've reached the {maxMessages}-message limit for this chat.
-            </p>
+            <p className="text-text-secondary text-sm">{strings.limitReached(maxMessages)}</p>
             <button
               onClick={onClearChat}
               className="bg-accent text-bg-base hover:bg-accent-hover rounded-xl px-6 py-2.5 text-sm font-semibold transition-colors"
             >
-              Start New Chat
+              {strings.startNew}
             </button>
           </div>
         ) : (
           <>
-            <div className="bg-bg-surface border-border flex items-end gap-2 rounded-xl border px-4 py-3">
+            <div className="bg-bg-surface/80 border-accent/20 focus-within:border-accent/40 flex items-end gap-2 rounded-xl border px-4 py-3 backdrop-blur-sm transition-colors">
               <textarea
                 ref={inputRef}
                 value={input}
@@ -66,7 +66,7 @@ export function ChatInput({
                   e.target.style.height = `${Math.min(e.target.scrollHeight, 128)}px`;
                 }}
                 onKeyDown={handleKeyDown}
-                placeholder="Ask about Tomer…"
+                placeholder={strings.placeholder}
                 rows={1}
                 className="text-text-primary placeholder:text-text-muted max-h-32 flex-1 resize-none bg-transparent text-sm leading-relaxed outline-none"
                 disabled={isGenerating}
@@ -85,9 +85,9 @@ export function ChatInput({
                   onClick={() => onSend(input)}
                   disabled={!input.trim()}
                   className={cn(
-                    'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors',
+                    'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-all',
                     input.trim()
-                      ? 'bg-accent text-bg-base hover:bg-accent-hover'
+                      ? 'bg-accent text-bg-base hover:bg-accent-hover shadow-accent/30 shadow-lg'
                       : 'text-text-muted cursor-not-allowed',
                   )}
                   aria-label="Send message"
@@ -97,10 +97,8 @@ export function ChatInput({
               )}
             </div>
             <p className="text-text-muted mt-2 px-1 text-[10px]">
-              {provider === 'cloud'
-                ? 'Powered by xAI Grok · Responses may be inaccurate'
-                : 'AI runs locally in your browser via WebGPU · Responses may be inaccurate'}
-              {userMsgCount > 0 && ` · ${userMsgCount}/${maxMessages} messages`}
+              {strings.poweredBy}
+              {userMsgCount > 0 && ` · ${userMsgCount}/${maxMessages}`}
             </p>
           </>
         )}

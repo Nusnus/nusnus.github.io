@@ -17,7 +17,14 @@ const SESSIONS_KEY = 'ai-chat-sessions';
 const ACTIVE_KEY = 'ai-chat-active';
 const LEGACY_KEY = 'ai-chat-history';
 const MAX_SESSIONS = 20;
-const MAX_MESSAGES_PER_SESSION = 50;
+/**
+ * Sized for MAX_USER_MESSAGES = 40 (→ ~81 messages with assistant
+ * replies + welcome + summary). Matches worker MAX_INPUT_ITEMS.
+ * Summarization normally keeps us at ~41, but it's best-effort
+ * (silent catch-all in cloud-summarize.ts) — this cap must hold
+ * the full conversation when summarization is unavailable.
+ */
+const MAX_MESSAGES_PER_SESSION = 100;
 
 /** A single chat session. */
 export interface ChatSession {

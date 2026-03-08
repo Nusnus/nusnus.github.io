@@ -28,6 +28,21 @@ export interface CloudChatOptions {
   onWebSearch?: () => void;
   /** Called when a web search completes and the model starts synthesizing. */
   onWebSearchFound?: () => void;
+  /**
+   * Called when the model enters reasoning mode (before visible content).
+   * Signals the UI to show a "thinking" indicator.
+   */
+  onReasoningStart?: () => void;
+  /**
+   * Called when reasoning finishes and content is about to stream.
+   * Signals the UI to hide the "thinking" indicator.
+   */
+  onReasoningDone?: () => void;
+  /**
+   * Override the base temperature from CLOUD_GENERATION_CONFIG.
+   * Used by the Groky Spectrum to scale chaos level.
+   */
+  temperature?: number;
 }
 
 /** Result from cloud chat containing both content and tool calls. */
@@ -129,6 +144,8 @@ function buildRequestBody(
     input: messages,
     stream,
     ...CLOUD_GENERATION_CONFIG,
+    // Groky Spectrum overrides base temperature
+    ...(options?.temperature !== undefined && { temperature: options.temperature }),
     ...(options?.tools && { tools: options.tools }),
     ...(options?.tool_choice && { tool_choice: options.tool_choice }),
   };
@@ -263,6 +280,18 @@ export async function cloudChatStream(
   // Accumulate function call tool_calls (arguments arrive in chunks)
   const toolCallAccumulator = new Map<number, { id: string; name: string; arguments: string }>();
 
+  // Track reasoning state — fire onReasoningStart once, onReasoningDone
+  // when the first visible content delta arrives.
+  let reasoningStarted = false;
+  let reasoningDone = false;
+
+  const maybeFinishReasoning = () => {
+    if (reasoningStarted && !reasoningDone) {
+      reasoningDone = true;
+      options?.onReasoningDone?.();
+    }
+  };
+
   try {
     while (true) {
       const { done, value } = await reader.read();
@@ -285,6 +314,7 @@ export async function cloudChatStream(
 
           if (eventType === 'response.output_text.delta') {
             const e = raw as unknown as StreamOutputTextDelta;
+            maybeFinishReasoning();
             accumulated += e.delta;
             onToken(e.delta, stripGrokRenderForDisplay(accumulated));
           } else if (eventType === 'response.output_item.added') {
@@ -296,7 +326,14 @@ export async function cloudChatStream(
                 arguments: '',
               });
             } else if (e.item.type === 'web_search_call') {
+              maybeFinishReasoning();
               options?.onWebSearch?.();
+            } else if (e.item.type === 'reasoning') {
+              // Reasoning item started — signal the UI to show "thinking"
+              if (!reasoningStarted) {
+                reasoningStarted = true;
+                options?.onReasoningStart?.();
+              }
             }
           } else if (eventType === 'response.function_call_arguments.delta') {
             const e = raw as unknown as StreamFunctionCallArgsDelta;
@@ -306,6 +343,20 @@ export async function cloudChatStream(
             const e = raw as unknown as StreamOutputItemDone;
             if (e.item.type === 'web_search_call') {
               options?.onWebSearchFound?.();
+            } else if (e.item.type === 'reasoning') {
+              maybeFinishReasoning();
+            }
+          } else if (
+            // Some providers emit reasoning deltas under several names —
+            // we don't surface the trace (xAI redacts it), but we use it
+            // as a heartbeat to fire onReasoningStart early.
+            eventType === 'response.reasoning.delta' ||
+            eventType === 'response.reasoning_summary.delta' ||
+            eventType === 'response.reasoning_summary_text.delta'
+          ) {
+            if (!reasoningStarted) {
+              reasoningStarted = true;
+              options?.onReasoningStart?.();
             }
           } else if (eventType === 'response.failed') {
             const err = (raw as Record<string, unknown>).response as
@@ -325,14 +376,21 @@ export async function cloudChatStream(
           }
           // All other events (response.created, response.in_progress,
           // response.completed, etc.) — skip
-        } catch {
-          // Skip malformed JSON chunks
+        } catch (e) {
+          // Only swallow malformed JSON (JSON.parse throws SyntaxError).
+          // Intentional throws from response.failed / response.incomplete
+          // must propagate to the caller's error handler.
+          if (e instanceof SyntaxError) continue;
+          throw e;
         }
       }
     }
   } finally {
     reader.releaseLock();
   }
+
+  // If reasoning started but never explicitly finished, finish it now.
+  maybeFinishReasoning();
 
   const structuredToolCalls = Array.from(toolCallAccumulator.values());
 
