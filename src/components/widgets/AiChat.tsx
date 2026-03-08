@@ -222,6 +222,10 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       setInput('');
       addLog('info', 'ui', 'User message sent', { length: trimmed.length });
 
+      // Track streaming progress in outer scope so catch block can access them
+      let tokenCount = 0;
+      let lastAccumulated = '';
+
       const userMsg: ChatMessage = {
         id: crypto.randomUUID(),
         role: 'user',
@@ -274,12 +278,12 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
         ];
 
         // Stream response
-        let tokenCount = 0;
         const result = await cloudChatStream(
           fullHistory,
           selectedCloudModelId,
           (_token, accumulated) => {
             tokenCount++;
+            lastAccumulated = accumulated;
             setStreamTokenCount(tokenCount);
             setMessages((prev) => {
               const copy = [...prev];
@@ -333,26 +337,22 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
         // Map tool calls to actions
         const actions = mapToolCallsToActions(result.toolCalls);
 
-        // Final update — compute final messages, then persist outside the updater
-        let finalMessages: ChatMessage[] = [];
-        setMessages((prev) => {
-          const copy = [...prev];
-          const last = copy[copy.length - 1];
-          if (last?.role === 'assistant') {
-            const finalMsg = {
-              ...last,
-              content: result.content,
-            };
-            if (actions.length > 0) finalMsg.actions = actions;
-            else delete finalMsg.actions;
-            delete finalMsg.searchStatus;
-            copy[copy.length - 1] = finalMsg;
-          }
-          finalMessages = copy;
-          return copy;
-        });
+        // Build final assistant message
+        const finalAssistant: ChatMessage = {
+          ...assistantMsg,
+          content: result.content,
+        };
+        if (actions.length > 0) finalAssistant.actions = actions;
 
-        // Side effects outside the updater (localStorage writes, state updates)
+        // Compute final messages directly (don't rely on React state updater
+        // timing — in React 18 batched updates, the updater runs during render,
+        // not synchronously when setState is called)
+        const finalMessages = [...updated.slice(0, -1), finalAssistant];
+
+        // Update UI state
+        setMessages(finalMessages);
+
+        // Persist to localStorage
         // Skip save if the session changed (e.g. user switched sessions during streaming)
         if (activeSessionIdRef.current === sessionIdAtStart) {
           const sid = saveMessages(finalMessages, activeSessionId ?? undefined);
@@ -362,22 +362,20 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       } catch (err) {
         if (controller.signal.aborted) {
           addLog('warn', 'stream', 'Stream aborted by user');
-          // Remove empty assistant placeholder if no tokens were streamed,
-          // otherwise save the partial response so it survives page refresh
-          let abortMessages: ChatMessage[] = [];
-          setMessages((prev) => {
-            const last = prev[prev.length - 1];
-            if (last?.role === 'assistant' && !last.content) {
-              abortMessages = prev.slice(0, -1);
-              return abortMessages;
-            }
-            abortMessages = prev;
-            return prev;
-          });
+          // Build abort messages directly (same React 18 batching concern)
+          // If no tokens were streamed, remove the empty assistant placeholder;
+          // otherwise keep the partial response so it survives page refresh.
+          const abortMessages =
+            tokenCount === 0
+              ? updated.slice(0, -1) // Remove empty assistant placeholder
+              : [...updated.slice(0, -1), { ...assistantMsg, content: lastAccumulated }];
+
+          setMessages(abortMessages);
+
           if (
             activeSessionIdRef.current === sessionIdAtStart &&
-            abortMessages.length > 0 &&
-            abortMessages[abortMessages.length - 1]?.content
+            tokenCount > 0 &&
+            lastAccumulated
           ) {
             const sid = saveMessages(abortMessages, activeSessionId ?? undefined);
             setActiveSession(sid);
