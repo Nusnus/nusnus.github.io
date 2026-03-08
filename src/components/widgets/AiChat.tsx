@@ -342,9 +342,11 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
         const actions = mapToolCallsToActions(result.toolCalls);
 
         // Build final assistant message
+        // If the API returned only tool calls with no text, use a fallback so
+        // the empty content doesn't trigger a permanent TypingIndicator.
         const finalAssistant: ChatMessage = {
           ...assistantMsg,
-          content: result.content,
+          content: result.content || (actions.length > 0 ? '*(used tools only)*' : ''),
         };
         if (actions.length > 0) finalAssistant.actions = actions;
 
