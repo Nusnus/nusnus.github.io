@@ -1,5 +1,5 @@
 import { type RefObject } from 'react';
-import { Send, Square, Mic, MicOff } from 'lucide-react';
+import { Square, Mic, ArrowUp } from 'lucide-react';
 import { cn } from '@lib/utils/cn';
 import type { Language } from '@lib/ai/i18n';
 import { t } from '@lib/ai/i18n';
@@ -26,22 +26,21 @@ interface ChatInputProps {
   transcriptPreview?: string;
 }
 
-/** Voice waveform visualization bars. */
+/** Voice waveform visualization — animated bars that react to audio level. */
 function VoiceWaveform({ audioLevel }: { audioLevel: number }) {
-  const bars = 5;
   return (
-    <div className="flex items-center gap-0.5">
-      {Array.from({ length: bars }).map((_, i) => {
-        const delay = i * 0.1;
-        const height = Math.max(4, audioLevel * 24 * (1 - Math.abs(i - 2) * 0.2));
+    <div className="flex items-end gap-[3px]">
+      {[0, 1, 2, 3, 4].map((i) => {
+        const baseHeight = [10, 16, 20, 16, 10][i] ?? 10;
+        const height = Math.max(4, baseHeight * (0.3 + audioLevel * 0.7));
         return (
           <div
             key={i}
-            className="w-[3px] rounded-full bg-red-400 transition-all duration-100"
+            className="wave-bar bg-accent w-[3px] rounded-full transition-[height] duration-75"
             style={{
               height: `${height}px`,
+              animationDelay: `${i * 0.12}s`,
               opacity: 0.5 + audioLevel * 0.5,
-              animationDelay: `${delay}s`,
             }}
           />
         );
@@ -50,7 +49,7 @@ function VoiceWaveform({ audioLevel }: { audioLevel: number }) {
   );
 }
 
-/** Chat input footer — professional design with voice waveform. */
+/** Floating chat input bar with voice integration. */
 export function ChatInput({
   input,
   setInput,
@@ -79,69 +78,62 @@ export function ChatInput({
   };
 
   return (
-    <div className="border-border border-t px-4 py-3 md:px-8 lg:px-12">
-      <div className="mx-auto max-w-4xl">
+    <div className="shrink-0 px-4 pt-2 pb-4 md:px-6 lg:px-8">
+      <div className="mx-auto max-w-3xl">
         {isAtLimit ? (
-          <div className="flex flex-col items-center gap-3 py-2 text-center">
+          <div className="flex flex-col items-center gap-3 rounded-2xl border border-yellow-500/20 bg-yellow-500/5 py-4 text-center">
             <p className="text-text-secondary text-sm">{strings.messageLimitReached}</p>
             <button
               onClick={onClearChat}
-              className="bg-accent text-bg-base hover:bg-accent-hover rounded-xl px-6 py-2.5 text-sm font-semibold transition-all"
+              className="bg-accent text-bg-base hover:bg-accent-hover rounded-xl px-6 py-2 text-sm font-semibold transition-all"
             >
               {strings.startNewChat}
             </button>
           </div>
         ) : (
           <>
-            {/* Transcript preview overlay */}
-            {isRecording && transcriptPreview && (
-              <div className="cybernus-fade-in mb-2 rounded-lg border border-red-500/20 bg-red-500/5 px-4 py-2 text-sm text-red-300/80">
-                <span className="mr-2 text-[10px] font-medium tracking-wider text-red-400/60 uppercase">
-                  {strings.transcribing}
-                </span>
-                {transcriptPreview}
+            {/* Recording indicator bar */}
+            {isRecording && (
+              <div className="cybernus-fade-in mb-2 flex items-center gap-3 rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-2.5">
+                <div className="flex items-center gap-2">
+                  <span className="h-2 w-2 animate-pulse rounded-full bg-red-400" />
+                  <span className="text-xs font-medium text-red-400">{strings.recording}</span>
+                </div>
+                <VoiceWaveform audioLevel={audioLevel} />
+                {transcriptPreview && (
+                  <p className="min-w-0 flex-1 truncate text-sm text-red-300/70 italic">
+                    {transcriptPreview}
+                  </p>
+                )}
+                <button
+                  onClick={onVoiceToggle}
+                  className="shrink-0 rounded-lg bg-red-500/15 px-3 py-1 text-xs font-medium text-red-400 transition-all hover:bg-red-500/25"
+                >
+                  {strings.voiceStop}
+                </button>
               </div>
             )}
 
+            {/* Main input bar */}
             <div
               className={cn(
-                'flex items-end gap-3 rounded-2xl border px-4 py-3 transition-all',
+                'relative flex items-end gap-2 rounded-2xl border px-3 py-2 shadow-lg shadow-black/10 transition-all',
                 isRecording
-                  ? 'border-red-500/30 bg-red-500/5'
-                  : 'border-border bg-bg-surface focus-within:border-accent/35',
+                  ? 'border-red-500/25 bg-red-500/[0.03]'
+                  : 'border-border bg-bg-surface focus-within:border-accent/30 focus-within:shadow-accent/5',
               )}
             >
-              {/* Voice button with waveform */}
-              {voiceSupported && onVoiceToggle && (
-                <div className="relative shrink-0">
-                  <button
-                    onClick={onVoiceToggle}
-                    disabled={isGenerating}
-                    className={cn(
-                      'relative flex h-10 w-10 items-center justify-center rounded-xl transition-all',
-                      isRecording
-                        ? 'bg-red-500/20 text-red-400'
-                        : 'text-text-muted hover:bg-bg-elevated hover:text-text-secondary',
-                    )}
-                    aria-label={isRecording ? strings.voiceStop : strings.voiceStart}
-                    title={isRecording ? strings.voiceStop : strings.voiceStart}
-                  >
-                    {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
-                    {/* Pulsing ring animation when recording */}
-                    {isRecording && (
-                      <>
-                        <span className="voice-ring absolute inset-0 rounded-xl border-2 border-red-500/40" />
-                        <span className="voice-ring absolute inset-0 rounded-xl border-2 border-red-500/20 [animation-delay:0.5s]" />
-                      </>
-                    )}
-                  </button>
-                  {/* Waveform bars next to mic */}
-                  {isRecording && (
-                    <div className="absolute top-1/2 -right-1 translate-x-full -translate-y-1/2">
-                      <VoiceWaveform audioLevel={audioLevel} />
-                    </div>
-                  )}
-                </div>
+              {/* Voice button */}
+              {voiceSupported && onVoiceToggle && !isRecording && (
+                <button
+                  onClick={onVoiceToggle}
+                  disabled={isGenerating}
+                  className="text-text-muted hover:text-accent hover:bg-accent-muted flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all"
+                  aria-label={strings.voiceStart}
+                  title={strings.voiceStart}
+                >
+                  <Mic className="h-4 w-4" />
+                </button>
               )}
 
               <textarea
@@ -150,15 +142,15 @@ export function ChatInput({
                 onChange={(e) => {
                   setInput(e.target.value);
                   e.target.style.height = 'auto';
-                  e.target.style.height = `${Math.min(e.target.scrollHeight, 128)}px`;
+                  e.target.style.height = `${Math.min(e.target.scrollHeight, 160)}px`;
                 }}
                 onKeyDown={handleKeyDown}
-                placeholder={isRecording ? strings.recording : strings.placeholder}
+                placeholder={isRecording ? strings.transcribing : strings.placeholder}
                 rows={1}
                 className={cn(
-                  'max-h-32 flex-1 resize-none bg-transparent text-sm leading-relaxed outline-none',
+                  'max-h-40 min-h-[36px] flex-1 resize-none bg-transparent py-1.5 text-sm leading-relaxed outline-none',
                   isRecording
-                    ? 'text-red-300/80 placeholder:text-red-400/30'
+                    ? 'text-red-300/70 placeholder:text-red-400/20'
                     : 'text-text-primary placeholder:text-text-muted',
                 )}
                 disabled={isGenerating || isRecording}
@@ -170,30 +162,30 @@ export function ChatInput({
               {isGenerating ? (
                 <button
                   onClick={onStop}
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-500/15 text-red-400 transition-all hover:bg-red-500/25"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-red-500/15 text-red-400 transition-all hover:bg-red-500/25"
                   aria-label={strings.stop}
                 >
-                  <Square className="h-4 w-4 fill-current" />
+                  <Square className="h-3.5 w-3.5 fill-current" />
                 </button>
               ) : (
                 <button
                   onClick={() => onSend(input)}
                   disabled={!input.trim()}
                   className={cn(
-                    'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all',
+                    'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all',
                     input.trim()
                       ? 'bg-accent text-bg-base hover:bg-accent-hover'
-                      : 'text-text-muted cursor-not-allowed',
+                      : 'bg-bg-elevated text-text-muted cursor-not-allowed',
                   )}
                   aria-label={strings.send}
                 >
-                  <Send className="h-4 w-4" />
+                  <ArrowUp className="h-4 w-4" />
                 </button>
               )}
             </div>
 
             {/* Footer info */}
-            <div className="text-text-muted mt-2 flex items-center justify-center gap-2 px-1 text-[10px]">
+            <div className="text-text-muted mt-2 flex items-center justify-center gap-2 text-[10px]">
               <span>{strings.poweredBy}</span>
               {userMsgCount > 0 && (
                 <>
