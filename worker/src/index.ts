@@ -48,10 +48,12 @@ interface ResponsesAPIRequest {
 const ALLOWED_ORIGINS: ReadonlySet<string> = new Set([
   'https://nusnus.github.io',
   'http://localhost:4321',
+  'http://localhost:4322',
   'http://localhost:3000',
 ]);
 
 const XAI_RESPONSES_URL = 'https://api.x.ai/v1/responses';
+const XAI_REALTIME_SECRETS_URL = 'https://api.x.ai/v1/realtime/client_secrets';
 
 /** Models visitors are allowed to use. Prevents switching to costly models. */
 const ALLOWED_MODELS: ReadonlySet<string> = new Set([
@@ -67,7 +69,7 @@ const DEFAULT_MODEL = 'grok-4-1-fast';
 /** Hard limits to prevent abuse. */
 const MAX_REQUEST_BYTES = 131_072; // 128 KB — accommodates full context + tools + chat history
 const MAX_OUTPUT_TOKENS_CAP = 1024;
-const MAX_INPUT_ITEMS = 30;
+const MAX_INPUT_ITEMS = 80; // 1 system + up to 30 user + 30 assistant + margin
 
 /** Simple in-memory rate limiter (per-isolate, resets on cold start). */
 const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
@@ -151,8 +153,42 @@ export default {
       return jsonResponse({ error: 'Method not allowed' }, 405, origin);
     }
 
-    // ── Path guard — only /v1/responses is accepted ──
+    // ── Route POST requests ──
     const postPath = new URL(request.url).pathname;
+
+    // ── Realtime ephemeral token endpoint ──
+    if (postPath === '/v1/realtime/client_secrets') {
+      if (!isAllowed) return jsonResponse({ error: 'Forbidden' }, 403);
+      if (!env.XAI_API_KEY) return jsonResponse({ error: 'Server misconfigured' }, 500, origin);
+
+      const clientIP = request.headers.get('CF-Connecting-IP') ?? 'unknown';
+      if (isRateLimited(clientIP)) {
+        return jsonResponse({ error: 'Rate limit exceeded. Try again shortly.' }, 429, origin);
+      }
+
+      try {
+        const xaiRes = await fetch(XAI_REALTIME_SECRETS_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${env.XAI_API_KEY}`,
+          },
+          body: JSON.stringify({ expires_after: { seconds: 300 } }),
+        });
+
+        const body = await xaiRes.text();
+        return new Response(body, {
+          status: xaiRes.status,
+          headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
+        });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to get ephemeral token';
+        console.error(`[ai-proxy] Realtime token error: ${message}`);
+        return jsonResponse({ error: 'Failed to get ephemeral token' }, 502, origin);
+      }
+    }
+
+    // ── Path guard — only /v1/responses beyond this point ──
     if (postPath !== '/v1/responses') {
       return jsonResponse({ error: 'Not found' }, 404, origin);
     }

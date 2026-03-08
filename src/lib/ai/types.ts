@@ -1,5 +1,5 @@
 /**
- * Shared types for the AI chatbot subsystem.
+ * Shared types for the Cybernus AI chatbot subsystem.
  */
 
 /** A single message in the chat conversation. */

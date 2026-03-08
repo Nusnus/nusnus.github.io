@@ -1,201 +1,119 @@
-import { Cloud, Monitor, Sparkles, Zap } from 'lucide-react';
+import { Sparkles, Zap, Cloud } from 'lucide-react';
 import { cn } from '@lib/utils/cn';
-import {
-  AVAILABLE_MODELS,
-  GROUP_INFO,
-  CLOUD_MODELS,
-  type ModelGroup,
-  type ChatProvider,
-} from '@lib/ai/config';
-import { ModelCard } from './ModelCard';
+import { CLOUD_MODELS } from '@lib/ai/config';
+import type { Language } from '@lib/ai/i18n';
+import { t } from '@lib/ai/i18n';
 
 interface ModelPickerProps {
-  provider: ChatProvider;
-  setProvider: (p: ChatProvider) => void;
-  webGPUSupported: boolean;
-  selectedModelId: string;
-  setSelectedModelId: (id: string) => void;
   selectedCloudModelId: string;
   setSelectedCloudModelId: (id: string) => void;
-  cacheMap: Record<string, boolean>;
-  isDeletingModel: string | null;
-  deleteModel: (id: string) => void;
   hasSavedChat: boolean;
   onContinue: () => void;
   onNewChat: () => void;
+  language: Language;
 }
 
-/** Idle-screen model picker with provider toggle, model grid, and start buttons. */
+/** Idle-screen model picker — centered hero with model selection. */
 export function ModelPicker({
-  provider,
-  setProvider,
-  webGPUSupported,
-  selectedModelId,
-  setSelectedModelId,
   selectedCloudModelId,
   setSelectedCloudModelId,
-  cacheMap,
-  isDeletingModel,
-  deleteModel,
   hasSavedChat,
   onContinue,
   onNewChat,
+  language,
 }: ModelPickerProps) {
-  const selectedModel = AVAILABLE_MODELS.find((m) => m.id === selectedModelId);
-  const groups: ModelGroup[] = ['top', 'more'];
+  const strings = t(language);
 
   return (
-    <div className="flex h-full flex-col">
-      {/* Header */}
-      <div className="border-border shrink-0 border-b px-6 py-5 text-center">
-        <div className="bg-accent/10 mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl">
-          <Sparkles className="text-accent h-6 w-6" />
-        </div>
-        <h2 className="text-text-primary mb-1 text-lg font-bold">Ask AI about Tomer</h2>
-        <p className="text-text-secondary text-xs">Choose how you want to chat</p>
-      </div>
-
-      {/* Provider toggle */}
-      <div className="border-border shrink-0 border-b px-6 py-3">
-        <div className="mx-auto flex max-w-5xl gap-2">
-          <button
-            onClick={() => setProvider('cloud')}
-            className={cn(
-              'flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all',
-              provider === 'cloud'
-                ? 'bg-accent/15 text-accent border-accent border'
-                : 'border-border text-text-secondary hover:bg-bg-elevated border',
-            )}
-          >
-            <Zap className="h-4 w-4" />
-            Cloud · xAI Grok
-          </button>
-          <button
-            onClick={() => webGPUSupported && setProvider('local')}
-            className={cn(
-              'flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all',
-              !webGPUSupported && 'cursor-not-allowed opacity-40',
-              provider === 'local'
-                ? 'bg-accent/15 text-accent border-accent border'
-                : 'border-border text-text-secondary hover:bg-bg-elevated border',
-            )}
-            disabled={!webGPUSupported}
-            title={!webGPUSupported ? 'WebGPU is not supported in this browser' : undefined}
-          >
-            <Monitor className="h-4 w-4" />
-            Local · In-Browser
-          </button>
-        </div>
-      </div>
-
-      {/* Content area */}
-      <div className="flex-1 overflow-y-auto px-6 py-5">
-        {provider === 'cloud' ? (
-          /* ── Cloud model picker ── */
-          <div className="mx-auto max-w-2xl">
-            <div className="mb-4 grid gap-3 sm:grid-cols-2">
-              {CLOUD_MODELS.map((cm) => (
-                <button
-                  key={cm.id}
-                  onClick={() => setSelectedCloudModelId(cm.id)}
-                  className={cn(
-                    'border-border bg-bg-surface relative flex flex-col rounded-xl border p-4 text-left transition-all',
-                    selectedCloudModelId === cm.id
-                      ? 'border-accent ring-accent/30 ring-2'
-                      : 'hover:bg-bg-elevated hover:border-text-muted',
-                  )}
-                >
-                  <div className="mb-1.5 flex items-center gap-2">
-                    <Zap className="text-accent h-4 w-4" />
-                    <h3 className="text-text-primary text-sm font-semibold">{cm.name}</h3>
-                    {cm.recommended && (
-                      <span className="bg-accent text-bg-base rounded-full px-2 py-0.5 text-[9px] font-bold">
-                        ★ Recommended
-                      </span>
-                    )}
-                  </div>
-                  <span className="bg-bg-elevated text-text-muted mb-2 inline-block w-fit rounded px-1.5 py-0.5 text-[10px] font-medium">
-                    xAI
-                  </span>
-                  <p className="text-text-secondary text-xs leading-relaxed">{cm.description}</p>
-                  <div className="text-text-muted mt-3 flex items-center gap-3 text-[11px]">
-                    <span className="flex items-center gap-1">
-                      <Cloud className="h-3.5 w-3.5 opacity-50" /> Cloud
-                    </span>
-                    <span className="opacity-30">|</span>
-                    <span>No download</span>
-                    <span className="opacity-30">|</span>
-                    <span>Instant start</span>
-                  </div>
-                </button>
-              ))}
+    <div className="flex h-full flex-col items-center justify-center px-4">
+      <div className="w-full max-w-xl">
+        {/* Hero */}
+        <div className="cybernus-fade-in-up mb-10 text-center">
+          <div className="relative mx-auto mb-5 flex h-14 w-14 items-center justify-center">
+            <div className="cybernus-glow-pulse border-accent/20 absolute inset-0 rounded-full border" />
+            <div className="bg-accent/10 flex h-12 w-12 items-center justify-center rounded-full">
+              <Sparkles className="text-accent h-6 w-6" />
             </div>
-            <p className="text-text-muted text-center text-[10px]">
-              Powered by xAI · Requests proxied through a secure endpoint · No API keys exposed
-            </p>
           </div>
-        ) : (
-          /* ── Local model picker ── */
-          <div className="mx-auto max-w-5xl space-y-8">
-            {groups.map((group) => {
-              const models = AVAILABLE_MODELS.filter((m) => m.group === group);
-              if (models.length === 0) return null;
-              const info = GROUP_INFO[group];
-              return (
-                <div key={group}>
-                  <div className="mb-3">
-                    <h3 className="text-text-primary text-sm font-semibold">{info.label}</h3>
-                    <p className="text-text-muted text-[11px]">{info.subtitle}</p>
-                  </div>
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    {models.map((model) => (
-                      <ModelCard
-                        key={model.id}
-                        model={model}
-                        isSelected={selectedModelId === model.id}
-                        isCached={!!cacheMap[model.id]}
-                        isDeleting={isDeletingModel === model.id}
-                        onSelect={() => setSelectedModelId(model.id)}
-                        onDelete={() => deleteModel(model.id)}
-                      />
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-            <p className="text-text-muted text-center text-[10px]">
-              All models run 100% in your browser via WebGPU — no data leaves your device
-            </p>
-          </div>
-        )}
-      </div>
+          <h2 className="text-text-primary mb-2 text-2xl font-bold">{strings.title}</h2>
+          <p className="text-text-muted text-sm">{strings.subtitle}</p>
+        </div>
 
-      {/* Sticky footer with start button(s) */}
-      <div className="border-border shrink-0 border-t px-6 py-4 text-center">
-        <div className="flex items-center justify-center gap-3">
+        {/* Model cards */}
+        <div
+          className="cybernus-fade-in-up mb-8 grid gap-3 sm:grid-cols-2"
+          style={{ animationDelay: '100ms' }}
+        >
+          {CLOUD_MODELS.map((cm) => {
+            const isSelected = selectedCloudModelId === cm.id;
+            return (
+              <button
+                key={cm.id}
+                onClick={() => setSelectedCloudModelId(cm.id)}
+                className={cn(
+                  'group relative flex flex-col rounded-xl border p-4 text-left transition-all',
+                  isSelected
+                    ? 'border-accent/30 bg-accent/[0.06]'
+                    : 'border-border hover:border-accent/15 hover:bg-bg-surface',
+                )}
+              >
+                <div className="mb-1.5 flex items-center gap-2">
+                  <Zap
+                    className={cn('h-3.5 w-3.5', isSelected ? 'text-accent' : 'text-text-muted')}
+                  />
+                  <h3
+                    className={cn(
+                      'text-sm font-semibold',
+                      isSelected ? 'text-text-primary' : 'text-text-secondary',
+                    )}
+                  >
+                    {cm.name}
+                  </h3>
+                  {cm.recommended && (
+                    <span className="bg-accent text-bg-base rounded-full px-1.5 py-px text-[9px] font-bold">
+                      {strings.recommended}
+                    </span>
+                  )}
+                </div>
+                <p className="text-text-muted text-xs leading-relaxed">{cm.description}</p>
+                <div className="text-text-muted mt-2.5 flex items-center gap-2 text-[10px]">
+                  <Cloud className="h-3 w-3 opacity-40" />
+                  <span>
+                    {strings.noDownload} · {strings.instantStart}
+                  </span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Action buttons */}
+        <div
+          className="cybernus-fade-in-up flex flex-col items-center gap-3 sm:flex-row sm:justify-center"
+          style={{ animationDelay: '200ms' }}
+        >
           {hasSavedChat && (
             <button
               onClick={onContinue}
-              className="bg-accent text-bg-base hover:bg-accent-hover rounded-xl px-8 py-3 text-sm font-semibold transition-colors"
+              className="bg-accent text-bg-base hover:bg-accent-hover w-full rounded-xl px-8 py-3 text-sm font-semibold transition-all sm:w-auto"
             >
-              Continue Chat
+              {strings.continueChat}
             </button>
           )}
           <button
             onClick={onNewChat}
             className={cn(
-              'rounded-xl px-8 py-3 text-sm font-semibold transition-colors',
+              'w-full rounded-xl px-8 py-3 text-sm font-semibold transition-all sm:w-auto',
               hasSavedChat
-                ? 'border-border text-text-primary hover:bg-bg-elevated border'
+                ? 'border-border text-text-primary hover:border-accent/30 hover:bg-accent-muted border'
                 : 'bg-accent text-bg-base hover:bg-accent-hover',
             )}
           >
-            {provider === 'local' && !cacheMap[selectedModelId] ? 'Download & Start' : 'New Chat'}
-            {provider === 'local' && selectedModel && !cacheMap[selectedModelId] && (
-              <span className="ml-1.5 opacity-70">({selectedModel.downloadSize})</span>
-            )}
+            {strings.newChat}
           </button>
         </div>
+
+        <p className="text-text-muted mt-6 text-center text-[10px]">{strings.poweredBy}</p>
       </div>
     </div>
   );
