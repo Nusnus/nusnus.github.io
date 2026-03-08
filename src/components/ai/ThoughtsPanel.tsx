@@ -166,8 +166,8 @@ export function ThoughtsPanel() {
   return (
     <div className="relative hidden h-full w-[280px] shrink-0 overflow-hidden xl:block">
       {/* Gradient overlays blend panel edges seamlessly into the chat background */}
-      <div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-b from-[#0a0a0f] via-[#0a0a0f]/30 to-[#0a0a0f]" />
-      <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-[#0a0a0f] to-transparent" />
+      <div className="from-bg-base via-bg-base/30 to-bg-base pointer-events-none absolute inset-0 z-10 bg-gradient-to-b" />
+      <div className="from-bg-base pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r to-transparent" />
 
       {/* Header — subtle, blends into background */}
       <div className="relative z-20 px-4 pt-4 pb-2">
@@ -222,7 +222,7 @@ export function ThoughtsPanel() {
       </div>
 
       {/* Bottom fade overlay */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-32 bg-gradient-to-t from-[#0a0a0f] to-transparent" />
+      <div className="from-bg-base pointer-events-none absolute inset-x-0 bottom-0 z-10 h-32 bg-gradient-to-t to-transparent" />
     </div>
   );
 }

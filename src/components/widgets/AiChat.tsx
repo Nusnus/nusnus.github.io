@@ -713,7 +713,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
   );
 
   return (
-    <div className="flex h-full bg-[#0a0a0f]">
+    <div className="bg-bg-base flex h-full">
       {/* Mobile sidebar backdrop */}
       {showSidebar && (
         // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- backdrop overlay
@@ -726,7 +726,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       {/* Sidebar — persistent on desktop, overlay on mobile */}
       <aside
         className={cn(
-          'flex h-full shrink-0 flex-col border-r border-white/[0.06] bg-[#0c0c14]',
+          'bg-bg-surface flex h-full shrink-0 flex-col border-r border-white/[0.06]',
           'md:relative md:flex md:w-[260px]',
           showSidebar ? 'fixed inset-y-0 left-0 z-30 w-72' : 'hidden md:flex',
         )}

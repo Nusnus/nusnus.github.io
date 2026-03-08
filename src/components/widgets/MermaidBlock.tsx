@@ -97,6 +97,22 @@ function sanitize(src: string): string {
     }
     return _m;
   });
+  //    e) Fix directive lines with erroneous colons (e.g. "dateFormat :X" → "dateFormat X")
+  s = s.replace(/^(\s*(?:dateFormat|axisFormat|tickInterval)\s+):(\S)/gm, '$1$2');
+  //    f) Replace hyphens in Gantt task IDs (after the colon) with underscores
+  //       e.g. "d12-13" → "d12_13" — hyphens in IDs break the parser
+  s = s.replace(
+    /^(\s+[^:]+:\s*(?:active|done|crit|milestone)(?:,\s*|\s*,\s*))([a-zA-Z][a-zA-Z0-9-]+)(\s*,)/gm,
+    (_m, before: string, id: string, after: string) => `${before}${id.replace(/-/g, '_')}${after}`,
+  );
+  //    g) Wrap task names starting with digits in quotes to prevent parser confusion
+  //       e.g. "7-8 Days :crit, gap, 2d" → '"7-8 Days" :crit, gap, 2d'
+  s = s.replace(/^(\s+)(\d[^:]*?)\s*(:.*)/gm, (_m, indent: string, name: string, rest: string) => {
+    const trimmed = name.trim();
+    // Already quoted — skip
+    if (trimmed.startsWith('"')) return _m;
+    return `${indent}"${trimmed}" ${rest}`;
+  });
 
   return s;
 }
