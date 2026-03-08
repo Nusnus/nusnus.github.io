@@ -259,13 +259,13 @@ export default function CybernusChat() {
         // Summarize old messages if the conversation is getting long.
         // Done before building history so the summary is sent to the model.
         const summarizedBase = await maybeSummarizeCloud(messages);
-        if (summarizedBase !== messages && !abortRef.current) {
+        if (summarizedBase !== messages && !controller.signal.aborted) {
           // Keep the summarized base + the new user+asst bubbles in state.
-          // Abort guard: maybeSummarizeCloud makes an unabortable network
-          // call — if clearChat/switchSession replaced messages during it,
-          // this wholesale setMessages would restore the stale conversation.
-          // (Stop-only is safe to fall through: cloudChatStream aborts
-          // immediately and the catch block shows *(stopped)*.)
+          // Guard is per-invocation: maybeSummarizeCloud is unabortable, and
+          // handleStop flips isGenerating synchronously — the user can
+          // stop + re-send before this resolves. A newer sendMessage resets
+          // the shared abortRef, but nothing can un-abort *this* controller.
+          // Covers clearChat/switchSession too (both call .abort()).
           setMessages([...summarizedBase, userMsg, asstMsg]);
         }
 
@@ -363,8 +363,14 @@ export default function CybernusChat() {
           );
         }
       } finally {
-        setIsGenerating(false);
-        abortControllerRef.current = null;
+        // Only clean up if we're still the active generation. If the user
+        // stopped and re-sent during summarize, a newer sendMessage owns
+        // these refs now — clobbering them would drop that generation's
+        // stop button and leak its controller.
+        if (abortControllerRef.current === controller) {
+          setIsGenerating(false);
+          abortControllerRef.current = null;
+        }
         requestAnimationFrame(() => inputRef.current?.focus());
       }
     },
