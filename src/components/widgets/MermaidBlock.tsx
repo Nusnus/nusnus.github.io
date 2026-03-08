@@ -271,7 +271,6 @@ export default function MermaidBlock({ code, blockKey }: { code: string; blockKe
         const { svg } = await mermaid.render(idRef.current, clean);
         if (!cancelled && containerRef.current) {
           containerRef.current.innerHTML = svg;
-          setSvgHtml(svg);
           // Make SVG responsive
           const svgEl = containerRef.current.querySelector('svg');
           if (svgEl) {
@@ -293,6 +292,8 @@ export default function MermaidBlock({ code, blockKey }: { code: string; blockKe
               // getBBox may throw if SVG is not in the DOM yet
             }
           }
+          // Store final SVG after all DOM modifications (viewBox, height, etc.)
+          setSvgHtml(containerRef.current.innerHTML);
           setRendering(false);
         }
       } catch (err) {
