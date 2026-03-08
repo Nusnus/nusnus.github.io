@@ -1,24 +1,10 @@
 {
-  "totalContributions": 2404,
+  "totalContributions": 2403,
   "totalCommits": 166,
   "totalPRs": 123,
-  "totalReviews": 141,
+  "totalReviews": 140,
   "totalIssues": 0,
   "weeks": [
-    {
-      "contributionDays": [
-        {
-          "contributionCount": 1,
-          "date": "2025-03-07",
-          "weekday": 5
-        },
-        {
-          "contributionCount": 4,
-          "date": "2025-03-08",
-          "weekday": 6
-        }
-      ]
-    },
     {
       "contributionDays": [
         {
@@ -2044,6 +2030,15 @@
           "contributionCount": 8,
           "date": "2026-03-07",
           "weekday": 6
+        }
+      ]
+    },
+    {
+      "contributionDays": [
+        {
+          "contributionCount": 0,
+          "date": "2026-03-08",
+          "weekday": 0
         }
       ]
     }
