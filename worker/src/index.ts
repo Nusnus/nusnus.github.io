@@ -69,7 +69,7 @@ const DEFAULT_MODEL = 'grok-4-1-fast';
 /** Hard limits to prevent abuse. */
 const MAX_REQUEST_BYTES = 131_072; // 128 KB — accommodates full context + tools + chat history
 const MAX_OUTPUT_TOKENS_CAP = 1024;
-const MAX_INPUT_ITEMS = 30;
+const MAX_INPUT_ITEMS = 80; // 1 system + up to 30 user + 30 assistant + margin
 
 /** Simple in-memory rate limiter (per-isolate, resets on cold start). */
 const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
