@@ -446,6 +446,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       setActiveSession(session.id);
       setMessages(session.messages);
       setShowSidebar(false);
+      setEngineState('ready');
       addLog('info', 'session', 'Switched session', { id: session.id });
     },
     [addLog],
