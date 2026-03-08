@@ -88,7 +88,6 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
-  const roastHandoffRef = useRef(false);
   const activeSessionIdRef = useRef(activeSessionId);
   activeSessionIdRef.current = activeSessionId;
 
@@ -143,7 +142,6 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
     try {
       const handoff = sessionStorage.getItem('grok-roast-handoff');
       if (handoff) {
-        roastHandoffRef.current = true;
         sessionStorage.removeItem('grok-roast-handoff');
         const parsed = JSON.parse(handoff) as { messages?: ChatMessage[] } | ChatMessage[];
         const msgs = Array.isArray(parsed) ? parsed : parsed.messages;
@@ -289,9 +287,9 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
               const copy = [...prev];
               const last = copy[copy.length - 1];
               if (last?.role === 'assistant') {
-                const updated = { ...last, content: accumulated };
-                delete updated.searchStatus;
-                copy[copy.length - 1] = updated;
+                const patched = { ...last, content: accumulated };
+                delete patched.searchStatus;
+                copy[copy.length - 1] = patched;
               }
               return copy;
             });
@@ -355,7 +353,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
         // Persist to localStorage
         // Skip save if the session changed (e.g. user switched sessions during streaming)
         if (activeSessionIdRef.current === sessionIdAtStart) {
-          const sid = saveMessages(finalMessages, activeSessionId ?? undefined);
+          const sid = saveMessages(finalMessages, activeSessionIdRef.current ?? undefined);
           setActiveSession(sid);
           setSessions(loadSessions());
         }
@@ -375,7 +373,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
             setMessages(abortMessages);
 
             if (tokenCount > 0 && lastAccumulated) {
-              const sid = saveMessages(abortMessages, activeSessionId ?? undefined);
+              const sid = saveMessages(abortMessages, activeSessionIdRef.current ?? undefined);
               setActiveSession(sid);
               setSessions(loadSessions());
             }
@@ -752,7 +750,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
             <ModelPicker
               selectedCloudModelId={selectedCloudModelId}
               setSelectedCloudModelId={setSelectedCloudModelId}
-              hasSavedChat={loadMessages().length > 0}
+              hasSavedChat={getActiveSessionId() !== null}
               onContinue={() => initEngine(true)}
               onNewChat={() => initEngine(false)}
               language={language}
@@ -840,8 +838,10 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
         )}
       </div>
 
-      {/* Debug panel */}
-      <DebugPanel state={debugState} onClearLogs={() => setDebugLogs([])} />
+      {/* Debug panel — only in development */}
+      {import.meta.env.DEV && (
+        <DebugPanel state={debugState} onClearLogs={() => setDebugLogs([])} />
+      )}
     </div>
   );
 }
