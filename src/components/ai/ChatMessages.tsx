@@ -524,12 +524,26 @@ export function ChatMessages({
                           <TypingIndicator />
                         )
                       ) : !isUser ? (
-                        <AssistantContent
-                          content={msg.content}
-                          isStreaming={isStreaming}
-                          onSendMessage={onSendMessage}
-                          isGenerating={isGenerating}
-                        />
+                        <div
+                          role="button"
+                          tabIndex={0}
+                          onClick={handleExpand}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') handleExpand();
+                          }}
+                          className="group/zoom relative cursor-zoom-in rounded-lg transition-colors hover:bg-white/[0.02]"
+                          title="Click to expand"
+                        >
+                          <div className="pointer-events-none absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-md bg-white/[0.06] text-white/0 opacity-0 backdrop-blur-sm transition-all group-hover/zoom:text-white/50 group-hover/zoom:opacity-100">
+                            <Maximize2 className="h-3 w-3" />
+                          </div>
+                          <AssistantContent
+                            content={msg.content}
+                            isStreaming={isStreaming}
+                            onSendMessage={onSendMessage}
+                            isGenerating={isGenerating}
+                          />
+                        </div>
                       ) : (
                         <p className="whitespace-pre-wrap">{msg.content}</p>
                       )}
