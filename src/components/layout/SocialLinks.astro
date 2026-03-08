@@ -7,7 +7,7 @@
 import { SOCIAL_ICONS } from '@config';
 ---
 
-<div class="border-border flex items-center gap-3 border-t pt-4">
+<div class="border-border/50 flex items-center gap-3 border-t pt-4">
   {
     SOCIAL_ICONS.map(({ href, label, path }) => (
       <a
@@ -15,7 +15,7 @@ import { SOCIAL_ICONS } from '@config';
         target="_blank"
         rel="noopener noreferrer"
         aria-label={label}
-        class="text-text-muted hover:bg-bg-surface hover:text-accent flex h-9 w-9 items-center justify-center rounded-lg transition-colors duration-100"
+        class="text-text-muted hover:bg-bg-surface hover:text-accent flex h-9 w-9 items-center justify-center rounded-lg transition-all duration-200 hover:shadow-[var(--shadow-soft)]"
       >
         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
           <path d={path} />

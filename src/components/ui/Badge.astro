@@ -10,9 +10,9 @@ interface Props {
 const { variant = 'ghost', size = 'sm', class: className } = Astro.props;
 
 const variantClasses = {
-  ghost: 'border border-border text-text-secondary',
-  filled: 'bg-bg-elevated text-text-primary',
-  accent: 'bg-accent-muted text-accent',
+  ghost: 'border border-border/80 text-text-secondary',
+  filled: 'bg-bg-elevated/80 text-text-primary backdrop-blur-sm',
+  accent: 'bg-accent-muted text-accent border border-accent/20',
 };
 
 const sizeClasses = {

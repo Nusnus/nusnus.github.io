@@ -20,7 +20,16 @@ const celeryStars = repos?.find((r) => r.fullName === 'celery/celery')?.stars ??
 const totalContributions = graph?.totalContributions ?? 0;
 ---
 
-<aside class="border-accent/30 bg-bg-base hidden h-screen flex-col border-r px-5 py-6 md:flex">
+<aside
+  class="bg-bg-base border-border/50 relative hidden h-screen flex-col border-r px-5 py-6 md:flex"
+>
+  <!-- Gradient accent line at the top of the sidebar -->
+  <div
+    class="from-accent to-accent-end absolute top-0 right-0 left-0 h-px bg-gradient-to-r opacity-40"
+    aria-hidden="true"
+  >
+  </div>
+
   <!-- Avatar + Status -->
   <div class="mb-4 flex items-center gap-3">
     <div class="group relative">
@@ -29,7 +38,7 @@ const totalContributions = graph?.totalContributions ?? 0;
         alt="Tomer Nosrati"
         width="64"
         height="64"
-        class="group-hover:ring-accent/50 rounded-full ring-2 ring-transparent transition-shadow duration-200"
+        class="ring-accent/20 group-hover:ring-accent/50 rounded-full ring-2 transition-shadow duration-200 group-hover:shadow-[var(--shadow-glow)]"
         loading="eager"
       />
       <div class="absolute -right-0.5 -bottom-0.5" id="status-dot-container">
@@ -68,10 +77,11 @@ const totalContributions = graph?.totalContributions ?? 0;
   </div>
 
   <!-- Quick Stats -->
-  <div class="border-border mb-5 border-t pt-4">
+  <div class="border-border/50 mb-5 border-t pt-4">
     <p class="text-text-primary mb-3 font-mono text-sm font-semibold">
-      <span data-live="totalContributions">{formatCompactNumber(totalContributions)}</span> contributions
-      this year
+      <span class="text-accent" data-live="totalContributions"
+        >{formatCompactNumber(totalContributions)}</span
+      > contributions this year
     </p>
 
     {

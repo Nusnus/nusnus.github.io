@@ -1,28 +1,28 @@
 ---
 import Card from '@components/ui/Card.astro';
 import Badge from '@components/ui/Badge.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
 import { LINKEDIN_ARTICLES } from '@config';
 import { formatDate } from '@lib/utils/date';
 ---
 
-<section id="writing" aria-label="Writing">
-  <div class="mb-6 flex items-center gap-3">
-    <h2 class="text-3xl font-bold tracking-tight">Writing</h2>
+<section id="writing" class="animate-section" aria-label="Writing">
+  <SectionHeader
+    title="Writing"
+    subtitle="Thoughts on distributed systems, open source leadership, and software engineering philosophy"
+  >
     <Badge variant="accent" size="sm">Soon</Badge>
-  </div>
-  <p class="text-text-secondary mb-6">
-    Thoughts on distributed systems, open source leadership, and software engineering philosophy
-  </p>
+  </SectionHeader>
 
   <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
     {
       LINKEDIN_ARTICLES.map((article) => (
-        <Card href={article.url}>
+        <Card href={article.url} glow>
           <Badge variant="ghost" size="sm" class="mb-3">
             Published on LinkedIn
           </Badge>
           <h3 class="text-text-primary mb-2 text-base font-semibold">{article.title}</h3>
-          <p class="text-text-secondary mb-3 text-sm">{article.excerpt}</p>
+          <p class="text-text-secondary mb-3 text-sm leading-relaxed">{article.excerpt}</p>
           <div class="text-text-muted flex items-center justify-between text-xs">
             <time datetime={article.publishedAt}>{formatDate(article.publishedAt)}</time>
             <span class="text-accent inline-flex items-center gap-1">

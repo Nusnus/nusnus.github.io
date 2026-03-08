@@ -1,13 +1,18 @@
 ---
 import RepoCard from '@components/ui/RepoCard.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
 import { loadCeleryOrgRepos } from '@lib/data/loader';
 
 const repos = (await loadCeleryOrgRepos()) ?? [];
 ---
 
-<section id="celery-organization" aria-label="Celery Organization">
-  <h2 class="mb-2 text-3xl font-bold tracking-tight">Celery Organization</h2>
-  <p class="text-text-secondary mb-6">
+<section id="celery-organization" class="animate-section" aria-label="Celery Organization">
+  <SectionHeader title="Celery Organization">
+    <Fragment slot="default">
+      <!-- Empty: subtitle handled below for link support -->
+    </Fragment>
+  </SectionHeader>
+  <p class="text-text-secondary -mt-4 mb-6 pl-4 text-sm">
     Additional repositories I contribute to across the
     <a
       href="https://github.com/celery"

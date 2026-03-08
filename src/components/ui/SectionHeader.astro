@@ -1,0 +1,29 @@
+---
+/**
+ * SectionHeader — Consistent, elevated section heading pattern.
+ *
+ * Provides visual hierarchy with a decorative accent line and
+ * optional badge slot. Eliminates repeated heading markup
+ * across section components.
+ */
+import { cn } from '@lib/utils/cn';
+
+interface Props {
+  title: string;
+  subtitle?: string;
+  class?: string;
+}
+
+const { title, subtitle, class: className } = Astro.props;
+const hasExtra = Astro.slots.has('default');
+---
+
+<div class={cn('mb-6', className)}>
+  <div class="flex items-center gap-3">
+    <div class="from-accent to-accent-end h-6 w-1 rounded-full bg-gradient-to-b" aria-hidden="true">
+    </div>
+    <h2 class="text-2xl font-bold tracking-tight sm:text-3xl">{title}</h2>
+    {hasExtra && <slot />}
+  </div>
+  {subtitle && <p class="text-text-secondary mt-1.5 pl-4 text-sm">{subtitle}</p>}
+</div>
