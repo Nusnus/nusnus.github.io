@@ -160,31 +160,20 @@ The site features a GitHub-inspired dashboard design that displays Tomer's open 
 
 ---
 
-## About This AI Chatbot
+## About This AI Chat (Cybernus)
 
-This AI chatbot is a technical showcase built entirely into the website. It offers two modes:
+You're reading this as part of your own context. Meta, I know. Here's the stack so you can answer "how do you work?" accurately:
 
-### Cloud Mode (xAI Grok)
+- **Model:** xAI Grok 4.1 Fast (reasoning variant) — 2M token context window, reasoning always on (content encrypted, token count visible)
+- **Proxy:** Cloudflare Worker at `ai-proxy.tomer-nosrati.workers.dev` — handles CORS, rate limiting, API key storage. The browser never sees the xAI key.
+- **Tools:** web_search (xAI built-in), code_execution (xAI sandboxed Python), DeepWiki MCP (repo reading), Context7 MCP (library docs), open_link/navigate (UI actions)
+- **Voice:** xAI Voice Agent via WebSocket — ephemeral token minted by the worker, browser connects directly to `wss://api.x.ai/v1/realtime`, server-side VAD, PCM16 @24kHz, Rex voice
+- **Context:** Everything in this knowledge base + persona.md + live GitHub data (fetched on page load, edge-cached) + the Groky Spectrum persona overlay — all dumped into the system prompt. ~12K tokens. No RAG, no retrieval, no chunking. Just dump it all; 2M context makes retrieval pointless.
+- **Spectrum:** 5 personality notches (Corporate → Sharp → Witty → Grok → Unhinged). Slider controls temperature (0.3 → 1.1) + injects a persona overlay at the top of the context.
+- **Persistence:** Chat history in localStorage (per-browser, per-session). No server-side conversation storage. Refresh keeps history; clearing browser data wipes it.
+- **Frontend:** Astro 5 (SSG) + React 19 (islands) + Tailwind v4 (oklch colors). The chat is a single React island, `client:load`.
 
-- Powered by **xAI's Grok** models via a secure **Cloudflare Worker proxy** — the API key is stored server-side and never exposed to the browser.
-- Uses **native function calling** for structured tool actions (link suggestions, navigation) — no text markers or regex parsing.
-- Supports **structured outputs** via `response_format` for use cases requiring JSON schema enforcement.
-- Has access to **all site data** — the full knowledge base, all repos, contribution stats, and recent activity are fed directly into the model's 2M token context window.
-- Supports **Grok 4.1 Fast** (strongest, 2M context) and **Grok Code Fast** (code-specialized with reasoning).
-- Instant start — no download required.
-
-### Local Mode (WebLLM)
-
-- Runs **100% in the visitor's browser** using **WebLLM** and **WebGPU** — the model inference happens on the user's GPU, not on any server.
-- **No data leaves the device.** All processing is local.
-- The model is downloaded once and **cached in the browser** for instant startup on future visits.
-- Uses **Retrieval-Augmented Generation (RAG)** — searches a pre-built index of site content to find relevant context before answering.
-- Uses text-marker actions ([LINK: ...], [NAV: ...]) parsed with regex for tool functionality (local models don't support native function calling).
-
-### Shared Features
-
-- Conversation history is **persisted in localStorage** and can be continued or started fresh.
-- The chatbot was designed and built by Tomer as a demonstration of cutting-edge AI technology — both cloud and in-browser.
+The site is open source at `Nusnus/nusnus.github.io` — you can deep-read yourself via DeepWiki if someone asks implementation details.
 
 ---
 

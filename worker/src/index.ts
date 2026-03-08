@@ -4,6 +4,12 @@
  * Proxies requests to xAI (Grok) via the Responses API.
  * The API key is stored as a Cloudflare secret — never in source code.
  *
+ * Routes:
+ *   POST /v1/responses — proxy to xAI Responses API (SSE streaming + JSON)
+ *   POST /voice/token  — mint ephemeral token for xAI Voice Agent WS
+ *   GET  /github/*     — GitHub data proxy (profile, repos, activity…)
+ *   GET  /             — health check
+ *
  * Security layers:
  *  1. Origin allowlist (CORS)
  *  2. Method restriction (POST only, OPTIONS for preflight)
@@ -52,6 +58,7 @@ const ALLOWED_ORIGINS: ReadonlySet<string> = new Set([
 ]);
 
 const XAI_RESPONSES_URL = 'https://api.x.ai/v1/responses';
+const XAI_VOICE_TOKEN_URL = 'https://api.x.ai/v1/realtime/client_secrets';
 
 /** Models visitors are allowed to use. Prevents switching to costly models. */
 const ALLOWED_MODELS: ReadonlySet<string> = new Set([
@@ -62,12 +69,20 @@ const ALLOWED_MODELS: ReadonlySet<string> = new Set([
   'grok-code-fast-1',
 ]);
 
-const DEFAULT_MODEL = 'grok-4-1-fast';
+const DEFAULT_MODEL = 'grok-4-1-fast-reasoning';
 
 /** Hard limits to prevent abuse. */
-const MAX_REQUEST_BYTES = 131_072; // 128 KB — accommodates full context + tools + chat history
-const MAX_OUTPUT_TOKENS_CAP = 1024;
-const MAX_INPUT_ITEMS = 30;
+const MAX_REQUEST_BYTES = 262_144; // 256 KB — full context + MCP tool defs + chat history
+const MAX_OUTPUT_TOKENS_CAP = 2048;
+const MAX_INPUT_ITEMS = 40;
+const MAX_TOOLS = 20;
+const VOICE_TOKEN_TTL_SECONDS = 300;
+
+/** MCP server URLs the client is allowed to request. */
+const ALLOWED_MCP_SERVERS: ReadonlySet<string> = new Set([
+  'https://mcp.deepwiki.com/mcp',
+  'https://mcp.context7.com/mcp',
+]);
 
 /** Simple in-memory rate limiter (per-isolate, resets on cold start). */
 const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
@@ -151,8 +166,53 @@ export default {
       return jsonResponse({ error: 'Method not allowed' }, 405, origin);
     }
 
-    // ── Path guard — only /v1/responses is accepted ──
+    // ── Route dispatch ──
     const postPath = new URL(request.url).pathname;
+
+    // ── Voice ephemeral token ──
+    // Browser connects to wss://api.x.ai/v1/realtime directly using this token
+    // in the sec-websocket-protocol header. No WS proxy needed.
+    if (postPath === '/voice/token') {
+      if (!isAllowed) return jsonResponse({ error: 'Forbidden' }, 403);
+      const clientIP = request.headers.get('CF-Connecting-IP') ?? 'unknown';
+      if (isRateLimited(clientIP)) {
+        return jsonResponse({ error: 'Rate limit exceeded' }, 429, origin);
+      }
+      if (!env.XAI_API_KEY) return jsonResponse({ error: 'Server misconfigured' }, 500, origin);
+
+      try {
+        const tokenRes = await fetch(XAI_VOICE_TOKEN_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${env.XAI_API_KEY}`,
+          },
+          body: JSON.stringify({ expires_after: { seconds: VOICE_TOKEN_TTL_SECONDS } }),
+        });
+        if (!tokenRes.ok) {
+          const errText = await tokenRes.text().catch(() => '');
+          console.error(`[ai-proxy] voice token ${tokenRes.status}: ${errText}`);
+          return jsonResponse({ error: 'Failed to mint voice token' }, 502, origin);
+        }
+        const data = (await tokenRes.json()) as {
+          client_secret?: { value?: string } | string;
+          value?: string;
+        };
+        // xAI may return {value} or {client_secret: {value}} — handle both
+        const token =
+          typeof data.client_secret === 'string'
+            ? data.client_secret
+            : (data.client_secret?.value ?? data.value);
+        if (!token) {
+          return jsonResponse({ error: 'Token response missing value' }, 502, origin);
+        }
+        return jsonResponse({ token }, 200, origin);
+      } catch (err) {
+        console.error(`[ai-proxy] voice token error: ${err instanceof Error ? err.message : err}`);
+        return jsonResponse({ error: 'Failed to reach AI provider' }, 502, origin);
+      }
+    }
+
     if (postPath !== '/v1/responses') {
       return jsonResponse({ error: 'Not found' }, 404, origin);
     }
@@ -212,6 +272,22 @@ export default {
       }
       if (typeof msg.content !== 'string') {
         return jsonResponse({ error: 'Each input item must have string content' }, 400, origin);
+      }
+    }
+
+    // ── Tool validation — cap count + MCP server allowlist ──
+    if (body.tools !== undefined) {
+      if (!Array.isArray(body.tools)) {
+        return jsonResponse({ error: 'tools must be an array' }, 400, origin);
+      }
+      if (body.tools.length > MAX_TOOLS) {
+        return jsonResponse({ error: `Too many tools (max ${MAX_TOOLS})` }, 400, origin);
+      }
+      for (const tool of body.tools) {
+        const t = tool as { type?: string; server_url?: string };
+        if (t.type === 'mcp' && t.server_url && !ALLOWED_MCP_SERVERS.has(t.server_url)) {
+          return jsonResponse({ error: 'MCP server not allowed' }, 400, origin);
+        }
       }
     }
 

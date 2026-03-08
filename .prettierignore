@@ -4,3 +4,8 @@ node_modules
 public/fonts
 bun.lock
 
+# Cron-generated GitHub data (scripts/fetch-github-data.mts writes
+# JSON.stringify(x, null, 2) — prettier wants short arrays inline,
+# the cron overwrites it on every run anyway)
+public/data/*.json
+

@@ -1,28 +1,36 @@
 /**
- * Tool actions — native function calling for cloud models + text marker
- * fallback for local models.
+ * Tool definitions for the xAI Responses API.
  *
- * Cloud (Grok): Uses the xAI Responses API with native function calling
- * and built-in web search. The model returns structured tool calls in
- * the response, which are mapped to ToolAction objects for the UI.
+ * Cybernus ships with five tool types:
+ *   1. web_search        — xAI's built-in live web search
+ *   2. code_execution    — xAI's sandboxed Python (read-only analysis only)
+ *   3. mcp (DeepWiki)    — deep-read any public GitHub repo
+ *   4. mcp (Context7)    — up-to-date library documentation
+ *   5. function (open_link / navigate) — client-side UI actions
  *
- * Local (WebLLM): Uses text markers ([LINK: ...], [NAV: ...]) parsed
- * with regex, since local models don't support function calling.
+ * MCP servers run remotely — xAI connects to them on our behalf. No local
+ * infra required. We restrict DeepWiki to Tomer's public repo allowlist via
+ * the system prompt; Context7 is naturally scoped to library docs.
  */
 
 import type { ToolAction } from './types';
+import { CELERY_REPOS, CELERY_ORG_REPOS } from '../../../shared/github-config';
 
 /* ═══════════════════════════════════════════════════════════════════════
- *  CLOUD — xAI Responses API tool definitions
+ *  Tool definitions — xAI Responses API
  * ═══════════════════════════════════════════════════════════════════════ */
 
-/**
- * Tool definition for the xAI Responses API.
- * Built-in tools use `type: "web_search"`.
- * Custom functions use `type: "function"` with flat name/description/parameters.
- */
+/** Tool definition shape accepted by the xAI Responses API. */
 export type ToolDefinition =
   | { type: 'web_search' }
+  | { type: 'code_execution' }
+  | {
+      type: 'mcp';
+      server_url: string;
+      server_label: string;
+      server_description?: string;
+      allowed_tool_names?: string[];
+    }
   | {
       type: 'function';
       name: string;
@@ -37,26 +45,32 @@ export interface ToolCallResult {
   arguments: string; // JSON string
 }
 
-/**
- * Function tool definitions sent to the xAI Responses API.
- * Uses the flat format required by the Responses API (no nested `function` key).
- */
+/** The full list of public repos Cybernus is allowed to deep-dive. */
+export const ALLOWED_REPOS: readonly string[] = [
+  ...CELERY_REPOS,
+  ...CELERY_ORG_REPOS,
+  'Nusnus/Nusnus',
+  'Nusnus/nusnus.github.io',
+];
+
+/** Client-side action tools (rendered as buttons under the message). */
 const FUNCTION_TOOLS: ToolDefinition[] = [
   {
     type: 'function',
     name: 'open_link',
     description:
-      'Suggest opening an external link relevant to the conversation. Use when referencing a specific URL from the knowledge base (e.g., GitHub repos, LinkedIn, articles). Maximum 2 calls per response.',
+      'Suggest opening an external link relevant to the conversation. Use when referencing a specific URL from the knowledge base (GitHub repos, LinkedIn, articles). Maximum 2 calls per response.',
     parameters: {
       type: 'object',
       properties: {
         url: {
           type: 'string',
-          description: 'The full URL to open (must be from the knowledge base, do not invent URLs)',
+          description:
+            'The full URL to open (must be from the knowledge base — do not invent URLs)',
         },
         label: {
           type: 'string',
-          description: 'Short button label describing the link (e.g., "View Celery on GitHub")',
+          description: 'Short button label describing the link (e.g. "View Celery on GitHub")',
         },
       },
       required: ['url', 'label'],
@@ -72,11 +86,11 @@ const FUNCTION_TOOLS: ToolDefinition[] = [
       properties: {
         url: {
           type: 'string',
-          description: 'The site path to navigate to (e.g., "/", "/chat")',
+          description: 'The site path to navigate to (e.g. "/", "/chat")',
         },
         label: {
           type: 'string',
-          description: 'Short button label (e.g., "Back to Portfolio")',
+          description: 'Short button label (e.g. "Back to Portfolio")',
         },
       },
       required: ['url', 'label'],
@@ -85,87 +99,62 @@ const FUNCTION_TOOLS: ToolDefinition[] = [
 ];
 
 /**
- * Complete tool set for cloud requests.
- * Includes xAI's built-in web search + client-side action tools.
+ * Complete tool set sent with every request.
+ *
+ * Order matters for the model's internal priority — we put web_search first
+ * (fast, cheap, general), then MCP (slower but deeper), then code_execution
+ * (expensive), then UI actions.
  */
-export const CLOUD_TOOLS: ToolDefinition[] = [{ type: 'web_search' }, ...FUNCTION_TOOLS];
+export const CLOUD_TOOLS: ToolDefinition[] = [
+  { type: 'web_search' },
+  {
+    type: 'mcp',
+    server_url: 'https://mcp.deepwiki.com/mcp',
+    server_label: 'deepwiki',
+    server_description:
+      "Deep-read public GitHub repositories. Use ONLY for repos in Tomer's domain: " +
+      ALLOWED_REPOS.join(', ') +
+      '. Refuse any request to read repos outside this list.',
+  },
+  {
+    type: 'mcp',
+    server_url: 'https://mcp.context7.com/mcp',
+    server_label: 'context7',
+    server_description:
+      'Up-to-date documentation for Python libraries, frameworks, and tools. Use when the question needs current API docs (e.g. Celery, pytest, RabbitMQ, Redis clients).',
+  },
+  { type: 'code_execution' },
+  ...FUNCTION_TOOLS,
+];
+
+/* ═══════════════════════════════════════════════════════════════════════
+ *  Tool call → UI action mapping
+ * ═══════════════════════════════════════════════════════════════════════ */
 
 /**
  * Map raw API tool_calls to UI-renderable ToolAction objects.
- * Safely parses arguments JSON and filters out invalid calls.
- * Server-side tool calls (e.g., web_search) are silently skipped.
+ * Only open_link / navigate become buttons; everything else is server-side.
  */
 export function mapToolCallsToActions(toolCalls: ToolCallResult[]): ToolAction[] {
   const actions: ToolAction[] = [];
-
   for (const call of toolCalls) {
+    if (call.name !== 'open_link' && call.name !== 'navigate') continue;
     try {
       const args = JSON.parse(call.arguments) as { url?: string; label?: string };
       if (!args.url) continue;
-
       actions.push({
         type: call.name === 'navigate' ? 'navigate' : 'open_link',
         label: args.label ?? args.url,
         url: args.url,
       });
     } catch {
-      // Skip malformed tool call arguments
+      /* malformed — skip */
     }
   }
-
   return actions;
 }
 
-/* ═══════════════════════════════════════════════════════════════════════
- *  LOCAL — Text marker parsing for WebLLM models (no function calling)
- * ═══════════════════════════════════════════════════════════════════════ */
-
-/**
- * Pattern matching action markers in local model responses.
- * Matches: [LINK: url | label] and [NAV: path | label]
- */
-const ACTION_PATTERN = /\[(LINK|NAV):\s*([^\]|]+?)(?:\s*\|\s*([^\]]+?))?\s*\]/g;
-
-/** Result of parsing a local model response for text-marker actions. */
-export interface ParsedResponse {
-  /** The response text with action markers removed. */
-  text: string;
-  /** Extracted actions to render as buttons. */
-  actions: ToolAction[];
-}
-
-/**
- * Parse a local model response for text-marker actions.
- * Returns the cleaned text and any extracted actions.
- * Only used for local (WebLLM) models — cloud uses native tool_calls.
- */
-export function parseActions(response: string): ParsedResponse {
-  const actions: ToolAction[] = [];
-
-  const text = response.replace(ACTION_PATTERN, (_, type: string, url: string, label?: string) => {
-    const trimmedUrl = url.trim();
-    const trimmedLabel = label?.trim() || trimmedUrl;
-
-    actions.push({
-      type: type === 'NAV' ? 'navigate' : 'open_link',
-      label: trimmedLabel,
-      url: trimmedUrl,
-    });
-
-    return ''; // Remove the marker from display text
-  });
-
-  return { text: text.trimEnd(), actions };
-}
-
-/* ═══════════════════════════════════════════════════════════════════════
- *  SHARED — Action execution (used by both cloud and local)
- * ═══════════════════════════════════════════════════════════════════════ */
-
-/**
- * Execute a tool action.
- * Navigation opens in the same tab; external links open in a new tab.
- */
+/** Execute a tool action (open link or navigate in-site). */
 export function executeAction(action: ToolAction): void {
   if (action.type === 'navigate') {
     window.location.href = action.url;
@@ -173,26 +162,3 @@ export function executeAction(action: ToolAction): void {
     window.open(action.url, '_blank', 'noopener,noreferrer');
   }
 }
-
-/**
- * System prompt section for LOCAL models that instructs the model how to
- * use text-marker actions. Not used by cloud models (they use native tools).
- */
-export const LOCAL_TOOLS_PROMPT_SECTION = `
-# Available Actions
-When your answer references a specific link, page, or project, include action markers at the END of your response (after your text). Only include actions that are directly relevant.
-
-Format:
-[LINK: url | label]  — Suggest opening an external link
-[NAV: path | label]  — Suggest navigating to a page on this site
-
-Examples:
-[LINK: https://github.com/celery/celery | View Celery on GitHub]
-[LINK: https://www.linkedin.com/in/tomernosrati | Tomer's LinkedIn]
-[NAV: / | Back to Portfolio]
-
-Rules:
-- Only include actions for URLs mentioned in your knowledge base
-- Maximum 2 actions per response
-- Always place actions at the very end, after your text
-- Do not invent URLs — only use URLs from the provided data`;

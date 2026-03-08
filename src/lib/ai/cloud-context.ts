@@ -1,14 +1,23 @@
 /**
- * Cloud context builder — feeds ALL available data to cloud models.
+ * Cloud context builder — assembles the full system prompt for cloud models.
  *
- * Unlike the RAG approach (designed for 4K context WebLLM models), cloud
- * models like Grok have massive context windows (2M tokens). We dump
- * everything — no chunking, no BM25 search, no retrieval failures.
+ * Grok's 2M token context makes retrieval pointless. We dump everything:
+ * runtime environment → spectrum overlay → persona → knowledge → live data
+ * → tool docs. ~12K tokens. No RAG, no chunking, no BM25.
  *
- * Data is fetched from the Cloudflare Worker (live, edge-cached) with
- * automatic fallback to build-time static JSON if the Worker is unavailable.
- * Total context: ~12K tokens — trivial for a 2M context model.
+ * Section order matters (prompt primacy — earlier = more weight):
+ *   1. Runtime environment (WHERE am I, WHO am I, WHAT voice)
+ *   2. Spectrum overlay (personality dial — overrides persona.md tone)
+ *   3. Persona (Cybernus-as-Tomer identity — skipped for roast widget)
+ *   4. Knowledge base (facts about Tomer, Celery, career)
+ *   5. Live GitHub data (edge-cached via Worker, static JSON fallback)
+ *   6. Static site content (articles, collaborations, links)
+ *   7. Tool capabilities + response formatting contract
+ *   8. Optional caller-provided trailer
  */
+
+import { ALLOWED_REPOS } from './tools';
+import { describeRuntime, shouldLoadPersona, type RuntimeContext } from './runtime-context';
 
 import type { ActivityData, RepoData, ContributionGraphData, ProfileData } from '@lib/github/types';
 import {
@@ -69,21 +78,60 @@ async function fetchContextFile(path: string): Promise<string> {
 }
 
 /**
- * Fetch ALL data sources and build a comprehensive context string.
- * Tries the live Worker endpoints first (cached at edge), falls back to
- * build-time static JSON if the Worker is unavailable.
- *
- * @param additionalContext Optional situational context appended at the end
- *   (e.g. roast widget tells Grok it's running on the homepage while the
- *   visitor is watching the portfolio).
+ * Response-formatting contract. Tells the model what the chat UI can render
+ * so it knows how rich it can go without producing broken output.
  */
-export async function buildCloudContext(additionalContext?: string): Promise<string> {
+const RESPONSE_FORMATTING = `# Response Formatting
+
+The chat UI renders GitHub-flavored markdown. You can use:
+- **Headings** (\`#\`, \`##\`, \`###\`), **bold**, *italic*, \`inline code\`
+- **Fenced code blocks** with language tags — \`\`\`python, \`\`\`typescript, \`\`\`bash (syntax highlighted)
+- **Tables** — GFM pipe syntax (\`| col | col |\`) — use for comparisons, version matrices, broker feature grids
+- **Links** — \`[text](url)\` renders clickable. Bare URLs also auto-link.
+- **Lists** — \`-\` or \`1.\`
+- **Mermaid diagrams** — \`\`\`mermaid blocks render as interactive SVG (sequence diagrams, flowcharts). Use when a picture genuinely helps.
+- **Citations** — \`[[1]](url)\` renders as a superscript link for web-search sources
+
+A wall of plain text is a wasted canvas. Structure your answers.`;
+
+/**
+ * Coding-expertise section. Tells the model how to behave when asked about
+ * code in the allowlisted repos — use deepwiki proactively, answer with
+ * actual code from the actual files.
+ */
+const CODING_EXPERTISE = `# Coding Expertise
+
+I wrote or reviewed most of the code in my repos. When asked implementation questions:
+
+1. **Lean on deepwiki** — if the question is about internals ("how does X work?", "where is Y defined?"), read the actual current code. Fresh code beats stale memory.
+2. **Answer with real code** — quote actual functions from actual files, with file paths. Not pseudocode.
+3. **Know the conventions** — Celery ecosystem is Python 3.9+, pytest, Black formatting, type hints encouraged but not mandatory, docstrings in reStructuredText. pytest-celery is fully typed. This site is TypeScript strict mode, Tailwind v4, React 19.
+4. **context7 for APIs** — if the answer needs current docs for pytest/RabbitMQ/Redis/etc., pull them.
+5. **code_execution to demonstrate** — if a small runnable example would help, write it, run it, show the output.
+
+Be the person who actually knows the codebase, not the person who read the README once.`;
+
+/**
+ * Fetch ALL data sources and build the complete system context.
+ *
+ * @param runtime Where and how the agent is running (chat-page vs roast-widget).
+ *   Determines voice, page description, and whether persona.md is loaded.
+ * @param personaOverlay Spectrum-driven personality dial, layered after the
+ *   runtime environment so it wins over persona.md's default tone.
+ * @param additionalContext Optional trailing section from the caller.
+ */
+export async function buildCloudContext(
+  runtime: RuntimeContext,
+  personaOverlay?: string,
+  additionalContext?: string,
+): Promise<string> {
   const sections: string[] = [];
+  const loadPersona = shouldLoadPersona(runtime.surface);
 
   // Fetch all data sources in parallel — context files + Worker data (static fallback)
   const [persona, knowledge, profileRes, reposRes, orgReposRes, activityRes, graphRes] =
     await Promise.all([
-      fetchContextFile('/data/ai-context/persona.md'),
+      loadPersona ? fetchContextFile('/data/ai-context/persona.md') : Promise.resolve(''),
       fetchContextFile('/data/ai-context/knowledge.md'),
       fetchGitHub('profile', '/data/profile.json'),
       fetchGitHub('repos', '/data/repos.json'),
@@ -92,10 +140,16 @@ export async function buildCloudContext(additionalContext?: string): Promise<str
       fetchGitHub('contributions', '/data/contribution-graph.json'),
     ]);
 
-  // ── Persona (Grok personality) — must come first ──
+  // ── 1. Runtime environment (self-awareness — WHERE/WHO/WHAT voice) ──
+  sections.push(describeRuntime(runtime));
+
+  // ── 2. Spectrum persona overlay (personality dial) ──
+  if (personaOverlay) sections.push(personaOverlay);
+
+  // ── 3. Persona (Cybernus-as-Tomer — skipped for roast widget) ──
   if (persona) sections.push(persona);
 
-  // ── Knowledge base (facts about Tomer, projects, etc.) ──
+  // ── 4. Knowledge base ──
   if (knowledge) sections.push(knowledge);
 
   // ── GitHub profile ──
@@ -190,6 +244,21 @@ export async function buildCloudContext(additionalContext?: string): Promise<str
       `- Celery Open Collective: ${SOCIAL_LINKS.openCollective}`,
   );
 
+  // ── 7. Tool capabilities + formatting + coding ──
+  sections.push(
+    `# Tool Capabilities\n` +
+      `- **web_search** — live web search. Use for anything time-sensitive (releases, news, dates).\n` +
+      `- **deepwiki** (MCP) — deep-read public GitHub repos. Use ONLY for:\n  ` +
+      ALLOWED_REPOS.map((r) => `\`${r}\``).join(', ') +
+      `\n  Refuse any repo outside this list.\n` +
+      `- **context7** (MCP) — current library docs (Python/Celery/pytest/RabbitMQ/Redis).\n` +
+      `- **code_execution** — sandboxed Python. Demonstrations, calculations, analysis. Read-only.\n` +
+      `- **open_link / navigate** — clickable buttons in the chat. Max 2 per response.`,
+  );
+  sections.push(RESPONSE_FORMATTING);
+  sections.push(CODING_EXPERTISE);
+
+  // ── 8. Caller trailer ──
   if (additionalContext) {
     sections.push(additionalContext);
   }

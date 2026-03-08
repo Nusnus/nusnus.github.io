@@ -376,6 +376,40 @@ function renderBlock(block: string, key: number): ReactNode {
 
   const lines = trimmed.split('\n');
 
+  // GFM table: header row, separator row (| --- | --- |), body rows
+  if (lines.length >= 2 && isTableSeparator(lines[1] ?? '')) {
+    const tableRows = lines.filter((l) => l.trim().startsWith('|') || l.includes('|'));
+    if (tableRows.length >= 2) {
+      const [headerRow, , ...bodyRows] = tableRows;
+      return (
+        <div key={key} className="my-2 overflow-x-auto">
+          <table className="border-border w-full border-collapse text-xs">
+            <thead>
+              <tr className="bg-bg-elevated">
+                {parseTableRow(headerRow ?? '').map((cell, j) => (
+                  <th key={j} className="border-border border px-2 py-1 text-left font-semibold">
+                    {renderInline(cell)}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {bodyRows.map((row, i) => (
+                <tr key={i}>
+                  {parseTableRow(row).map((cell, j) => (
+                    <td key={j} className="border-border border px-2 py-1">
+                      {renderInline(cell)}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+    }
+  }
+
   // Heading: # ## ###
   if (lines.length === 1) {
     const headingMatch = trimmed.match(/^(#{1,3})\s+(.+)$/);
@@ -444,13 +478,33 @@ function renderBlock(block: string, key: number): ReactNode {
   );
 }
 
-/** Render inline markdown: bold, italic, code, links, citations. */
+/** Check if a line is a GFM table separator row: | --- | :---: | ---: | */
+function isTableSeparator(line: string): boolean {
+  const trimmed = line.trim();
+  if (!trimmed.includes('|')) return false;
+  // Remove leading/trailing pipe, split cells, check each is only :, -, and whitespace
+  const cells = trimmed.replace(/^\||\|$/g, '').split('|');
+  return cells.length > 0 && cells.every((c) => /^\s*:?-{3,}:?\s*$/.test(c));
+}
+
+/** Parse a GFM table row into cell contents. */
+function parseTableRow(line: string): string[] {
+  return line
+    .trim()
+    .replace(/^\||\|$/g, '')
+    .split('|')
+    .map((c) => c.trim());
+}
+
+/** Render inline markdown: bold, italic, code, links, citations, bare URLs. */
 function renderInline(text: string): ReactNode {
   // Split on inline patterns, preserving delimiters
   const parts: ReactNode[] = [];
-  // Groups: 2=bold, 3=italic, 4=code, 5=citation-num, 6=citation-url, 7=link-text, 8=link-url
+  // Groups: 2=bold, 3=italic, 4=code, 5=cite-num, 6=cite-url, 7=link-text, 8=link-url, 9=bare-url
+  // Bare URL: https?:// followed by non-whitespace, non-closing-bracket chars.
+  // Trailing punctuation (.,!?;:) is stripped so "see https://x.com." links "https://x.com".
   const regex =
-    /(\*\*(.+?)\*\*|\*(.+?)\*|`([^`]+)`|\[\[(\d+)\]\]\(([^)]+)\)|\[([^\]]+)\]\(([^)]+)\))/g;
+    /(\*\*(.+?)\*\*|\*(.+?)\*|`([^`]+)`|\[\[(\d+)\]\]\(([^)]+)\)|\[([^\]]+)\]\(([^)]+)\)|(https?:\/\/[^\s<>)\]]+))/g;
 
   let lastIndex = 0;
   let match: RegExpExecArray | null;
@@ -509,6 +563,27 @@ function renderInline(text: string): ReactNode {
           {match[7]}
         </a>,
       );
+    } else if (match[9]) {
+      // Bare URL — strip trailing sentence punctuation
+      let url = match[9];
+      let trailing = '';
+      const trailMatch = url.match(/[.,!?;:]+$/);
+      if (trailMatch) {
+        trailing = trailMatch[0];
+        url = url.slice(0, -trailing.length);
+      }
+      parts.push(
+        <a
+          key={match.index}
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-accent hover:underline"
+        >
+          {url}
+        </a>,
+      );
+      if (trailing) parts.push(trailing);
     }
 
     lastIndex = match.index + match[0].length;
