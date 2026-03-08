@@ -129,7 +129,9 @@ const DIAGRAM_DEFAULT_ZOOM = 1.0;
 /** Fullscreen diagram viewer overlay. */
 function DiagramViewer({ svgHtml, onClose }: { svgHtml: string; onClose: () => void }) {
   const [zoom, setZoom] = useState(DIAGRAM_DEFAULT_ZOOM);
+  const [fitZoom, setFitZoom] = useState(DIAGRAM_DEFAULT_ZOOM);
   const contentRef = useRef<HTMLDivElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   const handleZoomIn = useCallback(
     () => setZoom((z) => Math.min(z + DIAGRAM_ZOOM_STEP, DIAGRAM_MAX_ZOOM)),
@@ -139,7 +141,7 @@ function DiagramViewer({ svgHtml, onClose }: { svgHtml: string; onClose: () => v
     () => setZoom((z) => Math.max(z - DIAGRAM_ZOOM_STEP, DIAGRAM_MIN_ZOOM)),
     [],
   );
-  const handleZoomReset = useCallback(() => setZoom(DIAGRAM_DEFAULT_ZOOM), []);
+  const handleZoomReset = useCallback(() => setZoom(fitZoom), [fitZoom]);
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -149,16 +151,33 @@ function DiagramViewer({ svgHtml, onClose }: { svgHtml: string; onClose: () => v
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [onClose]);
 
-  // Inject SVG and remove width constraints so it renders at natural size
+  // Inject SVG, remove width constraints, and compute fit-to-screen zoom
   useEffect(() => {
-    if (!contentRef.current) return;
+    if (!contentRef.current || !scrollAreaRef.current) return;
     contentRef.current.innerHTML = svgHtml;
     const svgEl = contentRef.current.querySelector('svg');
     if (svgEl) {
       svgEl.style.width = '';
       svgEl.style.maxWidth = 'none';
       svgEl.style.height = 'auto';
-      svgEl.style.minWidth = '800px';
+      svgEl.style.minWidth = '';
+
+      // Measure the SVG's natural dimensions
+      const svgRect = svgEl.getBoundingClientRect();
+      const svgW = svgRect.width || 800;
+      const svgH = svgRect.height || 600;
+
+      // Measure available space (scroll area minus padding)
+      const areaRect = scrollAreaRef.current.getBoundingClientRect();
+      const padding = 64; // 32px padding on each side
+      const availW = areaRect.width - padding;
+      const availH = areaRect.height - padding;
+
+      // Calculate fit-to-screen zoom
+      const computed = Math.min(availW / svgW, availH / svgH);
+      const clamped = Math.min(Math.max(computed, DIAGRAM_MIN_ZOOM), DIAGRAM_MAX_ZOOM);
+      setFitZoom(clamped);
+      setZoom(clamped);
     }
   }, [svgHtml]);
 
@@ -220,7 +239,7 @@ function DiagramViewer({ svgHtml, onClose }: { svgHtml: string; onClose: () => v
       </div>
 
       {/* Scrollable diagram area */}
-      <div className="relative z-10 flex-1 overflow-auto p-8">
+      <div ref={scrollAreaRef} className="relative z-10 flex-1 overflow-auto p-8">
         <div
           className="mx-auto inline-block origin-top-left transition-transform duration-150 ease-out"
           style={{ zoom }}
