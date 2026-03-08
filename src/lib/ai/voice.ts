@@ -81,10 +81,14 @@ export interface VoiceCallbacks {
 
 /* ── Language mapping for SpeechRecognition ── */
 
+// Use broad language codes (no region) so the recognizer adapts to any accent.
+// Regional codes like 'en-US' bias recognition toward American pronunciation,
+// which fails for non-American speakers. Broad codes ('en', 'es', 'he') let
+// the browser's speech engine pick the best acoustic model automatically.
 const LANG_MAP: Record<string, string> = {
-  en: 'en-US',
-  es: 'es-CO',
-  he: 'he-IL',
+  en: 'en',
+  es: 'es',
+  he: 'he',
 };
 
 /* ── SpeechRecognition constructor (webkit prefix for Safari/older Chrome) ── */
@@ -177,7 +181,8 @@ export class VoiceSession {
       this.recognition.continuous = true;
       this.recognition.interimResults = true;
       this.recognition.lang = this.lang;
-      this.recognition.maxAlternatives = 1;
+      // More alternatives = better chance of correct transcription for accented speech
+      this.recognition.maxAlternatives = 3;
 
       this.recognition.onstart = () => {
         this.log('Speech recognition started');
@@ -193,7 +198,20 @@ export class VoiceSession {
           if (!result?.[0]) continue;
 
           if (result.isFinal) {
-            finalText += result[0].transcript;
+            // Pick the alternative with the highest confidence score.
+            // With maxAlternatives > 1, the browser returns multiple
+            // guesses — the best one isn't always at index 0 for
+            // non-native/accented speakers.
+            let bestTranscript = result[0].transcript;
+            let bestConfidence = result[0].confidence;
+            for (let j = 1; j < result.length; j++) {
+              const alt = result[j];
+              if (alt && alt.confidence > bestConfidence) {
+                bestTranscript = alt.transcript;
+                bestConfidence = alt.confidence;
+              }
+            }
+            finalText += bestTranscript;
           } else {
             interim += result[0].transcript;
           }
