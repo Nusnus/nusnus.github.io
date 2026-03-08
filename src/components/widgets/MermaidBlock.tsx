@@ -327,7 +327,10 @@ export default function MermaidBlock({ code, blockKey }: { code: string; blockKe
         tabIndex={0}
         onClick={() => !rendering && setIsViewerOpen(true)}
         onKeyDown={(e) => {
-          if ((e.key === 'Enter' || e.key === ' ') && !rendering) setIsViewerOpen(true);
+          if ((e.key === 'Enter' || e.key === ' ') && !rendering) {
+            e.preventDefault();
+            setIsViewerOpen(true);
+          }
         }}
         title="Click to expand diagram"
       >

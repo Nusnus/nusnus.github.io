@@ -532,7 +532,10 @@ export function ChatMessages({
                             handleExpand();
                           }}
                           onKeyDown={(e) => {
-                            if (e.key === 'Enter' || e.key === ' ') handleExpand();
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              handleExpand();
+                            }
                           }}
                           className="group/zoom relative cursor-zoom-in rounded-lg transition-colors hover:bg-white/[0.02]"
                           title="Click to expand"
