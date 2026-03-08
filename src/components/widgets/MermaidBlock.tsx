@@ -6,6 +6,7 @@
  * using unique IDs to avoid collisions when multiple diagrams appear.
  */
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { X, ZoomIn, ZoomOut, RotateCcw, Maximize2 } from 'lucide-react';
 
 let mermaidInitialized = false;
@@ -357,10 +358,13 @@ export default function MermaidBlock({ code, blockKey }: { code: string; blockKe
         )}
       </div>
 
-      {/* Fullscreen diagram viewer */}
-      {isViewerOpen && svgHtml && (
-        <DiagramViewer svgHtml={svgHtml} onClose={() => setIsViewerOpen(false)} />
-      )}
+      {/* Fullscreen diagram viewer — rendered via portal to escape CSS zoom context */}
+      {isViewerOpen &&
+        svgHtml &&
+        createPortal(
+          <DiagramViewer svgHtml={svgHtml} onClose={() => setIsViewerOpen(false)} />,
+          document.body,
+        )}
     </>
   );
 }
