@@ -592,9 +592,9 @@ export function ChatMessages({
 
           {/* Suggested questions — shown after welcome message only */}
           {isWelcomeOnly && (
-            <div className="px-4 py-4 md:px-8 lg:px-12">
+            <div className="px-4 py-6 md:px-8 lg:px-12">
               <div
-                className="cybernus-fade-in-up mx-auto grid max-w-3xl gap-2.5 sm:grid-cols-2"
+                className="cybernus-fade-in-up mx-auto grid max-w-3xl gap-3 sm:grid-cols-2"
                 style={{ animationDelay: '200ms' }}
               >
                 {SUGGESTED_QUESTIONS.map((q) => (
@@ -602,7 +602,7 @@ export function ChatMessages({
                     key={q}
                     onClick={() => onSendMessage(q)}
                     disabled={isGenerating}
-                    className="group border-border bg-bg-surface/50 text-text-secondary hover:border-accent/20 hover:bg-accent-muted hover:text-text-primary rounded-xl border px-4 py-3.5 text-left text-[13px] leading-relaxed transition-all"
+                    className="group border-border bg-bg-surface text-text-secondary hover:border-accent/40 hover:bg-accent-muted hover:text-text-primary rounded-xl border p-4 text-left text-[13px] leading-relaxed transition-all hover:-translate-y-0.5"
                   >
                     <span>{q}</span>
                   </button>

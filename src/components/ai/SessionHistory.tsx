@@ -29,8 +29,8 @@ export function SessionHistory({
   return (
     <div className="flex h-full flex-col overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2.5">
-        <span className="text-text-muted text-[11px] font-medium tracking-wider uppercase">
+      <div className="border-accent/30 flex items-center justify-between border-b px-5 py-3">
+        <span className="text-text-secondary text-[11px] font-semibold tracking-wider uppercase">
           {strings.history}
         </span>
         <div className="flex items-center gap-1">
@@ -53,7 +53,7 @@ export function SessionHistory({
       </div>
 
       {/* Session list */}
-      <div className="scrollbar-thin flex-1 overflow-y-auto px-2">
+      <div className="scrollbar-thin flex-1 overflow-y-auto px-3 pt-2">
         {sessions.length === 0 ? (
           <div className="flex flex-col items-center gap-2 px-4 py-8">
             <MessageSquare className="text-border h-8 w-8" />
@@ -68,10 +68,10 @@ export function SessionHistory({
                 <div
                   key={session.id}
                   className={cn(
-                    'group flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2.5 transition-all',
+                    'group flex cursor-pointer items-center gap-2.5 rounded-xl border px-3 py-2.5 transition-all',
                     isActive
-                      ? 'bg-accent-muted text-text-primary ring-accent/20 ring-1'
-                      : 'text-text-secondary hover:bg-bg-surface hover:text-text-primary',
+                      ? 'border-accent/40 bg-accent-muted text-text-primary'
+                      : 'text-text-secondary hover:border-border hover:bg-bg-surface hover:text-text-primary border-transparent',
                   )}
                   style={{ animationDelay: `${idx * 20}ms` }}
                   onClick={() => onSwitchSession(session)}
