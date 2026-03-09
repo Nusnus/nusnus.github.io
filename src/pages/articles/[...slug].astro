@@ -3,7 +3,7 @@ import type { GetStaticPaths, InferGetStaticPropsType } from 'astro';
 import { getCollection, render } from 'astro:content';
 import BaseLayout from '@layouts/BaseLayout.astro';
 import Badge from '@components/ui/Badge.astro';
-import { SOCIAL_LINKS } from '@config';
+
 import { formatDate } from '@lib/utils/date';
 
 export const getStaticPaths = (async () => {
@@ -140,56 +140,6 @@ const readingTime = Math.max(1, Math.round(wordCount / 200));
     <footer class="mt-14 sm:mt-20">
       <!-- Divider -->
       <div class="bg-border mb-8 h-px"></div>
-
-      <!-- Author Card -->
-      <div class="bg-bg-surface border-border mb-8 rounded-xl border p-5 sm:p-6">
-        <div class="flex items-start gap-4">
-          <img
-            src="https://avatars.githubusercontent.com/u/4662342?v=4"
-            alt="Tomer Nosrati"
-            width="48"
-            height="48"
-            class="rounded-full"
-            loading="lazy"
-          />
-          <div class="min-w-0 flex-1">
-            <p class="text-text-primary text-sm font-semibold">Written by Tomer Nosrati</p>
-            <p class="text-text-muted mt-0.5 text-xs">CEO & Tech Lead, Celery Organization</p>
-            <p class="text-text-secondary mt-2 text-sm leading-relaxed">
-              Software engineer and open source leader. Thoughts on distributed systems, open source
-              leadership, and software engineering philosophy.
-            </p>
-            <div class="mt-3 flex flex-wrap gap-2">
-              <a
-                href={SOCIAL_LINKS.linkedin}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="text-text-muted hover:text-accent text-xs transition-colors"
-              >
-                LinkedIn
-              </a>
-              <span class="text-border">·</span>
-              <a
-                href={SOCIAL_LINKS.twitter}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="text-text-muted hover:text-accent text-xs transition-colors"
-              >
-                X / Twitter
-              </a>
-              <span class="text-border">·</span>
-              <a
-                href={SOCIAL_LINKS.github}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="text-text-muted hover:text-accent text-xs transition-colors"
-              >
-                GitHub
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
 
       <!-- Bottom Actions -->
       <div class="flex items-center justify-between">
