@@ -142,6 +142,48 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
     };
   }, []);
 
+  /* ─── Global keyboard shortcuts ─── */
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      // Don't intercept when modifier keys are held (let browser native shortcuts work)
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+      // Escape: stop generation → close mobile sidebar → blur input
+      if (e.key === 'Escape') {
+        if (isGenerating) {
+          abortRef.current?.abort();
+          setIsGenerating(false);
+          return;
+        }
+        if (showSidebar) {
+          setShowSidebar(false);
+          return;
+        }
+        // Blur active input so user can use other shortcuts
+        if (document.activeElement instanceof HTMLElement) {
+          document.activeElement.blur();
+        }
+        return;
+      }
+
+      // Skip shortcuts when user is typing in an input/textarea/contenteditable
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement).isContentEditable) {
+        return;
+      }
+
+      // "/" — focus the chat input
+      if (e.key === '/') {
+        e.preventDefault();
+        inputRef.current?.focus();
+        return;
+      }
+    }
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isGenerating, showSidebar]);
+
   /* ─── Check for roast widget handoff ─── */
   useEffect(() => {
     try {
