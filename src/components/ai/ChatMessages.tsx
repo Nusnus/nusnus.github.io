@@ -24,6 +24,8 @@ interface ChatMessagesProps {
   messagesEndRef: RefObject<HTMLDivElement | null>;
   onSendMessage: (text: string) => void;
   language: Language;
+  /** Called after the expanded (zoomed) view closes. */
+  onExpandClose?: () => void;
 }
 
 /**
@@ -60,9 +62,9 @@ function extractFollowUps(content: string): { body: string; suggestions: string[
 function SkeletonLoader() {
   return (
     <div className="space-y-2.5 py-1">
-      <div className="cybernus-shimmer h-3.5 w-4/5 rounded-md bg-white/[0.04]" />
-      <div className="cybernus-shimmer h-3.5 w-3/5 rounded-md bg-white/[0.04] [animation-delay:200ms]" />
-      <div className="cybernus-shimmer h-3.5 w-2/3 rounded-md bg-white/[0.04] [animation-delay:400ms]" />
+      <div className="cybernus-shimmer bg-bg-elevated h-3.5 w-4/5 rounded-md" />
+      <div className="cybernus-shimmer bg-bg-elevated h-3.5 w-3/5 rounded-md [animation-delay:200ms]" />
+      <div className="cybernus-shimmer bg-bg-elevated h-3.5 w-2/3 rounded-md [animation-delay:400ms]" />
     </div>
   );
 }
@@ -71,9 +73,9 @@ function SkeletonLoader() {
 function TypingIndicator() {
   return (
     <span className="inline-flex items-center gap-1.5 py-1">
-      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-emerald-400/60 [animation-delay:0ms]" />
-      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-emerald-400/50 [animation-delay:150ms]" />
-      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-emerald-400/40 [animation-delay:300ms]" />
+      <span className="bg-accent/60 h-1.5 w-1.5 animate-bounce rounded-full [animation-delay:0ms]" />
+      <span className="bg-accent/50 h-1.5 w-1.5 animate-bounce rounded-full [animation-delay:150ms]" />
+      <span className="bg-accent/40 h-1.5 w-1.5 animate-bounce rounded-full [animation-delay:300ms]" />
     </span>
   );
 }
@@ -92,8 +94,8 @@ function SearchIndicator({
       className={cn(
         'inline-flex items-center gap-2.5 rounded-xl px-4 py-2.5 text-xs font-medium backdrop-blur-sm',
         isSearching
-          ? 'border border-white/[0.06] bg-white/[0.03] text-white/60'
-          : 'border border-emerald-500/20 bg-emerald-500/[0.06] text-emerald-400',
+          ? 'border-border bg-bg-surface text-text-secondary border'
+          : 'border-accent/20 bg-accent-muted text-accent border',
       )}
     >
       <Globe className={cn('h-3.5 w-3.5', isSearching && 'animate-spin')} />
@@ -103,7 +105,7 @@ function SearchIndicator({
           {[0, 150, 300].map((delay) => (
             <span
               key={delay}
-              className="inline-block h-1 w-1 animate-bounce rounded-full bg-white/30"
+              className="bg-text-muted inline-block h-1 w-1 animate-bounce rounded-full"
               style={{ animationDelay: `${delay}ms` }}
             />
           ))}
@@ -134,10 +136,10 @@ function ZoomControls({
   onExpand: () => void;
 }) {
   const zoomBtnClass =
-    'flex h-7 w-7 items-center justify-center rounded-md text-white/50 transition-colors hover:bg-white/[0.08] hover:text-white/80 disabled:opacity-30 disabled:cursor-not-allowed';
+    'flex h-7 w-7 items-center justify-center rounded-md text-text-muted transition-colors hover:bg-bg-elevated hover:text-text-primary disabled:opacity-30 disabled:cursor-not-allowed';
 
   return (
-    <div className="bg-bg-base/90 absolute right-4 bottom-4 z-10 flex items-center gap-0.5 rounded-xl border border-white/[0.08] px-1 py-1 shadow-lg backdrop-blur-md">
+    <div className="bg-bg-base/90 border-border absolute right-4 bottom-4 z-10 flex items-center gap-0.5 rounded-xl border px-1 py-1 shadow-lg backdrop-blur-md">
       <button
         onClick={onZoomOut}
         className={zoomBtnClass}
@@ -149,7 +151,7 @@ function ZoomControls({
       </button>
       <button
         onClick={onZoomReset}
-        className="flex h-7 min-w-[3rem] items-center justify-center rounded-md px-1 text-[10px] font-medium text-white/40 transition-colors hover:bg-white/[0.08] hover:text-white/70"
+        className="text-text-muted hover:bg-bg-elevated hover:text-text-secondary flex h-7 min-w-[3rem] items-center justify-center rounded-md px-1 text-[10px] font-medium transition-colors"
         title="Reset zoom"
         aria-label="Reset zoom"
       >
@@ -164,7 +166,7 @@ function ZoomControls({
       >
         <ZoomIn className="h-3.5 w-3.5" />
       </button>
-      <div className="mx-0.5 h-4 w-px bg-white/10" />
+      <div className="bg-border mx-0.5 h-4 w-px" />
       <button
         onClick={onExpand}
         className={zoomBtnClass}
@@ -214,13 +216,13 @@ function ExpandedMarkdownView({
   }, [onClose]);
 
   const zoomBtnClass =
-    'flex h-8 w-8 items-center justify-center rounded-lg text-white/50 transition-colors hover:bg-white/[0.08] hover:text-white/80 disabled:opacity-30 disabled:cursor-not-allowed';
+    'flex h-8 w-8 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-bg-elevated hover:text-text-primary disabled:opacity-30 disabled:cursor-not-allowed';
 
   return (
     <div className="bg-bg-base fixed inset-0 z-50 flex flex-col" dir={dir}>
       {/* Header */}
-      <div className="flex shrink-0 items-center justify-between border-b border-white/[0.06] px-6 py-3">
-        <span className="text-sm font-medium text-white/70">Expanded View</span>
+      <div className="border-border flex shrink-0 items-center justify-between border-b px-6 py-3">
+        <span className="text-text-secondary text-sm font-medium">Expanded View</span>
         <div className="flex items-center gap-1">
           <button
             onClick={handleZoomOut}
@@ -231,7 +233,7 @@ function ExpandedMarkdownView({
           >
             <ZoomOut className="h-4 w-4" />
           </button>
-          <span className="min-w-[3rem] text-center text-xs text-white/40">
+          <span className="text-text-muted min-w-[3rem] text-center text-xs">
             {Math.round(expandedZoom * 100)}%
           </span>
           <button
@@ -251,10 +253,10 @@ function ExpandedMarkdownView({
           >
             <RotateCcw className="h-3.5 w-3.5" />
           </button>
-          <div className="mx-1 h-5 w-px bg-white/10" />
+          <div className="bg-border mx-1 h-5 w-px" />
           <button
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-white/50 transition-colors hover:bg-white/[0.08] hover:text-white/80"
+            className="text-text-muted hover:bg-bg-elevated hover:text-text-primary flex h-8 w-8 items-center justify-center rounded-lg transition-colors"
             title="Close expanded view"
             aria-label="Close expanded view"
           >
@@ -279,29 +281,29 @@ function ExpandedMarkdownView({
             return (
               <div
                 key={msg.id}
-                className={cn('px-6 py-8 md:px-12 lg:px-20', isUser ? 'bg-white/[0.015]' : '')}
+                className={cn('px-6 py-8 md:px-12 lg:px-20', isUser ? 'bg-bg-surface/30' : '')}
               >
-                <div className="mx-auto flex max-w-4xl gap-5">
+                <div className="mx-auto flex max-w-3xl gap-5">
                   {/* Avatar */}
                   <div className="shrink-0 pt-0.5">
                     <div
                       className={cn(
                         'flex h-9 w-9 items-center justify-center rounded-lg',
                         isUser
-                          ? 'bg-gradient-to-br from-white/10 to-white/5 ring-1 ring-white/10'
-                          : 'bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 ring-1 ring-emerald-500/20',
+                          ? 'bg-bg-elevated ring-border ring-1'
+                          : 'bg-accent-muted ring-accent/20 ring-1',
                       )}
                     >
                       {isUser ? (
                         <svg
-                          className="h-4 w-4 text-white/70"
+                          className="text-text-secondary h-4 w-4"
                           viewBox="0 0 24 24"
                           fill="currentColor"
                         >
                           <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
                         </svg>
                       ) : (
-                        <Sparkles className="h-4 w-4 text-emerald-400" />
+                        <Sparkles className="text-accent h-4 w-4" />
                       )}
                     </div>
                   </div>
@@ -311,12 +313,12 @@ function ExpandedMarkdownView({
                     <p
                       className={cn(
                         'mb-2.5 text-xs font-semibold tracking-wide',
-                        isUser ? 'text-white/50' : 'text-emerald-400/80',
+                        isUser ? 'text-text-secondary' : 'text-accent',
                       )}
                     >
                       {isUser ? 'You' : 'Cybernus'}
                     </p>
-                    <div className="text-[15px] leading-relaxed text-white/85">
+                    <div className="text-text-primary/85 text-[15px] leading-relaxed">
                       {msg.searchStatus ? (
                         <SearchIndicator status={msg.searchStatus} strings={strings} />
                       ) : !msg.content ? (
@@ -344,7 +346,7 @@ function ExpandedMarkdownView({
                             key={idx}
                             onClick={() => executeAction(action)}
                             title={action.url}
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-white/[0.08] bg-white/[0.03] px-3.5 py-2 text-sm font-medium text-emerald-400/90 transition-all hover:border-emerald-500/30 hover:bg-emerald-500/[0.06]"
+                            className="border-border bg-bg-surface text-accent hover:border-accent/30 hover:bg-accent-muted inline-flex items-center gap-1.5 rounded-lg border px-3.5 py-2 text-sm font-medium transition-all"
                           >
                             {action.type === 'open_link' ? (
                               <ExternalLink className="h-3.5 w-3.5" />
@@ -404,7 +406,7 @@ function AssistantContent({
               key={idx}
               onClick={() => handleSuggestionClick(s)}
               disabled={isGenerating}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/15 bg-emerald-500/[0.04] px-3 py-1.5 text-xs font-medium text-emerald-400/80 transition-all hover:border-emerald-500/30 hover:bg-emerald-500/[0.08] hover:text-emerald-300 disabled:opacity-40"
+              className="border-accent/15 bg-accent-muted text-accent hover:border-accent/30 hover:bg-accent/15 hover:text-accent-hover inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all disabled:opacity-40"
             >
               <ArrowRight className="h-3 w-3" />
               {s}
@@ -423,6 +425,7 @@ export function ChatMessages({
   messagesEndRef,
   onSendMessage,
   language,
+  onExpandClose,
 }: ChatMessagesProps) {
   const strings = t(language);
   const dir = language === 'he' ? 'rtl' : 'ltr';
@@ -440,7 +443,10 @@ export function ChatMessages({
   );
   const handleZoomReset = useCallback(() => setZoomLevel(DEFAULT_ZOOM), []);
   const handleExpand = useCallback(() => setIsExpanded(true), []);
-  const handleCollapse = useCallback(() => setIsExpanded(false), []);
+  const handleCollapse = useCallback(() => {
+    setIsExpanded(false);
+    onExpandClose?.();
+  }, [onExpandClose]);
 
   const isWelcomeOnly = useMemo(
     () => messages.length === 1 && messages[0]?.role === 'assistant',
@@ -479,33 +485,33 @@ export function ChatMessages({
             return (
               <div
                 key={msg.id}
-                className={cn('group px-4 py-6 md:px-8 lg:px-12', isUser ? 'bg-white/[0.015]' : '')}
+                className={cn('group px-4 py-6 md:px-8 lg:px-12', isUser ? 'bg-bg-surface/30' : '')}
               >
-                <div className="mx-auto flex max-w-3xl gap-4">
+                <div className="mx-auto flex max-w-2xl gap-4">
                   {/* Avatar */}
                   <div className="relative shrink-0 pt-0.5">
                     <div
                       className={cn(
                         'flex h-8 w-8 items-center justify-center rounded-lg',
                         isUser
-                          ? 'bg-gradient-to-br from-white/10 to-white/5 ring-1 ring-white/10'
-                          : 'bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 ring-1 ring-emerald-500/20',
+                          ? 'bg-bg-elevated ring-border ring-1'
+                          : 'bg-accent-muted ring-accent/20 ring-1',
                       )}
                     >
                       {isUser ? (
                         <svg
-                          className="h-3.5 w-3.5 text-white/70"
+                          className="text-text-secondary h-3.5 w-3.5"
                           viewBox="0 0 24 24"
                           fill="currentColor"
                         >
                           <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
                         </svg>
                       ) : (
-                        <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
+                        <Sparkles className="text-accent h-3.5 w-3.5" />
                       )}
                     </div>
                     {isStreaming && (
-                      <div className="absolute -inset-1 animate-pulse rounded-lg ring-1 ring-emerald-500/30" />
+                      <div className="ring-accent/30 absolute -inset-1 animate-pulse rounded-lg ring-1" />
                     )}
                   </div>
 
@@ -515,14 +521,14 @@ export function ChatMessages({
                     <p
                       className={cn(
                         'mb-2 text-xs font-semibold tracking-wide',
-                        isUser ? 'text-white/50' : 'text-emerald-400/80',
+                        isUser ? 'text-text-secondary' : 'text-accent',
                       )}
                     >
                       {isUser ? 'You' : 'Cybernus'}
                     </p>
 
                     {/* Content */}
-                    <div className="text-sm leading-relaxed text-white/85">
+                    <div className="text-text-primary/85 text-sm leading-relaxed">
                       {msg.searchStatus ? (
                         <SearchIndicator status={msg.searchStatus} strings={strings} />
                       ) : !msg.content ? (
@@ -546,10 +552,10 @@ export function ChatMessages({
                               handleExpand();
                             }
                           }}
-                          className="group/zoom relative cursor-zoom-in rounded-lg transition-colors hover:bg-white/[0.02]"
+                          className="group/zoom hover:bg-bg-surface/50 relative cursor-zoom-in rounded-lg transition-colors"
                           title="Click to expand"
                         >
-                          <div className="pointer-events-none absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-md bg-white/[0.06] text-white/0 opacity-0 backdrop-blur-sm transition-all group-hover/zoom:text-white/50 group-hover/zoom:opacity-100">
+                          <div className="bg-bg-elevated group-hover/zoom:text-text-muted pointer-events-none absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-md text-transparent opacity-0 backdrop-blur-sm transition-all group-hover/zoom:opacity-100">
                             <Maximize2 className="h-3 w-3" />
                           </div>
                           <AssistantContent
@@ -572,7 +578,7 @@ export function ChatMessages({
                             key={idx}
                             onClick={() => executeAction(action)}
                             title={action.url}
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-1.5 text-xs font-medium text-emerald-400/90 transition-all hover:border-emerald-500/30 hover:bg-emerald-500/[0.06]"
+                            className="border-border bg-bg-surface text-accent hover:border-accent/30 hover:bg-accent-muted inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all"
                           >
                             {action.type === 'open_link' ? (
                               <ExternalLink className="h-3 w-3" />
@@ -592,9 +598,9 @@ export function ChatMessages({
 
           {/* Suggested questions — shown after welcome message only */}
           {isWelcomeOnly && (
-            <div className="px-4 py-4 md:px-8 lg:px-12">
+            <div className="px-4 py-6 md:px-8 lg:px-12">
               <div
-                className="cybernus-fade-in-up mx-auto grid max-w-3xl gap-2.5 sm:grid-cols-2"
+                className="cybernus-fade-in-up mx-auto grid max-w-2xl gap-3 sm:grid-cols-2"
                 style={{ animationDelay: '200ms' }}
               >
                 {SUGGESTED_QUESTIONS.map((q) => (
@@ -602,7 +608,7 @@ export function ChatMessages({
                     key={q}
                     onClick={() => onSendMessage(q)}
                     disabled={isGenerating}
-                    className="group rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3.5 text-left text-[13px] leading-relaxed text-white/50 transition-all hover:border-emerald-500/20 hover:bg-emerald-500/[0.03] hover:text-white/70"
+                    className="group border-border bg-bg-surface text-text-secondary hover:border-accent/40 hover:bg-accent-muted hover:text-text-primary rounded-xl border p-4 text-left text-[13px] leading-relaxed transition-all hover:-translate-y-0.5"
                   >
                     <span>{q}</span>
                   </button>

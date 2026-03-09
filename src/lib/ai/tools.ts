@@ -85,6 +85,18 @@ const FUNCTION_TOOLS: ToolDefinition[] = [
 export const CLOUD_TOOLS: ToolDefinition[] = [{ type: 'web_search' }, ...FUNCTION_TOOLS];
 
 /**
+ * Tool set for code-specialized models (e.g. grok-code-fast-1).
+ * Excludes web_search which may not be supported on code models.
+ */
+export const CODE_MODEL_TOOLS: ToolDefinition[] = [...FUNCTION_TOOLS];
+
+/** Returns the appropriate tool set for a given model ID. */
+export function getToolsForModel(modelId: string): ToolDefinition[] {
+  if (modelId.startsWith('grok-code')) return CODE_MODEL_TOOLS;
+  return CLOUD_TOOLS;
+}
+
+/**
  * Map raw API tool_calls to UI-renderable ToolAction objects.
  * Safely parses arguments JSON and filters out invalid calls.
  * Server-side tool calls (e.g., web_search) are silently skipped.

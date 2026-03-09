@@ -30,7 +30,7 @@ export const CLOUD_MODELS: CloudModelInfo[] = [
     recommended: true,
   },
   {
-    id: 'grok-code-fast',
+    id: 'grok-code-fast-1',
     name: 'Grok Code Fast',
     description:
       'Code-specialized with reasoning. Excels at technical explanations, programming topics, and code analysis.',

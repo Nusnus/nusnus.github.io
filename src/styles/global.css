@@ -325,7 +325,7 @@
   display: inline-block;
   width: 2px;
   height: 1em;
-  background: #34d399;
+  background: var(--color-accent);
   margin-left: 2px;
   animation: typing-cursor 1s step-end infinite;
   vertical-align: text-bottom;

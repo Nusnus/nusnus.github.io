@@ -125,7 +125,7 @@ export default function ActivityGraph({ weeks: initialWeeks }: Props) {
                 rx={BAR_RADIUS}
                 fill={isHovered ? 'var(--color-accent-hover)' : 'var(--color-accent)'}
                 opacity={hovered && !isHovered ? 0.35 : isHovered ? 1 : 0.7}
-                className="transition-opacity duration-100 motion-reduce:transition-none"
+                className="pointer-events-none transition-opacity duration-100 motion-reduce:transition-none"
               />
               {/* Value on hover */}
               {isHovered && (

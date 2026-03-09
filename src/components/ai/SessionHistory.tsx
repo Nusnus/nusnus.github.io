@@ -29,22 +29,22 @@ export function SessionHistory({
   return (
     <div className="flex h-full flex-col overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2.5">
-        <span className="text-[11px] font-medium tracking-wider text-white/25 uppercase">
+      <div className="border-accent/30 flex items-center justify-between border-b px-5 py-3">
+        <span className="text-text-secondary text-[11px] font-semibold tracking-wider uppercase">
           {strings.history}
         </span>
         <div className="flex items-center gap-1">
           {sessions.length > 0 && (
             <button
               onClick={onClearAll}
-              className="rounded px-1.5 py-0.5 text-[10px] text-red-400/30 transition-all hover:bg-red-400/10 hover:text-red-400"
+              className="rounded px-1.5 py-0.5 text-[10px] text-red-400/40 transition-all hover:bg-red-400/10 hover:text-red-400"
             >
               {strings.clearAll}
             </button>
           )}
           <button
             onClick={onClose}
-            className="rounded p-1 text-white/30 transition-all hover:bg-white/[0.05] hover:text-white/60 md:hidden"
+            className="text-text-muted hover:bg-bg-elevated hover:text-text-secondary rounded p-1 transition-all md:hidden"
             aria-label="Close"
           >
             <X className="h-3.5 w-3.5" />
@@ -53,11 +53,11 @@ export function SessionHistory({
       </div>
 
       {/* Session list */}
-      <div className="scrollbar-thin flex-1 overflow-y-auto px-2">
+      <div className="scrollbar-thin flex-1 overflow-y-auto px-3 pt-2">
         {sessions.length === 0 ? (
           <div className="flex flex-col items-center gap-2 px-4 py-8">
-            <MessageSquare className="h-8 w-8 text-white/10" />
-            <p className="text-xs text-white/20">{strings.noHistory}</p>
+            <MessageSquare className="text-border h-8 w-8" />
+            <p className="text-text-muted text-xs">{strings.noHistory}</p>
           </div>
         ) : (
           <div className="space-y-0.5">
@@ -68,10 +68,10 @@ export function SessionHistory({
                 <div
                   key={session.id}
                   className={cn(
-                    'group flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2.5 transition-all',
+                    'group flex cursor-pointer items-center gap-2.5 rounded-xl border px-3 py-2.5 transition-all',
                     isActive
-                      ? 'bg-emerald-500/[0.08] text-white ring-1 ring-emerald-500/20'
-                      : 'text-white/50 hover:bg-white/[0.04] hover:text-white/80',
+                      ? 'border-accent/40 bg-accent-muted text-text-primary'
+                      : 'text-text-secondary hover:border-border hover:bg-bg-surface hover:text-text-primary border-transparent',
                   )}
                   style={{ animationDelay: `${idx * 20}ms` }}
                   onClick={() => onSwitchSession(session)}
@@ -81,10 +81,10 @@ export function SessionHistory({
                     if (e.key === 'Enter') onSwitchSession(session);
                   }}
                 >
-                  <MessageSquare className="h-3.5 w-3.5 shrink-0 text-white/20" />
+                  <MessageSquare className="text-text-muted h-3.5 w-3.5 shrink-0" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[13px] leading-tight">{session.title}</p>
-                    <p className="mt-0.5 text-[10px] text-white/20">
+                    <p className="text-text-muted mt-0.5 text-[10px]">
                       {userMsgCount} {strings.messages}
                     </p>
                   </div>
@@ -93,7 +93,7 @@ export function SessionHistory({
                       e.stopPropagation();
                       onDeleteSession(session.id);
                     }}
-                    className="shrink-0 rounded p-0.5 text-white/20 opacity-0 transition-all group-hover:opacity-100 hover:bg-red-400/10 hover:text-red-400"
+                    className="text-text-muted shrink-0 rounded p-0.5 opacity-0 transition-all group-hover:opacity-100 hover:bg-red-400/10 hover:text-red-400"
                     aria-label="Delete session"
                   >
                     <Trash2 className="h-3 w-3" />

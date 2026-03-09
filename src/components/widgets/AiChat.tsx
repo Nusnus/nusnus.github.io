@@ -14,7 +14,7 @@ import {
   MAX_USER_MESSAGES,
   trimHistory,
 } from '@lib/ai/config';
-import { CLOUD_TOOLS, mapToolCallsToActions } from '@lib/ai/tools';
+import { getToolsForModel, mapToolCallsToActions } from '@lib/ai/tools';
 import {
   saveMessages,
   loadMessages,
@@ -76,6 +76,14 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
   const [audioLevel, setAudioLevel] = useState(0);
   const [transcriptPreview, setTranscriptPreview] = useState('');
   const voiceSessionRef = useRef<VoiceSession | null>(null);
+  const voiceStateRef = useRef(voiceState);
+  voiceStateRef.current = voiceState;
+  const handleVoiceToggleRef = useRef<(() => void) | null>(null);
+  const sendMessageRef = useRef<((text: string) => void) | null>(null);
+  const transcriptPreviewRef = useRef(transcriptPreview);
+  transcriptPreviewRef.current = transcriptPreview;
+  const inputRef_value = useRef(input);
+  inputRef_value.current = input;
 
   /* ─── Debug state ─── */
   const [debugLogs, setDebugLogs] = useState<DebugLogEntry[]>([]);
@@ -141,6 +149,101 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       voiceSessionRef.current?.destroy();
     };
   }, []);
+
+  /* ─── Global keyboard shortcuts ─── */
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      // Don't intercept when modifier keys are held (let browser native shortcuts work)
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+      // If the expanded (zoomed) overlay is open, let its own handler close it first.
+      // This applies to all Escape handling below (voice, generation, sidebar).
+      if (e.key === 'Escape') {
+        const expandedOverlay = document.querySelector('.fixed.inset-0.z-50');
+        if (expandedOverlay) return; // defer to ExpandedMarkdownView / DiagramViewer
+      }
+
+      // During voice recording: Esc cancels, Enter accepts + sends
+      if (voiceStateRef.current !== 'idle' && voiceStateRef.current !== 'error') {
+        if (e.key === 'Escape' || e.key === 'Enter') {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+
+          const isAccept = e.key === 'Enter';
+          // Capture interim transcript before stopping (stop() aborts recognition
+          // and discards pending results)
+          const interim = transcriptPreviewRef.current;
+          const existingInput = inputRef_value.current;
+
+          voiceSessionRef.current?.stop();
+          voiceSessionRef.current = null;
+          setVoiceState('idle');
+          setAudioLevel(0);
+          setTranscriptPreview('');
+
+          if (isAccept && interim) {
+            // Combine any already-finalized text with the interim transcript
+            const fullText = existingInput ? `${existingInput} ${interim}`.trim() : interim.trim();
+            if (fullText) {
+              setInput('');
+              sendMessageRef.current?.(fullText);
+            }
+          } else if (isAccept && existingInput?.trim()) {
+            // No interim but there is finalized text — send it
+            setInput('');
+            sendMessageRef.current?.(existingInput.trim());
+          }
+
+          // Focus the chat input for next interaction
+          requestAnimationFrame(() => inputRef.current?.focus());
+          return;
+        }
+      }
+
+      // Shift+Enter — start voice recording (when not already recording)
+      if (e.key === 'Enter' && e.shiftKey && voiceStateRef.current === 'idle') {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        handleVoiceToggleRef.current?.();
+        return;
+      }
+
+      // Escape priority: stop generation → close sidebar → focus input
+      if (e.key === 'Escape') {
+        if (isGenerating) {
+          e.stopImmediatePropagation();
+          abortRef.current?.abort();
+          setIsGenerating(false);
+          requestAnimationFrame(() => inputRef.current?.focus());
+          return;
+        }
+        if (showSidebar) {
+          e.stopImmediatePropagation();
+          setShowSidebar(false);
+          return;
+        }
+        // Focus the chat input as fallback
+        requestAnimationFrame(() => inputRef.current?.focus());
+        return;
+      }
+
+      // Skip shortcuts when user is typing in an input/textarea/contenteditable
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement).isContentEditable) {
+        return;
+      }
+
+      // "/" — focus the chat input
+      if (e.key === '/') {
+        e.preventDefault();
+        inputRef.current?.focus();
+        return;
+      }
+    }
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isGenerating, showSidebar]);
 
   /* ─── Check for roast widget handoff ─── */
   useEffect(() => {
@@ -303,7 +406,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
           },
           controller.signal,
           {
-            tools: CLOUD_TOOLS,
+            tools: getToolsForModel(selectedCloudModelId),
             tool_choice: 'auto',
             onWebSearch: () => {
               addLog('info', 'api', 'Web search triggered');
@@ -577,6 +680,8 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       setTranscriptPreview('');
     }
   }, [voiceState, addLog, language]);
+  handleVoiceToggleRef.current = handleVoiceToggle;
+  sendMessageRef.current = sendMessage;
 
   /* ─── Derived values ─── */
   const activeCloudModel = CLOUD_MODELS.find((m) => m.id === selectedCloudModelId);
@@ -594,8 +699,8 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
   const sidebarContent = (
     <div className="flex h-full flex-col">
       {/* Brand header */}
-      <div className="flex shrink-0 items-center gap-3 border-b border-white/[0.06] px-4 py-4">
-        <div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 ring-1 ring-emerald-500/20">
+      <div className="border-accent/30 flex shrink-0 items-center gap-3 border-b px-5 py-5">
+        <div className="bg-accent-muted ring-accent/20 relative flex h-8 w-8 items-center justify-center rounded-lg ring-1">
           <span
             className="h-2.5 w-2.5 rounded-full"
             style={{
@@ -604,14 +709,14 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
             }}
           />
         </div>
-        <span className="text-sm font-bold tracking-[0.15em] text-white">CYBERNUS</span>
+        <span className="text-text-primary text-sm font-bold tracking-[0.15em]">CYBERNUS</span>
       </div>
 
-      {/* New Chat button */}
-      <div className="shrink-0 px-3 pt-3 pb-1">
-        <button
-          onClick={clearChat}
-          className="flex w-full items-center gap-2 rounded-xl border border-white/[0.06] px-3 py-2.5 text-[13px] text-white/60 transition-all hover:border-emerald-500/20 hover:bg-emerald-500/[0.04] hover:text-white/90"
+      {/* Home button */}
+      <div className="shrink-0 px-4 pt-4 pb-1">
+        <a
+          href="/"
+          className="border-border bg-bg-surface text-text-secondary hover:border-accent/40 hover:bg-accent-muted hover:text-text-primary flex w-full items-center gap-2.5 rounded-xl border px-3 py-2.5 text-sm transition-all hover:-translate-y-0.5"
         >
           <svg
             className="h-4 w-4"
@@ -622,8 +727,33 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
             strokeLinecap="round"
             strokeLinejoin="round"
           >
-            <path d="M12 5v14M5 12h14" />
+            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+            <polyline points="9 22 9 12 15 12 15 22" />
           </svg>
+          Home
+        </a>
+      </div>
+
+      {/* New Chat button */}
+      <div className="shrink-0 px-4 pt-1 pb-1">
+        <button
+          onClick={clearChat}
+          className="border-accent/30 bg-accent/5 text-text-primary hover:border-accent/50 hover:bg-accent/10 flex w-full items-center gap-2.5 rounded-xl border px-3 py-2.5 text-sm font-medium transition-all hover:-translate-y-0.5"
+        >
+          <span className="text-accent relative flex h-4 w-4 items-center justify-center">
+            <span className="bg-accent/20 absolute inset-0 animate-ping rounded-full opacity-40" />
+            <svg
+              className="relative h-4 w-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+          </span>
           {strings.newChat}
         </button>
       </div>
@@ -642,13 +772,13 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       </div>
 
       {/* Settings section */}
-      <div className="shrink-0 space-y-4 border-t border-white/[0.06] px-4 py-4">
+      <div className="border-border shrink-0 space-y-4 border-t px-5 py-5">
         {/* Language toggle */}
         <div>
-          <p className="mb-2 text-[10px] font-medium tracking-wider text-white/30 uppercase">
+          <p className="text-text-muted mb-2 text-[10px] font-medium tracking-wider uppercase">
             {strings.language}
           </p>
-          <div className="flex items-center gap-0.5 rounded-lg bg-white/[0.04] p-0.5">
+          <div className="bg-bg-elevated flex items-center gap-0.5 rounded-lg p-0.5">
             {LANGUAGES.map((l) => (
               <button
                 key={l.code}
@@ -656,8 +786,8 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
                 className={cn(
                   'flex-1 rounded-md px-1.5 py-1.5 text-center text-xs transition-all',
                   language === l.code
-                    ? 'bg-white/[0.08] text-white shadow-sm'
-                    : 'text-white/30 hover:text-white/60',
+                    ? 'bg-bg-surface text-text-primary shadow-sm'
+                    : 'text-text-muted hover:text-text-secondary',
                 )}
                 title={l.nativeName}
               >
@@ -669,7 +799,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
 
         {/* Personality slider */}
         <div>
-          <p className="mb-2 text-[10px] font-medium tracking-wider text-white/30 uppercase">
+          <p className="text-text-muted mb-2 text-[10px] font-medium tracking-wider uppercase">
             {strings.personality}
           </p>
           <div className="flex items-center gap-2">
@@ -680,19 +810,19 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
               max={5}
               value={personality}
               onChange={(e) => handlePersonalityChange(Number(e.target.value) as PersonalityLevel)}
-              className="h-1 flex-1 cursor-pointer appearance-none rounded-full bg-white/10 accent-emerald-500 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-emerald-400"
+              className="bg-bg-elevated accent-accent [&::-webkit-slider-thumb]:bg-accent h-1 flex-1 cursor-pointer appearance-none rounded-full [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full"
               title={`${strings.personalityLevel}: ${currentPersonality?.name ?? ''}`}
             />
-            <span className="w-16 text-[10px] text-white/30">{currentPersonality?.name}</span>
+            <span className="text-text-muted w-16 text-[10px]">{currentPersonality?.name}</span>
           </div>
         </div>
       </div>
 
       {/* Back to portfolio */}
-      <div className="shrink-0 border-t border-white/[0.06] px-4 py-3">
+      <div className="border-accent/30 shrink-0 border-t px-5 py-4">
         <a
           href="/"
-          className="flex items-center gap-2 text-xs text-white/30 transition-colors hover:text-white/60"
+          className="text-text-primary hover:text-accent flex items-center gap-2 text-sm font-medium transition-colors"
         >
           <svg
             className="h-3.5 w-3.5"
@@ -726,7 +856,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       {/* Sidebar — persistent on desktop, overlay on mobile */}
       <aside
         className={cn(
-          'bg-bg-surface flex h-full shrink-0 flex-col border-r border-white/[0.06]',
+          'border-accent/30 bg-bg-base flex h-full shrink-0 flex-col border-r',
           'md:relative md:flex md:w-[260px]',
           showSidebar ? 'fixed inset-y-0 left-0 z-30 w-72' : 'hidden md:flex',
         )}
@@ -734,16 +864,19 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
         {sidebarContent}
       </aside>
 
+      {/* Left Neural Stream — visible on xl+ screens */}
+      <ThoughtsPanel side="left" />
+
       {/* Main content area */}
       <div className="flex min-w-0 flex-1 flex-col">
         {engineState === 'idle' ? (
           /* ─── Idle screen ─── */
           <>
             {/* Mobile header for idle */}
-            <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-3 md:hidden">
+            <div className="border-accent/30 flex items-center justify-between border-b px-4 py-3 md:hidden">
               <button
                 onClick={() => setShowSidebar(true)}
-                className="rounded-lg p-1.5 text-white/40 transition-colors hover:bg-white/[0.05]"
+                className="text-text-muted hover:bg-bg-surface rounded-lg p-1.5 transition-colors"
                 aria-label="Open menu"
               >
                 <svg
@@ -756,7 +889,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
                   <path d="M3 12h18M3 6h18M3 18h18" />
                 </svg>
               </button>
-              <span className="text-sm font-bold tracking-wider text-white">CYBERNUS</span>
+              <span className="text-text-primary text-sm font-bold tracking-wider">CYBERNUS</span>
               <div className="w-8" />
             </div>
             <ModelPicker
@@ -772,12 +905,12 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
           /* ─── Chat UI ─── */
           <>
             {/* Minimal chat header */}
-            <div className="flex shrink-0 items-center justify-between border-b border-white/[0.06] px-4 py-3">
+            <div className="border-accent/30 flex shrink-0 items-center justify-between border-b px-4 py-3">
               <div className="flex items-center gap-3">
                 {/* Mobile hamburger */}
                 <button
                   onClick={() => setShowSidebar(true)}
-                  className="rounded-lg p-1.5 text-white/40 transition-colors hover:bg-white/[0.05] md:hidden"
+                  className="text-text-muted hover:bg-bg-surface rounded-lg p-1.5 transition-colors md:hidden"
                   aria-label="Open menu"
                 >
                   <svg
@@ -800,8 +933,10 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
                       boxShadow: `0 0 8px ${currentPersonality?.glowColor ?? 'var(--color-accent)'}`,
                     }}
                   />
-                  <span className="text-xs text-white/50">{activeCloudModel?.name ?? 'Grok'}</span>
-                  <span className="hidden text-[10px] text-white/25 sm:inline">
+                  <span className="text-text-secondary text-xs">
+                    {activeCloudModel?.name ?? 'Grok'}
+                  </span>
+                  <span className="text-text-muted hidden text-[10px] sm:inline">
                     {currentPersonality?.emoji} {currentPersonality?.name}
                   </span>
                 </div>
@@ -826,6 +961,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
               messagesEndRef={messagesEndRef}
               onSendMessage={sendMessage}
               language={language}
+              onExpandClose={() => requestAnimationFrame(() => inputRef.current?.focus())}
             />
 
             {/* Input */}
@@ -851,8 +987,8 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
         )}
       </div>
 
-      {/* Floating thoughts panel — visible on xl+ screens */}
-      <ThoughtsPanel />
+      {/* Floating thoughts panels — visible on xl+ screens */}
+      <ThoughtsPanel side="right" />
 
       {/* Debug panel — only in development */}
       {import.meta.env.DEV && (
