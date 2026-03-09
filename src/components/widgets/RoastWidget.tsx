@@ -5,10 +5,7 @@
  * Replaces the old static <a href="/chat?roast=1"> FAB.
  */
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { cloudChatStream } from '@lib/ai/cloud';
-import { buildCloudContext } from '@lib/ai/cloud-context';
 import { DEFAULT_CLOUD_MODEL_ID } from '@lib/ai/config';
-import { renderMarkdown } from '@lib/ai/markdown';
 
 type WidgetState = 'closed' | 'loading' | 'streaming' | 'done' | 'error';
 
@@ -79,6 +76,11 @@ ${
     ? "Make the roast feel live and contextual — reference what they're probably staring at right now. You're the Oracle appearing mid-matrix to roast the architect of the very simulation the visitor is browsing. Keep it short, savage, and self-aware. This is a teaser — the full chat is one click away."
     : `The visitor already got ${levelClamp} roast${levelClamp > 1 ? 's' : ''} from you and just hit the ${fires} escalate button — they're literally asking you to go harder. You can see your previous roast${levelClamp > 1 ? 's' : ''} in the conversation. Acknowledge that they came back for more (be smug about it), then deliver a fresh roast that's rawer, more vulgar, more savage. Don't repeat material from your previous roast${levelClamp > 1 ? 's' : ''}. Keep it short, punchy, contextual to the page they're browsing.`
 }`;
+
+      const [{ cloudChatStream }, { buildCloudContext }] = await Promise.all([
+        import('@lib/ai/cloud'),
+        import('@lib/ai/cloud-context'),
+      ]);
 
       const context = await buildCloudContext(roastContext);
       const systemMessage = { role: 'system' as const, content: context };
@@ -254,9 +256,7 @@ ${
                 <LoadingIndicator />
               )}
               {(state === 'streaming' || state === 'done') && response && (
-                <div className="text-text-primary text-sm leading-relaxed">
-                  {renderMarkdown(response, state === 'streaming')}
-                </div>
+                <RoastContent response={response} streaming={state === 'streaming'} />
               )}
               {state === 'error' && (
                 <p className="text-sm text-red-400">{errorMsg || 'Failed to generate roast.'}</p>
@@ -290,6 +290,24 @@ ${
       </button>
     </>
   );
+}
+
+/** Lazily renders markdown content — avoids pulling renderMarkdown into the idle bundle. */
+function RoastContent({ response, streaming }: { response: string; streaming: boolean }) {
+  const [rendered, setRendered] = useState<React.ReactNode>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    import('@lib/ai/markdown').then(({ renderMarkdown }) => {
+      if (!cancelled) setRendered(renderMarkdown(response, streaming));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [response, streaming]);
+
+  if (!rendered) return null;
+  return <div className="text-text-primary text-sm leading-relaxed">{rendered}</div>;
 }
 
 /** Pulsing dots loading indicator. */

@@ -7,6 +7,11 @@ export default defineConfig({
 
   devToolbar: { enabled: false },
 
+  prefetch: {
+    defaultStrategy: 'viewport',
+    prefetchAll: false,
+  },
+
   integrations: [react()],
 
   vite: {

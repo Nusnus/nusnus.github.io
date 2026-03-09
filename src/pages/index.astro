@@ -13,7 +13,7 @@ import CeleryOrganization from '@components/sections/CeleryOrganization.astro';
 import Articles from '@components/sections/Articles.astro';
 import Sponsoring from '@components/sections/Sponsoring.astro';
 import ThemeToggle from '@components/widgets/ThemeToggle';
-import StatusDot from '@components/widgets/StatusDot';
+import StatusDot from '@components/widgets/StatusDot.astro';
 import ActivityFeed from '@components/widgets/ActivityFeed';
 import LiveData from '@components/widgets/LiveData';
 import { loadActivity } from '@lib/data/loader';
@@ -34,8 +34,8 @@ const lastEventTime = activity?.events[0]?.createdAt ?? new Date().toISOString()
   >
     <!-- Sidebar (hidden on mobile, shown on md+) -->
     <Sidebar>
-      <StatusDot client:load lastEventTimestamp={lastEventTime} slot="status-dot" />
-      <ThemeToggle client:load slot="theme-toggle" />
+      <StatusDot lastEventTimestamp={lastEventTime} slot="status-dot" />
+      <ThemeToggle client:idle slot="theme-toggle" />
     </Sidebar>
 
     <!-- Main Content -->
@@ -88,7 +88,7 @@ const lastEventTime = activity?.events[0]?.createdAt ?? new Date().toISOString()
 
     <!-- Activity Panel (hidden on md and below) -->
     <ActivityPanel>
-      <ActivityFeed client:load initialEvents={activity?.events ?? []} />
+      <ActivityFeed client:idle initialEvents={activity?.events?.slice(0, 10) ?? []} />
     </ActivityPanel>
   </div>
 

@@ -53,7 +53,7 @@
 
 @font-face {
   font-family: 'JetBrains Mono';
-  font-weight: 400 700;
+  font-weight: 400;
   font-display: swap;
   src: url('/fonts/JetBrainsMono-Regular.woff2') format('woff2');
 }
