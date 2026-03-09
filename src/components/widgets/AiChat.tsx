@@ -78,6 +78,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
   const voiceSessionRef = useRef<VoiceSession | null>(null);
   const voiceStateRef = useRef(voiceState);
   voiceStateRef.current = voiceState;
+  const handleVoiceToggleRef = useRef<(() => void) | null>(null);
 
   /* ─── Debug state ─── */
   const [debugLogs, setDebugLogs] = useState<DebugLogEntry[]>([]);
@@ -167,16 +168,27 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
           setVoiceState('idle');
           setAudioLevel(0);
           setTranscriptPreview('');
+          // Focus the chat input so user can immediately type or press Enter to send
+          requestAnimationFrame(() => inputRef.current?.focus());
           return;
         }
       }
 
-      // Escape priority: stop generation → close sidebar → blur
+      // Shift+Enter — start voice recording (when not already recording)
+      if (e.key === 'Enter' && e.shiftKey && voiceStateRef.current === 'idle') {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        handleVoiceToggleRef.current?.();
+        return;
+      }
+
+      // Escape priority: stop generation → close sidebar → focus input
       if (e.key === 'Escape') {
         if (isGenerating) {
           e.stopImmediatePropagation();
           abortRef.current?.abort();
           setIsGenerating(false);
+          requestAnimationFrame(() => inputRef.current?.focus());
           return;
         }
         if (showSidebar) {
@@ -644,6 +656,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       setTranscriptPreview('');
     }
   }, [voiceState, addLog, language]);
+  handleVoiceToggleRef.current = handleVoiceToggle;
 
   /* ─── Derived values ─── */
   const activeCloudModel = CLOUD_MODELS.find((m) => m.id === selectedCloudModelId);
@@ -923,6 +936,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
               messagesEndRef={messagesEndRef}
               onSendMessage={sendMessage}
               language={language}
+              onExpandClose={() => requestAnimationFrame(() => inputRef.current?.focus())}
             />
 
             {/* Input */}

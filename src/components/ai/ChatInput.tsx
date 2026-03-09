@@ -117,12 +117,15 @@ export function ChatInput({
                     {transcriptPreview}
                   </p>
                 )}
-                <button
-                  onClick={onVoiceToggle}
-                  className="shrink-0 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-1.5 text-xs font-medium text-red-400 transition-all hover:bg-red-500/20"
-                >
-                  {strings.voiceStop}
-                </button>
+                <div className="flex shrink-0 items-center gap-2">
+                  <span className="text-[10px] text-red-400/50">Esc cancel · Enter accept</span>
+                  <button
+                    onClick={onVoiceToggle}
+                    className="shrink-0 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-1.5 text-xs font-medium text-red-400 transition-all hover:bg-red-500/20"
+                  >
+                    {strings.voiceStop}
+                  </button>
+                </div>
               </div>
             )}
 
@@ -135,16 +138,19 @@ export function ChatInput({
                   : 'border-border bg-bg-surface focus-within:border-accent/30 focus-within:shadow-accent/5 shadow-black/20 backdrop-blur-sm',
               )}
             >
-              {/* Voice button */}
+              {/* Voice button with Shift+Enter hint */}
               {voiceSupported && onVoiceToggle && !isRecording && (
                 <button
                   onClick={onVoiceToggle}
                   disabled={isGenerating}
-                  className="text-text-muted hover:bg-bg-elevated hover:text-accent flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all"
+                  className="text-text-muted hover:bg-bg-elevated hover:text-accent group flex shrink-0 items-center gap-1.5 rounded-xl px-2 py-1.5 transition-all"
                   aria-label={strings.voiceStart}
                   title={strings.voiceStart}
                 >
                   <Mic className="h-4 w-4" />
+                  <span className="text-text-muted/50 group-hover:text-accent/60 text-[10px] whitespace-nowrap transition-colors">
+                    Shift+Enter
+                  </span>
                 </button>
               )}
 

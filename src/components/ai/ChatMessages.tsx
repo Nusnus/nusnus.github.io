@@ -24,6 +24,8 @@ interface ChatMessagesProps {
   messagesEndRef: RefObject<HTMLDivElement | null>;
   onSendMessage: (text: string) => void;
   language: Language;
+  /** Called after the expanded (zoomed) view closes. */
+  onExpandClose?: () => void;
 }
 
 /**
@@ -423,6 +425,7 @@ export function ChatMessages({
   messagesEndRef,
   onSendMessage,
   language,
+  onExpandClose,
 }: ChatMessagesProps) {
   const strings = t(language);
   const dir = language === 'he' ? 'rtl' : 'ltr';
@@ -440,7 +443,10 @@ export function ChatMessages({
   );
   const handleZoomReset = useCallback(() => setZoomLevel(DEFAULT_ZOOM), []);
   const handleExpand = useCallback(() => setIsExpanded(true), []);
-  const handleCollapse = useCallback(() => setIsExpanded(false), []);
+  const handleCollapse = useCallback(() => {
+    setIsExpanded(false);
+    onExpandClose?.();
+  }, [onExpandClose]);
 
   const isWelcomeOnly = useMemo(
     () => messages.length === 1 && messages[0]?.role === 'assistant',
