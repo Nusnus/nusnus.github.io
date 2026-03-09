@@ -1,5 +1,6 @@
 ---
 import ContributionGraph from '@components/widgets/ContributionGraph';
+import SectionHeader from '@components/ui/SectionHeader.astro';
 import {
   loadContributionGraph,
   loadRepos,
@@ -89,7 +90,7 @@ const trophies: Trophy[] = [
 ];
 ---
 
-<section id="activity" class="relative" aria-label="Activity overview">
+<section id="activity" class="animate-section relative" aria-label="Activity overview">
   <!-- Living Canvas: heatmap as subtle background texture -->
   <div
     class="pointer-events-none absolute inset-0 overflow-hidden opacity-[0.06]"
@@ -104,13 +105,12 @@ const trophies: Trophy[] = [
 
   <!-- Foreground content -->
   <div class="relative z-10">
-    <h2 class="mb-1 text-3xl font-bold tracking-tight">Contributions</h2>
-    <p class="text-text-secondary mb-5 text-sm">Contribution heatmap for the last year</p>
+    <SectionHeader title="Contributions" subtitle="Contribution heatmap for the last year" />
 
     <!-- Contribution heatmap -->
     {
       weeks.length > 0 && (
-        <div class="bg-bg-surface/50 ring-border/50 mb-6 overflow-x-auto rounded-xl p-4 ring-1">
+        <div class="bg-bg-surface/50 ring-border/50 mb-6 overflow-x-auto rounded-xl p-4 shadow-[var(--shadow-soft)] ring-1">
           <ContributionGraph client:visible weeks={weeks} totalContributions={totalContributions} />
         </div>
       )
@@ -118,35 +118,50 @@ const trophies: Trophy[] = [
 
     <!-- Summary stats -->
     <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
-      <div class="bg-bg-surface/50 ring-border/40 rounded-lg p-3 ring-1">
-        <p class="text-accent font-mono text-xl font-bold" data-live="totalContributions">
+      <div
+        class="bg-bg-surface/60 ring-border/40 group hover:ring-accent/30 rounded-xl p-4 ring-1 backdrop-blur-sm transition-all duration-200 hover:shadow-[var(--shadow-glow)]"
+      >
+        <p
+          class="text-accent font-mono text-xl font-bold transition-transform duration-200 group-hover:scale-105"
+          data-live="totalContributions"
+        >
           {formatCompactNumber(totalContributions)}
         </p>
-        <p class="text-text-muted text-xs">contributions</p>
+        <p class="text-text-muted mt-0.5 text-xs">contributions</p>
       </div>
-      <div class="bg-bg-surface/50 ring-border/40 rounded-lg p-3 ring-1">
-        <p class="text-accent font-mono text-xl font-bold">
-          🔥 <span data-live="streak">{streak}</span>
+      <div
+        class="bg-bg-surface/60 ring-border/40 group hover:ring-accent/30 rounded-xl p-4 ring-1 backdrop-blur-sm transition-all duration-200 hover:shadow-[var(--shadow-glow)]"
+      >
+        <p
+          class="text-accent font-mono text-xl font-bold transition-transform duration-200 group-hover:scale-105"
+        >
+          <span data-live="streak">{streak}</span>
         </p>
-        <p class="text-text-muted text-xs">day streak</p>
+        <p class="text-text-muted mt-0.5 text-xs">day streak</p>
       </div>
       {
         graph && (
-          <div class="bg-bg-surface/50 ring-border/40 rounded-lg p-3 ring-1">
-            <p class="text-accent font-mono text-xl font-bold" data-live="totalCommits">
+          <div class="bg-bg-surface/60 ring-border/40 group hover:ring-accent/30 rounded-xl p-4 ring-1 backdrop-blur-sm transition-all duration-200 hover:shadow-[var(--shadow-glow)]">
+            <p
+              class="text-accent font-mono text-xl font-bold transition-transform duration-200 group-hover:scale-105"
+              data-live="totalCommits"
+            >
               {formatCompactNumber(graph.totalCommits)}
             </p>
-            <p class="text-text-muted text-xs">commits</p>
+            <p class="text-text-muted mt-0.5 text-xs">commits</p>
           </div>
         )
       }
       {
         graph && (
-          <div class="bg-bg-surface/50 ring-border/40 rounded-lg p-3 ring-1">
-            <p class="text-accent font-mono text-xl font-bold" data-live="totalPRs">
+          <div class="bg-bg-surface/60 ring-border/40 group hover:ring-accent/30 rounded-xl p-4 ring-1 backdrop-blur-sm transition-all duration-200 hover:shadow-[var(--shadow-glow)]">
+            <p
+              class="text-accent font-mono text-xl font-bold transition-transform duration-200 group-hover:scale-105"
+              data-live="totalPRs"
+            >
               {formatCompactNumber(graph.totalPRs)}
             </p>
-            <p class="text-text-muted text-xs">pull requests</p>
+            <p class="text-text-muted mt-0.5 text-xs">pull requests</p>
           </div>
         )
       }
@@ -155,7 +170,7 @@ const trophies: Trophy[] = [
     <!-- Trophies -->
     {
       trophies.length > 0 && (
-        <div class="mt-6">
+        <div class="mt-8">
           <p class="text-text-muted mb-3 text-xs font-medium tracking-wider uppercase">
             Achievements
           </p>
@@ -165,21 +180,24 @@ const trophies: Trophy[] = [
               return (
                 <Tag
                   class:list={[
-                    'bg-bg-surface/50 ring-border/40 flex flex-col items-center rounded-lg p-3 text-center ring-1',
+                    'bg-bg-surface/60 ring-border/40 group flex flex-col items-center rounded-xl p-4 text-center ring-1 backdrop-blur-sm transition-all duration-200',
                     trophy.link &&
-                      'hover:ring-accent/60 cursor-pointer transition-all duration-150 hover:-translate-y-0.5',
+                      'hover:ring-accent/40 cursor-pointer hover:-translate-y-0.5 hover:shadow-[var(--shadow-glow)]',
                   ]}
                   href={trophy.link}
                   target={trophy.link ? '_blank' : undefined}
                   rel={trophy.link ? 'noopener noreferrer' : undefined}
                 >
-                  <span class="mb-1 text-2xl" aria-hidden="true">
+                  <span
+                    class="mb-1.5 text-2xl transition-transform duration-200 group-hover:scale-110"
+                    aria-hidden="true"
+                  >
                     {trophy.icon}
                   </span>
                   <p class="text-accent font-mono text-lg leading-tight font-bold">
                     {trophy.value}
                   </p>
-                  <p class="text-text-primary text-xs font-medium">{trophy.label}</p>
+                  <p class="text-text-primary mt-0.5 text-xs font-medium">{trophy.label}</p>
                   <p class="text-text-muted text-[10px]">{trophy.detail}</p>
                 </Tag>
               );

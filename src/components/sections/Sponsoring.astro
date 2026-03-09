@@ -3,9 +3,19 @@ import Button from '@components/ui/Button.astro';
 import { OPEN_COLLECTIVE_URL } from '@config';
 ---
 
-<section id="sponsoring" aria-label="Sponsor Celery">
-  <div class="border-accent/20 bg-accent-muted rounded-xl border p-6 md:p-8">
-    <div class="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+<section id="sponsoring" class="animate-section" aria-label="Sponsor Celery">
+  <div
+    class="border-accent/20 from-accent-muted/80 to-accent-muted/40 relative overflow-hidden rounded-xl border bg-gradient-to-br p-6 shadow-[var(--shadow-soft)] md:p-8"
+  >
+    <!-- Decorative gradient orb -->
+    <div
+      class="pointer-events-none absolute -top-20 -right-20 h-48 w-48 rounded-full opacity-20 blur-3xl"
+      style="background: radial-gradient(circle, var(--color-accent) 0%, transparent 70%)"
+      aria-hidden="true"
+    >
+    </div>
+
+    <div class="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
       <div class="max-w-xl">
         <!-- Celery leaf icon -->
         <div class="mb-3 flex items-center gap-2">

@@ -1,13 +1,16 @@
 ---
 import RepoCard from '@components/ui/RepoCard.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
 import { loadRepos } from '@lib/data/loader';
 
 const repos = (await loadRepos()) ?? [];
 ---
 
-<section id="projects" aria-label="Active projects">
-  <h2 class="mb-2 text-3xl font-bold tracking-tight">Active Projects</h2>
-  <p class="text-text-secondary mb-6">Open source projects I maintain and contribute to</p>
+<section id="projects" class="animate-section" aria-label="Active projects">
+  <SectionHeader
+    title="Active Projects"
+    subtitle="Open source projects I maintain and contribute to"
+  />
 
   <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
     {repos.map((repo) => <RepoCard repo={repo} />)}

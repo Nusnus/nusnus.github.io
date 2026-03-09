@@ -12,8 +12,10 @@ interface Props {
 const { variant = 'primary', size = 'md', href, class: className, ...rest } = Astro.props;
 
 const variantClasses = {
-  primary: 'bg-accent text-bg-base hover:bg-accent-hover shadow-sm',
-  ghost: 'border border-border text-text-primary hover:border-accent/40 hover:text-accent',
+  primary:
+    'bg-gradient-to-r from-accent to-accent-end text-bg-base hover:brightness-110 shadow-[var(--shadow-soft)] hover:shadow-[var(--shadow-glow)]',
+  ghost:
+    'border border-border text-text-primary hover:border-accent/40 hover:text-accent hover:shadow-[var(--shadow-soft)]',
   link: 'text-accent hover:underline underline-offset-4',
 };
 
@@ -25,7 +27,7 @@ const sizeClasses = {
 
 const classes = cn(
   'inline-flex items-center justify-center gap-2 rounded-lg font-medium',
-  'transition-colors duration-150',
+  'transition-all duration-200 ease-out',
   'focus-visible:ring-accent focus-visible:ring-offset-bg-base focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
   'motion-reduce:transition-none',
   variantClasses[variant],

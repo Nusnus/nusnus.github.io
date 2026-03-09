@@ -1,25 +1,28 @@
 ---
 import Card from '@components/ui/Card.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
 import { COLLABORATIONS } from '@config';
 ---
 
-<section id="collaborations" aria-label="Collaborations and recognition">
-  <h2 class="mb-2 text-3xl font-bold tracking-tight">Collaborations</h2>
-  <p class="text-text-secondary mb-6">Recognition and partnerships across the ecosystem</p>
+<section id="collaborations" class="animate-section" aria-label="Collaborations and recognition">
+  <SectionHeader
+    title="Collaborations"
+    subtitle="Recognition and partnerships across the ecosystem"
+  />
 
   <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
     {
       COLLABORATIONS.map((collab) => (
-        <Card>
+        <Card glow>
           <h3 class="text-text-primary mb-1 text-base font-semibold">{collab.name}</h3>
           <p class="text-accent mb-3 text-sm font-medium">{collab.title}</p>
-          <p class="text-text-secondary mb-4 text-sm">{collab.description}</p>
+          <p class="text-text-secondary mb-4 text-sm leading-relaxed">{collab.description}</p>
           <div class="flex items-center gap-4">
             <a
               href={collab.url}
               target="_blank"
               rel="noopener noreferrer"
-              class="text-accent inline-flex items-center gap-1 text-xs"
+              class="text-accent inline-flex items-center gap-1 text-xs transition-colors duration-200 hover:brightness-125"
             >
               Visit
               <svg
@@ -42,7 +45,7 @@ import { COLLABORATIONS } from '@config';
                 href={collab.xUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                class="text-text-muted hover:text-text-primary inline-flex items-center gap-1 text-xs transition-colors"
+                class="text-text-muted hover:text-text-primary inline-flex items-center gap-1 text-xs transition-colors duration-200"
               >
                 <svg class="h-3 w-3" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                   <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
