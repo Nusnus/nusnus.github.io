@@ -149,13 +149,17 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       if (e.ctrlKey || e.metaKey || e.altKey) return;
 
       // Escape: stop generation → close mobile sidebar → blur input
+      // stopImmediatePropagation prevents other window-level listeners
+      // (e.g. ExpandedMarkdownView) from also reacting to the same keypress.
       if (e.key === 'Escape') {
         if (isGenerating) {
+          e.stopImmediatePropagation();
           abortRef.current?.abort();
           setIsGenerating(false);
           return;
         }
         if (showSidebar) {
+          e.stopImmediatePropagation();
           setShowSidebar(false);
           return;
         }
