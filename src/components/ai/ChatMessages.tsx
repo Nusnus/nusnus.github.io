@@ -281,7 +281,7 @@ function ExpandedMarkdownView({
                 key={msg.id}
                 className={cn('px-6 py-8 md:px-12 lg:px-20', isUser ? 'bg-bg-surface/30' : '')}
               >
-                <div className="mx-auto flex max-w-4xl gap-5">
+                <div className="mx-auto flex max-w-3xl gap-5">
                   {/* Avatar */}
                   <div className="shrink-0 pt-0.5">
                     <div
@@ -481,7 +481,7 @@ export function ChatMessages({
                 key={msg.id}
                 className={cn('group px-4 py-6 md:px-8 lg:px-12', isUser ? 'bg-bg-surface/30' : '')}
               >
-                <div className="mx-auto flex max-w-3xl gap-4">
+                <div className="mx-auto flex max-w-2xl gap-4">
                   {/* Avatar */}
                   <div className="relative shrink-0 pt-0.5">
                     <div
@@ -594,7 +594,7 @@ export function ChatMessages({
           {isWelcomeOnly && (
             <div className="px-4 py-6 md:px-8 lg:px-12">
               <div
-                className="cybernus-fade-in-up mx-auto grid max-w-3xl gap-3 sm:grid-cols-2"
+                className="cybernus-fade-in-up mx-auto grid max-w-2xl gap-3 sm:grid-cols-2"
                 style={{ animationDelay: '200ms' }}
               >
                 {SUGGESTED_QUESTIONS.map((q) => (

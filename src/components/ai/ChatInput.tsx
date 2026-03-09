@@ -71,6 +71,15 @@ export function ChatInput({
   const strings = t(language);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // During recording: Esc cancels, Enter accepts and closes
+    if (isRecording && onVoiceToggle) {
+      if (e.key === 'Escape' || e.key === 'Enter') {
+        e.preventDefault();
+        onVoiceToggle();
+        return;
+      }
+    }
+
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       onSend(input);
@@ -79,7 +88,7 @@ export function ChatInput({
 
   return (
     <div className="shrink-0 px-4 pt-2 pb-4 md:px-8 lg:px-12">
-      <div className="mx-auto max-w-3xl">
+      <div className="mx-auto max-w-2xl">
         {isAtLimit ? (
           <div className="border-status-warning/20 bg-status-warning/[0.04] flex flex-col items-center gap-3 rounded-2xl border py-4 text-center backdrop-blur-sm">
             <p className="text-text-secondary text-sm">{strings.messageLimitReached}</p>

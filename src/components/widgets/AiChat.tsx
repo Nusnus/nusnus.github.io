@@ -76,6 +76,8 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
   const [audioLevel, setAudioLevel] = useState(0);
   const [transcriptPreview, setTranscriptPreview] = useState('');
   const voiceSessionRef = useRef<VoiceSession | null>(null);
+  const voiceStateRef = useRef(voiceState);
+  voiceStateRef.current = voiceState;
 
   /* ─── Debug state ─── */
   const [debugLogs, setDebugLogs] = useState<DebugLogEntry[]>([]);
@@ -147,6 +149,20 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
     function onKeyDown(e: KeyboardEvent) {
       // Don't intercept when modifier keys are held (let browser native shortcuts work)
       if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+      // During voice recording: Esc cancels, Enter accepts
+      if (voiceStateRef.current !== 'idle' && voiceStateRef.current !== 'error') {
+        if (e.key === 'Escape' || e.key === 'Enter') {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          voiceSessionRef.current?.stop();
+          voiceSessionRef.current = null;
+          setVoiceState('idle');
+          setAudioLevel(0);
+          setTranscriptPreview('');
+          return;
+        }
+      }
 
       // Escape: stop generation → close mobile sidebar → blur input
       // stopImmediatePropagation prevents other window-level listeners
@@ -805,6 +821,9 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
         {sidebarContent}
       </aside>
 
+      {/* Left Neural Stream — visible on xl+ screens */}
+      <ThoughtsPanel side="left" />
+
       {/* Main content area */}
       <div className="flex min-w-0 flex-1 flex-col">
         {engineState === 'idle' ? (
@@ -924,8 +943,8 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
         )}
       </div>
 
-      {/* Floating thoughts panel — visible on xl+ screens */}
-      <ThoughtsPanel />
+      {/* Floating thoughts panels — visible on xl+ screens */}
+      <ThoughtsPanel side="right" />
 
       {/* Debug panel — only in development */}
       {import.meta.env.DEV && (
