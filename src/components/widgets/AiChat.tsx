@@ -689,10 +689,10 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       </div>
 
       {/* Back to portfolio */}
-      <div className="border-border shrink-0 border-t px-5 py-3">
+      <div className="border-accent/30 shrink-0 border-t px-5 py-4">
         <a
           href="/"
-          className="text-text-secondary hover:text-accent flex items-center gap-2 text-xs transition-colors"
+          className="text-text-primary hover:text-accent flex items-center gap-2 text-sm font-medium transition-colors"
         >
           <svg
             className="h-3.5 w-3.5"
