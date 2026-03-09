@@ -113,7 +113,7 @@ function buildThought(id: number, text: string, delaySeconds: number): FloatingT
     duration: 18 + Math.random() * 14,
     delay: delaySeconds,
     size: SIZES[Math.floor(Math.random() * SIZES.length)] ?? 'sm',
-    opacity: 0.08 + Math.random() * 0.2,
+    opacity: 0.3 + Math.random() * 0.3,
   };
 }
 
@@ -170,7 +170,7 @@ export function ThoughtsPanel() {
         className="pointer-events-none absolute inset-0 z-10"
         style={{
           background:
-            'linear-gradient(to bottom, var(--color-bg-base), color-mix(in oklch, var(--color-bg-base) 30%, transparent), var(--color-bg-base))',
+            'linear-gradient(to bottom, var(--color-bg-base), transparent 25%, transparent 75%, var(--color-bg-base))',
         }}
       />
       <div
@@ -184,10 +184,10 @@ export function ThoughtsPanel() {
       <div className="relative z-20 px-4 pt-4 pb-2">
         <div className="flex items-center gap-2">
           <span className="relative flex h-1.5 w-1.5">
-            <span className="bg-accent/20 absolute inline-flex h-full w-full animate-ping rounded-full" />
-            <span className="bg-accent/30 relative inline-flex h-1.5 w-1.5 rounded-full" />
+            <span className="bg-accent/40 absolute inline-flex h-full w-full animate-ping rounded-full" />
+            <span className="bg-accent/50 relative inline-flex h-1.5 w-1.5 rounded-full" />
           </span>
-          <span className="text-accent/20 font-mono text-[10px] tracking-widest uppercase">
+          <span className="text-accent/40 font-mono text-[10px] tracking-widest uppercase">
             Neural Stream
           </span>
         </div>
@@ -222,7 +222,7 @@ export function ThoughtsPanel() {
                 color: `rgba(52, 211, 153, ${thought.opacity})`,
                 textShadow:
                   thought.opacity > 0.2
-                    ? `0 0 12px rgba(52, 211, 153, ${thought.opacity * 0.15})`
+                    ? `0 0 12px rgba(52, 211, 153, ${thought.opacity * 0.25})`
                     : 'none',
               }}
             >
