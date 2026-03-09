@@ -10,6 +10,8 @@ export interface Article {
   url: string;
   excerpt: string;
   publishedAt: string;
+  /** Slug for the native article page. When set, card links to /articles/<slug>. */
+  slug?: string;
 }
 
 export interface Collaboration {
@@ -34,6 +36,7 @@ export const LINKEDIN_ARTICLES: readonly Article[] = [
     excerpt:
       "Taking an end-to-end approach is more than just a professional technique; it's a lifestyle philosophy.",
     publishedAt: '2023-08-26',
+    slug: 'elevate-your-game-e2e-thinking',
   },
   {
     title: 'The Subtle Art of Making Every Word Count',
@@ -41,6 +44,7 @@ export const LINKEDIN_ARTICLES: readonly Article[] = [
     excerpt:
       'The Point-First Approach (PFA) — your escape hatch from verbosity and your gateway to focused, meaningful conversations.',
     publishedAt: '2023-09-09',
+    slug: 'subtle-art-making-every-word-count',
   },
 ] as const;
 

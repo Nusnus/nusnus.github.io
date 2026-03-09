@@ -16,34 +16,45 @@ import { formatDate } from '@lib/utils/date';
 
   <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
     {
-      LINKEDIN_ARTICLES.map((article) => (
-        <Card href={article.url}>
-          <Badge variant="ghost" size="sm" class="mb-3">
-            Published on LinkedIn
-          </Badge>
-          <h3 class="text-text-primary mb-2 text-base font-semibold">{article.title}</h3>
-          <p class="text-text-secondary mb-3 text-sm">{article.excerpt}</p>
-          <div class="text-text-muted flex items-center justify-between text-xs">
-            <time datetime={article.publishedAt}>{formatDate(article.publishedAt)}</time>
-            <span class="text-accent inline-flex items-center gap-1">
-              Read on LinkedIn
-              <svg
-                class="h-3 w-3"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
+      LINKEDIN_ARTICLES.map((article) => {
+        const cardHref = article.slug ? `/articles/${article.slug}` : article.url;
+        const isInternal = !!article.slug;
+
+        return (
+          <Card href={cardHref} internal={isInternal}>
+            <Badge variant="ghost" size="sm" class="mb-3">
+              Published on LinkedIn
+            </Badge>
+            <h3 class="text-text-primary mb-2 text-base font-semibold">{article.title}</h3>
+            <p class="text-text-secondary mb-3 text-sm">{article.excerpt}</p>
+            <div class="text-text-muted flex items-center justify-between text-xs">
+              <time datetime={article.publishedAt}>{formatDate(article.publishedAt)}</time>
+              <a
+                href={article.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-accent relative z-10 inline-flex items-center gap-1 hover:underline"
+                onclick="event.stopPropagation();"
               >
-                <line x1="5" y1="12" x2="19" y2="12" />
-                <polyline points="12 5 19 12 12 19" />
-              </svg>
-            </span>
-          </div>
-        </Card>
-      ))
+                Read on LinkedIn
+                <svg
+                  class="h-3 w-3"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                  <polyline points="12 5 19 12 12 19" />
+                </svg>
+              </a>
+            </div>
+          </Card>
+        );
+      })
     }
   </div>
 
