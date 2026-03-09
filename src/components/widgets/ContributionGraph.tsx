@@ -96,6 +96,20 @@ export default function ContributionGraph({
     setTooltipPos(null);
   }, []);
 
+  /** Touch handler for mobile — tap to show, tap again/elsewhere to dismiss */
+  const handleTouch = useCallback(
+    (e: React.TouchEvent, date: string, count: number, weekIndex: number, dayIndex: number) => {
+      e.preventDefault();
+      if (hovered?.weekIndex === weekIndex && hovered?.dayIndex === dayIndex) {
+        setHovered(null);
+        setTooltipPos(null);
+      } else {
+        handleMouseEnter(date, count, weekIndex, dayIndex);
+      }
+    },
+    [hovered, handleMouseEnter],
+  );
+
   const gridWidth = weeks.length * CELL_STEP;
   const svgWidth = LABEL_WIDTH + gridWidth;
   const svgHeight = MONTH_LABEL_HEIGHT + 7 * CELL_STEP;
@@ -170,6 +184,9 @@ export default function ContributionGraph({
                   handleMouseEnter(day.date, day.contributionCount, weekIndex, day.weekday)
                 }
                 onMouseLeave={handleMouseLeave}
+                onTouchStart={(e) =>
+                  handleTouch(e, day.date, day.contributionCount, weekIndex, day.weekday)
+                }
               />
             );
           }),

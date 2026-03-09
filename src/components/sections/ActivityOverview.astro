@@ -104,7 +104,7 @@ const trophies: Trophy[] = [
 
   <!-- Foreground content -->
   <div class="relative z-10">
-    <h2 class="mb-1 text-3xl font-bold tracking-tight">Contributions</h2>
+    <h2 class="mb-1 text-2xl font-bold tracking-tight sm:text-3xl">Contributions</h2>
     <p class="text-text-secondary mb-5 text-sm">Contribution heatmap for the last year</p>
 
     <!-- Contribution heatmap -->
@@ -159,7 +159,7 @@ const trophies: Trophy[] = [
           <p class="text-text-muted mb-3 text-xs font-medium tracking-wider uppercase">
             Achievements
           </p>
-          <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
             {trophies.map((trophy) => {
               const Tag = trophy.link ? 'a' : 'div';
               return (

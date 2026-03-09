@@ -87,7 +87,7 @@ export function ChatInput({
   };
 
   return (
-    <div className="shrink-0 px-4 pt-2 pb-4 md:px-8 lg:px-12">
+    <div className="shrink-0 px-3 pt-2 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-4 md:px-8 lg:px-12">
       <div className="mx-auto max-w-2xl">
         {isAtLimit ? (
           <div className="border-status-warning/20 bg-status-warning/[0.04] flex flex-col items-center gap-3 rounded-2xl border py-4 text-center backdrop-blur-sm">
@@ -103,7 +103,7 @@ export function ChatInput({
           <>
             {/* Recording indicator bar */}
             {isRecording && (
-              <div className="cybernus-fade-in mb-2.5 flex items-center gap-3 rounded-xl border border-red-500/20 bg-red-500/[0.04] px-4 py-3 backdrop-blur-sm">
+              <div className="cybernus-fade-in mb-2.5 flex flex-wrap items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/[0.04] px-3 py-2.5 backdrop-blur-sm sm:flex-nowrap sm:gap-3 sm:px-4 sm:py-3">
                 <div className="flex items-center gap-2">
                   <span className="relative flex h-2.5 w-2.5">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-50" />
@@ -113,12 +113,14 @@ export function ChatInput({
                 </div>
                 <VoiceWaveform audioLevel={audioLevel} />
                 {transcriptPreview && (
-                  <p className="min-w-0 flex-1 truncate text-sm text-red-300/60 italic">
+                  <p className="min-w-0 flex-1 basis-full truncate text-sm text-red-300/60 italic sm:basis-auto">
                     {transcriptPreview}
                   </p>
                 )}
-                <div className="flex shrink-0 items-center gap-2">
-                  <span className="text-[10px] text-red-400/50">Esc cancel · Enter send</span>
+                <div className="ml-auto flex shrink-0 items-center gap-2">
+                  <span className="hidden text-[10px] text-red-400/50 sm:inline">
+                    Esc cancel · Enter send
+                  </span>
                   <button
                     onClick={onVoiceToggle}
                     className="shrink-0 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-1.5 text-xs font-medium text-red-400 transition-all hover:bg-red-500/20"
@@ -148,7 +150,7 @@ export function ChatInput({
                   title={strings.voiceStart}
                 >
                   <Mic className="h-4 w-4" />
-                  <span className="text-text-muted/50 group-hover:text-accent/60 text-[10px] whitespace-nowrap transition-colors">
+                  <span className="text-text-muted/50 group-hover:text-accent/60 hidden text-[10px] whitespace-nowrap transition-colors sm:inline">
                     Shift+Enter
                   </span>
                 </button>

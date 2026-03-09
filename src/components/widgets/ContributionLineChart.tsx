@@ -76,6 +76,19 @@ export default function ContributionLineChart({ weeks: initialWeeks }: Props) {
   }, []);
   const handleLeave = useCallback(() => setHovered(null), []);
 
+  /** Touch handler for mobile — tap to show, tap again to dismiss */
+  const handleTouch = useCallback(
+    (e: React.TouchEvent, index: number, date: string, count: number) => {
+      e.preventDefault();
+      if (hovered?.index === index) {
+        setHovered(null);
+      } else {
+        setHovered({ index, date, count });
+      }
+    },
+    [hovered],
+  );
+
   if (days.length === 0) return null;
 
   const n = days.length;
@@ -178,6 +191,7 @@ export default function ContributionLineChart({ weeks: initialWeeks }: Props) {
                 fill="transparent"
                 onMouseEnter={() => handleEnter(i, day.date, day.count)}
                 onMouseLeave={handleLeave}
+                onTouchStart={(e) => handleTouch(e, i, day.date, day.count)}
               />
               {/* Hover vertical line */}
               {isHov && (

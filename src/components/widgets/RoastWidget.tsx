@@ -179,7 +179,7 @@ ${
     <>
       {/* Chat bubble */}
       {isOpen && (
-        <div className="fixed right-4 bottom-24 z-50 w-[min(380px,calc(100vw-2rem))] sm:right-6">
+        <div className="fixed right-4 bottom-20 z-50 w-[min(380px,calc(100vw-2rem))] sm:right-6 sm:bottom-24">
           <div className="bg-bg-base border-border flex max-h-[60vh] flex-col overflow-hidden rounded-2xl border shadow-2xl">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-orange-500/20 bg-gradient-to-r from-orange-500/10 to-red-500/10 px-4 py-2.5">
@@ -282,7 +282,7 @@ ${
       <button
         onClick={handleFabClick}
         aria-label={isOpen ? 'Close roast' : 'Roast Tomer Nosrati'}
-        className="roast-fab group fixed right-6 bottom-6 z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-2"
+        className="roast-fab group fixed right-4 bottom-4 z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-2 sm:right-6 sm:bottom-6"
       >
         <span className="text-2xl transition-transform duration-300 group-hover:scale-125">
           {isOpen ? '✕' : '🔥'}

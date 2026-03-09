@@ -35,7 +35,7 @@ export function ModelPicker({
               <Sparkles className="text-accent h-8 w-8" />
             </div>
           </div>
-          <h2 className="text-text-primary mb-3 text-3xl font-extrabold tracking-tight sm:text-4xl">
+          <h2 className="text-text-primary mb-3 text-2xl font-extrabold tracking-tight sm:text-3xl md:text-4xl">
             {strings.title}
           </h2>
           <p className="text-text-secondary text-sm">{strings.subtitle}</p>
