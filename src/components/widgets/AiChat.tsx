@@ -649,8 +649,30 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
         <span className="text-text-primary text-sm font-bold tracking-[0.15em]">CYBERNUS</span>
       </div>
 
-      {/* New Chat button */}
+      {/* Home button */}
       <div className="shrink-0 px-4 pt-4 pb-1">
+        <a
+          href="/"
+          className="border-border bg-bg-surface text-text-secondary hover:border-accent/40 hover:bg-accent-muted hover:text-text-primary flex w-full items-center gap-2.5 rounded-xl border px-3 py-2.5 text-sm transition-all hover:-translate-y-0.5"
+        >
+          <svg
+            className="h-4 w-4"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+            <polyline points="9 22 9 12 15 12 15 22" />
+          </svg>
+          Home
+        </a>
+      </div>
+
+      {/* New Chat button */}
+      <div className="shrink-0 px-4 pt-1 pb-1">
         <button
           onClick={clearChat}
           className="border-accent/30 bg-accent/5 text-text-primary hover:border-accent/50 hover:bg-accent/10 flex w-full items-center gap-2.5 rounded-xl border px-3 py-2.5 text-sm font-medium transition-all hover:-translate-y-0.5"
