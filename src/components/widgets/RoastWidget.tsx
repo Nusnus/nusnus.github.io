@@ -294,19 +294,22 @@ ${
 
 /** Lazily renders markdown content — avoids pulling renderMarkdown into the idle bundle. */
 function RoastContent({ response, streaming }: { response: string; streaming: boolean }) {
-  const [rendered, setRendered] = useState<React.ReactNode>(null);
+  const [renderFn, setRenderFn] = useState<
+    ((md: string, streaming: boolean) => React.ReactNode) | null
+  >(null);
 
   useEffect(() => {
     let cancelled = false;
     import('@lib/ai/markdown').then(({ renderMarkdown }) => {
-      if (!cancelled) setRendered(renderMarkdown(response, streaming));
+      if (!cancelled) setRenderFn(() => renderMarkdown);
     });
     return () => {
       cancelled = true;
     };
-  }, [response, streaming]);
+  }, []);
 
-  return <div className="text-text-primary text-sm leading-relaxed">{rendered ?? response}</div>;
+  const content = renderFn ? renderFn(response, streaming) : response;
+  return <div className="text-text-primary text-sm leading-relaxed">{content}</div>;
 }
 
 /** Pulsing dots loading indicator. */
