@@ -611,19 +611,22 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       <div className="shrink-0 px-4 pt-4 pb-1">
         <button
           onClick={clearChat}
-          className="border-border bg-bg-surface text-text-secondary hover:border-accent/40 hover:bg-accent-muted hover:text-text-primary flex w-full items-center gap-2 rounded-xl border px-3 py-2.5 text-[13px] transition-all hover:-translate-y-0.5"
+          className="border-accent/30 bg-accent/5 text-text-primary hover:border-accent/50 hover:bg-accent/10 flex w-full items-center gap-2.5 rounded-xl border px-3 py-2.5 text-sm font-medium transition-all hover:-translate-y-0.5"
         >
-          <svg
-            className="h-4 w-4"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M12 5v14M5 12h14" />
-          </svg>
+          <span className="text-accent relative flex h-4 w-4 items-center justify-center">
+            <span className="bg-accent/20 absolute inset-0 animate-ping rounded-full opacity-40" />
+            <svg
+              className="relative h-4 w-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+          </span>
           {strings.newChat}
         </button>
       </div>
