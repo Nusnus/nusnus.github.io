@@ -79,6 +79,11 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
   const voiceStateRef = useRef(voiceState);
   voiceStateRef.current = voiceState;
   const handleVoiceToggleRef = useRef<(() => void) | null>(null);
+  const sendMessageRef = useRef<((text: string) => void) | null>(null);
+  const transcriptPreviewRef = useRef(transcriptPreview);
+  transcriptPreviewRef.current = transcriptPreview;
+  const inputRef_value = useRef(input);
+  inputRef_value.current = input;
 
   /* ─── Debug state ─── */
   const [debugLogs, setDebugLogs] = useState<DebugLogEntry[]>([]);
@@ -158,17 +163,38 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
         if (expandedOverlay) return; // defer to ExpandedMarkdownView / DiagramViewer
       }
 
-      // During voice recording: Esc cancels, Enter accepts
+      // During voice recording: Esc cancels, Enter accepts + sends
       if (voiceStateRef.current !== 'idle' && voiceStateRef.current !== 'error') {
         if (e.key === 'Escape' || e.key === 'Enter') {
           e.preventDefault();
           e.stopImmediatePropagation();
+
+          const isAccept = e.key === 'Enter';
+          // Capture interim transcript before stopping (stop() aborts recognition
+          // and discards pending results)
+          const interim = transcriptPreviewRef.current;
+          const existingInput = inputRef_value.current;
+
           voiceSessionRef.current?.stop();
           voiceSessionRef.current = null;
           setVoiceState('idle');
           setAudioLevel(0);
           setTranscriptPreview('');
-          // Focus the chat input so user can immediately type or press Enter to send
+
+          if (isAccept && interim) {
+            // Combine any already-finalized text with the interim transcript
+            const fullText = existingInput ? `${existingInput} ${interim}`.trim() : interim.trim();
+            if (fullText) {
+              setInput('');
+              sendMessageRef.current?.(fullText);
+            }
+          } else if (isAccept && existingInput?.trim()) {
+            // No interim but there is finalized text — send it
+            setInput('');
+            sendMessageRef.current?.(existingInput.trim());
+          }
+
+          // Focus the chat input for next interaction
           requestAnimationFrame(() => inputRef.current?.focus());
           return;
         }
@@ -196,10 +222,8 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
           setShowSidebar(false);
           return;
         }
-        // Blur active input so user can use other shortcuts
-        if (document.activeElement instanceof HTMLElement) {
-          document.activeElement.blur();
-        }
+        // Focus the chat input as fallback
+        requestAnimationFrame(() => inputRef.current?.focus());
         return;
       }
 
@@ -657,6 +681,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
     }
   }, [voiceState, addLog, language]);
   handleVoiceToggleRef.current = handleVoiceToggle;
+  sendMessageRef.current = sendMessage;
 
   /* ─── Derived values ─── */
   const activeCloudModel = CLOUD_MODELS.find((m) => m.id === selectedCloudModelId);

@@ -118,7 +118,7 @@ export function ChatInput({
                   </p>
                 )}
                 <div className="flex shrink-0 items-center gap-2">
-                  <span className="text-[10px] text-red-400/50">Esc cancel · Enter accept</span>
+                  <span className="text-[10px] text-red-400/50">Esc cancel · Enter send</span>
                   <button
                     onClick={onVoiceToggle}
                     className="shrink-0 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-1.5 text-xs font-medium text-red-400 transition-all hover:bg-red-500/20"
