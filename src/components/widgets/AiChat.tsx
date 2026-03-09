@@ -150,6 +150,13 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       // Don't intercept when modifier keys are held (let browser native shortcuts work)
       if (e.ctrlKey || e.metaKey || e.altKey) return;
 
+      // If the expanded (zoomed) overlay is open, let its own handler close it first.
+      // This applies to all Escape handling below (voice, generation, sidebar).
+      if (e.key === 'Escape') {
+        const expandedOverlay = document.querySelector('.fixed.inset-0.z-50');
+        if (expandedOverlay) return; // defer to ExpandedMarkdownView / DiagramViewer
+      }
+
       // During voice recording: Esc cancels, Enter accepts
       if (voiceStateRef.current !== 'idle' && voiceStateRef.current !== 'error') {
         if (e.key === 'Escape' || e.key === 'Enter') {
@@ -164,9 +171,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
         }
       }
 
-      // Escape: stop generation → close mobile sidebar → blur input
-      // stopImmediatePropagation prevents other window-level listeners
-      // (e.g. ExpandedMarkdownView) from also reacting to the same keypress.
+      // Escape priority: stop generation → close sidebar → blur
       if (e.key === 'Escape') {
         if (isGenerating) {
           e.stopImmediatePropagation();
