@@ -306,8 +306,7 @@ function RoastContent({ response, streaming }: { response: string; streaming: bo
     };
   }, [response, streaming]);
 
-  if (!rendered) return null;
-  return <div className="text-text-primary text-sm leading-relaxed">{rendered}</div>;
+  return <div className="text-text-primary text-sm leading-relaxed">{rendered ?? response}</div>;
 }
 
 /** Pulsing dots loading indicator. */
