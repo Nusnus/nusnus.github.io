@@ -5,7 +5,7 @@
  * assistant text to speech using the Rex voice.
  */
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { cn } from '@lib/utils/cn';
 import { textToSpeech } from '@lib/cybernus/services/VoiceService';
 import type { Language } from '@lib/ai/i18n';
@@ -23,6 +23,18 @@ export function TTSButton({ text, language }: TTSButtonProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const strings = t(language);
+
+  // Cleanup on unmount: stop audio and abort pending requests
+  useEffect(() => {
+    return () => {
+      abortRef.current?.abort();
+      const audio = audioRef.current;
+      if (audio) {
+        audio.pause();
+        if (audio.src.startsWith('blob:')) URL.revokeObjectURL(audio.src);
+      }
+    };
+  }, []);
 
   const handleClick = useCallback(async () => {
     if (state === 'playing') {
@@ -52,8 +64,8 @@ export function TTSButton({ text, language }: TTSButtonProps) {
       const cleanText = text
         .replace(/\*\*([^*]+)\*\*/g, '$1')
         .replace(/\*([^*]+)\*/g, '$1')
-        .replace(/`[^`]+`/g, '')
         .replace(/```[\s\S]*?```/g, '')
+        .replace(/`[^`]+`/g, '')
         .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
         .replace(/#{1,6}\s/g, '')
         .replace(/^\s*[>\-*]\s/gm, '')
