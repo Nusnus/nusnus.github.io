@@ -295,20 +295,9 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       // Ignore invalid handoff data
     }
 
-    // Load session on mount
+    // Load sessions for sidebar history — but always start on idle (model picker)
     const allSessions = loadSessions();
     setSessions(allSessions);
-    const activeId = getActiveSessionId();
-    if (activeId) {
-      setActiveSession(activeId);
-      const restored = loadMessages();
-      if (restored.length > 0) {
-        setMessages(restored);
-        setEngineState('ready');
-        addLog('info', 'session', 'Session restored', { id: activeId, messages: restored.length });
-        return;
-      }
-    }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* ─── Init engine (start new/continue chat) ─── */
