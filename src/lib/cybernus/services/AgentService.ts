@@ -55,6 +55,15 @@ const AGENT_PERSONAS: Record<string, AgentPersona> = {
       'M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15z',
     color: '#ce93d8',
   },
+  // MCP calls arrive as 'mcp' (from 'mcp_call' → strip '_call'). Map to Archivist.
+  mcp: {
+    agent: 'Archivist',
+    workingLabel: 'Querying DeepWiki...',
+    doneLabel: 'DeepWiki search complete',
+    iconPath:
+      'M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15z',
+    color: '#ce93d8',
+  },
   image_generation: {
     agent: 'Vision',
     workingLabel: 'Generating image...',
