@@ -905,7 +905,7 @@ function VideoPlayer({ src, alt }: { src: string; alt: string }) {
         className={`w-full max-w-full rounded-xl border border-[#00ff41]/15 shadow-lg shadow-black/20 transition-opacity duration-300 ${
           loaded ? 'opacity-100' : 'pointer-events-none absolute h-0 overflow-hidden opacity-0'
         }`}
-        onLoadedData={() => setLoaded(true)}
+        onLoadedMetadata={() => setLoaded(true)}
         onError={() => setError(true)}
         aria-label={alt}
       />

@@ -144,6 +144,9 @@ ${
 
       const finalContent = content + imageMarkdown;
 
+      // If user closed the widget during image generation, don't reopen
+      if (controller.signal.aborted) return;
+
       // Append this exchange to history so the next escalation sees it
       if (isEscalation || levelClamp === 0) {
         historyRef.current.push(

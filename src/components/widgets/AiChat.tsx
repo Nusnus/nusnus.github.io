@@ -592,6 +592,9 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
           }
         }
 
+        // Bail out if the user aborted during image generation
+        if (controller.signal.aborted) throw new Error('aborted');
+
         // Handle video generation tool calls
         const videoToolCalls = result.toolCalls.filter((tc) => tc.name === 'generate_video');
         let videoMarkdown = '';
@@ -653,6 +656,9 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
             });
           }
         }
+
+        // Bail out if the user aborted during video generation
+        if (controller.signal.aborted) throw new Error('aborted');
 
         // Build final assistant message
         // If the API returned only tool calls with no text, use a fallback so
