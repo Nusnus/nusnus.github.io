@@ -26,7 +26,11 @@ export function TTSButton({ text, language }: TTSButtonProps) {
 
   const handleClick = useCallback(async () => {
     if (state === 'playing') {
-      audioRef.current?.pause();
+      const audio = audioRef.current;
+      if (audio) {
+        audio.pause();
+        if (audio.src.startsWith('blob:')) URL.revokeObjectURL(audio.src);
+      }
       audioRef.current = null;
       abortRef.current?.abort();
       setState('idle');
