@@ -49,6 +49,12 @@ interface AiChatProps {
 
 type EngineState = 'idle' | 'ready';
 
+/** Maximum number of debug log entries to retain. */
+const MAX_DEBUG_LOGS = 200;
+
+/** Shared SVG path for the hamburger menu icon. */
+const HAMBURGER_MENU_PATH = 'M3 12h18M3 6h18M3 18h18';
+
 /** Check if a message is any translated welcome message. */
 function isWelcomeMessage(content: string): boolean {
   return LANGUAGES.some((l) => t(l.code).welcome === content);
@@ -123,8 +129,8 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       setDebugLogs((prev) => {
         const entry = createLogEntry(level, category, message, data);
         const updated = [...prev, entry];
-        // Keep last 200 logs
-        return updated.length > 200 ? updated.slice(-200) : updated;
+        // Keep last MAX_DEBUG_LOGS logs
+        return updated.length > MAX_DEBUG_LOGS ? updated.slice(-MAX_DEBUG_LOGS) : updated;
       });
     },
     [],
@@ -974,7 +980,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
                   stroke="currentColor"
                   strokeWidth="2"
                 >
-                  <path d="M3 12h18M3 6h18M3 18h18" />
+                  <path d={HAMBURGER_MENU_PATH} />
                 </svg>
               </button>
               <span className="text-text-primary text-sm font-bold tracking-wider">CYBERNUS</span>
@@ -1008,7 +1014,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
                     stroke="currentColor"
                     strokeWidth="2"
                   >
-                    <path d="M3 12h18M3 6h18M3 18h18" />
+                    <path d={HAMBURGER_MENU_PATH} />
                   </svg>
                 </button>
 

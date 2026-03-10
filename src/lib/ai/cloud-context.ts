@@ -16,15 +16,9 @@ import {
   safeRepoName,
   WORKER_BASE_URL,
 } from '@config';
-import { relativeTime } from '@lib/utils/date';
+import { relativeTime, formatNumber } from '@lib/utils/date';
 import { getPersonality, type PersonalityLevel } from './personality';
 import { getLanguageInstruction, type Language } from './i18n';
-
-/** Format a number with commas (full precision for AI context). */
-const fmt = (n: number) => n.toLocaleString('en-US');
-
-/** Format an ISO date as relative time. */
-const formatRelative = relativeTime;
 
 /**
  * Fetch a GitHub endpoint from the Worker (live, cached), falling back to
@@ -108,7 +102,7 @@ export async function buildCloudContext(
       `# Live GitHub Profile\n` +
         `- **${profile.name}** (@${profile.login})\n` +
         `- Bio: ${profile.bio}\n` +
-        `- Followers: ${fmt(profile.followers)} · Public repos: ${profile.publicRepos}`,
+        `- Followers: ${formatNumber(profile.followers)} · Public repos: ${profile.publicRepos}`,
     );
   }
 
@@ -119,8 +113,8 @@ export async function buildCloudContext(
       const rank = r.contributorRank ? ` · #${r.contributorRank} all-time contributor` : '';
       return (
         `- **${r.fullName}**: ${r.description}\n` +
-        `  ${fmt(r.stars)}★ · ${fmt(r.forks)} forks · ${r.openIssues} open issues · ` +
-        `Role: ${r.role}${rank} · Language: ${r.language ?? 'Python'} · Last push: ${formatRelative(r.lastPush)}`
+        `  ${formatNumber(r.stars)}★ · ${formatNumber(r.forks)} forks · ${r.openIssues} open issues · ` +
+        `Role: ${r.role}${rank} · Language: ${r.language ?? 'Python'} · Last push: ${relativeTime(r.lastPush)}`
       );
     });
     sections.push(`# Featured Projects (Live Data)\n${lines.join('\n')}`);
@@ -131,7 +125,7 @@ export async function buildCloudContext(
     const orgRepos = (await orgReposRes.json()) as RepoData[];
     const lines = orgRepos.map((r) => {
       const rank = r.contributorRank ? ` · #${r.contributorRank} all-time contributor` : '';
-      return `- **${r.fullName}**: ${r.description} · ${fmt(r.stars)}★ · Role: ${r.role}${rank}`;
+      return `- **${r.fullName}**: ${r.description} · ${formatNumber(r.stars)}★ · Role: ${r.role}${rank}`;
     });
     sections.push(`# Celery Organization Repos (Live Data)\n${lines.join('\n')}`);
   }
@@ -141,11 +135,11 @@ export async function buildCloudContext(
     const graph = (await graphRes.json()) as ContributionGraphData;
     sections.push(
       `# Contribution Stats (Last 12 Months)\n` +
-        `- Total contributions: ${fmt(graph.totalContributions)}\n` +
-        `- Commits: ${fmt(graph.totalCommits)}\n` +
-        `- Pull requests: ${fmt(graph.totalPRs)}\n` +
-        `- Code reviews: ${fmt(graph.totalReviews)}\n` +
-        `- Issues: ${fmt(graph.totalIssues)}`,
+        `- Total contributions: ${formatNumber(graph.totalContributions)}\n` +
+        `- Commits: ${formatNumber(graph.totalCommits)}\n` +
+        `- Pull requests: ${formatNumber(graph.totalPRs)}\n` +
+        `- Code reviews: ${formatNumber(graph.totalReviews)}\n` +
+        `- Issues: ${formatNumber(graph.totalIssues)}`,
     );
   }
 
@@ -156,7 +150,7 @@ export async function buildCloudContext(
     if (data.events.length > 0) {
       const lines = data.events.map((e) => {
         const repo = safeRepoName(e.repo);
-        return `- [${formatRelative(e.createdAt)}] ${e.type}: ${e.title} (${repo})`;
+        return `- [${relativeTime(e.createdAt)}] ${e.type}: ${e.title} (${repo})`;
       });
       sections.push(`# Recent GitHub Activity (Live)\n${lines.join('\n')}`);
     }
