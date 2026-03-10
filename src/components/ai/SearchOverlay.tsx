@@ -47,6 +47,7 @@ export function SearchOverlay({ isOpen, onClose, onSelectResult, language }: Sea
   }, []);
 
   const handleClose = useCallback(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
     setQuery('');
     setResults([]);
     onClose();
