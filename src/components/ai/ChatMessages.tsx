@@ -11,7 +11,6 @@ import {
   RotateCcw,
 } from 'lucide-react';
 import { cn } from '@lib/utils/cn';
-import { SUGGESTED_QUESTIONS } from '@lib/ai/config';
 import type { ChatMessage } from '@lib/ai/types';
 import { renderMarkdown } from '@lib/ai/markdown';
 import { executeAction } from '@lib/ai/tools';
@@ -609,16 +608,24 @@ export function ChatMessages({
                 className="cybernus-fade-in-up mx-auto grid max-w-2xl gap-3 sm:grid-cols-2"
                 style={{ animationDelay: '200ms' }}
               >
-                {SUGGESTED_QUESTIONS.map((q) => (
-                  <button
-                    key={q}
-                    onClick={() => onSendMessage(q)}
-                    disabled={isGenerating}
-                    className="group border-border bg-bg-surface text-text-secondary hover:border-accent/40 hover:bg-accent-muted hover:text-text-primary rounded-xl border p-4 text-left text-[13px] leading-relaxed transition-all hover:-translate-y-0.5"
-                  >
-                    <span>{q}</span>
-                  </button>
-                ))}
+                {(() => {
+                  const questions = [
+                    "What are Tomer's main open source contributions?",
+                    'Tell me about the Celery project',
+                    'What is pytest-celery and how does it work?',
+                    'Show me a visual breakdown of your GitHub activity',
+                  ];
+                  return questions.map((q) => (
+                    <button
+                      key={q}
+                      onClick={() => onSendMessage(q)}
+                      disabled={isGenerating}
+                      className="group border-border bg-bg-surface text-text-secondary hover:border-accent/40 hover:bg-accent-muted hover:text-text-primary rounded-xl border p-4 text-left text-[13px] leading-relaxed transition-all hover:-translate-y-0.5"
+                    >
+                      <span>{q}</span>
+                    </button>
+                  ));
+                })()}
               </div>
             </div>
           )}

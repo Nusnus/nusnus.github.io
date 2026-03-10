@@ -8,12 +8,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { cn } from '@lib/utils/cn';
 import type { ChatMessage } from '@lib/ai/types';
-import {
-  CLOUD_MODELS,
-  DEFAULT_CLOUD_MODEL_ID,
-  MAX_USER_MESSAGES,
-  trimHistory,
-} from '@lib/ai/config';
+import { MODEL_ID, MAX_USER_MESSAGES, trimHistory } from '@lib/ai/config';
 import { getToolsForModel, mapToolCallsToActions } from '@lib/ai/tools';
 import {
   saveMessages,
@@ -28,7 +23,7 @@ import {
 import type { ChatSession } from '@lib/ai/memory';
 import { ChatMessages } from '@components/ai/ChatMessages';
 import { ChatInput } from '@components/ai/ChatInput';
-import { ModelPicker } from '@components/ai/ModelPicker';
+
 import { SessionHistory } from '@components/ai/SessionHistory';
 import { ThoughtsPanel } from '@components/ai/ThoughtsPanel';
 import { DebugPanel, createLogEntry } from '@components/ai/DebugPanel';
@@ -38,6 +33,13 @@ import type { PersonalityLevel } from '@lib/ai/personality';
 import { getLanguage, setLanguage as setStoredLanguage, LANGUAGES, t } from '@lib/ai/i18n';
 import type { Language } from '@lib/ai/i18n';
 import { VoiceSession, isVoiceSupported } from '@lib/ai/voice';
+import {
+  generateSubAgentTasks,
+  advanceSubAgentTasks,
+  completeAllSubAgentTasks,
+} from '@lib/ai/sub-agents';
+import type { SubAgentTask } from '@lib/ai/sub-agents';
+import { SubAgentPanel } from '@components/ai/SubAgentPanel';
 import type { VoiceState } from '@lib/ai/voice';
 
 interface AiChatProps {
@@ -51,7 +53,7 @@ function isWelcomeMessage(content: string): boolean {
   return LANGUAGES.some((l) => t(l.code).welcome === content);
 }
 
-/** Main Cybernus chat component — cloud-only architecture with professional UI. */
+/** Main Cybernus chat component — single-model, direct-to-chat architecture. */
 export default function AiChat({ systemPrompt }: AiChatProps) {
   /* ─── Core state ─── */
   const [engineState, setEngineState] = useState<EngineState>('idle');
@@ -59,8 +61,8 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
   const [input, setInput] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
 
-  /* ─── Cloud model ─── */
-  const [selectedCloudModelId, setSelectedCloudModelId] = useState(DEFAULT_CLOUD_MODEL_ID);
+  /* ─── Cloud model — single model, no selection ─── */
+  const selectedCloudModelId = MODEL_ID;
 
   /* ─── Personality & Language ─── */
   const [personality, setPersonality] = useState<PersonalityLevel>(getPersonalityLevel);
@@ -84,6 +86,10 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
   transcriptPreviewRef.current = transcriptPreview;
   const inputRef_value = useRef(input);
   inputRef_value.current = input;
+
+  /* ─── Sub-agent state ─── */
+  const [subAgentTasks, setSubAgentTasks] = useState<SubAgentTask[]>([]);
+  const subAgentIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   /* ─── Debug state ─── */
   const [debugLogs, setDebugLogs] = useState<DebugLogEntry[]>([]);
@@ -213,7 +219,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
         if (isGenerating) {
           e.stopImmediatePropagation();
           abortRef.current?.abort();
-          setIsGenerating(false);
+          finishGeneration();
           requestAnimationFrame(() => inputRef.current?.focus());
           return;
         }
@@ -264,7 +270,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       // Ignore invalid handoff data
     }
 
-    // Load session on mount
+    // Load session on mount — auto-start (no model picker)
     const allSessions = loadSessions();
     setSessions(allSessions);
     const activeId = getActiveSessionId();
@@ -278,40 +284,27 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
         return;
       }
     }
+
+    // No saved session — auto-start new chat
+    const welcomeMsg: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: 'assistant',
+      content: t(getLanguage()).welcome,
+    };
+    setMessages([welcomeMsg]);
+    setEngineState('ready');
+    addLog('info', 'session', 'Auto-started new chat');
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  /* ─── Init engine (start new/continue chat) ─── */
-  const initEngine = useCallback(
-    (resumeExisting: boolean) => {
-      if (resumeExisting) {
-        const activeId = getActiveSessionId();
-        const restored = loadMessages();
-        if (restored.length > 0) {
-          setMessages(restored);
-          if (activeId) setActiveSession(activeId);
-          setEngineState('ready');
-          addLog('info', 'session', 'Resumed existing chat', { messages: restored.length });
-          inputRef.current?.focus();
-          return;
-        }
-      }
-
-      // Start new session with translated welcome
-      const welcomeMsg: ChatMessage = {
-        id: crypto.randomUUID(),
-        role: 'assistant',
-        content: t(language).welcome,
-      };
-      setMessages([welcomeMsg]);
-      setActiveSession(null);
-      setActiveSessionId(null);
-      setEngineState('ready');
-      addLog('info', 'session', 'New chat started');
-
-      setTimeout(() => inputRef.current?.focus(), 100);
-    },
-    [addLog, language],
-  );
+  /* ─── Helper: stop generation and complete sub-agents ─── */
+  const finishGeneration = useCallback(() => {
+    setIsGenerating(false);
+    if (subAgentIntervalRef.current) {
+      clearInterval(subAgentIntervalRef.current);
+      subAgentIntervalRef.current = null;
+    }
+    setSubAgentTasks((prev) => completeAllSubAgentTasks(prev));
+  }, []);
 
   /* ─── Send message ─── */
   const sendMessage = useCallback(
@@ -329,6 +322,28 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       setInput('');
       if (inputRef.current) inputRef.current.style.height = 'auto';
       addLog('info', 'ui', 'User message sent', { length: trimmed.length });
+
+      // Generate sub-agent tasks for visual feedback
+      const tasks = generateSubAgentTasks(trimmed);
+      setSubAgentTasks(tasks);
+
+      // Start sub-agent task progression
+      if (subAgentIntervalRef.current) clearInterval(subAgentIntervalRef.current);
+      let currentTasks = tasks;
+      // Advance the first task immediately
+      currentTasks = advanceSubAgentTasks(currentTasks);
+      setSubAgentTasks(currentTasks);
+      subAgentIntervalRef.current = setInterval(() => {
+        const allDone = currentTasks.every(
+          (t) => t.status === 'completed' || t.status === 'failed',
+        );
+        if (allDone) {
+          if (subAgentIntervalRef.current) clearInterval(subAgentIntervalRef.current);
+          return;
+        }
+        currentTasks = advanceSubAgentTasks(currentTasks);
+        setSubAgentTasks(currentTasks);
+      }, 1200);
 
       // Track streaming progress in outer scope so catch block can access them
       let tokenCount = 0;
@@ -516,7 +531,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
           return copy;
         });
       } finally {
-        setIsGenerating(false);
+        finishGeneration();
         setStreamEndTime(Date.now());
         if (abortRef.current === controller) {
           abortRef.current = null;
@@ -546,7 +561,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
     sessionGenRef.current++;
     activeSessionIdRef.current = null;
     abortRef.current?.abort();
-    setIsGenerating(false);
+    finishGeneration();
     clearMessages();
     setMessages([]);
     setActiveSession(null);
@@ -561,7 +576,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       sessionGenRef.current++;
       activeSessionIdRef.current = session.id;
       abortRef.current?.abort();
-      setIsGenerating(false);
+      finishGeneration();
       setActiveSessionId(session.id);
       setActiveSession(session.id);
       setMessages(session.messages);
@@ -580,7 +595,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
         sessionGenRef.current++;
         activeSessionIdRef.current = null;
         abortRef.current?.abort();
-        setIsGenerating(false);
+        finishGeneration();
         clearMessages();
         setMessages([]);
         setActiveSession(null);
@@ -595,7 +610,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
     sessionGenRef.current++;
     activeSessionIdRef.current = null;
     abortRef.current?.abort();
-    setIsGenerating(false);
+    finishGeneration();
     clearAllSessions();
     setMessages([]);
     setActiveSession(null);
@@ -607,7 +622,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
 
   const handleStop = useCallback(() => {
     abortRef.current?.abort();
-    setIsGenerating(false);
+    finishGeneration();
     addLog('info', 'stream', 'Generation stopped by user');
   }, [addLog]);
 
@@ -684,7 +699,6 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
   sendMessageRef.current = sendMessage;
 
   /* ─── Derived values ─── */
-  const activeCloudModel = CLOUD_MODELS.find((m) => m.id === selectedCloudModelId);
   const userMsgCount = messages.filter((m) => m.role === 'user').length;
   const isAtLimit = userMsgCount >= MAX_USER_MESSAGES;
   const currentPersonality = PERSONALITY_LEVELS[personality];
@@ -870,9 +884,8 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       {/* Main content area */}
       <div className="flex min-w-0 flex-1 flex-col">
         {engineState === 'idle' ? (
-          /* ─── Idle screen ─── */
+          /* ─── Loading state — brief flash while session loads ─── */
           <>
-            {/* Mobile header for idle */}
             <div className="border-accent/30 flex items-center justify-between border-b px-4 py-3 md:hidden">
               <button
                 onClick={() => setShowSidebar(true)}
@@ -892,14 +905,12 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
               <span className="text-text-primary text-sm font-bold tracking-wider">CYBERNUS</span>
               <div className="w-8" />
             </div>
-            <ModelPicker
-              selectedCloudModelId={selectedCloudModelId}
-              setSelectedCloudModelId={setSelectedCloudModelId}
-              hasSavedChat={getActiveSessionId() !== null}
-              onContinue={() => initEngine(true)}
-              onNewChat={() => initEngine(false)}
-              language={language}
-            />
+            <div className="flex flex-1 items-center justify-center">
+              <div className="text-center">
+                <div className="bg-accent/10 mx-auto mb-4 h-12 w-12 animate-pulse rounded-xl" />
+                <p className="text-text-muted text-sm">Initializing Cybernus...</p>
+              </div>
+            </div>
           </>
         ) : (
           /* ─── Chat UI ─── */
@@ -933,9 +944,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
                       boxShadow: `0 0 8px ${currentPersonality?.glowColor ?? 'var(--color-accent)'}`,
                     }}
                   />
-                  <span className="text-text-secondary text-xs">
-                    {activeCloudModel?.name ?? 'Grok'}
-                  </span>
+                  <span className="text-text-secondary text-xs">Grok 4</span>
                   <span className="text-text-muted hidden text-[10px] sm:inline">
                     {currentPersonality?.emoji} {currentPersonality?.name}
                   </span>
@@ -985,6 +994,11 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
             />
           </>
         )}
+      </div>
+
+      {/* Sub-agent panel — visible on lg+ when tasks are active */}
+      <div className="hidden lg:block">
+        <SubAgentPanel tasks={subAgentTasks} isVisible={subAgentTasks.length > 0} />
       </div>
 
       {/* Floating thoughts panels — visible on xl+ screens */}

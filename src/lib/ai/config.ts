@@ -1,59 +1,34 @@
 /**
- * Cybernus AI Configuration — cloud-only architecture.
+ * Cybernus AI Configuration — single model, cloud-only architecture.
  *
- * All inference runs through xAI Grok via the Cloudflare Worker proxy.
- * No local WebLLM models.
+ * All inference runs through xAI Grok 4 via the Cloudflare Worker proxy.
+ * Single model eliminates choice paralysis and ensures consistent quality.
  */
 
-/* ─── Cloud Model Catalog ─── */
+/* ─── Model Configuration ─── */
 
-export interface CloudModelInfo {
-  /** xAI model ID. */
-  id: string;
-  /** Human-readable display name. */
-  name: string;
-  /** Short description to help users pick. */
-  description: string;
-  /** Whether this is the default cloud model. */
-  recommended?: boolean;
-}
+/** The sole model powering Cybernus — Grok 4 latest. */
+export const MODEL_ID = 'grok-4-1-fast';
+export const MODEL_NAME = 'Grok 4';
 
 /** Cloudflare Worker proxy URL — API key is stored server-side. */
 export { WORKER_AI_URL as CLOUD_PROXY_URL } from '@config';
 
-export const CLOUD_MODELS: CloudModelInfo[] = [
-  {
-    id: 'grok-4-1-fast',
-    name: 'Grok 4.1 Fast',
-    description:
-      'The strongest available model. Latest Grok 4.1 with reasoning, 2M context window. Best for in-depth questions.',
-    recommended: true,
-  },
-  {
-    id: 'grok-code-fast-1',
-    name: 'Grok Code Fast',
-    description:
-      'Code-specialized with reasoning. Excels at technical explanations, programming topics, and code analysis.',
-  },
-];
-
-export const DEFAULT_CLOUD_MODEL_ID = 'grok-4-1-fast';
-
-/** Generation parameters for cloud models (large context, Responses API). */
+/** Generation parameters for cloud model (large context, Responses API). */
 export const CLOUD_GENERATION_CONFIG = {
   temperature: 0.85,
   top_p: 0.9,
-  max_output_tokens: 1024,
+  max_output_tokens: 2048,
 } as const;
 
 /** Maximum user messages per session before requiring a new chat. */
-export const MAX_USER_MESSAGES = 30;
+export const MAX_USER_MESSAGES = 50;
 
 /**
  * Trim conversation history to fit within a reasonable token budget.
- * Cloud models have 2M context but we still trim for efficiency.
+ * Grok 4 has 2M context but we trim for efficiency.
  */
-const MAX_HISTORY_CHARS = 50_000;
+const MAX_HISTORY_CHARS = 80_000;
 
 export function trimHistory(
   messages: { role: 'user' | 'assistant'; content: string }[],
@@ -73,10 +48,46 @@ export function trimHistory(
   return trimmed;
 }
 
-/** Suggested questions shown as quick-action chips. */
-export const SUGGESTED_QUESTIONS = [
-  "What are Tomer's main open source contributions?",
-  'Tell me about the Celery project',
-  'What is pytest-celery?',
-  'Roast Tomer Nosrati 🔥',
-] as const;
+/** Suggested questions shown as quick-action chips (per language). */
+export const SUGGESTED_QUESTIONS = {
+  en: [
+    "What are Tomer's main open source contributions?",
+    'Tell me about the Celery project',
+    'What is pytest-celery and how does it work?',
+    'Show me a visual breakdown of your GitHub activity',
+  ],
+  es: [
+    'Cuales son las principales contribuciones de Tomer?',
+    'Cuentame sobre el proyecto Celery',
+    'Que es pytest-celery y como funciona?',
+    'Muestrame un diagrama de tu actividad en GitHub',
+  ],
+  he: [
+    'מה התרומות העיקריות של תומר לקוד פתוח?',
+    'ספר לי על פרויקט Celery',
+    'מה זה pytest-celery ואיך זה עובד?',
+    'הראה לי ויזואליזציה של הפעילות שלך ב-GitHub',
+  ],
+} as const;
+
+// ── Legacy compatibility exports ──
+// These re-exports maintain backwards compatibility with components
+// that still import from the old multi-model API.
+
+export interface CloudModelInfo {
+  id: string;
+  name: string;
+  description: string;
+  recommended?: boolean;
+}
+
+export const CLOUD_MODELS: CloudModelInfo[] = [
+  {
+    id: MODEL_ID,
+    name: MODEL_NAME,
+    description: 'The strongest available model. Grok 4 with reasoning, 2M context window.',
+    recommended: true,
+  },
+];
+
+export const DEFAULT_CLOUD_MODEL_ID = MODEL_ID;

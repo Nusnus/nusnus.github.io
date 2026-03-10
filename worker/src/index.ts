@@ -55,9 +55,10 @@ const ALLOWED_ORIGINS: ReadonlySet<string> = new Set([
 const XAI_RESPONSES_URL = 'https://api.x.ai/v1/responses';
 const XAI_REALTIME_SECRETS_URL = 'https://api.x.ai/v1/realtime/client_secrets';
 
-/** Models visitors are allowed to use. Prevents switching to costly models. */
+/** Models visitors are allowed to use. Single model for Cybernus refactor. */
 const ALLOWED_MODELS: ReadonlySet<string> = new Set([
   'grok-4-1-fast',
+  // Legacy models kept for backwards compatibility
   'grok-4-1-fast-reasoning',
   'grok-4-1-fast-non-reasoning',
   'grok-code-fast',
@@ -67,9 +68,9 @@ const ALLOWED_MODELS: ReadonlySet<string> = new Set([
 const DEFAULT_MODEL = 'grok-4-1-fast';
 
 /** Hard limits to prevent abuse. */
-const MAX_REQUEST_BYTES = 131_072; // 128 KB — accommodates full context + tools + chat history
-const MAX_OUTPUT_TOKENS_CAP = 1024;
-const MAX_INPUT_ITEMS = 80; // 1 system + up to 30 user + 30 assistant + margin
+const MAX_REQUEST_BYTES = 200_000; // 200 KB — larger for full-context Cybernus prompts
+const MAX_OUTPUT_TOKENS_CAP = 2048;
+const MAX_INPUT_ITEMS = 100; // 1 system + up to 50 user + 50 assistant
 
 /** Simple in-memory rate limiter (per-isolate, resets on cold start). */
 const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute

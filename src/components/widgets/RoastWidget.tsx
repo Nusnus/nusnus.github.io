@@ -2,7 +2,7 @@
  * RoastWidget — Floating 🔥 FAB that opens a compact chat bubble
  * and streams a roast from Grok via the Cloudflare Worker proxy.
  *
- * Replaces the old static <a href="/chat?roast=1"> FAB.
+ * Replaces the old static <a href="/cybernus?roast=1"> FAB.
  */
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { DEFAULT_CLOUD_MODEL_ID } from '@lib/ai/config';
@@ -158,7 +158,7 @@ ${
   useEffect(() => {
     const link = document.createElement('link');
     link.rel = 'prefetch';
-    link.href = '/chat';
+    link.href = '/cybernus';
     document.head.appendChild(link);
     return () => link.remove();
   }, []);
@@ -170,7 +170,7 @@ ${
       messages: [{ id: crypto.randomUUID(), role: 'assistant', content: response }],
     };
     sessionStorage.setItem('grok-roast-handoff', JSON.stringify(handoff));
-    window.location.href = '/chat';
+    window.location.href = '/cybernus';
   }, [response]);
 
   const isOpen = state !== 'closed';

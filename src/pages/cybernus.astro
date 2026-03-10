@@ -1,0 +1,27 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import AiChat from '@components/widgets/AiChat';
+import {
+  loadProfile,
+  loadRepos,
+  loadCeleryOrgRepos,
+  loadContributionGraph,
+} from '@lib/data/loader';
+import { buildSystemPrompt } from '@lib/ai/prompt';
+
+const repos = (await loadRepos()) ?? [];
+const orgRepos = (await loadCeleryOrgRepos()) ?? [];
+
+const systemPrompt = buildSystemPrompt({
+  profile: await loadProfile(),
+  repos,
+  orgRepos,
+  graph: await loadContributionGraph(),
+});
+---
+
+<BaseLayout title="Cybernus — Tomer's Digital Self">
+  <main class="h-dvh overflow-hidden">
+    <AiChat client:load systemPrompt={systemPrompt} />
+  </main>
+</BaseLayout>

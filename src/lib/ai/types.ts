@@ -11,15 +11,21 @@ export interface ChatMessage {
   actions?: ToolAction[];
   /** Web search phase: 'searching' while running, 'found' when complete (synthesizing). */
   searchStatus?: 'searching' | 'found';
+  /** Timestamp when the message was created. */
+  timestamp?: number;
 }
 
 /** A client-side action the assistant can suggest. */
 export interface ToolAction {
-  type: 'navigate' | 'open_link';
+  type: 'navigate' | 'open_link' | 'render_component';
   /** Display label for the action button. */
   label: string;
   /** URL or path to navigate to / open. */
   url: string;
+  /** Component type for render_component actions. */
+  componentType?: string;
+  /** Props for the rendered component. */
+  props?: Record<string, string>;
 }
 
 /** A chunk of indexed content for RAG retrieval. */

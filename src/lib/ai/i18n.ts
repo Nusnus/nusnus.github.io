@@ -86,6 +86,7 @@ interface UIStrings {
   noDownload: string;
   instantStart: string;
   continueChat: string;
+  searchHistory: string;
 }
 
 const TRANSLATIONS: Record<Language, UIStrings> = {
@@ -124,6 +125,7 @@ const TRANSLATIONS: Record<Language, UIStrings> = {
     noDownload: 'No download',
     instantStart: 'Instant start',
     continueChat: 'Continue Chat',
+    searchHistory: 'Search chats...',
   },
   es: {
     welcome:
@@ -160,6 +162,7 @@ const TRANSLATIONS: Record<Language, UIStrings> = {
     noDownload: 'Sin descarga',
     instantStart: 'Inicio instantaneo',
     continueChat: 'Continuar Chat',
+    searchHistory: 'Buscar chats...',
   },
   he: {
     welcome:
@@ -196,6 +199,7 @@ const TRANSLATIONS: Record<Language, UIStrings> = {
     noDownload: 'ללא הורדה',
     instantStart: 'התחלה מיידית',
     continueChat: 'המשך צ׳אט',
+    searchHistory: '...חפש שיחות',
   },
 };
 
