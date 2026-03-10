@@ -181,7 +181,7 @@ const THOUGHTS_B: string[] = [
   'Rendering developer profile at 60fps...',
   'Nusnus: a handle that needs no explanation',
   'Achievement unlocked: mass adoption',
-  'Powered by xAI Grok — naturally',
+  'Powered by curiosity and caffeine',
   'Stack overflow: not the error, the knowledge',
   'Some people count sheep. He counts commits.',
   "The contribution graph is not a suggestion. It's a lifestyle.",
