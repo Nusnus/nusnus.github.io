@@ -74,31 +74,169 @@ const ogImageUrl = new URL(ogImage, SITE_URL).href;
     {Astro.url.pathname !== '/chat' && <RoastWidget client:idle />}
 
     <style>
+      /* ── Roast FAB base ── */
       .roast-fab {
         background: radial-gradient(circle at 30% 30%, #ff6b35, #e63946);
         box-shadow:
           0 4px 15px rgba(230, 57, 70, 0.4),
           0 0 30px rgba(255, 107, 53, 0.15);
-        animation: fab-glow 3s ease-in-out infinite;
+        animation: fab-breathe 3s ease-in-out infinite;
       }
       .roast-fab:hover {
         box-shadow:
-          0 6px 25px rgba(230, 57, 70, 0.5),
-          0 0 40px rgba(255, 107, 53, 0.25);
+          0 6px 25px rgba(230, 57, 70, 0.6),
+          0 0 50px rgba(255, 107, 53, 0.35);
       }
-      @keyframes fab-glow {
+      @keyframes fab-breathe {
         0%,
         100% {
           box-shadow:
             0 4px 15px rgba(230, 57, 70, 0.4),
-            0 0 30px rgba(255, 107, 53, 0.15);
+            0 0 20px rgba(255, 107, 53, 0.1);
+          transform: scale(1);
         }
         50% {
           box-shadow:
-            0 4px 20px rgba(230, 57, 70, 0.5),
-            0 0 40px rgba(255, 107, 53, 0.3);
+            0 4px 25px rgba(230, 57, 70, 0.55),
+            0 0 45px rgba(255, 107, 53, 0.3);
+          transform: scale(1.04);
         }
       }
+
+      /* ── Expanding ring pulses (CTA attention-grabber) ── */
+      .roast-ring {
+        border: 2px solid rgba(255, 107, 53, 0.4);
+        pointer-events: none;
+      }
+      .roast-ring-1 {
+        animation: roast-ring-expand 3s ease-out infinite;
+      }
+      .roast-ring-2 {
+        animation: roast-ring-expand 3s ease-out 1.5s infinite;
+      }
+      .roast-ring-3 {
+        animation: roast-ring-expand 2s ease-out 0.7s infinite;
+        border-color: rgba(230, 57, 70, 0.5);
+      }
+      @keyframes roast-ring-expand {
+        0% {
+          transform: scale(1);
+          opacity: 0.6;
+        }
+        100% {
+          transform: scale(2.2);
+          opacity: 0;
+        }
+      }
+
+      /* ── Level 0 (idle/default): warm ember breathe ── */
+      .roast-fab[data-roast-level='-1'] {
+        animation: fab-breathe 3s ease-in-out infinite;
+      }
+
+      /* ── Level 1: hotter glow, faster pulse ── */
+      .roast-fab[data-roast-level='1'] {
+        background: radial-gradient(circle at 30% 30%, #ff5722, #d32f2f);
+        animation: fab-level1 2s ease-in-out infinite;
+      }
+      @keyframes fab-level1 {
+        0%,
+        100% {
+          box-shadow:
+            0 4px 20px rgba(211, 47, 47, 0.5),
+            0 0 35px rgba(255, 87, 34, 0.25);
+        }
+        50% {
+          box-shadow:
+            0 4px 30px rgba(211, 47, 47, 0.7),
+            0 0 60px rgba(255, 87, 34, 0.4);
+        }
+      }
+      .roast-fab[data-roast-level='1'] .roast-ring {
+        border-color: rgba(255, 87, 34, 0.5);
+      }
+
+      /* ── Level 2: nuclear orange, rapid pulse with double ring ── */
+      .roast-fab[data-roast-level='2'] {
+        background: radial-gradient(circle at 30% 30%, #ff3d00, #b71c1c);
+        animation: fab-level2 1.4s ease-in-out infinite;
+      }
+      @keyframes fab-level2 {
+        0%,
+        100% {
+          box-shadow:
+            0 4px 25px rgba(183, 28, 28, 0.6),
+            0 0 50px rgba(255, 61, 0, 0.3),
+            inset 0 0 15px rgba(255, 152, 0, 0.15);
+          transform: scale(1);
+        }
+        50% {
+          box-shadow:
+            0 4px 35px rgba(183, 28, 28, 0.8),
+            0 0 70px rgba(255, 61, 0, 0.5),
+            inset 0 0 20px rgba(255, 152, 0, 0.25);
+          transform: scale(1.06);
+        }
+      }
+      .roast-fab[data-roast-level='2'] .roast-ring {
+        border-color: rgba(255, 61, 0, 0.6);
+      }
+      .roast-fab[data-roast-level='2'] .roast-ring-1 {
+        animation-duration: 2s;
+      }
+      .roast-fab[data-roast-level='2'] .roast-ring-2 {
+        animation-duration: 2s;
+        animation-delay: 1s;
+      }
+
+      /* ── Level 3: full unhinged — violent pulse, magenta fire, triple ring ── */
+      .roast-fab[data-roast-level='3'] {
+        background: radial-gradient(circle at 30% 30%, #ff1744, #880e4f);
+        animation: fab-level3 0.9s ease-in-out infinite;
+      }
+      @keyframes fab-level3 {
+        0%,
+        100% {
+          box-shadow:
+            0 4px 30px rgba(136, 14, 79, 0.7),
+            0 0 60px rgba(255, 23, 68, 0.4),
+            0 0 100px rgba(255, 61, 0, 0.15),
+            inset 0 0 20px rgba(255, 193, 7, 0.2);
+          transform: scale(1);
+        }
+        25% {
+          transform: scale(1.08) rotate(2deg);
+        }
+        50% {
+          box-shadow:
+            0 4px 40px rgba(136, 14, 79, 0.9),
+            0 0 80px rgba(255, 23, 68, 0.6),
+            0 0 120px rgba(255, 61, 0, 0.3),
+            inset 0 0 25px rgba(255, 193, 7, 0.35);
+          transform: scale(1.1);
+        }
+        75% {
+          transform: scale(1.08) rotate(-2deg);
+        }
+      }
+      .roast-fab[data-roast-level='3'] .roast-ring {
+        border-color: rgba(255, 23, 68, 0.7);
+        border-width: 3px;
+      }
+      .roast-fab[data-roast-level='3'] .roast-ring-1 {
+        animation-duration: 1.4s;
+      }
+      .roast-fab[data-roast-level='3'] .roast-ring-2 {
+        animation-duration: 1.4s;
+        animation-delay: 0.5s;
+      }
+      .roast-fab[data-roast-level='3'] .roast-ring-3 {
+        animation-duration: 1.2s;
+        animation-delay: 0.3s;
+        border-color: rgba(255, 193, 7, 0.5);
+      }
+
+      /* ── Loading dots ── */
       @keyframes roast-dot {
         0%,
         80%,
@@ -124,6 +262,8 @@ const ogImageUrl = new URL(ogImage, SITE_URL).href;
         }
       }
       @media (prefers-reduced-motion: reduce) {
+        .roast-fab,
+        .roast-ring,
         .roast-header-btn {
           animation: none;
         }

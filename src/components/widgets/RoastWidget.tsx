@@ -282,9 +282,26 @@ ${
       <button
         onClick={handleFabClick}
         aria-label={isOpen ? 'Close roast' : 'Roast Tomer Nosrati'}
+        data-roast-level={isOpen ? roastLevel : -1}
         className="roast-fab group fixed right-4 bottom-4 z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-2 sm:right-6 sm:bottom-6"
       >
-        <span className="text-2xl transition-transform duration-300 group-hover:scale-125">
+        {/* Glow rings — escalate per level */}
+        {!isOpen && (
+          <>
+            <span className="roast-ring roast-ring-1 absolute inset-0 rounded-full" />
+            <span className="roast-ring roast-ring-2 absolute inset-0 rounded-full" />
+          </>
+        )}
+        {isOpen && roastLevel >= 1 && (
+          <>
+            <span className="roast-ring roast-ring-1 absolute inset-0 rounded-full" />
+            <span className="roast-ring roast-ring-2 absolute inset-0 rounded-full" />
+            {roastLevel >= 2 && (
+              <span className="roast-ring roast-ring-3 absolute inset-0 rounded-full" />
+            )}
+          </>
+        )}
+        <span className="relative text-2xl transition-transform duration-300 group-hover:scale-125">
           {isOpen ? '✕' : '🔥'}
         </span>
       </button>
