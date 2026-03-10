@@ -714,29 +714,45 @@ function renderInline(text: string): ReactNode {
 function ChatImage({ src, alt }: { src: string; alt: string }) {
   const [isOpen, setIsOpen] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState(false);
 
   const handleClose = useCallback(() => setIsOpen(false), []);
+
+  if (error) {
+    return (
+      <span className="bg-bg-elevated my-3 flex h-48 w-full items-center justify-center rounded-xl border border-red-500/20">
+        <span className="text-text-muted text-sm">Image failed to load</span>
+      </span>
+    );
+  }
 
   return (
     <>
       <span className="group/img relative my-3 block">
+        {/* Skeleton placeholder — shown while image loads */}
         {!loaded && (
           <span className="bg-bg-elevated flex h-48 w-full animate-pulse items-center justify-center rounded-xl">
             <span className="text-text-muted text-xs">Loading image...</span>
           </span>
         )}
+        {/* Image button — rendered in the DOM always so the browser loads the src.
+            Use opacity-0 + h-0 overflow-hidden instead of display:none so
+            the <img> fires onLoad even before it's visible. */}
         <button
           type="button"
           onClick={() => setIsOpen(true)}
-          className={`block cursor-zoom-in border-0 bg-transparent p-0 ${loaded ? '' : 'hidden'}`}
+          className={`block w-full cursor-zoom-in border-0 bg-transparent p-0 transition-opacity duration-300 ${
+            loaded ? 'opacity-100' : 'pointer-events-none absolute h-0 overflow-hidden opacity-0'
+          }`}
           aria-label={`Expand image: ${alt}`}
+          tabIndex={loaded ? 0 : -1}
         >
           <img
             src={src}
             alt={alt}
             className="max-w-full rounded-xl border border-[#00ff41]/15 shadow-lg shadow-black/20 transition-all duration-200 hover:border-[#00ff41]/30 hover:shadow-[#00ff41]/10"
-            loading="lazy"
             onLoad={() => setLoaded(true)}
+            onError={() => setError(true)}
           />
         </button>
         {loaded && (
@@ -763,7 +779,7 @@ function ImageLightbox({ src, alt, onClose }: { src: string; alt: string; onClos
     >
       <button
         onClick={onClose}
-        className="absolute top-4 right-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/70 transition-colors hover:bg-white/20 hover:text-white"
+        className="absolute top-[max(1rem,env(safe-area-inset-top))] right-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/70 transition-colors hover:bg-white/20 hover:text-white"
         aria-label="Close"
       >
         <svg
@@ -781,7 +797,7 @@ function ImageLightbox({ src, alt, onClose }: { src: string; alt: string; onClos
       <img
         src={src}
         alt={alt}
-        className="max-h-[90vh] max-w-[90vw] rounded-xl object-contain shadow-2xl"
+        className="max-h-[85vh] max-w-[92vw] rounded-xl object-contain shadow-2xl sm:max-h-[90vh] sm:max-w-[90vw]"
         onClick={(e) => e.stopPropagation()}
       />
     </div>
@@ -831,7 +847,9 @@ function VideoPlayer({ src, alt }: { src: string; alt: string }) {
         controls
         playsInline
         preload="metadata"
-        className={`max-w-full rounded-xl border border-[#00ff41]/15 shadow-lg shadow-black/20 ${loaded ? '' : 'hidden'}`}
+        className={`w-full max-w-full rounded-xl border border-[#00ff41]/15 shadow-lg shadow-black/20 transition-opacity duration-300 ${
+          loaded ? 'opacity-100' : 'pointer-events-none absolute h-0 overflow-hidden opacity-0'
+        }`}
         onLoadedData={() => setLoaded(true)}
         onError={() => setError(true)}
         aria-label={alt}

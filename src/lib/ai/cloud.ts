@@ -446,7 +446,7 @@ export async function generateVideo(prompt: string, signal?: AbortSignal): Promi
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       prompt,
-      duration: 5,
+      duration: 10,
       aspect_ratio: '16:9',
       resolution: '720p',
     }),

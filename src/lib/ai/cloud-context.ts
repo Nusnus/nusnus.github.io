@@ -111,12 +111,13 @@ export async function buildCloudContext(
       avatarLines.push(`- GitHub avatar: ${profile.avatarUrl}`);
     }
     avatarLines.push(
-      `- LinkedIn profile: ${SOCIAL_LINKS.linkedin} (profile photo available)`,
-      `- X/Twitter profile: ${SOCIAL_LINKS.twitter} (profile photo available)`,
+      `- LinkedIn profile photo: ${SOCIAL_LINKS.linkedin} (USE THIS as primary visual reference)`,
+      `- X/Twitter profile photo: ${SOCIAL_LINKS.twitter}`,
       '',
-      `When asked to draw, illustrate, or generate an image of Tomer, use these profile photos as visual reference. ` +
-        `The generated image should resemble the real Tomer — match his appearance, facial features, and style from these public profiles. ` +
-        `Do NOT invent an appearance — always base it on the real photos available from the URLs above.`,
+      `CRITICAL: When generating ANY image that includes Tomer, you MUST describe his actual appearance ` +
+        `from his LinkedIn profile photo in the image prompt. Look at ${SOCIAL_LINKS.linkedin} — ` +
+        `describe his real face, hair, build, and style. Never invent a generic appearance. ` +
+        `The generated image must look like the actual person in these photos.`,
     );
     sections.push(avatarLines.join('\n'));
   }

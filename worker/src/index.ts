@@ -141,15 +141,13 @@ export default {
       return jsonResponse({ status: 'ok' }, 200);
     }
 
-    // ── GitHub data routes (GET /github/*) ──
-    if (request.method === 'GET' && !env.GITHUB_TOKEN) {
-      return jsonResponse({ error: 'GitHub token not configured' }, 500, origin);
-    }
+    // ── GET routes ──
     if (request.method === 'GET') {
       if (!isAllowed) return jsonResponse({ error: 'Forbidden' }, 403);
 
-      // ── Video status polling (GET /v1/videos/:requestId) ──
       const getPath = new URL(request.url).pathname;
+
+      // ── Video status polling (GET /v1/videos/:requestId) ──
       const videoMatch = getPath.match(/^\/v1\/videos\/([a-f0-9-]+)$/);
       if (videoMatch) {
         const requestId = videoMatch[1];
@@ -169,6 +167,11 @@ export default {
           console.error(`[ai-proxy] Video status error: ${message}`);
           return jsonResponse({ error: 'Failed to check video status' }, 502, origin);
         }
+      }
+
+      // ── GitHub data routes (GET /github/*) ──
+      if (!env.GITHUB_TOKEN) {
+        return jsonResponse({ error: 'GitHub token not configured' }, 500, origin);
       }
 
       const ghResponse = await handleGitHubRoute(request, env.GITHUB_TOKEN, corsHeaders(origin));
