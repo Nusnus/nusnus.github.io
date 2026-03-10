@@ -1,8 +1,7 @@
 /**
- * Cybernus AI Configuration — cloud-only architecture.
+ * Cybernus AI Configuration — single model architecture.
  *
- * All inference runs through xAI Grok via the Cloudflare Worker proxy.
- * No local WebLLM models.
+ * All inference runs through xAI Grok 4 via the Cloudflare Worker proxy.
  */
 
 /* ─── Cloud Model Catalog ─── */
@@ -21,19 +20,14 @@ export interface CloudModelInfo {
 /** Cloudflare Worker proxy URL — API key is stored server-side. */
 export { WORKER_AI_URL as CLOUD_PROXY_URL } from '@config';
 
+/** Single model: Grok 4 (latest). */
 export const CLOUD_MODELS: CloudModelInfo[] = [
   {
     id: 'grok-4-1-fast',
     name: 'Grok 4.1 Fast',
     description:
-      'The strongest available model. Latest Grok 4.1 with reasoning, 2M context window. Best for in-depth questions.',
+      'The strongest available model. Latest Grok 4.1 with reasoning, 2M context window, MCP tools, and web search.',
     recommended: true,
-  },
-  {
-    id: 'grok-code-fast-1',
-    name: 'Grok Code Fast',
-    description:
-      'Code-specialized with reasoning. Excels at technical explanations, programming topics, and code analysis.',
   },
 ];
 
@@ -78,5 +72,5 @@ export const SUGGESTED_QUESTIONS = [
   "What are Tomer's main open source contributions?",
   'Tell me about the Celery project',
   'What is pytest-celery?',
-  'Roast Tomer Nosrati 🔥',
+  'Roast Tomer Nosrati',
 ] as const;

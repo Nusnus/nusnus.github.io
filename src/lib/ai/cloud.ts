@@ -20,7 +20,7 @@ export interface CloudMessage {
 
 /** Optional parameters for cloud chat requests. */
 export interface CloudChatOptions {
-  /** Tool definitions (web_search, function calls, etc.). */
+  /** Tool definitions (web_search, function calls, MCP, etc.). */
   tools?: ToolDefinition[];
   /** Tool choice strategy: 'auto' lets the model decide. */
   tool_choice?: 'auto' | 'none' | 'required';
@@ -28,6 +28,10 @@ export interface CloudChatOptions {
   onWebSearch?: () => void;
   /** Called when a web search completes and the model starts synthesizing. */
   onWebSearchFound?: () => void;
+  /** Called when any tool/agent is invoked (name of the tool type). */
+  onToolUse?: (toolType: string) => void;
+  /** Called when a tool invocation completes. */
+  onToolDone?: (toolType: string) => void;
 }
 
 /** Result from cloud chat containing both content and tool calls. */
@@ -305,6 +309,12 @@ export async function cloudChatStream(
               });
             } else if (e.item.type === 'web_search_call') {
               options?.onWebSearch?.();
+            } else if (
+              e.item.type === 'x_search_call' ||
+              e.item.type === 'code_execution_call' ||
+              e.item.type === 'mcp_call'
+            ) {
+              options?.onToolUse?.(e.item.type);
             }
           } else if (eventType === 'response.function_call_arguments.delta') {
             const e = raw as unknown as StreamFunctionCallArgsDelta;
@@ -314,6 +324,12 @@ export async function cloudChatStream(
             const e = raw as unknown as StreamOutputItemDone;
             if (e.item.type === 'web_search_call') {
               options?.onWebSearchFound?.();
+            } else if (
+              e.item.type === 'x_search_call' ||
+              e.item.type === 'code_execution_call' ||
+              e.item.type === 'mcp_call'
+            ) {
+              options?.onToolDone?.(e.item.type);
             }
           } else if (eventType === 'response.failed') {
             const err = (raw as Record<string, unknown>).response as

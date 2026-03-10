@@ -2,7 +2,7 @@
  * Cybernus AI Chat — cloud-only orchestrator.
  *
  * Manages: cloud streaming via xAI Grok, session memory, personality,
- * language, voice, debug panel, and the professional chat UI.
+ * language, voice, MCP agents, search, TTS, Matrix theme, and the chat UI.
  */
 
 import { useState, useCallback, useRef, useEffect } from 'react';
@@ -33,6 +33,9 @@ import { SessionHistory } from '@components/ai/SessionHistory';
 import { ThoughtsPanel } from '@components/ai/ThoughtsPanel';
 import { DebugPanel, createLogEntry } from '@components/ai/DebugPanel';
 import type { DebugLogEntry, DebugState } from '@components/ai/DebugPanel';
+import { SearchOverlay } from '@components/ai/SearchOverlay';
+import { AgentPanel } from '@components/ai/AgentPanel';
+import { MatrixRain } from '@components/ai/MatrixRain';
 import { getPersonalityLevel, setPersonalityLevel, PERSONALITY_LEVELS } from '@lib/ai/personality';
 import type { PersonalityLevel } from '@lib/ai/personality';
 import { getLanguage, setLanguage as setStoredLanguage, LANGUAGES, t } from '@lib/ai/i18n';
@@ -70,6 +73,11 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [activeSessionId, setActiveSession] = useState<string | null>(null);
   const [showSidebar, setShowSidebar] = useState(false);
+
+  /* ─── Search & Agent panel ─── */
+  const [showSearch, setShowSearch] = useState(false);
+  const [showAgentPanel, setShowAgentPanel] = useState(false);
+  const [activeToolCalls, setActiveToolCalls] = useState<string[]>([]);
 
   /* ─── Voice state ─── */
   const [voiceState, setVoiceState] = useState<VoiceState>('idle');
@@ -153,6 +161,13 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
   /* ─── Global keyboard shortcuts ─── */
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
+      // Ctrl+K / Cmd+K — open search overlay
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowSearch((prev) => !prev);
+        return;
+      }
+
       // Don't intercept when modifier keys are held (let browser native shortcuts work)
       if (e.ctrlKey || e.metaKey || e.altKey) return;
 
@@ -410,6 +425,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
             tool_choice: 'auto',
             onWebSearch: () => {
               addLog('info', 'api', 'Web search triggered');
+              setActiveToolCalls((prev) => [...prev, 'web_search']);
               setMessages((prev) => {
                 const copy = [...prev];
                 const last = copy[copy.length - 1];
@@ -421,6 +437,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
             },
             onWebSearchFound: () => {
               addLog('info', 'api', 'Web search results found');
+              setActiveToolCalls((prev) => prev.filter((t) => t !== 'web_search'));
               setMessages((prev) => {
                 const copy = [...prev];
                 const last = copy[copy.length - 1];
@@ -429,6 +446,14 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
                 }
                 return copy;
               });
+            },
+            onToolUse: (toolType: string) => {
+              addLog('info', 'api', `Tool invoked: ${toolType}`);
+              setActiveToolCalls((prev) => [...prev, toolType]);
+            },
+            onToolDone: (toolType: string) => {
+              addLog('info', 'api', `Tool completed: ${toolType}`);
+              setActiveToolCalls((prev) => prev.filter((t) => t !== toolType));
             },
           },
         );
@@ -518,21 +543,13 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       } finally {
         setIsGenerating(false);
         setStreamEndTime(Date.now());
+        setActiveToolCalls([]);
         if (abortRef.current === controller) {
           abortRef.current = null;
         }
       }
     },
-    [
-      messages,
-      isGenerating,
-      systemPrompt,
-      selectedCloudModelId,
-      activeSessionId,
-      personality,
-      language,
-      addLog,
-    ],
+    [messages, isGenerating, systemPrompt, selectedCloudModelId, personality, language, addLog],
   );
 
   /* ─── Session management ─── */
@@ -683,6 +700,18 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
   handleVoiceToggleRef.current = handleVoiceToggle;
   sendMessageRef.current = sendMessage;
 
+  /* ─── Search result handler ─── */
+  const handleSearchSelect = useCallback(
+    (sessionId: string) => {
+      const allSessions = loadSessions();
+      const session = allSessions.find((s) => s.id === sessionId);
+      if (session) {
+        switchSession(session);
+      }
+    },
+    [switchSession],
+  );
+
   /* ─── Derived values ─── */
   const activeCloudModel = CLOUD_MODELS.find((m) => m.id === selectedCloudModelId);
   const userMsgCount = messages.filter((m) => m.role === 'user').length;
@@ -758,6 +787,29 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
         </button>
       </div>
 
+      {/* Search button */}
+      <div className="shrink-0 px-4 pt-1 pb-1">
+        <button
+          onClick={() => setShowSearch(true)}
+          className="border-border bg-bg-surface text-text-secondary hover:border-accent/40 hover:bg-accent-muted hover:text-text-primary flex w-full items-center gap-2.5 rounded-xl border px-3 py-2.5 text-sm transition-all hover:-translate-y-0.5"
+        >
+          <svg
+            className="h-4 w-4"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.3-4.3" />
+          </svg>
+          {strings.search}
+          <kbd className="text-text-muted ml-auto rounded border border-white/10 px-1 py-0.5 text-[9px]">
+            Ctrl+K
+          </kbd>
+        </button>
+      </div>
+
       {/* Session list */}
       <div className="min-h-0 flex-1">
         <SessionHistory
@@ -820,30 +872,24 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
 
       {/* Back to portfolio */}
       <div className="border-accent/30 shrink-0 border-t px-5 py-4">
-        <a
-          href="/"
-          className="text-text-primary hover:text-accent flex items-center gap-2 text-sm font-medium transition-colors"
-        >
-          <svg
-            className="h-3.5 w-3.5"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="m12 19-7-7 7-7" />
-            <path d="M19 12H5" />
-          </svg>
-          Back to portfolio
-        </a>
+        <p className="text-text-muted text-center text-[10px]">{strings.poweredBy}</p>
       </div>
     </div>
   );
 
   return (
-    <div className="bg-bg-base flex h-full">
+    <div className="bg-bg-base relative flex h-full">
+      {/* Matrix rain background */}
+      <MatrixRain opacity={0.03} />
+
+      {/* Search overlay */}
+      <SearchOverlay
+        isOpen={showSearch}
+        onClose={() => setShowSearch(false)}
+        onSelectResult={handleSearchSelect}
+        language={language}
+      />
+
       {/* Mobile sidebar backdrop */}
       {showSidebar && (
         // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- backdrop overlay
@@ -952,6 +998,33 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
                   {strings.recording}
                 </span>
               )}
+
+              {/* Agent panel toggle */}
+              <button
+                onClick={() => setShowAgentPanel((prev) => !prev)}
+                className={cn(
+                  'rounded-lg p-1.5 transition-colors',
+                  showAgentPanel
+                    ? 'bg-[#00ff41]/10 text-[#00ff41]'
+                    : 'text-text-muted hover:bg-bg-surface',
+                )}
+                aria-label={strings.agents}
+                title={strings.agents}
+              >
+                <svg
+                  className="h-4 w-4"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1.27a2 2 0 0 1-3.46 0H6.73a2 2 0 0 1-3.46 0H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z" />
+                  <circle cx="7.5" cy="14.5" r="1" fill="currentColor" />
+                  <circle cx="16.5" cy="14.5" r="1" fill="currentColor" />
+                </svg>
+              </button>
             </div>
 
             {/* Messages */}
@@ -989,6 +1062,13 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
 
       {/* Floating thoughts panels — visible on xl+ screens */}
       <ThoughtsPanel side="right" />
+
+      {/* Agent panel — right sidebar */}
+      {showAgentPanel && (
+        <aside className="border-accent/30 bg-bg-base hidden w-[240px] shrink-0 border-l xl:block">
+          <AgentPanel language={language} activeToolCalls={activeToolCalls} />
+        </aside>
+      )}
 
       {/* Debug panel — only in development */}
       {import.meta.env.DEV && (

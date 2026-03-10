@@ -1,28 +1,22 @@
 /**
- * Tool actions — native function calling for cloud models (Grok).
+ * Tool actions — native function calling + MCP tools for cloud models (Grok).
  *
- * Uses the xAI Responses API with native function calling and built-in
- * web search. The model returns structured tool calls in the response,
+ * Uses the xAI Responses API with native function calling, built-in
+ * web search, X search, code execution, and remote MCP tools (DeepWiki).
+ * The model returns structured tool calls in the response,
  * which are mapped to ToolAction objects for the UI.
  */
 
 import type { ToolAction } from './types';
+import { buildToolDefinitions, loadTools } from '@lib/cybernus/services/AgentService';
 
 /* ─── xAI Responses API tool definitions ─── */
 
 /**
  * Tool definition for the xAI Responses API.
- * Built-in tools use `type: "web_search"`.
- * Custom functions use `type: "function"` with flat name/description/parameters.
+ * Supports built-in tools, function tools, and remote MCP tools.
  */
-export type ToolDefinition =
-  | { type: 'web_search' }
-  | {
-      type: 'function';
-      name: string;
-      description: string;
-      parameters: Record<string, unknown>;
-    };
+export type ToolDefinition = Record<string, unknown>;
 
 /** Raw tool call as returned by the xAI Responses API. */
 export interface ToolCallResult {
@@ -32,74 +26,18 @@ export interface ToolCallResult {
 }
 
 /**
- * Function tool definitions sent to the xAI Responses API.
- * Uses the flat format required by the Responses API (no nested `function` key).
+ * Returns the tool definitions for the current session.
+ * Uses the AgentService to build definitions from enabled tools.
  */
-const FUNCTION_TOOLS: ToolDefinition[] = [
-  {
-    type: 'function',
-    name: 'open_link',
-    description:
-      'Suggest opening an external link relevant to the conversation. Use when referencing a specific URL from the knowledge base (e.g., GitHub repos, LinkedIn, articles). Maximum 2 calls per response.',
-    parameters: {
-      type: 'object',
-      properties: {
-        url: {
-          type: 'string',
-          description: 'The full URL to open (must be from the knowledge base, do not invent URLs)',
-        },
-        label: {
-          type: 'string',
-          description: 'Short button label describing the link (e.g., "View Celery on GitHub")',
-        },
-      },
-      required: ['url', 'label'],
-    },
-  },
-  {
-    type: 'function',
-    name: 'navigate',
-    description:
-      'Suggest navigating to a page on this website. Use when directing the user to a section of the portfolio site. Maximum 2 calls per response.',
-    parameters: {
-      type: 'object',
-      properties: {
-        url: {
-          type: 'string',
-          description: 'The site path to navigate to (e.g., "/", "/chat")',
-        },
-        label: {
-          type: 'string',
-          description: 'Short button label (e.g., "Back to Portfolio")',
-        },
-      },
-      required: ['url', 'label'],
-    },
-  },
-];
-
-/**
- * Complete tool set for cloud requests.
- * Includes xAI's built-in web search + client-side action tools.
- */
-export const CLOUD_TOOLS: ToolDefinition[] = [{ type: 'web_search' }, ...FUNCTION_TOOLS];
-
-/**
- * Tool set for code-specialized models (e.g. grok-code-fast-1).
- * Excludes web_search which may not be supported on code models.
- */
-export const CODE_MODEL_TOOLS: ToolDefinition[] = [...FUNCTION_TOOLS];
-
-/** Returns the appropriate tool set for a given model ID. */
-export function getToolsForModel(modelId: string): ToolDefinition[] {
-  if (modelId.startsWith('grok-code')) return CODE_MODEL_TOOLS;
-  return CLOUD_TOOLS;
+export function getToolsForModel(_modelId: string): ToolDefinition[] {
+  const tools = loadTools();
+  return buildToolDefinitions(tools);
 }
 
 /**
  * Map raw API tool_calls to UI-renderable ToolAction objects.
  * Safely parses arguments JSON and filters out invalid calls.
- * Server-side tool calls (e.g., web_search) are silently skipped.
+ * Server-side tool calls (e.g., web_search, mcp) are silently skipped.
  */
 export function mapToolCallsToActions(toolCalls: ToolCallResult[]): ToolAction[] {
   const actions: ToolAction[] = [];

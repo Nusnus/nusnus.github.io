@@ -17,6 +17,7 @@ import { renderMarkdown } from '@lib/ai/markdown';
 import { executeAction } from '@lib/ai/tools';
 import type { Language } from '@lib/ai/i18n';
 import { t } from '@lib/ai/i18n';
+import { TTSButton } from './TTSButton';
 
 interface ChatMessagesProps {
   messages: ChatMessage[];
@@ -319,7 +320,16 @@ function ExpandedMarkdownView({
                         isUser ? 'text-text-secondary' : 'text-accent',
                       )}
                     >
-                      {isUser ? 'You' : 'Cybernus'}
+                      {isUser ? (
+                        'You'
+                      ) : (
+                        <span className="flex items-center gap-2">
+                          Cybernus
+                          {msg.content && !isStreamingMsg && (
+                            <TTSButton text={msg.content} language={language} />
+                          )}
+                        </span>
+                      )}
                     </p>
                     <div className="text-text-primary/85 text-[15px] leading-relaxed">
                       {msg.searchStatus ? (
@@ -530,7 +540,16 @@ export function ChatMessages({
                         isUser ? 'text-text-secondary' : 'text-accent',
                       )}
                     >
-                      {isUser ? 'You' : 'Cybernus'}
+                      {isUser ? (
+                        'You'
+                      ) : (
+                        <span className="flex items-center gap-2">
+                          Cybernus
+                          {msg.content && !isStreaming && (
+                            <TTSButton text={msg.content} language={language} />
+                          )}
+                        </span>
+                      )}
                     </p>
 
                     {/* Content */}
