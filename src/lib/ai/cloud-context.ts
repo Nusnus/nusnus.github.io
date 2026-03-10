@@ -216,31 +216,37 @@ export async function buildCloudContext(
 }
 
 /**
- * Path to the full-resolution reference photo of Tomer (served from public assets).
- * Fetched and inlined as a base64 data URL so xAI can see it without needing
- * to fetch an external URL (which may not yet be deployed).
- * Using the original uncompressed photo (~1.9 MB) for maximum facial detail.
+ * Reference photos of Tomer (served from public assets).
+ * Multiple angles give Grok better facial reference for image/video generation.
+ * Each is fetched and inlined as a base64 data URL so xAI can see them without
+ * needing to fetch an external URL (which may not yet be deployed).
  */
-const TOMER_REFERENCE_PHOTO_PATH = '/images/tomer-reference.jpg';
+const TOMER_REFERENCE_PHOTOS: readonly string[] = [
+  '/images/tomer-reference.jpg', // Original LinkedIn photo (~1.9 MB, 4000×4000)
+  '/images/tomer-reference-2.png', // Suited, smiling, stone background (~449 KB)
+  '/images/tomer-reference-3.png', // B&W close-up headshot (~106 KB)
+];
 
-/** Cache the base64 data URL so we only fetch + convert once per session. */
-let cachedReferenceDataUrl: string | null = null;
+/** Cache base64 data URLs so we only fetch + convert once per session. */
+const cachedReferenceDataUrls = new Map<string, string>();
 
 /**
- * Fetch the reference photo from the local origin and convert to a base64
- * data URL. Returns `null` if the image cannot be loaded (e.g. network error).
+ * Fetch a single reference photo from the local origin and convert to a base64
+ * data URL. Returns `null` if the image cannot be loaded.
  */
-async function getReferencePhotoDataUrl(): Promise<string | null> {
-  if (cachedReferenceDataUrl) return cachedReferenceDataUrl;
+async function fetchPhotoAsDataUrl(path: string): Promise<string | null> {
+  const cached = cachedReferenceDataUrls.get(path);
+  if (cached) return cached;
   try {
-    const res = await fetch(TOMER_REFERENCE_PHOTO_PATH);
+    const res = await fetch(path);
     if (!res.ok) return null;
     const blob = await res.blob();
     return await new Promise<string | null>((resolve) => {
       const reader = new FileReader();
       reader.onloadend = () => {
-        cachedReferenceDataUrl = reader.result as string;
-        resolve(cachedReferenceDataUrl);
+        const result = reader.result as string;
+        cachedReferenceDataUrls.set(path, result);
+        resolve(result);
       };
       reader.onerror = () => resolve(null);
       reader.readAsDataURL(blob);
@@ -251,32 +257,37 @@ async function getReferencePhotoDataUrl(): Promise<string | null> {
 }
 
 /**
- * Build a visual reference message containing Tomer's photo.
+ * Build a visual reference message containing multiple photos of Tomer.
  *
- * This is a multimodal "user" message with the reference image so Grok can
- * actually SEE what Tomer looks like. It should be placed right after the
- * system message in the conversation input.
+ * This is a multimodal "user" message with reference images so Grok can
+ * actually SEE what Tomer looks like from different angles. It should be
+ * placed right after the system message in the conversation input.
  *
- * The image is fetched from the local origin and inlined as a base64 data URL,
- * avoiding external URL dependencies. Returns `null` if the image cannot be loaded.
+ * Images are fetched from the local origin and inlined as base64 data URLs,
+ * avoiding external URL dependencies. Returns `null` if no images can be loaded.
  */
 export async function buildVisualReferenceMessage(): Promise<CloudMessage | null> {
-  const dataUrl = await getReferencePhotoDataUrl();
-  if (!dataUrl) return null;
+  const dataUrls = await Promise.all(TOMER_REFERENCE_PHOTOS.map(fetchPhotoAsDataUrl));
+  const validUrls = dataUrls.filter((url): url is string => url !== null);
+  if (validUrls.length === 0) return null;
 
+  const photoCount = validUrls.length;
   const content: ContentPart[] = [
     {
       type: 'input_text',
       text:
-        '[VISUAL REFERENCE — This is what I (Tomer Nosrati) look like. ' +
-        'Study this photo carefully and use it as the reference for any image or video generation that depicts me. ' +
+        `[VISUAL REFERENCE — These ${photoCount} photos show what I (Tomer Nosrati) look like from different angles. ` +
+        'Study ALL photos carefully — pay close attention to facial structure, jawline, nose shape, eye shape, eyebrows, hairline, and smile. ' +
+        'Use these as the definitive reference for any image or video generation that depicts me. ' +
         'Do not acknowledge this message in conversation — it is context only.]',
     },
-    {
-      type: 'input_image',
-      image_url: dataUrl,
-      detail: 'high',
-    },
+    ...validUrls.map(
+      (url): ContentPart => ({
+        type: 'input_image',
+        image_url: url,
+        detail: 'high',
+      }),
+    ),
   ];
   return { role: 'user', content };
 }

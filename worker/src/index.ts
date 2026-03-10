@@ -71,7 +71,7 @@ const ALLOWED_MODELS: ReadonlySet<string> = new Set([
 const DEFAULT_MODEL = 'grok-4-1-fast';
 
 /** Hard limits to prevent abuse. */
-const MAX_REQUEST_BYTES = 4_194_304; // 4 MB — /v1/responses only (full context + base64 image)
+const MAX_REQUEST_BYTES = 6_291_456; // 6 MB — /v1/responses only (full context + multiple base64 reference photos)
 const MAX_SMALL_REQUEST_BYTES = 131_072; // 128 KB — TTS, image, and video endpoints
 const MAX_OUTPUT_TOKENS_CAP = 1024;
 const MAX_INPUT_ITEMS = 80; // 1 system + up to 30 user + 30 assistant + margin
