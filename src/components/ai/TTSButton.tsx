@@ -101,6 +101,12 @@ export function TTSButton({ text, language }: TTSButtonProps) {
       await audio.play();
       setState('playing');
     } catch (err) {
+      // Clean up blob URL and audio ref on failure (e.g. autoplay rejection)
+      const failedAudio = audioRef.current;
+      if (failedAudio) {
+        if (failedAudio.src.startsWith('blob:')) URL.revokeObjectURL(failedAudio.src);
+        audioRef.current = null;
+      }
       if (err instanceof DOMException && err.name === 'AbortError') {
         setState('idle');
       } else {
