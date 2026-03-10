@@ -96,19 +96,23 @@ export async function buildCloudContext(
   if (knowledge) sections.push(knowledge);
 
   // ── GitHub profile ──
+  let githubAvatarUrl: string | undefined;
   if (profileRes?.ok) {
     const profile = (await profileRes.json()) as ProfileData;
+    githubAvatarUrl = profile.avatarUrl;
     sections.push(
       `# Live GitHub Profile\n` +
         `- **${profile.name}** (@${profile.login})\n` +
         `- Bio: ${profile.bio}\n` +
         `- Followers: ${formatNumber(profile.followers)} · Public repos: ${profile.publicRepos}`,
     );
+  }
 
-    // ── Visual identity — "Sight" for Cybernus ──
+  // ── Visual identity — "Sight" for Cybernus (always included; uses static URLs) ──
+  {
     const avatarLines = [`# Visual Identity — How Tomer Looks`];
-    if (profile.avatarUrl) {
-      avatarLines.push(`- GitHub avatar: ${profile.avatarUrl}`);
+    if (githubAvatarUrl) {
+      avatarLines.push(`- GitHub avatar: ${githubAvatarUrl}`);
     }
     avatarLines.push(
       `- LinkedIn profile photo: ${SOCIAL_LINKS.linkedin} (USE THIS as primary visual reference)`,

@@ -95,8 +95,10 @@ ${
 
       setState('streaming');
 
-      // Build tool definitions so Grok can generate images
-      const tools = buildToolDefinitions(loadTools());
+      // Build tool definitions so Grok can generate images (exclude video — too slow for roast widget)
+      const tools = buildToolDefinitions(loadTools()).filter(
+        (t) => (t as Record<string, unknown>).name !== 'generate_video',
+      );
 
       const { content, toolCalls } = await cloudChatStream(
         messages,
