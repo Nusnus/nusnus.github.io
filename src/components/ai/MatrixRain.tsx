@@ -15,6 +15,8 @@ const CHARS =
   'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEF';
 const FONT_SIZE = 14;
 const DROP_SPEED = 0.4;
+/** Target ~20fps — subtle background doesn't need full 60fps. */
+const FRAME_INTERVAL = 50;
 
 export function MatrixRain({ opacity = 0.03 }: MatrixRainProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -40,8 +42,16 @@ export function MatrixRain({ opacity = 0.03 }: MatrixRainProps) {
     resize();
     window.addEventListener('resize', resize);
 
-    function draw() {
+    let lastFrameTime = 0;
+    let paused = false;
+
+    function draw(now: number) {
       if (!ctx || !canvas) return;
+      animId = requestAnimationFrame(draw);
+
+      // Skip frames to throttle to ~20fps and pause when tab hidden
+      if (paused || now - lastFrameTime < FRAME_INTERVAL) return;
+      lastFrameTime = now;
 
       ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -61,14 +71,19 @@ export function MatrixRain({ opacity = 0.03 }: MatrixRainProps) {
         }
         drops[i] = (drops[i] ?? 0) + DROP_SPEED;
       }
-
-      animId = requestAnimationFrame(draw);
     }
 
-    draw();
+    // Pause when tab is hidden to save CPU
+    function onVisibility() {
+      paused = document.hidden;
+    }
+    document.addEventListener('visibilitychange', onVisibility);
+
+    animId = requestAnimationFrame(draw);
 
     return () => {
       window.removeEventListener('resize', resize);
+      document.removeEventListener('visibilitychange', onVisibility);
       cancelAnimationFrame(animId);
     };
   }, []);

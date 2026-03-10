@@ -32,10 +32,15 @@ export function SearchOverlay({ isOpen, onClose, onSelectResult, language }: Sea
     prevOpenRef.current = isOpen;
   }, [isOpen]);
 
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const handleSearch = useCallback((value: string) => {
     setQuery(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
     if (value.trim().length >= 2) {
-      setResults(searchHistory(value));
+      debounceRef.current = setTimeout(() => {
+        setResults(searchHistory(value));
+      }, 150);
     } else {
       setResults([]);
     }

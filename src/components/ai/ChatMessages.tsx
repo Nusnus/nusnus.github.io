@@ -1,4 +1,4 @@
-import { type RefObject, useMemo, useCallback, useState, useEffect } from 'react';
+import { type RefObject, useMemo, useCallback, useState, useEffect, memo } from 'react';
 import {
   ArrowRight,
   ExternalLink,
@@ -431,6 +431,150 @@ function AssistantContent({
   );
 }
 
+/** Single message row — memoized to prevent re-rendering all messages on every streaming token. */
+const MessageItem = memo(function MessageItem({
+  msg,
+  isStreaming,
+  isGenerating,
+  onSendMessage,
+  onExpand,
+  language,
+}: {
+  msg: ChatMessage;
+  isStreaming: boolean;
+  isGenerating: boolean;
+  onSendMessage: (text: string) => void;
+  onExpand: () => void;
+  language: Language;
+}) {
+  const isUser = msg.role === 'user';
+  const strings = t(language);
+
+  return (
+    <div
+      className={cn(
+        'group px-3 py-4 sm:px-4 sm:py-6 md:px-8 lg:px-12',
+        isUser ? 'bg-bg-surface/30' : '',
+      )}
+    >
+      <div className="mx-auto flex max-w-2xl gap-4">
+        {/* Avatar */}
+        <div className="relative shrink-0 pt-0.5">
+          <div
+            className={cn(
+              'flex h-8 w-8 items-center justify-center rounded-lg',
+              isUser
+                ? 'bg-bg-elevated ring-border ring-1'
+                : 'bg-accent-muted ring-accent/20 ring-1',
+            )}
+          >
+            {isUser ? (
+              <svg
+                className="text-text-secondary h-3.5 w-3.5"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+              </svg>
+            ) : (
+              <Sparkles className="text-accent h-3.5 w-3.5" />
+            )}
+          </div>
+          {isStreaming && (
+            <div className="ring-accent/30 absolute -inset-1 animate-pulse rounded-lg ring-1" />
+          )}
+        </div>
+
+        {/* Message body */}
+        <div className="min-w-0 flex-1">
+          {/* Role label */}
+          <p
+            className={cn(
+              'mb-2 text-xs font-semibold tracking-wide',
+              isUser ? 'text-text-secondary' : 'text-accent',
+            )}
+          >
+            {isUser ? (
+              'You'
+            ) : (
+              <span className="flex items-center gap-2">
+                Cybernus
+                {msg.content && !isStreaming && (
+                  <TTSButton text={msg.content} language={language} />
+                )}
+              </span>
+            )}
+          </p>
+
+          {/* Content */}
+          <div className="text-text-primary/85 text-sm leading-relaxed">
+            {msg.searchStatus ? (
+              <SearchIndicator status={msg.searchStatus} strings={strings} />
+            ) : !msg.content ? (
+              isStreaming ? (
+                <SkeletonLoader />
+              ) : (
+                <TypingIndicator />
+              )
+            ) : !isUser ? (
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={(e) => {
+                  if ((e.target as HTMLElement).closest('a, button')) return;
+                  onExpand();
+                }}
+                onKeyDown={(e) => {
+                  if ((e.target as HTMLElement).closest('a, button')) return;
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onExpand();
+                  }
+                }}
+                className="group/zoom hover:bg-bg-surface/50 relative cursor-zoom-in rounded-lg transition-colors"
+                title="Click to expand"
+              >
+                <div className="bg-bg-elevated group-hover/zoom:text-text-muted pointer-events-none absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-md text-transparent opacity-0 backdrop-blur-sm transition-all group-hover/zoom:opacity-100">
+                  <Maximize2 className="h-3 w-3" />
+                </div>
+                <AssistantContent
+                  content={msg.content}
+                  isStreaming={isStreaming}
+                  onSendMessage={onSendMessage}
+                  isGenerating={isGenerating}
+                />
+              </div>
+            ) : (
+              <p className="whitespace-pre-wrap">{msg.content}</p>
+            )}
+          </div>
+
+          {/* Tool action buttons */}
+          {msg.actions && msg.actions.length > 0 && (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {msg.actions.map((action, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => executeAction(action)}
+                  title={action.url}
+                  className="border-border bg-bg-surface text-accent hover:border-accent/30 hover:bg-accent-muted inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all"
+                >
+                  {action.type === 'open_link' ? (
+                    <ExternalLink className="h-3 w-3" />
+                  ) : (
+                    <ArrowRight className="h-3 w-3" />
+                  )}
+                  {action.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+});
+
 /** Renders the scrollable message list — ChatGPT-style full-width layout. */
 export function ChatMessages({
   messages,
@@ -440,7 +584,6 @@ export function ChatMessages({
   language,
   onExpandClose,
 }: ChatMessagesProps) {
-  const strings = t(language);
   const dir = language === 'he' ? 'rtl' : 'ltr';
 
   const [zoomLevel, setZoomLevel] = useState(DEFAULT_ZOOM);
@@ -496,128 +639,15 @@ export function ChatMessages({
             const isStreaming = isGenerating && isLastAssistant;
 
             return (
-              <div
+              <MessageItem
                 key={msg.id}
-                className={cn(
-                  'group px-3 py-4 sm:px-4 sm:py-6 md:px-8 lg:px-12',
-                  isUser ? 'bg-bg-surface/30' : '',
-                )}
-              >
-                <div className="mx-auto flex max-w-2xl gap-4">
-                  {/* Avatar */}
-                  <div className="relative shrink-0 pt-0.5">
-                    <div
-                      className={cn(
-                        'flex h-8 w-8 items-center justify-center rounded-lg',
-                        isUser
-                          ? 'bg-bg-elevated ring-border ring-1'
-                          : 'bg-accent-muted ring-accent/20 ring-1',
-                      )}
-                    >
-                      {isUser ? (
-                        <svg
-                          className="text-text-secondary h-3.5 w-3.5"
-                          viewBox="0 0 24 24"
-                          fill="currentColor"
-                        >
-                          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                        </svg>
-                      ) : (
-                        <Sparkles className="text-accent h-3.5 w-3.5" />
-                      )}
-                    </div>
-                    {isStreaming && (
-                      <div className="ring-accent/30 absolute -inset-1 animate-pulse rounded-lg ring-1" />
-                    )}
-                  </div>
-
-                  {/* Message body */}
-                  <div className="min-w-0 flex-1">
-                    {/* Role label */}
-                    <p
-                      className={cn(
-                        'mb-2 text-xs font-semibold tracking-wide',
-                        isUser ? 'text-text-secondary' : 'text-accent',
-                      )}
-                    >
-                      {isUser ? (
-                        'You'
-                      ) : (
-                        <span className="flex items-center gap-2">
-                          Cybernus
-                          {msg.content && !isStreaming && (
-                            <TTSButton text={msg.content} language={language} />
-                          )}
-                        </span>
-                      )}
-                    </p>
-
-                    {/* Content */}
-                    <div className="text-text-primary/85 text-sm leading-relaxed">
-                      {msg.searchStatus ? (
-                        <SearchIndicator status={msg.searchStatus} strings={strings} />
-                      ) : !msg.content ? (
-                        isStreaming ? (
-                          <SkeletonLoader />
-                        ) : (
-                          <TypingIndicator />
-                        )
-                      ) : !isUser ? (
-                        <div
-                          role="button"
-                          tabIndex={0}
-                          onClick={(e) => {
-                            if ((e.target as HTMLElement).closest('a, button')) return;
-                            handleExpand();
-                          }}
-                          onKeyDown={(e) => {
-                            if ((e.target as HTMLElement).closest('a, button')) return;
-                            if (e.key === 'Enter' || e.key === ' ') {
-                              e.preventDefault();
-                              handleExpand();
-                            }
-                          }}
-                          className="group/zoom hover:bg-bg-surface/50 relative cursor-zoom-in rounded-lg transition-colors"
-                          title="Click to expand"
-                        >
-                          <div className="bg-bg-elevated group-hover/zoom:text-text-muted pointer-events-none absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-md text-transparent opacity-0 backdrop-blur-sm transition-all group-hover/zoom:opacity-100">
-                            <Maximize2 className="h-3 w-3" />
-                          </div>
-                          <AssistantContent
-                            content={msg.content}
-                            isStreaming={isStreaming}
-                            onSendMessage={onSendMessage}
-                            isGenerating={isGenerating}
-                          />
-                        </div>
-                      ) : (
-                        <p className="whitespace-pre-wrap">{msg.content}</p>
-                      )}
-                    </div>
-
-                    {/* Tool action buttons */}
-                    {msg.actions && msg.actions.length > 0 && (
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        {msg.actions.map((action, idx) => (
-                          <button
-                            key={idx}
-                            onClick={() => executeAction(action)}
-                            title={action.url}
-                            className="border-border bg-bg-surface text-accent hover:border-accent/30 hover:bg-accent-muted inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all"
-                          >
-                            {action.type === 'open_link' ? (
-                              <ExternalLink className="h-3 w-3" />
-                            ) : (
-                              <ArrowRight className="h-3 w-3" />
-                            )}
-                            {action.label}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
+                msg={msg}
+                isStreaming={isStreaming}
+                isGenerating={isGenerating}
+                onSendMessage={onSendMessage}
+                onExpand={handleExpand}
+                language={language}
+              />
             );
           })}
 

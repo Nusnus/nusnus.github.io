@@ -14,6 +14,7 @@ import { t } from '@lib/ai/i18n';
 interface AgentPanelProps {
   language: Language;
   activeToolCalls: string[];
+  onClose?: () => void;
 }
 
 const TOOL_ICONS: Record<string, string> = {
@@ -25,7 +26,7 @@ const TOOL_ICONS: Record<string, string> = {
   book: 'M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15z',
 };
 
-export function AgentPanel({ language, activeToolCalls }: AgentPanelProps) {
+export function AgentPanel({ language, activeToolCalls, onClose }: AgentPanelProps) {
   const [tools, setTools] = useState<AgentTool[]>(loadTools);
   const strings = t(language);
 
@@ -37,9 +38,28 @@ export function AgentPanel({ language, activeToolCalls }: AgentPanelProps) {
   return (
     <div className="flex h-full flex-col">
       <div className="border-b border-[#00ff41]/10 px-4 py-3">
-        <h3 className="text-xs font-bold tracking-wider text-[#00ff41]/70 uppercase">
-          {strings.agents}
-        </h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-xs font-bold tracking-wider text-[#00ff41]/70 uppercase">
+            {strings.agents}
+          </h3>
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="rounded p-1 text-white/30 transition-colors hover:bg-white/5 hover:text-white/60 xl:hidden"
+              aria-label="Close"
+            >
+              <svg
+                className="h-3.5 w-3.5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M18 6 6 18M6 6l12 12" />
+              </svg>
+            </button>
+          )}
+        </div>
         <p className="mt-0.5 text-[10px] text-white/30">{strings.agentsDescription}</p>
       </div>
 

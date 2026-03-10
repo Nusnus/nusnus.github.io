@@ -5,7 +5,7 @@
  * language, voice, MCP agents, search, TTS, Matrix theme, and the chat UI.
  */
 
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { cn } from '@lib/utils/cn';
 import type { ChatMessage } from '@lib/ai/types';
 import {
@@ -130,21 +130,37 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
     [],
   );
 
-  /* ─── Debug state object ─── */
-  const debugState: DebugState = {
-    logs: debugLogs,
-    streamTokenCount,
-    streamStartTime,
-    streamEndTime,
-    apiRequestCount,
-    lastApiLatency,
-    activeSessionId,
-    messageCount: messages.length,
-    personalityLevel: personality,
-    language,
-    isGenerating,
-    engineState,
-  };
+  /* ─── Debug state object (memoized) ─── */
+  const debugState: DebugState = useMemo(
+    () => ({
+      logs: debugLogs,
+      streamTokenCount,
+      streamStartTime,
+      streamEndTime,
+      apiRequestCount,
+      lastApiLatency,
+      activeSessionId,
+      messageCount: messages.length,
+      personalityLevel: personality,
+      language,
+      isGenerating,
+      engineState,
+    }),
+    [
+      debugLogs,
+      streamTokenCount,
+      streamStartTime,
+      streamEndTime,
+      apiRequestCount,
+      lastApiLatency,
+      activeSessionId,
+      messages.length,
+      personality,
+      language,
+      isGenerating,
+      engineState,
+    ],
+  );
 
   /* ─── Scroll to bottom on new messages ─── */
   useEffect(() => {
@@ -712,9 +728,12 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
     [switchSession],
   );
 
-  /* ─── Derived values ─── */
-  const activeCloudModel = CLOUD_MODELS.find((m) => m.id === selectedCloudModelId);
-  const userMsgCount = messages.filter((m) => m.role === 'user').length;
+  /* ─── Derived values (memoized) ─── */
+  const activeCloudModel = useMemo(
+    () => CLOUD_MODELS.find((m) => m.id === selectedCloudModelId),
+    [selectedCloudModelId],
+  );
+  const userMsgCount = useMemo(() => messages.filter((m) => m.role === 'user').length, [messages]);
   const isAtLimit = userMsgCount >= MAX_USER_MESSAGES;
   const currentPersonality = PERSONALITY_LEVELS[personality];
   const strings = t(language);
@@ -894,17 +913,18 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       {showSidebar && (
         // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- backdrop overlay
         <div
-          className="fixed inset-0 z-20 bg-black/50 md:hidden"
+          className="fixed inset-0 z-20 bg-black/50 backdrop-blur-[2px] transition-opacity md:hidden"
           onClick={() => setShowSidebar(false)}
         />
       )}
 
-      {/* Sidebar — persistent on desktop, overlay on mobile */}
+      {/* Sidebar — persistent on desktop, slide-over on mobile */}
       <aside
         className={cn(
-          'border-accent/30 bg-bg-base flex h-full shrink-0 flex-col border-r',
-          'md:relative md:flex md:w-[260px]',
-          showSidebar ? 'fixed inset-y-0 left-0 z-30 w-72' : 'hidden md:flex',
+          'border-accent/30 bg-bg-base flex h-full shrink-0 flex-col border-r transition-transform duration-200 ease-out',
+          'fixed inset-y-0 left-0 z-30 w-72',
+          'md:relative md:z-auto md:w-[260px] md:translate-x-0',
+          showSidebar ? 'translate-x-0' : '-translate-x-full',
         )}
       >
         {sidebarContent}
@@ -1063,11 +1083,29 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       {/* Floating thoughts panels — visible on xl+ screens */}
       <ThoughtsPanel side="right" />
 
-      {/* Agent panel — right sidebar */}
+      {/* Agent panel — inline sidebar on xl+, floating overlay on smaller screens */}
       {showAgentPanel && (
-        <aside className="border-accent/30 bg-bg-base hidden w-[240px] shrink-0 border-l xl:block">
-          <AgentPanel language={language} activeToolCalls={activeToolCalls} />
-        </aside>
+        <>
+          {/* Backdrop for mobile/tablet overlay */}
+          {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- backdrop */}
+          <div
+            className="fixed inset-0 z-20 bg-black/40 xl:hidden"
+            onClick={() => setShowAgentPanel(false)}
+          />
+          <aside
+            className={cn(
+              'border-accent/30 bg-bg-base border-l',
+              'fixed inset-y-0 right-0 z-30 w-[280px]',
+              'xl:relative xl:z-auto xl:block xl:w-[240px] xl:shrink-0',
+            )}
+          >
+            <AgentPanel
+              language={language}
+              activeToolCalls={activeToolCalls}
+              onClose={() => setShowAgentPanel(false)}
+            />
+          </aside>
+        </>
       )}
 
       {/* Debug panel — only in development */}
