@@ -76,7 +76,7 @@ export function AgentPanel({ language, activeToolCalls }: AgentPanelProps) {
                     </svg>
                     <span className="text-xs font-medium text-white/80">{tool.name}</span>
                     {isActive && (
-                      <span className="flex h-1.5 w-1.5">
+                      <span className="relative flex h-1.5 w-1.5">
                         <span className="absolute inline-flex h-1.5 w-1.5 animate-ping rounded-full bg-[#00ff41] opacity-40" />
                         <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#00ff41]" />
                       </span>
