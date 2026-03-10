@@ -52,7 +52,7 @@ export function TTSButton({ text, language }: TTSButtonProps) {
         .replace(/```[\s\S]*?```/g, '')
         .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
         .replace(/#{1,6}\s/g, '')
-        .replace(/[>\-*]/g, '')
+        .replace(/^\s*[>\-*]\s/gm, '')
         .trim();
 
       if (!cleanText) {

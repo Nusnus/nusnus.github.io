@@ -201,6 +201,9 @@ export default {
 
       try {
         const ttsBody = await request.text();
+        if (ttsBody.length > MAX_REQUEST_BYTES) {
+          return jsonResponse({ error: 'Request too large' }, 413, origin);
+        }
         const xaiRes = await fetch(XAI_TTS_URL, {
           method: 'POST',
           headers: {

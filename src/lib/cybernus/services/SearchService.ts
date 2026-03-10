@@ -25,8 +25,9 @@ export function searchHistory(query: string, maxResults = 20): SearchResult[] {
 
   for (const session of sessions) {
     for (const message of session.messages) {
-      const normalizedContent = normalize(message.content);
-      const matchIndex = normalizedContent.indexOf(normalizedQuery);
+      // Use toLowerCase (not normalize) to preserve original whitespace positions
+      const lowerContent = message.content.toLowerCase();
+      const matchIndex = lowerContent.indexOf(normalizedQuery);
 
       if (matchIndex !== -1) {
         results.push({
