@@ -658,14 +658,27 @@ export function ChatMessages({
                 className="cybernus-fade-in-up mx-auto grid max-w-2xl gap-3 sm:grid-cols-2"
                 style={{ animationDelay: '200ms' }}
               >
-                {SUGGESTED_QUESTIONS.map((q) => (
+                {SUGGESTED_QUESTIONS.map((q, idx) => (
                   <button
-                    key={q}
-                    onClick={() => onSendMessage(q)}
+                    key={q.label}
+                    onClick={() => onSendMessage(q.prompt)}
                     disabled={isGenerating}
-                    className="group border-border bg-bg-surface text-text-secondary hover:border-accent/40 hover:bg-accent-muted hover:text-text-primary rounded-xl border p-4 text-left text-[13px] leading-relaxed transition-all hover:-translate-y-0.5"
+                    className="group relative overflow-hidden rounded-xl border border-[#00ff41]/10 bg-[#0a0a0a]/80 p-4 text-left transition-all duration-300 hover:-translate-y-1 hover:border-[#00ff41]/30 hover:shadow-lg hover:shadow-[#00ff41]/5 disabled:opacity-50"
+                    style={{ animationDelay: `${(idx + 1) * 80}ms` }}
                   >
-                    <span>{q}</span>
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#00ff41]/[0.03] to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                    <div className="relative">
+                      <div className="mb-2 flex items-center gap-2">
+                        <span className="text-lg">{q.icon}</span>
+                        <span className="text-sm font-semibold text-[#00ff41]/90 transition-colors group-hover:text-[#00ff41]">
+                          {q.label}
+                        </span>
+                      </div>
+                      <p className="text-text-muted text-xs leading-relaxed transition-colors group-hover:text-gray-300">
+                        {q.prompt}
+                      </p>
+                    </div>
+                    <ArrowRight className="absolute right-3 bottom-3 h-3.5 w-3.5 text-[#00ff41]/0 transition-all duration-300 group-hover:text-[#00ff41]/50" />
                   </button>
                 ))}
               </div>

@@ -25,10 +25,12 @@ describe('AI config', () => {
     expect(MAX_USER_MESSAGES).toBeLessThanOrEqual(100);
   });
 
-  it('has suggested questions', () => {
+  it('has suggested questions with icon, label, and prompt', () => {
     expect(SUGGESTED_QUESTIONS.length).toBeGreaterThan(0);
     for (const q of SUGGESTED_QUESTIONS) {
-      expect(q.length).toBeGreaterThan(0);
+      expect(q.icon.length).toBeGreaterThan(0);
+      expect(q.label.length).toBeGreaterThan(0);
+      expect(q.prompt.length).toBeGreaterThan(0);
     }
   });
 

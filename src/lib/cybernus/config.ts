@@ -62,8 +62,25 @@ export const VOICE_OPTIONS = [
 
 /** Suggested questions shown on the welcome screen. */
 export const SUGGESTED_QUESTIONS = [
-  "What are Tomer's main open source contributions?",
-  'Tell me about the Celery project',
-  'What is pytest-celery?',
-  'Roast Tomer Nosrati',
+  {
+    icon: '🧬',
+    label: 'The Origin Story',
+    prompt: 'Who is Tomer Nosrati and how did he become the backbone of distributed Python?',
+  },
+  {
+    icon: '🌿',
+    label: 'Celery Deep Dive',
+    prompt:
+      'Break down the Celery project architecture — how does distributed task processing actually work?',
+  },
+  {
+    icon: '🧪',
+    label: 'pytest-celery',
+    prompt: 'What is pytest-celery and why did Tomer build it from scratch?',
+  },
+  {
+    icon: '🔥',
+    label: 'Roast Mode',
+    prompt: 'Roast Tomer Nosrati — no mercy, full send',
+  },
 ] as const;
