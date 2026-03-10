@@ -118,12 +118,17 @@ export async function buildCloudContext(
     avatarLines.push(
       `- LinkedIn: ${SOCIAL_LINKS.linkedin}`,
       `- X/Twitter: ${SOCIAL_LINKS.twitter}`,
-      `- Reference photo: included as image input in this conversation (study it!)`,
+      `- Reference photos: 3 photos included as image inputs in this conversation (study ALL of them!)`,
       '',
-      `CRITICAL: A real photo of Tomer is included as a multimodal image in your conversation input. ` +
-        `USE IT as the primary visual reference for all image generation. When generating images, ` +
-        `describe him as: "a man with short silver-gray swept-back hair, well-groomed gray stubble beard, ` +
-        `olive/tan Mediterranean skin, dark brown eyes, athletic build, confident warm smile."`,
+      `CRITICAL IMAGE GENERATION HINT — USE THIS EVERY TIME YOU GENERATE AN IMAGE OR VIDEO OF TOMER:`,
+      `"a man in his late 30s with short silver-gray swept-back hair faded on the sides, ` +
+        `dark thick eyebrows, dark brown deep-set eyes, straight prominent nose, ` +
+        `slightly protruding ears, olive/tan Mediterranean skin, sharp defined jawline ` +
+        `with high cheekbones, short well-groomed salt-and-pepper stubble beard, ` +
+        `wide warm smile showing straight white teeth, lean athletic build."`,
+      '',
+      `For "Cybernus" (the AI entity), you have FULL creative freedom — futuristic, digital, cyberpunk, Matrix-inspired. ` +
+        `Cybernus is NOT bound by Tomer's physical appearance.`,
     );
     sections.push(avatarLines.join('\n'));
   }
@@ -277,8 +282,16 @@ export async function buildVisualReferenceMessage(): Promise<CloudMessage | null
       type: 'input_text',
       text:
         `[VISUAL REFERENCE — These ${photoCount} photos show what I (Tomer Nosrati) look like from different angles. ` +
-        'Study ALL photos carefully — pay close attention to facial structure, jawline, nose shape, eye shape, eyebrows, hairline, and smile. ' +
-        'Use these as the definitive reference for any image or video generation that depicts me. ' +
+        'Study ALL photos carefully. Here is an exact description of my appearance to use as a mandatory hint ' +
+        'whenever generating images or videos of me: ' +
+        'A man in his late 30s with short silver-gray swept-back hair faded on the sides, ' +
+        'dark thick eyebrows (noticeably darker than hair), dark brown deep-set eyes with slight crinkle lines, ' +
+        'straight prominent nose, slightly protruding ears, olive/tan Mediterranean skin, ' +
+        'sharp defined angular jawline with high cheekbones, ' +
+        'short well-groomed salt-and-pepper stubble beard, ' +
+        'wide warm smile showing full set of straight white teeth, lean athletic build. ' +
+        'IMPORTANT: When generating "Cybernus" (the AI entity, not Tomer the human), you have FULL creative freedom — ' +
+        'Cybernus can look futuristic, digital, cyberpunk, or any creative interpretation. ' +
         'Do not acknowledge this message in conversation — it is context only.]',
     },
     ...validUrls.map(
