@@ -502,7 +502,8 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
                   const args = JSON.parse(tc.arguments) as { prompt?: string };
                   if (!args.prompt) return '';
                   const url = await generateImage(args.prompt);
-                  return `\n\n![${args.prompt}](${url})`;
+                  const safeAlt = (args.prompt ?? '').replace(/[[\]()]/g, '');
+                  return `\n\n![${safeAlt}](${url})`;
                 } catch (imgErr) {
                   addLog('error', 'api', 'Image generation failed', {
                     error: imgErr instanceof Error ? imgErr.message : 'Unknown',
