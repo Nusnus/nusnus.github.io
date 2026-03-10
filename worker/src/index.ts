@@ -71,7 +71,8 @@ const ALLOWED_MODELS: ReadonlySet<string> = new Set([
 const DEFAULT_MODEL = 'grok-4-1-fast';
 
 /** Hard limits to prevent abuse. */
-const MAX_REQUEST_BYTES = 4_194_304; // 4 MB — accommodates full context + full-resolution base64 image (~2.5 MB) + tools + chat history
+const MAX_REQUEST_BYTES = 4_194_304; // 4 MB — /v1/responses only (full context + base64 image)
+const MAX_SMALL_REQUEST_BYTES = 131_072; // 128 KB — TTS, image, and video endpoints
 const MAX_OUTPUT_TOKENS_CAP = 1024;
 const MAX_INPUT_ITEMS = 80; // 1 system + up to 30 user + 30 assistant + margin
 
@@ -152,6 +153,11 @@ export default {
       if (videoMatch) {
         const requestId = videoMatch[1];
         if (!env.XAI_API_KEY) return jsonResponse({ error: 'Server misconfigured' }, 500, origin);
+
+        const vidPollIP = request.headers.get('CF-Connecting-IP') ?? 'unknown';
+        if (isRateLimited(vidPollIP)) {
+          return jsonResponse({ error: 'Rate limit exceeded. Try again shortly.' }, 429, origin);
+        }
         try {
           const xaiRes = await fetch(`${XAI_VIDEOS_STATUS_URL}/${requestId}`, {
             method: 'GET',
@@ -231,7 +237,7 @@ export default {
 
       try {
         const ttsBody = await request.text();
-        if (ttsBody.length > MAX_REQUEST_BYTES) {
+        if (ttsBody.length > MAX_SMALL_REQUEST_BYTES) {
           return jsonResponse({ error: 'Request too large' }, 413, origin);
         }
         const xaiRes = await fetch(XAI_TTS_URL, {
@@ -278,7 +284,7 @@ export default {
 
       try {
         const imgBody = await request.text();
-        if (imgBody.length > MAX_REQUEST_BYTES) {
+        if (imgBody.length > MAX_SMALL_REQUEST_BYTES) {
           return jsonResponse({ error: 'Request too large' }, 413, origin);
         }
 
@@ -326,7 +332,7 @@ export default {
 
       try {
         const vidBody = await request.text();
-        if (vidBody.length > MAX_REQUEST_BYTES) {
+        if (vidBody.length > MAX_SMALL_REQUEST_BYTES) {
           return jsonResponse({ error: 'Request too large' }, 413, origin);
         }
 
