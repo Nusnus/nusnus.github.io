@@ -156,6 +156,16 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
     };
   }, []);
 
+  /* ─── Sub-agent interval cleanup ─── */
+  useEffect(() => {
+    return () => {
+      if (subAgentIntervalRef.current) {
+        clearInterval(subAgentIntervalRef.current);
+        subAgentIntervalRef.current = null;
+      }
+    };
+  }, []);
+
   /* ─── Global keyboard shortcuts ─── */
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
