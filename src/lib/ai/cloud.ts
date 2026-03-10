@@ -13,6 +13,9 @@
 import { CLOUD_PROXY_URL, CLOUD_GENERATION_CONFIG } from './config';
 import type { ToolDefinition, ToolCallResult } from './tools';
 
+/** Worker base URL for non-responses endpoints. */
+const WORKER_BASE_URL = CLOUD_PROXY_URL.replace('/v1/responses', '');
+
 export interface CloudMessage {
   role: 'system' | 'user' | 'assistant';
   content: string;
@@ -373,4 +376,39 @@ export async function cloudChatStream(
   }
 
   return { content, toolCalls };
+}
+
+/* ─── Image Generation ─── */
+
+interface ImageGenerationResponse {
+  data?: { url?: string; b64_json?: string }[];
+  error?: { message: string };
+}
+
+/**
+ * Generate an image via the xAI image generation API through the worker proxy.
+ * Returns the temporary URL of the generated image.
+ */
+export async function generateImage(prompt: string): Promise<string> {
+  const response = await fetch(`${WORKER_BASE_URL}/v1/images/generations`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt, response_format: 'url' }),
+  });
+
+  if (!response.ok) {
+    let errorMessage = `Image generation failed (${response.status})`;
+    try {
+      const data = (await response.json()) as ImageGenerationResponse;
+      if (data.error?.message) errorMessage = data.error.message;
+    } catch {
+      // Use default error message
+    }
+    throw new Error(errorMessage);
+  }
+
+  const data = (await response.json()) as ImageGenerationResponse;
+  const url = data.data?.[0]?.url;
+  if (!url) throw new Error('No image URL returned');
+  return url;
 }

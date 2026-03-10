@@ -28,14 +28,14 @@ export function ModelPicker({ hasSavedChat, onContinue, onNewChat, language }: M
             </div>
           </div>
           <h2 className="text-text-primary mb-2 text-3xl font-extrabold tracking-tight sm:text-4xl">
-            CYBERNUS
+            Cybernus
           </h2>
           <p className="text-text-secondary mx-auto max-w-xs text-sm leading-relaxed">
             {strings.subtitle}
           </p>
         </div>
 
-        {/* Model info card */}
+        {/* Capabilities card */}
         <div
           className="cybernus-fade-in-up mb-8 rounded-xl border border-[#00ff41]/20 bg-[#00ff41]/[0.03] p-5"
           style={{ animationDelay: '100ms' }}
@@ -45,10 +45,10 @@ export function ModelPicker({ hasSavedChat, onContinue, onNewChat, language }: M
               className="block h-2 w-2 rounded-full bg-[#00ff41]"
               style={{ boxShadow: '0 0 8px rgba(0,255,65,0.5)' }}
             />
-            <span className="text-text-primary text-sm font-semibold">Grok 4.1 Fast</span>
+            <span className="text-text-primary text-sm font-semibold">Neural Core Online</span>
           </div>
           <p className="text-text-muted text-xs leading-relaxed">
-            2M context window · MCP tools · Web search · Code execution
+            Voice · Vision · Web · Code · Agents · Image Gen
           </p>
         </div>
 

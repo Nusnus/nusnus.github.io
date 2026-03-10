@@ -483,15 +483,47 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
           toolCalls: result.toolCalls.length,
         });
 
-        // Map tool calls to actions
-        const actions = mapToolCallsToActions(result.toolCalls);
+        // Map tool calls to actions (exclude generate_image — handled separately)
+        const actions = mapToolCallsToActions(
+          result.toolCalls.filter((tc) => tc.name !== 'generate_image'),
+        );
+
+        // Handle image generation tool calls
+        const imageToolCalls = result.toolCalls.filter((tc) => tc.name === 'generate_image');
+        let imageMarkdown = '';
+        if (imageToolCalls.length > 0) {
+          setActiveToolCalls((prev) => [...prev, 'image_generation']);
+          addLog('info', 'api', `Generating ${imageToolCalls.length} image(s)`);
+          try {
+            const { generateImage } = await import('@lib/ai/cloud');
+            const imageResults = await Promise.all(
+              imageToolCalls.map(async (tc) => {
+                try {
+                  const args = JSON.parse(tc.arguments) as { prompt?: string };
+                  if (!args.prompt) return '';
+                  const url = await generateImage(args.prompt);
+                  return `\n\n![${args.prompt}](${url})`;
+                } catch (imgErr) {
+                  addLog('error', 'api', 'Image generation failed', {
+                    error: imgErr instanceof Error ? imgErr.message : 'Unknown',
+                  });
+                  return '\n\n*Image generation failed.*';
+                }
+              }),
+            );
+            imageMarkdown = imageResults.join('');
+          } finally {
+            setActiveToolCalls((prev) => prev.filter((t) => t !== 'image_generation'));
+          }
+        }
 
         // Build final assistant message
         // If the API returned only tool calls with no text, use a fallback so
         // the empty content doesn't trigger a permanent TypingIndicator.
+        const textContent = result.content + imageMarkdown;
         const finalAssistant: ChatMessage = {
           ...assistantMsg,
-          content: result.content || (result.toolCalls.length > 0 ? '*(used tools only)*' : ''),
+          content: textContent || (result.toolCalls.length > 0 ? '*(used tools only)*' : ''),
         };
         if (actions.length > 0) finalAssistant.actions = actions;
 
@@ -1000,7 +1032,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
                     }}
                   />
                   <span className="text-text-secondary text-xs">
-                    {activeCloudModel?.name ?? 'Grok'}
+                    {activeCloudModel?.name ?? 'Cybernus'}
                   </span>
                   <span className="text-text-muted hidden text-[10px] sm:inline">
                     {currentPersonality?.emoji} {currentPersonality?.name}

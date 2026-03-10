@@ -107,7 +107,7 @@ const TRANSLATIONS: Record<Language, UIStrings> = {
     welcome:
       "Welcome to the Matrix. I'm **Cybernus** — Tomer Nosrati's digital self. You're not talking to an assistant — you're talking to Tomer, rendered in code. Ask me anything about my work, projects, or the Celery empire. Or just dare me to roast myself.",
     placeholder: 'Ask Cybernus anything...',
-    poweredBy: 'Powered by xAI Grok · Cybernus v1.0',
+    poweredBy: 'Cybernus v1.0 · Tomer Nosrati',
     newChat: 'New',
     history: 'History',
     clearAll: 'Clear All',
@@ -157,7 +157,7 @@ const TRANSLATIONS: Record<Language, UIStrings> = {
     welcome:
       'Bienvenido a la Matrix. Soy **Cybernus** — el yo digital de Tomer Nosrati. No estas hablando con un asistente — estas hablando con Tomer, renderizado en codigo. Preguntame lo que quieras sobre mi trabajo, proyectos o el imperio Celery. O atrevete a pedirme que me rostice a mi mismo.',
     placeholder: 'Preguntale a Cybernus...',
-    poweredBy: 'Impulsado por xAI Grok · Cybernus v1.0',
+    poweredBy: 'Cybernus v1.0 · Tomer Nosrati',
     newChat: 'Nuevo',
     history: 'Historial',
     clearAll: 'Borrar Todo',
@@ -207,7 +207,7 @@ const TRANSLATIONS: Record<Language, UIStrings> = {
     welcome:
       'ברוכים הבאים למטריקס. אני **סייברנוס** — העצמי הדיגיטלי של תומר נוסרתי. אתם לא מדברים עם עוזר — אתם מדברים עם תומר, מרונדר בקוד. שאלו אותי כל דבר על העבודה שלי, הפרויקטים או אימפריית Celery. או תעזו לבקש ממני לצלות את עצמי.',
     placeholder: '...שאלו את סייברנוס',
-    poweredBy: 'מופעל על ידי xAI Grok · Cybernus v1.0',
+    poweredBy: 'Cybernus v1.0 · Tomer Nosrati',
     newChat: 'חדש',
     history: 'היסטוריה',
     clearAll: 'מחק הכל',

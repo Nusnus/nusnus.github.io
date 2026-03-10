@@ -24,9 +24,9 @@ export { WORKER_AI_URL as CLOUD_PROXY_URL } from '@config';
 export const CLOUD_MODELS: CloudModelInfo[] = [
   {
     id: 'grok-4-1-fast',
-    name: 'Grok 4.1 Fast',
+    name: 'Neural Core',
     description:
-      'The strongest available model. Latest Grok 4.1 with reasoning, 2M context window, MCP tools, and web search.',
+      'Advanced AI engine with reasoning, 2M context window, MCP tools, web search, and image generation.',
     recommended: true,
   },
 ];

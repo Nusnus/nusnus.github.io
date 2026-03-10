@@ -46,6 +46,14 @@ const DEFAULT_TOOLS: AgentTool[] = [
     serverLabel: 'deepwiki',
     icon: 'book',
   },
+  {
+    id: 'image_generation',
+    name: 'Image Generation',
+    description: 'Generate images from text prompts using xAI native image model',
+    type: 'builtin',
+    enabled: true,
+    icon: 'image',
+  },
 ];
 
 /** Load tool configuration from localStorage, falling back to defaults. */
@@ -114,6 +122,23 @@ export function buildToolDefinitions(tools: AgentTool[]): Record<string, unknown
 
   // Always include the client-side function tools
   definitions.push(
+    {
+      type: 'function',
+      name: 'generate_image',
+      description:
+        'Generate an image from a text prompt using the xAI image generation model. Use when the user asks to draw, illustrate, visualize, or create an image of something. Returns the image inline in the conversation.',
+      parameters: {
+        type: 'object',
+        properties: {
+          prompt: {
+            type: 'string',
+            description:
+              'Detailed text prompt describing the image to generate. Be descriptive and specific for best results.',
+          },
+        },
+        required: ['prompt'],
+      },
+    },
     {
       type: 'function',
       name: 'open_link',

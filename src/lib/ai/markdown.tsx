@@ -557,12 +557,12 @@ function renderBlock(block: string, key: number): ReactNode {
   );
 }
 
-/** Render inline markdown: bold, italic, code, links, citations, wikilinks. */
+/** Render inline markdown: bold, italic, code, links, images, citations, wikilinks. */
 function renderInline(text: string): ReactNode {
   const parts: ReactNode[] = [];
-  // Groups: 2=bold, 3=italic, 4=code, 5=citation-num, 6=citation-url, 7=link-text, 8=link-url, 9=wikilink
+  // Groups: 2=img-alt, 3=img-url, 4=bold, 5=italic, 6=code, 7=citation-num, 8=citation-url, 9=link-text, 10=link-url, 11=wikilink
   const regex =
-    /(\*\*(.+?)\*\*|\*(.+?)\*|`([^`]+)`|\[\[(\d+)\]\]\(([^)]+)\)|\[([^\]]+)\]\(([^)]+)\)|\[\[([^\]]+)\]\])/g;
+    /(!\[([^\]]*)\]\(([^)]+)\)|\*\*(.+?)\*\*|\*(.+?)\*|`([^`]+)`|\[\[(\d+)\]\]\(([^)]+)\)|\[([^\]]+)\]\(([^)]+)\)|\[\[([^\]]+)\]\])/g;
 
   let lastIndex = 0;
   let match: RegExpExecArray | null;
@@ -572,57 +572,68 @@ function renderInline(text: string): ReactNode {
       parts.push(text.slice(lastIndex, match.index));
     }
 
-    if (match[2]) {
+    if (match[2] !== undefined && match[3]) {
+      // ![alt](url) — inline image
+      parts.push(
+        <img
+          key={match.index}
+          src={match[3]}
+          alt={match[2] || 'Generated image'}
+          className="my-2 max-w-full rounded-lg border border-[#00ff41]/20"
+          loading="lazy"
+        />,
+      );
+    } else if (match[4]) {
       // **bold**
       parts.push(
         <strong key={match.index} className="font-semibold">
-          {match[2]}
+          {match[4]}
         </strong>,
       );
-    } else if (match[3]) {
+    } else if (match[5]) {
       // *italic*
       parts.push(
         <em key={match.index} className="italic">
-          {match[3]}
+          {match[5]}
         </em>,
       );
-    } else if (match[4]) {
+    } else if (match[6]) {
       // `code`
       parts.push(
         <code key={match.index} className="bg-bg-elevated rounded px-1 py-0.5 text-xs">
-          {match[4]}
+          {match[6]}
         </code>,
       );
-    } else if (match[5] && match[6]) {
+    } else if (match[7] && match[8]) {
       // [[n]](url) — web search citation
       parts.push(
         <sup key={match.index}>
           <a
-            href={match[6]}
+            href={match[8]}
             target="_blank"
             rel="noopener noreferrer"
             className="text-accent hover:underline"
           >
-            [{match[5]}]
+            [{match[7]}]
           </a>
         </sup>,
       );
-    } else if (match[7] && match[8]) {
+    } else if (match[9] && match[10]) {
       // [text](url)
       parts.push(
         <a
           key={match.index}
-          href={match[8]}
+          href={match[10]}
           target="_blank"
           rel="noopener noreferrer"
           className="text-accent hover:underline"
         >
-          {match[7]}
+          {match[9]}
         </a>,
       );
-    } else if (match[9]) {
+    } else if (match[11]) {
       // [[Wikilink]] — render as a styled internal reference
-      const pageName = match[9];
+      const pageName = match[11];
       parts.push(
         <span
           key={match.index}

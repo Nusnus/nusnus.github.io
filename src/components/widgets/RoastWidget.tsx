@@ -1,6 +1,6 @@
 /**
  * RoastWidget — Floating 🔥 FAB that opens a compact chat bubble
- * and streams a roast from Grok via the Cloudflare Worker proxy.
+ * and streams a roast from the AI via the Cloudflare Worker proxy.
  *
  * Replaces the old static <a href="/chat?roast=1"> FAB.
  */
@@ -9,7 +9,7 @@ import { DEFAULT_CLOUD_MODEL_ID } from '@lib/ai/config';
 
 type WidgetState = 'closed' | 'loading' | 'streaming' | 'done' | 'error';
 
-/** User message sent to Grok at each escalation level (0 = default). */
+/** User message sent at each escalation level (0 = default). */
 const ESCALATE_PROMPTS = [
   'Roast Tomer Nosrati 🔥',
   'Roast Tomer Nosrati harder 🔥🔥 — the last roast was too gentle. Be more vulgar, more savage, zero filter. Really let it rip.',
@@ -33,7 +33,7 @@ export default function RoastWidget() {
   const [roastLevel, setRoastLevel] = useState(0);
   const bubbleRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
-  /** Conversation history — lets Grok "remember" previous roasts on escalation. */
+  /** Conversation history — lets the AI "remember" previous roasts on escalation. */
   const historyRef = useRef<{ role: 'user' | 'assistant'; content: string }[]>([]);
 
   /** Scroll the bubble to the bottom as tokens stream in. */
@@ -62,10 +62,10 @@ export default function RoastWidget() {
       // Fresh roast (level 0) — reset history
       if (levelClamp === 0) historyRef.current = [];
 
-      // Tell Grok it's running as a widget on the homepage while the visitor browses
+      // Tell the AI it's running as a widget on the homepage while the visitor browses
       const roastContext = `# Situational Context — Roast Widget
 
-You are currently running as the **🔥 Roast by Grok** floating widget on the **homepage** of nusnus.github.io. The visitor triggered you by clicking the fire button while browsing Tomer's portfolio. They are actively looking at:
+You are currently running as the **🔥 Roast by Cybernus** floating widget on the **homepage** of nusnus.github.io. The visitor triggered you by clicking the fire button while browsing Tomer's portfolio. They are actively looking at:
 - The contribution heatmap and streak counter
 - Live activity feed (recent pushes, PRs, reviews)
 - Achievement badges (total stars, contributor rank, code reviews, followers)
@@ -187,7 +187,7 @@ ${
                 <span className="text-base">
                   {HEADER_ICONS[Math.min(roastLevel, HEADER_ICONS.length - 1)]}
                 </span>
-                <span className="text-sm font-semibold">Roast by Grok</span>
+                <span className="text-sm font-semibold">Roast by Cybernus</span>
               </div>
               <div className="flex items-center gap-1">
                 {(state === 'done' || state === 'error') && (
@@ -316,7 +316,7 @@ function RoastContent({ response, streaming }: { response: string; streaming: bo
 function LoadingIndicator() {
   return (
     <div className="flex items-center gap-1.5 py-2">
-      <span className="text-text-muted text-sm">Grok is cooking</span>
+      <span className="text-text-muted text-sm">Cybernus is cooking</span>
       <span className="flex gap-0.5">
         {[0, 1, 2].map((i) => (
           <span
