@@ -16,7 +16,7 @@ import {
   REPO_ROLES,
   GITHUB_USERNAME,
   isKnownPublicRepo,
-} from '../src/lib/utils/constants.js';
+} from '../src/config/index.js';
 
 const token = process.env.GITHUB_TOKEN;
 if (!token) {

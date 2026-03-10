@@ -11,11 +11,6 @@ const dtf = new Intl.DateTimeFormat('en-US', {
   day: 'numeric',
 });
 
-const dtfShort = new Intl.DateTimeFormat('en-US', {
-  month: 'short',
-  day: 'numeric',
-});
-
 /**
  * Returns a human-readable relative time string (e.g. "3 hours ago", "yesterday").
  */
@@ -38,41 +33,6 @@ export function relativeTime(date: Date | string): string {
 export function formatDate(date: Date | string): string {
   const d = typeof date === 'string' ? new Date(date) : date;
   return dtf.format(d);
-}
-
-/**
- * Formats a date as "Mar 3".
- */
-export function formatDateShort(date: Date | string): string {
-  const d = typeof date === 'string' ? new Date(date) : date;
-  return dtfShort.format(d);
-}
-
-/**
- * Returns true if the given date is today (in local timezone).
- */
-export function isToday(date: Date | string): boolean {
-  const d = typeof date === 'string' ? new Date(date) : date;
-  const now = new Date();
-  return (
-    d.getFullYear() === now.getFullYear() &&
-    d.getMonth() === now.getMonth() &&
-    d.getDate() === now.getDate()
-  );
-}
-
-/**
- * Returns true if the given date is yesterday (in local timezone).
- */
-export function isYesterday(date: Date | string): boolean {
-  const d = typeof date === 'string' ? new Date(date) : date;
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  return (
-    d.getFullYear() === yesterday.getFullYear() &&
-    d.getMonth() === yesterday.getMonth() &&
-    d.getDate() === yesterday.getDate()
-  );
 }
 
 /**
@@ -104,6 +64,11 @@ export function calculateStreak(days: { date: string; contributionCount: number 
   }
 
   return streak;
+}
+
+/** Format a number with commas (e.g. 1234 → "1,234"). */
+export function formatNumber(n: number): string {
+  return n.toLocaleString('en-US');
 }
 
 /**
