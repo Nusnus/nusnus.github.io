@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
-import type { ActivityEvent } from '@lib/github/types';
-import { fetchEvents } from '@lib/github/api';
+import type { ActivityEvent, ActivityData } from '@lib/github/types';
+import { fetchWorkerData } from '@lib/worker-client';
 import { formatEventType, getEventColor, truncateCommitMessage } from '@lib/github/formatters';
 import { relativeTime } from '@lib/utils/date';
-import { isKnownPublicRepo } from '@config';
 import {
   GitCommitHorizontal,
   GitPullRequest,
@@ -25,60 +24,17 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   CreateEvent: PlusCircle,
 };
 
-function processRawEvents(
-  raw: {
-    type?: string;
-    repo: { name: string };
-    created_at?: string;
-    id: string;
-    payload?: Record<string, unknown>;
-  }[],
-): ActivityEvent[] {
-  return raw.slice(0, 20).map((e) => {
-    const payload = e.payload ?? {};
-    let title = e.type?.replace('Event', '') ?? 'Activity';
-    const url = `https://github.com/${e.repo.name}`;
-
-    if (e.type === 'PushEvent') {
-      const commits = (payload.commits as { message: string }[]) ?? [];
-      title = commits[0]?.message ?? 'Push';
-    } else if (e.type === 'PullRequestEvent') {
-      const pr = payload.pull_request as { title: string } | undefined;
-      title = pr?.title ?? 'Pull Request';
-    }
-
-    const repoName = e.repo.name;
-    return {
-      id: e.id,
-      type: e.type ?? 'Unknown',
-      repo: isKnownPublicRepo(repoName) ? repoName : 'Private Project',
-      title: isKnownPublicRepo(repoName) ? title : (e.type?.replace('Event', '') ?? 'Activity'),
-      url: isKnownPublicRepo(repoName) ? url : `https://github.com/${repoName.split('/')[0]}`,
-      createdAt: e.created_at ?? new Date().toISOString(),
-    };
-  });
-}
-
 export default function ActivityFeed({ initialEvents }: Props) {
   const [events, setEvents] = useState<ActivityEvent[]>(initialEvents);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(initialEvents.length === 0);
 
   useEffect(() => {
     let cancelled = false;
 
-    fetchEvents()
-      .then((raw) => {
-        if (cancelled || !raw) return;
-        const processed = processRawEvents(
-          raw as unknown as {
-            type?: string;
-            repo: { name: string };
-            created_at?: string;
-            id: string;
-            payload?: Record<string, unknown>;
-          }[],
-        );
-        if (processed.length > 0) setEvents(processed);
+    fetchWorkerData<ActivityData>('activity', '/data/activity.json')
+      .then((data) => {
+        if (cancelled || !data?.events?.length) return;
+        setEvents(data.events);
       })
       .catch(() => {
         // Fallback to initial events — already set
@@ -117,7 +73,7 @@ export default function ActivityFeed({ initialEvents }: Props) {
             href={event.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="group hover:bg-bg-surface flex gap-3 rounded-lg p-2.5 transition-colors duration-100 motion-reduce:transition-none"
+            className="group hover:bg-bg-surface active:bg-bg-surface/80 flex gap-3 rounded-lg p-2.5 transition-colors duration-100 motion-reduce:transition-none"
             style={{
               animation: `slide-in-right 200ms ease-out ${index * 50}ms both`,
             }}

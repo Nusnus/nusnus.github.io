@@ -5,10 +5,7 @@
  * Replaces the old static <a href="/chat?roast=1"> FAB.
  */
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { cloudChatStream } from '@lib/ai/cloud';
-import { buildCloudContext } from '@lib/ai/cloud-context';
 import { DEFAULT_CLOUD_MODEL_ID } from '@lib/ai/config';
-import { renderMarkdown } from '@lib/ai/markdown';
 
 type WidgetState = 'closed' | 'loading' | 'streaming' | 'done' | 'error';
 
@@ -79,6 +76,11 @@ ${
     ? "Make the roast feel live and contextual — reference what they're probably staring at right now. You're the Oracle appearing mid-matrix to roast the architect of the very simulation the visitor is browsing. Keep it short, savage, and self-aware. This is a teaser — the full chat is one click away."
     : `The visitor already got ${levelClamp} roast${levelClamp > 1 ? 's' : ''} from you and just hit the ${fires} escalate button — they're literally asking you to go harder. You can see your previous roast${levelClamp > 1 ? 's' : ''} in the conversation. Acknowledge that they came back for more (be smug about it), then deliver a fresh roast that's rawer, more vulgar, more savage. Don't repeat material from your previous roast${levelClamp > 1 ? 's' : ''}. Keep it short, punchy, contextual to the page they're browsing.`
 }`;
+
+      const [{ cloudChatStream }, { buildCloudContext }] = await Promise.all([
+        import('@lib/ai/cloud'),
+        import('@lib/ai/cloud-context'),
+      ]);
 
       const context = await buildCloudContext(roastContext);
       const systemMessage = { role: 'system' as const, content: context };
@@ -177,7 +179,7 @@ ${
     <>
       {/* Chat bubble */}
       {isOpen && (
-        <div className="fixed right-4 bottom-24 z-50 w-[min(380px,calc(100vw-2rem))] sm:right-6">
+        <div className="fixed right-4 bottom-20 z-50 w-[min(380px,calc(100vw-2rem))] sm:right-6 sm:bottom-24">
           <div className="bg-bg-base border-border flex max-h-[60vh] flex-col overflow-hidden rounded-2xl border shadow-2xl">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-orange-500/20 bg-gradient-to-r from-orange-500/10 to-red-500/10 px-4 py-2.5">
@@ -254,9 +256,7 @@ ${
                 <LoadingIndicator />
               )}
               {(state === 'streaming' || state === 'done') && response && (
-                <div className="text-text-primary text-sm leading-relaxed">
-                  {renderMarkdown(response, state === 'streaming')}
-                </div>
+                <RoastContent response={response} streaming={state === 'streaming'} />
               )}
               {state === 'error' && (
                 <p className="text-sm text-red-400">{errorMsg || 'Failed to generate roast.'}</p>
@@ -282,7 +282,7 @@ ${
       <button
         onClick={handleFabClick}
         aria-label={isOpen ? 'Close roast' : 'Roast Tomer Nosrati'}
-        className="roast-fab group fixed right-6 bottom-6 z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-2"
+        className="roast-fab group fixed right-4 bottom-4 z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-2 sm:right-6 sm:bottom-6"
       >
         <span className="text-2xl transition-transform duration-300 group-hover:scale-125">
           {isOpen ? '✕' : '🔥'}
@@ -290,6 +290,26 @@ ${
       </button>
     </>
   );
+}
+
+/** Lazily renders markdown content — avoids pulling renderMarkdown into the idle bundle. */
+function RoastContent({ response, streaming }: { response: string; streaming: boolean }) {
+  const [renderFn, setRenderFn] = useState<
+    ((md: string, streaming: boolean) => React.ReactNode) | null
+  >(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    import('@lib/ai/markdown').then(({ renderMarkdown }) => {
+      if (!cancelled) setRenderFn(() => renderMarkdown);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const content = renderFn ? renderFn(response, streaming) : response;
+  return <div className="text-text-primary text-sm leading-relaxed">{content}</div>;
 }
 
 /** Pulsing dots loading indicator. */

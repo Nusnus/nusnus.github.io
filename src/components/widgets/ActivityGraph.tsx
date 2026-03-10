@@ -61,6 +61,19 @@ export default function ActivityGraph({ weeks: initialWeeks }: Props) {
   }, []);
   const handleMouseLeave = useCallback(() => setHovered(null), []);
 
+  /** Touch handler for mobile — tap to show, tap again to dismiss */
+  const handleTouch = useCallback(
+    (e: React.TouchEvent, index: number, label: string, total: number) => {
+      e.preventDefault();
+      if (hovered?.index === index) {
+        setHovered(null);
+      } else {
+        setHovered({ index, label, total });
+      }
+    },
+    [hovered],
+  );
+
   if (buckets.length === 0) return null;
 
   const barCount = buckets.length;
@@ -115,6 +128,9 @@ export default function ActivityGraph({ weeks: initialWeeks }: Props) {
                   handleMouseEnter(i, `${bucket.label} ${bucket.year}`, bucket.total)
                 }
                 onMouseLeave={handleMouseLeave}
+                onTouchStart={(e) =>
+                  handleTouch(e, i, `${bucket.label} ${bucket.year}`, bucket.total)
+                }
               />
               {/* Bar */}
               <rect

@@ -67,19 +67,6 @@ async function ghFetch<T>(path: string, token: string): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-async function ghFetchAll<T>(path: string, token: string): Promise<T[]> {
-  const results: T[] = [];
-  let page = 1;
-  while (true) {
-    const sep = path.includes('?') ? '&' : '?';
-    const data = await ghFetch<T[]>(`${path}${sep}per_page=100&page=${page}`, token);
-    results.push(...data);
-    if (data.length < 100) break;
-    page++;
-  }
-  return results;
-}
-
 // ─── Data fetchers ───────────────────────────────────────────────────
 
 async function fetchProfile(token: string) {
@@ -97,9 +84,21 @@ async function fetchProfile(token: string) {
 
 async function fetchContributorRank(o: string, r: string, t: string): Promise<number | undefined> {
   try {
-    const c = await ghFetchAll<{ login: string }>(`/repos/${o}/${r}/contributors`, t);
-    const idx = c.findIndex((x) => x.login === GITHUB_USERNAME);
-    return idx >= 0 ? idx + 1 : undefined;
+    // Paginate until we find the user — no need to fetch ALL contributors
+    let page = 1;
+    let offset = 0;
+    while (page <= 10) {
+      const data = await ghFetch<{ login: string }[]>(
+        `/repos/${o}/${r}/contributors?per_page=100&page=${page}`,
+        t,
+      );
+      const idx = data.findIndex((x) => x.login === GITHUB_USERNAME);
+      if (idx >= 0) return offset + idx + 1;
+      if (data.length < 100) break; // last page
+      offset += data.length;
+      page++;
+    }
+    return undefined;
   } catch {
     return undefined;
   }
