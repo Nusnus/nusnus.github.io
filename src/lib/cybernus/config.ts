@@ -1,54 +1,29 @@
 /**
- * Cybernus AI Configuration — single model architecture.
+ * Cybernus Configuration — single model, single identity.
  *
- * All inference runs through xAI Grok 4 via the Cloudflare Worker proxy.
+ * Grok 4 (latest) via xAI Responses API through the Cloudflare Worker.
  */
 
-/* ─── Cloud Model Catalog ─── */
+export { WORKER_AI_URL as CLOUD_PROXY_URL, WORKER_BASE_URL } from '@config';
 
-export interface CloudModelInfo {
-  /** xAI model ID. */
-  id: string;
-  /** Human-readable display name. */
-  name: string;
-  /** Short description to help users pick. */
-  description: string;
-  /** Whether this is the default cloud model. */
-  recommended?: boolean;
-}
+/** The sole model — Grok 4 latest. */
+export const MODEL_ID = 'grok-4-1-fast';
+export const MODEL_NAME = 'Grok 4.1 Fast';
 
-/** Cloudflare Worker proxy URL — API key is stored server-side. */
-export { WORKER_AI_URL as CLOUD_PROXY_URL } from '@config';
-
-/** Single model: Grok 4 (latest). */
-export const CLOUD_MODELS: CloudModelInfo[] = [
-  {
-    id: 'grok-4-1-fast',
-    name: 'Neural Core',
-    description:
-      'Advanced AI engine with reasoning, 2M context window, MCP tools, web search, and image generation.',
-    recommended: true,
-  },
-];
-
-export const DEFAULT_CLOUD_MODEL_ID = 'grok-4-1-fast';
-
-/** Generation parameters for cloud models (large context, Responses API). */
-export const CLOUD_GENERATION_CONFIG = {
+/** Generation parameters. */
+export const GENERATION_CONFIG = {
   temperature: 0.85,
   top_p: 0.9,
   max_output_tokens: 1024,
 } as const;
 
-/** Maximum user messages per session before requiring a new chat. */
+/** Maximum user messages per session. */
 export const MAX_USER_MESSAGES = 30;
 
-/**
- * Trim conversation history to fit within a reasonable token budget.
- * Cloud models have 2M context but we still trim for efficiency.
- */
+/** Maximum characters in conversation history sent to API. */
 const MAX_HISTORY_CHARS = 50_000;
 
+/** Trim conversation history for token efficiency. */
 export function trimHistory(
   messages: { role: 'user' | 'assistant'; content: string }[],
 ): { role: 'user' | 'assistant'; content: string }[] {
@@ -66,6 +41,24 @@ export function trimHistory(
 
   return trimmed;
 }
+
+/** Default voice for TTS (Rex — confident, clear, male). */
+export const DEFAULT_VOICE_ID = 'rex';
+
+/** Alias for use in VoiceService. */
+export const CYBERNUS_VOICE_ID = DEFAULT_VOICE_ID;
+
+/** Maximum duration for live voice conversations (seconds). */
+export const VOICE_LIVE_LIMIT_SECONDS = 120;
+
+/** Available xAI TTS voices. */
+export const VOICE_OPTIONS = [
+  { id: 'rex', name: 'Rex', tone: 'Confident, clear', gender: 'Male' },
+  { id: 'leo', name: 'Leo', tone: 'Authoritative, strong', gender: 'Male' },
+  { id: 'eve', name: 'Eve', tone: 'Energetic, upbeat', gender: 'Female' },
+  { id: 'ara', name: 'Ara', tone: 'Warm, friendly', gender: 'Female' },
+  { id: 'sal', name: 'Sal', tone: 'Smooth, balanced', gender: 'Neutral' },
+] as const;
 
 /** Suggested questions shown on the welcome screen. */
 export const SUGGESTED_QUESTIONS = [

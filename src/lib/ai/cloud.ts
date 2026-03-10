@@ -13,6 +13,9 @@
 import { CLOUD_PROXY_URL, CLOUD_GENERATION_CONFIG } from './config';
 import type { ToolDefinition, ToolCallResult } from './tools';
 
+/** Worker base URL for non-responses endpoints. */
+const WORKER_BASE_URL = CLOUD_PROXY_URL.replace('/v1/responses', '');
+
 export interface CloudMessage {
   role: 'system' | 'user' | 'assistant';
   content: string;
@@ -20,7 +23,7 @@ export interface CloudMessage {
 
 /** Optional parameters for cloud chat requests. */
 export interface CloudChatOptions {
-  /** Tool definitions (web_search, function calls, etc.). */
+  /** Tool definitions (web_search, function calls, MCP, etc.). */
   tools?: ToolDefinition[];
   /** Tool choice strategy: 'auto' lets the model decide. */
   tool_choice?: 'auto' | 'none' | 'required';
@@ -28,6 +31,10 @@ export interface CloudChatOptions {
   onWebSearch?: () => void;
   /** Called when a web search completes and the model starts synthesizing. */
   onWebSearchFound?: () => void;
+  /** Called when any tool/agent is invoked (name of the tool type). */
+  onToolUse?: (toolType: string) => void;
+  /** Called when a tool invocation completes. */
+  onToolDone?: (toolType: string) => void;
 }
 
 /** Result from cloud chat containing both content and tool calls. */
@@ -305,6 +312,12 @@ export async function cloudChatStream(
               });
             } else if (e.item.type === 'web_search_call') {
               options?.onWebSearch?.();
+            } else if (
+              e.item.type === 'x_search_call' ||
+              e.item.type === 'code_execution_call' ||
+              e.item.type === 'mcp_call'
+            ) {
+              options?.onToolUse?.(e.item.type.replace(/_call$/, ''));
             }
           } else if (eventType === 'response.function_call_arguments.delta') {
             const e = raw as unknown as StreamFunctionCallArgsDelta;
@@ -314,6 +327,12 @@ export async function cloudChatStream(
             const e = raw as unknown as StreamOutputItemDone;
             if (e.item.type === 'web_search_call') {
               options?.onWebSearchFound?.();
+            } else if (
+              e.item.type === 'x_search_call' ||
+              e.item.type === 'code_execution_call' ||
+              e.item.type === 'mcp_call'
+            ) {
+              options?.onToolDone?.(e.item.type.replace(/_call$/, ''));
             }
           } else if (eventType === 'response.failed') {
             const err = (raw as Record<string, unknown>).response as
@@ -357,4 +376,39 @@ export async function cloudChatStream(
   }
 
   return { content, toolCalls };
+}
+
+/* ─── Image Generation ─── */
+
+interface ImageGenerationResponse {
+  data?: { url?: string; b64_json?: string }[];
+  error?: { message: string };
+}
+
+/**
+ * Generate an image via the xAI image generation API through the worker proxy.
+ * Returns the temporary URL of the generated image.
+ */
+export async function generateImage(prompt: string): Promise<string> {
+  const response = await fetch(`${WORKER_BASE_URL}/v1/images/generations`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt, response_format: 'url' }),
+  });
+
+  if (!response.ok) {
+    let errorMessage = `Image generation failed (${response.status})`;
+    try {
+      const data = (await response.json()) as ImageGenerationResponse;
+      if (data.error?.message) errorMessage = data.error.message;
+    } catch {
+      // Use default error message
+    }
+    throw new Error(errorMessage);
+  }
+
+  const data = (await response.json()) as ImageGenerationResponse;
+  const url = data.data?.[0]?.url;
+  if (!url) throw new Error('No image URL returned');
+  return url;
 }
