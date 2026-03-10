@@ -439,8 +439,12 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
             onWebSearch: () => {
               addLog('info', 'api', 'Web search triggered');
               setActiveToolCalls((prev) => [...prev, 'web_search']);
-              const activity = createAgentActivity('web_search');
-              accumulatedAgentActivity = [...accumulatedAgentActivity, activity];
+              if (!accumulatedAgentActivity.some((a) => a.toolType === 'web_search')) {
+                accumulatedAgentActivity = [
+                  ...accumulatedAgentActivity,
+                  createAgentActivity('web_search'),
+                ];
+              }
               setMessages((prev) => {
                 const copy = [...prev];
                 const last = copy[copy.length - 1];
