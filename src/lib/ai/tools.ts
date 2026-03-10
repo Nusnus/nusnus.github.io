@@ -80,7 +80,7 @@ const FUNCTION_TOOLS: ToolDefinition[] = [
     type: 'function',
     name: 'show_github_stats',
     description:
-      'Display a rich GitHub statistics card showing contribution data, repo stars, and activity metrics. Use when the user asks about GitHub stats, contributions, or activity overview.',
+      'Display a rich GitHub statistics card. Extract the actual numbers from the context data you have. Use when the user asks about GitHub stats, contributions, or activity overview.',
     parameters: {
       type: 'object',
       properties: {
@@ -89,31 +89,90 @@ const FUNCTION_TOOLS: ToolDefinition[] = [
           enum: ['contributions', 'repos', 'activity', 'overview'],
           description: 'Type of GitHub statistics to display',
         },
+        username: {
+          type: 'string',
+          description: 'GitHub username (e.g., "Nusnus")',
+        },
+        public_repos: {
+          type: 'string',
+          description: 'Number of public repositories (from context data)',
+        },
+        followers: {
+          type: 'string',
+          description: 'Number of followers (from context data)',
+        },
+        total_stars: {
+          type: 'string',
+          description: 'Total stars across all repos (from context data)',
+        },
+        contributions: {
+          type: 'string',
+          description: 'Total contributions in the last year (from context data)',
+        },
+        top_language: {
+          type: 'string',
+          description: 'Top programming language (from context data)',
+        },
       },
-      required: ['stat_type'],
+      required: [
+        'stat_type',
+        'username',
+        'public_repos',
+        'followers',
+        'total_stars',
+        'contributions',
+      ],
     },
   },
   {
     type: 'function',
     name: 'show_project_card',
     description:
-      'Display a rich project showcase card for a specific repository. Use when discussing a particular project in detail.',
+      'Display a rich project showcase card. Extract actual repo data from the context. Use when discussing a particular project in detail.',
     parameters: {
       type: 'object',
       properties: {
         repo: {
           type: 'string',
-          description: 'Repository full name (e.g., "celery/celery", "celery/pytest-celery")',
+          description: 'Repository full name (e.g., "celery/celery")',
+        },
+        name: {
+          type: 'string',
+          description: 'Display name of the project (e.g., "Celery")',
+        },
+        description: {
+          type: 'string',
+          description: 'Short project description (from context data)',
+        },
+        url: {
+          type: 'string',
+          description: 'URL to the repository (e.g., "https://github.com/celery/celery")',
+        },
+        stars: {
+          type: 'string',
+          description: 'Star count (from context data)',
+        },
+        forks: {
+          type: 'string',
+          description: 'Fork count (from context data)',
+        },
+        language: {
+          type: 'string',
+          description: 'Primary programming language',
+        },
+        role: {
+          type: 'string',
+          description: 'Tomer\'s role in this project (e.g., "Tech Lead", "Owner", "Contributor")',
         },
       },
-      required: ['repo'],
+      required: ['repo', 'name', 'description', 'url'],
     },
   },
   {
     type: 'function',
     name: 'show_timeline',
     description:
-      'Display a visual timeline of career milestones or project history. Use when discussing career progression or project evolution.',
+      'Display a visual timeline. Provide the actual events from the context data. Use when discussing career progression or project evolution.',
     parameters: {
       type: 'object',
       properties: {
@@ -122,8 +181,17 @@ const FUNCTION_TOOLS: ToolDefinition[] = [
           description:
             'Topic for the timeline (e.g., "career", "celery-releases", "contributions")',
         },
+        title: {
+          type: 'string',
+          description: 'Display title for the timeline card',
+        },
+        events: {
+          type: 'string',
+          description:
+            'JSON array of timeline events. Each event: {"date": "YYYY", "title": "...", "description": "...", "type": "milestone|release|achievement|career"}',
+        },
       },
-      required: ['topic'],
+      required: ['topic', 'title', 'events'],
     },
   },
 ];
@@ -159,26 +227,39 @@ export function mapToolCallsToActions(toolCalls: ToolCallResult[]): ToolAction[]
           url: args.url,
         });
       } else if (call.name === 'show_github_stats') {
+        // Pass all model-provided data through as props
+        const props: Record<string, string> = {};
+        for (const [key, val] of Object.entries(args)) {
+          if (val !== undefined) props[key] = val;
+        }
         actions.push({
           type: 'render_component',
           componentType: 'github_stats',
-          props: { statType: args.stat_type ?? 'overview' },
+          props,
           label: 'GitHub Stats',
           url: '',
         });
       } else if (call.name === 'show_project_card') {
+        const props: Record<string, string> = {};
+        for (const [key, val] of Object.entries(args)) {
+          if (val !== undefined) props[key] = val;
+        }
         actions.push({
           type: 'render_component',
           componentType: 'project_card',
-          props: { repo: args.repo ?? '' },
+          props,
           label: args.repo ?? 'Project',
           url: '',
         });
       } else if (call.name === 'show_timeline') {
+        const props: Record<string, string> = {};
+        for (const [key, val] of Object.entries(args)) {
+          if (val !== undefined) props[key] = val;
+        }
         actions.push({
           type: 'render_component',
           componentType: 'timeline',
-          props: { topic: args.topic ?? '' },
+          props,
           label: 'Timeline',
           url: '',
         });

@@ -73,8 +73,6 @@ function stripMarkdown(text: string): string {
       .replace(/!\[.*?\]\(.*?\)/g, '')
       // Remove HTML tags
       .replace(/<[^>]+>/g, '')
-      // Remove mermaid blocks
-      .replace(/```mermaid[\s\S]*?```/g, '')
       // Remove follow-up suggestions (→ prefixed lines)
       .replace(/^→\s+.*$/gm, '')
       // Collapse multiple newlines

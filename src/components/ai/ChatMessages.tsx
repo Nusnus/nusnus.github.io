@@ -347,25 +347,41 @@ function ExpandedMarkdownView({
                       )}
                     </div>
 
-                    {msg.actions && msg.actions.length > 0 && (
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        {msg.actions.map((action, idx) => (
-                          <button
-                            key={idx}
-                            onClick={() => executeAction(action)}
-                            title={action.url}
-                            className="border-border bg-bg-surface text-accent hover:border-accent/30 hover:bg-accent-muted inline-flex items-center gap-1.5 rounded-lg border px-3.5 py-2 text-sm font-medium transition-all"
-                          >
-                            {action.type === 'open_link' ? (
-                              <ExternalLink className="h-3.5 w-3.5" />
-                            ) : (
-                              <ArrowRight className="h-3.5 w-3.5" />
-                            )}
-                            {action.label}
-                          </button>
+                    {/* Rich component renders (MCP tools) */}
+                    {msg.actions &&
+                      msg.actions
+                        .filter((a) => a.type === 'render_component')
+                        .map((action, idx) => (
+                          <RichComponent
+                            key={`rc-exp-${idx}`}
+                            componentType={action.componentType ?? 'unknown'}
+                            props={action.props ?? {}}
+                          />
                         ))}
-                      </div>
-                    )}
+
+                    {/* Tool action buttons (navigate / open_link) */}
+                    {msg.actions &&
+                      msg.actions.filter((a) => a.type !== 'render_component').length > 0 && (
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          {msg.actions
+                            .filter((a) => a.type !== 'render_component')
+                            .map((action, idx) => (
+                              <button
+                                key={idx}
+                                onClick={() => executeAction(action)}
+                                title={action.url}
+                                className="border-border bg-bg-surface text-accent hover:border-accent/30 hover:bg-accent-muted inline-flex items-center gap-1.5 rounded-lg border px-3.5 py-2 text-sm font-medium transition-all"
+                              >
+                                {action.type === 'open_link' ? (
+                                  <ExternalLink className="h-3.5 w-3.5" />
+                                ) : (
+                                  <ArrowRight className="h-3.5 w-3.5" />
+                                )}
+                                {action.label}
+                              </button>
+                            ))}
+                        </div>
+                      )}
                   </div>
                 </div>
               </div>
