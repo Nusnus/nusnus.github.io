@@ -41,9 +41,11 @@ const lastEventTime = activity?.events[0]?.createdAt ?? new Date().toISOString()
     <!-- Main Content -->
     <MainContent>
       <!-- Hero Banner -->
-      <section class="flex flex-col items-center py-12 text-center" aria-label="Hero">
-        <h2 class="text-5xl font-extrabold tracking-tight sm:text-6xl">Tomer Nosrati</h2>
-        <p class="text-text-secondary mt-4 text-lg">
+      <section class="flex flex-col items-center py-8 text-center sm:py-12" aria-label="Hero">
+        <h2 class="text-3xl font-extrabold tracking-tight sm:text-5xl md:text-6xl">
+          Tomer Nosrati
+        </h2>
+        <p class="text-text-secondary mt-3 text-base sm:mt-4 sm:text-lg">
           CEO & Tech Lead ·
           <a
             href="https://github.com/celery"
@@ -52,10 +54,10 @@ const lastEventTime = activity?.events[0]?.createdAt ?? new Date().toISOString()
             rel="noopener noreferrer">Celery Organization</a
           >
         </p>
-        <p class="text-text-muted mt-2 text-base italic">
+        <p class="text-text-muted mt-1.5 text-sm italic sm:mt-2 sm:text-base">
           Building the backbone of distributed Python
         </p>
-        <div class="mt-6 flex items-center gap-6">
+        <div class="mt-4 flex items-center gap-4 sm:mt-6 sm:gap-6">
           <a
             href={SOCIAL_LINKS.linkedin}
             class="text-text-muted hover:text-text-primary text-xs font-semibold tracking-widest uppercase transition-colors"

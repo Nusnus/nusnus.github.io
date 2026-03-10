@@ -70,11 +70,34 @@
 @layer base {
   html {
     scroll-behavior: smooth;
+    /* Prevent horizontal overflow on mobile */
+    overflow-x: hidden;
   }
 
   /* Dark mode is default */
   body {
     @apply bg-bg-base text-text-primary font-sans antialiased;
+    /* Mobile native: remove tap highlight, prevent overscroll bounce */
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: none;
+    /* Safe area support for notched phones */
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* Use dynamic viewport height for mobile browsers (address bar aware) */
+  .h-dvh {
+    height: 100vh;
+    height: 100dvh;
+  }
+
+  /* Touch manipulation for scrollable areas — prevents 300ms delay */
+  button,
+  a,
+  [role='button'] {
+    touch-action: manipulation;
   }
 
   /* Light mode overrides via .light class */

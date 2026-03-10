@@ -139,7 +139,7 @@ function ZoomControls({
     'flex h-7 w-7 items-center justify-center rounded-md text-text-muted transition-colors hover:bg-bg-elevated hover:text-text-primary disabled:opacity-30 disabled:cursor-not-allowed';
 
   return (
-    <div className="bg-bg-base/90 border-border absolute right-4 bottom-4 z-10 flex items-center gap-0.5 rounded-xl border px-1 py-1 shadow-lg backdrop-blur-md">
+    <div className="bg-bg-base/90 border-border absolute right-4 bottom-4 z-10 hidden items-center gap-0.5 rounded-xl border px-1 py-1 shadow-lg backdrop-blur-md sm:flex">
       <button
         onClick={onZoomOut}
         className={zoomBtnClass}
@@ -221,7 +221,7 @@ function ExpandedMarkdownView({
   return (
     <div className="bg-bg-base fixed inset-0 z-50 flex flex-col" dir={dir}>
       {/* Header */}
-      <div className="border-border flex shrink-0 items-center justify-between border-b px-6 py-3">
+      <div className="border-border flex shrink-0 items-center justify-between border-b px-4 py-3 sm:px-6">
         <span className="text-text-secondary text-sm font-medium">Expanded View</span>
         <div className="flex items-center gap-1">
           <button
@@ -281,7 +281,10 @@ function ExpandedMarkdownView({
             return (
               <div
                 key={msg.id}
-                className={cn('px-6 py-8 md:px-12 lg:px-20', isUser ? 'bg-bg-surface/30' : '')}
+                className={cn(
+                  'px-4 py-6 sm:px-6 sm:py-8 md:px-12 lg:px-20',
+                  isUser ? 'bg-bg-surface/30' : '',
+                )}
               >
                 <div className="mx-auto flex max-w-3xl gap-5">
                   {/* Avatar */}
@@ -485,7 +488,10 @@ export function ChatMessages({
             return (
               <div
                 key={msg.id}
-                className={cn('group px-4 py-6 md:px-8 lg:px-12', isUser ? 'bg-bg-surface/30' : '')}
+                className={cn(
+                  'group px-3 py-4 sm:px-4 sm:py-6 md:px-8 lg:px-12',
+                  isUser ? 'bg-bg-surface/30' : '',
+                )}
               >
                 <div className="mx-auto flex max-w-2xl gap-4">
                   {/* Avatar */}
@@ -598,7 +604,7 @@ export function ChatMessages({
 
           {/* Suggested questions — shown after welcome message only */}
           {isWelcomeOnly && (
-            <div className="px-4 py-6 md:px-8 lg:px-12">
+            <div className="px-3 py-4 sm:px-4 sm:py-6 md:px-8 lg:px-12">
               <div
                 className="cybernus-fade-in-up mx-auto grid max-w-2xl gap-3 sm:grid-cols-2"
                 style={{ animationDelay: '200ms' }}
