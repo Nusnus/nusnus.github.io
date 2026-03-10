@@ -94,7 +94,7 @@ export function SessionHistory({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={strings.searchHistory ?? 'Search chats...'}
+              placeholder={strings.searchPlaceholder ?? 'Search chats...'}
               className="text-text-primary placeholder:text-text-muted/50 w-full bg-transparent text-xs outline-none"
             />
             {searchQuery && (

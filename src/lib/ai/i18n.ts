@@ -86,7 +86,20 @@ interface UIStrings {
   noDownload: string;
   instantStart: string;
   continueChat: string;
-  searchHistory: string;
+  search: string;
+  searchPlaceholder: string;
+  noResults: string;
+  agents: string;
+  agentsDescription: string;
+  toolActive: string;
+  toolInactive: string;
+  readAloud: string;
+  stopReading: string;
+  usingTool: string;
+  toolComplete: string;
+  searchingX: string;
+  executingCode: string;
+  queryingMcp: string;
 }
 
 const TRANSLATIONS: Record<Language, UIStrings> = {
@@ -94,7 +107,7 @@ const TRANSLATIONS: Record<Language, UIStrings> = {
     welcome:
       "Welcome to the Matrix. I'm **Cybernus** — Tomer Nosrati's digital self. You're not talking to an assistant — you're talking to Tomer, rendered in code. Ask me anything about my work, projects, or the Celery empire. Or just dare me to roast myself.",
     placeholder: 'Ask Cybernus anything...',
-    poweredBy: 'Powered by xAI Grok · Cybernus v1.0',
+    poweredBy: 'Cybernus v1.0 · Tomer Nosrati',
     newChat: 'New',
     history: 'History',
     clearAll: 'Clear All',
@@ -119,19 +132,32 @@ const TRANSLATIONS: Record<Language, UIStrings> = {
     recording: 'Recording...',
     transcribing: 'Transcribing...',
     micPermissionDenied: 'Microphone permission denied. Please allow microphone access.',
-    title: 'Ask Cybernus about Tomer',
-    subtitle: 'Choose your model and start chatting',
+    title: 'Enter the Matrix',
+    subtitle: "Tomer Nosrati's digital self, rendered in code",
     recommended: 'Recommended',
     noDownload: 'No download',
     instantStart: 'Instant start',
     continueChat: 'Continue Chat',
-    searchHistory: 'Search chats...',
+    search: 'Search',
+    searchPlaceholder: 'Search chat history...',
+    noResults: 'No results found.',
+    agents: 'Agents',
+    agentsDescription: 'MCP tools and capabilities',
+    toolActive: 'Active',
+    toolInactive: 'Inactive',
+    readAloud: 'Read aloud',
+    stopReading: 'Stop reading',
+    usingTool: 'Using tool',
+    toolComplete: 'Tool complete',
+    searchingX: 'Searching X',
+    executingCode: 'Executing code',
+    queryingMcp: 'Querying agent',
   },
   es: {
     welcome:
       'Bienvenido a la Matrix. Soy **Cybernus** — el yo digital de Tomer Nosrati. No estas hablando con un asistente — estas hablando con Tomer, renderizado en codigo. Preguntame lo que quieras sobre mi trabajo, proyectos o el imperio Celery. O atrevete a pedirme que me rostice a mi mismo.',
     placeholder: 'Preguntale a Cybernus...',
-    poweredBy: 'Impulsado por xAI Grok · Cybernus v1.0',
+    poweredBy: 'Cybernus v1.0 · Tomer Nosrati',
     newChat: 'Nuevo',
     history: 'Historial',
     clearAll: 'Borrar Todo',
@@ -156,19 +182,32 @@ const TRANSLATIONS: Record<Language, UIStrings> = {
     recording: 'Grabando...',
     transcribing: 'Transcribiendo...',
     micPermissionDenied: 'Permiso de microfono denegado. Permite el acceso al microfono.',
-    title: 'Preguntale a Cybernus sobre Tomer',
-    subtitle: 'Elige tu modelo y empieza a chatear',
+    title: 'Entra a la Matrix',
+    subtitle: 'El yo digital de Tomer Nosrati, renderizado en codigo',
     recommended: 'Recomendado',
     noDownload: 'Sin descarga',
     instantStart: 'Inicio instantaneo',
     continueChat: 'Continuar Chat',
-    searchHistory: 'Buscar chats...',
+    search: 'Buscar',
+    searchPlaceholder: 'Buscar en el historial...',
+    noResults: 'Sin resultados.',
+    agents: 'Agentes',
+    agentsDescription: 'Herramientas MCP y capacidades',
+    toolActive: 'Activo',
+    toolInactive: 'Inactivo',
+    readAloud: 'Leer en voz alta',
+    stopReading: 'Dejar de leer',
+    usingTool: 'Usando herramienta',
+    toolComplete: 'Herramienta completada',
+    searchingX: 'Buscando en X',
+    executingCode: 'Ejecutando codigo',
+    queryingMcp: 'Consultando agente',
   },
   he: {
     welcome:
       'ברוכים הבאים למטריקס. אני **סייברנוס** — העצמי הדיגיטלי של תומר נוסרתי. אתם לא מדברים עם עוזר — אתם מדברים עם תומר, מרונדר בקוד. שאלו אותי כל דבר על העבודה שלי, הפרויקטים או אימפריית Celery. או תעזו לבקש ממני לצלות את עצמי.',
     placeholder: '...שאלו את סייברנוס',
-    poweredBy: 'מופעל על ידי xAI Grok · Cybernus v1.0',
+    poweredBy: 'Cybernus v1.0 · Tomer Nosrati',
     newChat: 'חדש',
     history: 'היסטוריה',
     clearAll: 'מחק הכל',
@@ -193,13 +232,26 @@ const TRANSLATIONS: Record<Language, UIStrings> = {
     recording: '...מקליט',
     transcribing: '...מתמלל',
     micPermissionDenied: '.הרשאת מיקרופון נדחתה. אנא אפשר גישה למיקרופון',
-    title: 'שאלו את סייברנוס על תומר',
-    subtitle: 'בחרו מודל והתחילו לשוחח',
+    title: 'היכנסו למטריקס',
+    subtitle: 'העצמי הדיגיטלי של תומר נוסרתי, מרונדר בקוד',
     recommended: 'מומלץ',
     noDownload: 'ללא הורדה',
     instantStart: 'התחלה מיידית',
     continueChat: 'המשך צ׳אט',
-    searchHistory: '...חפש שיחות',
+    search: 'חיפוש',
+    searchPlaceholder: '...חיפוש בהיסטוריית הצ׳אט',
+    noResults: '.לא נמצאו תוצאות',
+    agents: 'סוכנים',
+    agentsDescription: 'כלי MCP ויכולות',
+    toolActive: 'פעיל',
+    toolInactive: 'לא פעיל',
+    readAloud: 'הקראה בקול',
+    stopReading: 'הפסק הקראה',
+    usingTool: 'משתמש בכלי',
+    toolComplete: 'כלי הושלם',
+    searchingX: 'X מחפש ב',
+    executingCode: 'מריץ קוד',
+    queryingMcp: 'שולח שאילתה לסוכן',
   },
 };
 

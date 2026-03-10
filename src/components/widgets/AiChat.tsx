@@ -2,13 +2,18 @@
  * Cybernus AI Chat — cloud-only orchestrator.
  *
  * Manages: cloud streaming via xAI Grok, session memory, personality,
- * language, voice, debug panel, and the professional chat UI.
+ * language, voice, MCP agents, search, TTS, Matrix theme, and the chat UI.
  */
 
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { cn } from '@lib/utils/cn';
 import type { ChatMessage } from '@lib/ai/types';
-import { MODEL_ID, MAX_USER_MESSAGES, trimHistory } from '@lib/ai/config';
+import {
+  CLOUD_MODELS,
+  DEFAULT_CLOUD_MODEL_ID,
+  MAX_USER_MESSAGES,
+  trimHistory,
+} from '@lib/ai/config';
 import { getToolsForModel, mapToolCallsToActions } from '@lib/ai/tools';
 import {
   saveMessages,
@@ -23,23 +28,19 @@ import {
 import type { ChatSession } from '@lib/ai/memory';
 import { ChatMessages } from '@components/ai/ChatMessages';
 import { ChatInput } from '@components/ai/ChatInput';
-
+import { ModelPicker } from '@components/ai/ModelPicker';
 import { SessionHistory } from '@components/ai/SessionHistory';
 import { ThoughtsPanel } from '@components/ai/ThoughtsPanel';
 import { DebugPanel, createLogEntry } from '@components/ai/DebugPanel';
 import type { DebugLogEntry, DebugState } from '@components/ai/DebugPanel';
+import { SearchOverlay } from '@components/ai/SearchOverlay';
+import { AgentPanel } from '@components/ai/AgentPanel';
+import { MatrixRain } from '@components/ai/MatrixRain';
 import { getPersonalityLevel, setPersonalityLevel, PERSONALITY_LEVELS } from '@lib/ai/personality';
 import type { PersonalityLevel } from '@lib/ai/personality';
 import { getLanguage, setLanguage as setStoredLanguage, LANGUAGES, t } from '@lib/ai/i18n';
 import type { Language } from '@lib/ai/i18n';
 import { VoiceSession, isVoiceSupported } from '@lib/ai/voice';
-import {
-  generateSubAgentTasks,
-  advanceSubAgentTasks,
-  completeAllSubAgentTasks,
-} from '@lib/ai/sub-agents';
-import type { SubAgentTask } from '@lib/ai/sub-agents';
-import { SubAgentPanel } from '@components/ai/SubAgentPanel';
 import type { VoiceState } from '@lib/ai/voice';
 
 interface AiChatProps {
@@ -53,7 +54,7 @@ function isWelcomeMessage(content: string): boolean {
   return LANGUAGES.some((l) => t(l.code).welcome === content);
 }
 
-/** Main Cybernus chat component — single-model, direct-to-chat architecture. */
+/** Main Cybernus chat component — cloud-only architecture with professional UI. */
 export default function AiChat({ systemPrompt }: AiChatProps) {
   /* ─── Core state ─── */
   const [engineState, setEngineState] = useState<EngineState>('idle');
@@ -61,8 +62,8 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
   const [input, setInput] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
 
-  /* ─── Cloud model — single model, no selection ─── */
-  const selectedCloudModelId = MODEL_ID;
+  /* ─── Cloud model ─── */
+  const [selectedCloudModelId, setSelectedCloudModelId] = useState(DEFAULT_CLOUD_MODEL_ID);
 
   /* ─── Personality & Language ─── */
   const [personality, setPersonality] = useState<PersonalityLevel>(getPersonalityLevel);
@@ -72,6 +73,11 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [activeSessionId, setActiveSession] = useState<string | null>(null);
   const [showSidebar, setShowSidebar] = useState(false);
+
+  /* ─── Search & Agent panel ─── */
+  const [showSearch, setShowSearch] = useState(false);
+  const [showAgentPanel, setShowAgentPanel] = useState(false);
+  const [activeToolCalls, setActiveToolCalls] = useState<string[]>([]);
 
   /* ─── Voice state ─── */
   const [voiceState, setVoiceState] = useState<VoiceState>('idle');
@@ -86,10 +92,6 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
   transcriptPreviewRef.current = transcriptPreview;
   const inputRef_value = useRef(input);
   inputRef_value.current = input;
-
-  /* ─── Sub-agent state ─── */
-  const [subAgentTasks, setSubAgentTasks] = useState<SubAgentTask[]>([]);
-  const subAgentIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   /* ─── Debug state ─── */
   const [debugLogs, setDebugLogs] = useState<DebugLogEntry[]>([]);
@@ -128,21 +130,37 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
     [],
   );
 
-  /* ─── Debug state object ─── */
-  const debugState: DebugState = {
-    logs: debugLogs,
-    streamTokenCount,
-    streamStartTime,
-    streamEndTime,
-    apiRequestCount,
-    lastApiLatency,
-    activeSessionId,
-    messageCount: messages.length,
-    personalityLevel: personality,
-    language,
-    isGenerating,
-    engineState,
-  };
+  /* ─── Debug state object (memoized) ─── */
+  const debugState: DebugState = useMemo(
+    () => ({
+      logs: debugLogs,
+      streamTokenCount,
+      streamStartTime,
+      streamEndTime,
+      apiRequestCount,
+      lastApiLatency,
+      activeSessionId,
+      messageCount: messages.length,
+      personalityLevel: personality,
+      language,
+      isGenerating,
+      engineState,
+    }),
+    [
+      debugLogs,
+      streamTokenCount,
+      streamStartTime,
+      streamEndTime,
+      apiRequestCount,
+      lastApiLatency,
+      activeSessionId,
+      messages.length,
+      personality,
+      language,
+      isGenerating,
+      engineState,
+    ],
+  );
 
   /* ─── Scroll to bottom on new messages ─── */
   useEffect(() => {
@@ -156,19 +174,16 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
     };
   }, []);
 
-  /* ─── Sub-agent interval cleanup ─── */
-  useEffect(() => {
-    return () => {
-      if (subAgentIntervalRef.current) {
-        clearInterval(subAgentIntervalRef.current);
-        subAgentIntervalRef.current = null;
-      }
-    };
-  }, []);
-
   /* ─── Global keyboard shortcuts ─── */
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
+      // Ctrl+K / Cmd+K — open search overlay
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowSearch((prev) => !prev);
+        return;
+      }
+
       // Don't intercept when modifier keys are held (let browser native shortcuts work)
       if (e.ctrlKey || e.metaKey || e.altKey) return;
 
@@ -229,7 +244,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
         if (isGenerating) {
           e.stopImmediatePropagation();
           abortRef.current?.abort();
-          finishGeneration();
+          setIsGenerating(false);
           requestAnimationFrame(() => inputRef.current?.focus());
           return;
         }
@@ -280,41 +295,43 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       // Ignore invalid handoff data
     }
 
-    // Load session on mount — auto-start (no model picker)
+    // Load sessions for sidebar history — but always start on idle (model picker)
     const allSessions = loadSessions();
     setSessions(allSessions);
-    const activeId = getActiveSessionId();
-    if (activeId) {
-      setActiveSession(activeId);
-      const restored = loadMessages();
-      if (restored.length > 0) {
-        setMessages(restored);
-        setEngineState('ready');
-        addLog('info', 'session', 'Session restored', { id: activeId, messages: restored.length });
-        return;
-      }
-    }
-
-    // No saved session — auto-start new chat
-    const welcomeMsg: ChatMessage = {
-      id: crypto.randomUUID(),
-      role: 'assistant',
-      content: t(getLanguage()).welcome,
-    };
-    setMessages([welcomeMsg]);
-    setEngineState('ready');
-    addLog('info', 'session', 'Auto-started new chat');
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  /* ─── Helper: stop generation and complete sub-agents ─── */
-  const finishGeneration = useCallback(() => {
-    setIsGenerating(false);
-    if (subAgentIntervalRef.current) {
-      clearInterval(subAgentIntervalRef.current);
-      subAgentIntervalRef.current = null;
-    }
-    setSubAgentTasks((prev) => completeAllSubAgentTasks(prev));
-  }, []);
+  /* ─── Init engine (start new/continue chat) ─── */
+  const initEngine = useCallback(
+    (resumeExisting: boolean) => {
+      if (resumeExisting) {
+        const activeId = getActiveSessionId();
+        const restored = loadMessages();
+        if (restored.length > 0) {
+          setMessages(restored);
+          if (activeId) setActiveSession(activeId);
+          setEngineState('ready');
+          addLog('info', 'session', 'Resumed existing chat', { messages: restored.length });
+          inputRef.current?.focus();
+          return;
+        }
+      }
+
+      // Start new session with translated welcome
+      const welcomeMsg: ChatMessage = {
+        id: crypto.randomUUID(),
+        role: 'assistant',
+        content: t(language).welcome,
+      };
+      setMessages([welcomeMsg]);
+      setActiveSession(null);
+      setActiveSessionId(null);
+      setEngineState('ready');
+      addLog('info', 'session', 'New chat started');
+
+      setTimeout(() => inputRef.current?.focus(), 100);
+    },
+    [addLog, language],
+  );
 
   /* ─── Send message ─── */
   const sendMessage = useCallback(
@@ -332,28 +349,6 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       setInput('');
       if (inputRef.current) inputRef.current.style.height = 'auto';
       addLog('info', 'ui', 'User message sent', { length: trimmed.length });
-
-      // Generate sub-agent tasks for visual feedback
-      const tasks = generateSubAgentTasks(trimmed);
-      setSubAgentTasks(tasks);
-
-      // Start sub-agent task progression
-      if (subAgentIntervalRef.current) clearInterval(subAgentIntervalRef.current);
-      let currentTasks = tasks;
-      // Advance the first task immediately
-      currentTasks = advanceSubAgentTasks(currentTasks);
-      setSubAgentTasks(currentTasks);
-      subAgentIntervalRef.current = setInterval(() => {
-        const allDone = currentTasks.every(
-          (t) => t.status === 'completed' || t.status === 'failed',
-        );
-        if (allDone) {
-          if (subAgentIntervalRef.current) clearInterval(subAgentIntervalRef.current);
-          return;
-        }
-        currentTasks = advanceSubAgentTasks(currentTasks);
-        setSubAgentTasks(currentTasks);
-      }, 1200);
 
       // Track streaming progress in outer scope so catch block can access them
       let tokenCount = 0;
@@ -435,6 +430,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
             tool_choice: 'auto',
             onWebSearch: () => {
               addLog('info', 'api', 'Web search triggered');
+              setActiveToolCalls((prev) => [...prev, 'web_search']);
               setMessages((prev) => {
                 const copy = [...prev];
                 const last = copy[copy.length - 1];
@@ -446,6 +442,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
             },
             onWebSearchFound: () => {
               addLog('info', 'api', 'Web search results found');
+              setActiveToolCalls((prev) => prev.filter((t) => t !== 'web_search'));
               setMessages((prev) => {
                 const copy = [...prev];
                 const last = copy[copy.length - 1];
@@ -454,6 +451,14 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
                 }
                 return copy;
               });
+            },
+            onToolUse: (toolType: string) => {
+              addLog('info', 'api', `Tool invoked: ${toolType}`);
+              setActiveToolCalls((prev) => [...prev, toolType]);
+            },
+            onToolDone: (toolType: string) => {
+              addLog('info', 'api', `Tool completed: ${toolType}`);
+              setActiveToolCalls((prev) => prev.filter((t) => t !== toolType));
             },
           },
         );
@@ -467,15 +472,48 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
           toolCalls: result.toolCalls.length,
         });
 
-        // Map tool calls to actions
-        const actions = mapToolCallsToActions(result.toolCalls);
+        // Map tool calls to actions (exclude generate_image — handled separately)
+        const actions = mapToolCallsToActions(
+          result.toolCalls.filter((tc) => tc.name !== 'generate_image'),
+        );
+
+        // Handle image generation tool calls
+        const imageToolCalls = result.toolCalls.filter((tc) => tc.name === 'generate_image');
+        let imageMarkdown = '';
+        if (imageToolCalls.length > 0) {
+          setActiveToolCalls((prev) => [...prev, 'image_generation']);
+          addLog('info', 'api', `Generating ${imageToolCalls.length} image(s)`);
+          try {
+            const { generateImage } = await import('@lib/ai/cloud');
+            const imageResults = await Promise.all(
+              imageToolCalls.map(async (tc) => {
+                try {
+                  const args = JSON.parse(tc.arguments) as { prompt?: string };
+                  if (!args.prompt) return '';
+                  const url = await generateImage(args.prompt);
+                  const safeAlt = (args.prompt ?? '').replace(/[[\]()]/g, '');
+                  return `\n\n![${safeAlt}](${url})`;
+                } catch (imgErr) {
+                  addLog('error', 'api', 'Image generation failed', {
+                    error: imgErr instanceof Error ? imgErr.message : 'Unknown',
+                  });
+                  return '\n\n*Image generation failed.*';
+                }
+              }),
+            );
+            imageMarkdown = imageResults.join('');
+          } finally {
+            setActiveToolCalls((prev) => prev.filter((t) => t !== 'image_generation'));
+          }
+        }
 
         // Build final assistant message
         // If the API returned only tool calls with no text, use a fallback so
         // the empty content doesn't trigger a permanent TypingIndicator.
+        const textContent = result.content + imageMarkdown;
         const finalAssistant: ChatMessage = {
           ...assistantMsg,
-          content: result.content || (result.toolCalls.length > 0 ? '*(used tools only)*' : ''),
+          content: textContent || (result.toolCalls.length > 0 ? '*(used tools only)*' : ''),
         };
         if (actions.length > 0) finalAssistant.actions = actions;
 
@@ -541,38 +579,18 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
           return copy;
         });
       } finally {
-        finishGeneration();
+        setIsGenerating(false);
         setStreamEndTime(Date.now());
+        setActiveToolCalls([]);
         if (abortRef.current === controller) {
           abortRef.current = null;
         }
       }
     },
-    [
-      messages,
-      isGenerating,
-      systemPrompt,
-      selectedCloudModelId,
-      activeSessionId,
-      personality,
-      language,
-      addLog,
-    ],
+    [messages, isGenerating, systemPrompt, selectedCloudModelId, personality, language, addLog],
   );
 
   /* ─── Session management ─── */
-
-  /** Start a fresh chat with a welcome message (replaces idle state). */
-  const startFreshChat = useCallback(() => {
-    const welcomeMsg: ChatMessage = {
-      id: crypto.randomUUID(),
-      role: 'assistant',
-      content: t(language).welcome,
-    };
-    setMessages([welcomeMsg]);
-    setEngineState('ready');
-  }, [language]);
-
   const clearChat = useCallback(() => {
     // Save current messages before clearing so the session persists in history
     if (messages.length > 0 && messages.some((m) => m.role === 'user')) {
@@ -583,13 +601,14 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
     sessionGenRef.current++;
     activeSessionIdRef.current = null;
     abortRef.current?.abort();
-    finishGeneration();
+    setIsGenerating(false);
     clearMessages();
+    setMessages([]);
     setActiveSession(null);
     setSessions(loadSessions());
-    startFreshChat();
+    setEngineState('idle');
     addLog('info', 'session', 'Chat cleared');
-  }, [addLog, messages, activeSessionId, startFreshChat]);
+  }, [addLog, messages, activeSessionId]);
 
   const switchSession = useCallback(
     (session: ChatSession) => {
@@ -597,7 +616,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       sessionGenRef.current++;
       activeSessionIdRef.current = session.id;
       abortRef.current?.abort();
-      finishGeneration();
+      setIsGenerating(false);
       setActiveSessionId(session.id);
       setActiveSession(session.id);
       setMessages(session.messages);
@@ -616,32 +635,34 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
         sessionGenRef.current++;
         activeSessionIdRef.current = null;
         abortRef.current?.abort();
-        finishGeneration();
+        setIsGenerating(false);
         clearMessages();
+        setMessages([]);
         setActiveSession(null);
-        startFreshChat();
+        setEngineState('idle');
       }
       addLog('info', 'session', 'Session deleted', { id: sessionId });
     },
-    [activeSessionId, addLog, startFreshChat],
+    [activeSessionId, addLog],
   );
 
   const handleClearAll = useCallback(() => {
     sessionGenRef.current++;
     activeSessionIdRef.current = null;
     abortRef.current?.abort();
-    finishGeneration();
+    setIsGenerating(false);
     clearAllSessions();
+    setMessages([]);
     setActiveSession(null);
     setSessions([]);
     setShowSidebar(false);
-    startFreshChat();
+    setEngineState('idle');
     addLog('info', 'session', 'All sessions cleared');
-  }, [addLog, startFreshChat]);
+  }, [addLog]);
 
   const handleStop = useCallback(() => {
     abortRef.current?.abort();
-    finishGeneration();
+    setIsGenerating(false);
     addLog('info', 'stream', 'Generation stopped by user');
   }, [addLog]);
 
@@ -717,13 +738,27 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
   handleVoiceToggleRef.current = handleVoiceToggle;
   sendMessageRef.current = sendMessage;
 
-  /* ─── Derived values ─── */
-  const userMsgCount = messages.filter((m) => m.role === 'user').length;
+  /* ─── Search result handler ─── */
+  const handleSearchSelect = useCallback(
+    (sessionId: string) => {
+      const allSessions = loadSessions();
+      const session = allSessions.find((s) => s.id === sessionId);
+      if (session) {
+        switchSession(session);
+      }
+    },
+    [switchSession],
+  );
+
+  /* ─── Derived values (memoized) ─── */
+  const activeCloudModel = useMemo(
+    () => CLOUD_MODELS.find((m) => m.id === selectedCloudModelId),
+    [selectedCloudModelId],
+  );
+  const userMsgCount = useMemo(() => messages.filter((m) => m.role === 'user').length, [messages]);
   const isAtLimit = userMsgCount >= MAX_USER_MESSAGES;
   const currentPersonality = PERSONALITY_LEVELS[personality];
   const strings = t(language);
-  const dir = language === 'he' ? 'rtl' : 'ltr';
-  const isRTL = dir === 'rtl';
   const isRecording =
     voiceState === 'requesting-mic' ||
     voiceState === 'recording' ||
@@ -793,6 +828,29 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
         </button>
       </div>
 
+      {/* Search button */}
+      <div className="shrink-0 px-4 pt-1 pb-1">
+        <button
+          onClick={() => setShowSearch(true)}
+          className="border-border bg-bg-surface text-text-secondary hover:border-accent/40 hover:bg-accent-muted hover:text-text-primary flex w-full items-center gap-2.5 rounded-xl border px-3 py-2.5 text-sm transition-all hover:-translate-y-0.5"
+        >
+          <svg
+            className="h-4 w-4"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.3-4.3" />
+          </svg>
+          {strings.search}
+          <kbd className="text-text-muted ml-auto rounded border border-white/10 px-1 py-0.5 text-[9px]">
+            Ctrl+K
+          </kbd>
+        </button>
+      </div>
+
       {/* Session list */}
       <div className="min-h-0 flex-1">
         <SessionHistory
@@ -855,48 +913,40 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
 
       {/* Back to portfolio */}
       <div className="border-accent/30 shrink-0 border-t px-5 py-4">
-        <a
-          href="/"
-          className="text-text-primary hover:text-accent flex items-center gap-2 text-sm font-medium transition-colors"
-        >
-          <svg
-            className="h-3.5 w-3.5"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="m12 19-7-7 7-7" />
-            <path d="M19 12H5" />
-          </svg>
-          Back to portfolio
-        </a>
+        <p className="text-text-muted text-center text-[10px]">{strings.poweredBy}</p>
       </div>
     </div>
   );
 
   return (
-    <div className="bg-bg-base flex h-full" dir={dir}>
+    <div className="bg-bg-base relative flex h-full">
+      {/* Matrix rain background */}
+      <MatrixRain opacity={0.03} />
+
+      {/* Search overlay */}
+      <SearchOverlay
+        isOpen={showSearch}
+        onClose={() => setShowSearch(false)}
+        onSelectResult={handleSearchSelect}
+        language={language}
+      />
+
       {/* Mobile sidebar backdrop */}
       {showSidebar && (
         // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- backdrop overlay
         <div
-          className="fixed inset-0 z-20 bg-black/50 md:hidden"
+          className="fixed inset-0 z-20 bg-black/50 backdrop-blur-[2px] transition-opacity md:hidden"
           onClick={() => setShowSidebar(false)}
         />
       )}
 
-      {/* Sidebar — persistent on desktop, overlay on mobile */}
+      {/* Sidebar — persistent on desktop, slide-over on mobile */}
       <aside
         className={cn(
-          'border-accent/30 bg-bg-base flex h-full shrink-0 flex-col',
-          isRTL ? 'border-l' : 'border-r',
-          'md:relative md:flex md:w-[260px]',
-          showSidebar
-            ? cn('fixed inset-y-0 z-30 w-72', isRTL ? 'right-0' : 'left-0')
-            : 'hidden md:flex',
+          'border-accent/30 bg-bg-base flex h-full shrink-0 flex-col border-r transition-transform duration-200 ease-out',
+          'fixed inset-y-0 left-0 z-30 w-72',
+          'md:relative md:z-auto md:w-[260px] md:translate-x-0',
+          showSidebar ? 'translate-x-0' : '-translate-x-full',
         )}
       >
         {sidebarContent}
@@ -908,8 +958,9 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       {/* Main content area */}
       <div className="flex min-w-0 flex-1 flex-col">
         {engineState === 'idle' ? (
-          /* ─── Loading state — brief flash while session loads ─── */
+          /* ─── Idle screen ─── */
           <>
+            {/* Mobile header for idle */}
             <div className="border-accent/30 flex items-center justify-between border-b px-4 py-3 md:hidden">
               <button
                 onClick={() => setShowSidebar(true)}
@@ -929,12 +980,14 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
               <span className="text-text-primary text-sm font-bold tracking-wider">CYBERNUS</span>
               <div className="w-8" />
             </div>
-            <div className="flex flex-1 items-center justify-center">
-              <div className="text-center">
-                <div className="bg-accent/10 mx-auto mb-4 h-12 w-12 animate-pulse rounded-xl" />
-                <p className="text-text-muted text-sm">Initializing Cybernus...</p>
-              </div>
-            </div>
+            <ModelPicker
+              selectedCloudModelId={selectedCloudModelId}
+              setSelectedCloudModelId={setSelectedCloudModelId}
+              hasSavedChat={getActiveSessionId() !== null}
+              onContinue={() => initEngine(true)}
+              onNewChat={() => initEngine(false)}
+              language={language}
+            />
           </>
         ) : (
           /* ─── Chat UI ─── */
@@ -968,7 +1021,9 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
                       boxShadow: `0 0 8px ${currentPersonality?.glowColor ?? 'var(--color-accent)'}`,
                     }}
                   />
-                  <span className="text-text-secondary text-xs">Grok 4</span>
+                  <span className="text-text-secondary text-xs">
+                    {activeCloudModel?.name ?? 'Cybernus'}
+                  </span>
                   <span className="text-text-muted hidden text-[10px] sm:inline">
                     {currentPersonality?.emoji} {currentPersonality?.name}
                   </span>
@@ -985,6 +1040,33 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
                   {strings.recording}
                 </span>
               )}
+
+              {/* Agent panel toggle */}
+              <button
+                onClick={() => setShowAgentPanel((prev) => !prev)}
+                className={cn(
+                  'rounded-lg p-1.5 transition-colors',
+                  showAgentPanel
+                    ? 'bg-[#00ff41]/10 text-[#00ff41]'
+                    : 'text-text-muted hover:bg-bg-surface',
+                )}
+                aria-label={strings.agents}
+                title={strings.agents}
+              >
+                <svg
+                  className="h-4 w-4"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1.27a2 2 0 0 1-3.46 0H6.73a2 2 0 0 1-3.46 0H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z" />
+                  <circle cx="7.5" cy="14.5" r="1" fill="currentColor" />
+                  <circle cx="16.5" cy="14.5" r="1" fill="currentColor" />
+                </svg>
+              </button>
             </div>
 
             {/* Messages */}
@@ -1020,13 +1102,33 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
         )}
       </div>
 
-      {/* Sub-agent panel — visible on lg+ when tasks are active */}
-      <div className="hidden lg:block">
-        <SubAgentPanel tasks={subAgentTasks} isVisible={subAgentTasks.length > 0} />
-      </div>
-
       {/* Floating thoughts panels — visible on xl+ screens */}
       <ThoughtsPanel side="right" />
+
+      {/* Agent panel — inline sidebar on xl+, floating overlay on smaller screens */}
+      {showAgentPanel && (
+        <>
+          {/* Backdrop for mobile/tablet overlay */}
+          {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- backdrop */}
+          <div
+            className="fixed inset-0 z-20 bg-black/40 xl:hidden"
+            onClick={() => setShowAgentPanel(false)}
+          />
+          <aside
+            className={cn(
+              'border-accent/30 bg-bg-base border-l',
+              'fixed inset-y-0 right-0 z-30 w-[280px]',
+              'xl:relative xl:z-auto xl:block xl:w-[240px] xl:shrink-0',
+            )}
+          >
+            <AgentPanel
+              language={language}
+              activeToolCalls={activeToolCalls}
+              onClose={() => setShowAgentPanel(false)}
+            />
+          </aside>
+        </>
+      )}
 
       {/* Debug panel — only in development */}
       {import.meta.env.DEV && (

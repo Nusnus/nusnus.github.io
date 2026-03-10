@@ -54,6 +54,8 @@ const ALLOWED_ORIGINS: ReadonlySet<string> = new Set([
 
 const XAI_RESPONSES_URL = 'https://api.x.ai/v1/responses';
 const XAI_REALTIME_SECRETS_URL = 'https://api.x.ai/v1/realtime/client_secrets';
+const XAI_TTS_URL = 'https://api.x.ai/v1/tts';
+const XAI_IMAGES_URL = 'https://api.x.ai/v1/images/generations';
 
 /** Models visitors are allowed to use. Single model for Cybernus refactor. */
 const ALLOWED_MODELS: ReadonlySet<string> = new Set([
@@ -186,6 +188,101 @@ export default {
         const message = err instanceof Error ? err.message : 'Failed to get ephemeral token';
         console.error(`[ai-proxy] Realtime token error: ${message}`);
         return jsonResponse({ error: 'Failed to get ephemeral token' }, 502, origin);
+      }
+    }
+
+    // ── TTS endpoint (text-to-speech proxy) ──
+    if (postPath === '/v1/tts') {
+      if (!isAllowed) return jsonResponse({ error: 'Forbidden' }, 403);
+      if (!env.XAI_API_KEY) return jsonResponse({ error: 'Server misconfigured' }, 500, origin);
+
+      const ttsClientIP = request.headers.get('CF-Connecting-IP') ?? 'unknown';
+      if (isRateLimited(ttsClientIP)) {
+        return jsonResponse({ error: 'Rate limit exceeded. Try again shortly.' }, 429, origin);
+      }
+
+      try {
+        const ttsBody = await request.text();
+        if (ttsBody.length > MAX_REQUEST_BYTES) {
+          return jsonResponse({ error: 'Request too large' }, 413, origin);
+        }
+        const xaiRes = await fetch(XAI_TTS_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${env.XAI_API_KEY}`,
+          },
+          body: ttsBody,
+        });
+
+        if (!xaiRes.ok || !xaiRes.body) {
+          const errorBody = await xaiRes.text().catch(() => 'TTS error');
+          return new Response(errorBody, {
+            status: xaiRes.status || 502,
+            headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
+          });
+        }
+
+        return new Response(xaiRes.body, {
+          status: 200,
+          headers: {
+            'Content-Type': xaiRes.headers.get('Content-Type') ?? 'audio/mpeg',
+            'Cache-Control': 'no-cache',
+            ...corsHeaders(origin),
+          },
+        });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'TTS request failed';
+        console.error(`[ai-proxy] TTS error: ${message}`);
+        return jsonResponse({ error: 'Failed to generate speech' }, 502, origin);
+      }
+    }
+
+    // ── Image generation endpoint ──
+    if (postPath === '/v1/images/generations') {
+      if (!isAllowed) return jsonResponse({ error: 'Forbidden' }, 403);
+      if (!env.XAI_API_KEY) return jsonResponse({ error: 'Server misconfigured' }, 500, origin);
+
+      const imgClientIP = request.headers.get('CF-Connecting-IP') ?? 'unknown';
+      if (isRateLimited(imgClientIP)) {
+        return jsonResponse({ error: 'Rate limit exceeded. Try again shortly.' }, 429, origin);
+      }
+
+      try {
+        const imgBody = await request.text();
+        if (imgBody.length > MAX_REQUEST_BYTES) {
+          return jsonResponse({ error: 'Request too large' }, 413, origin);
+        }
+
+        // Validate and enforce model
+        let parsed: Record<string, unknown>;
+        try {
+          parsed = JSON.parse(imgBody) as Record<string, unknown>;
+        } catch {
+          return jsonResponse({ error: 'Invalid JSON' }, 400, origin);
+        }
+
+        // Force model to grok-imagine-image
+        parsed.model = 'grok-imagine-image';
+
+        const xaiRes = await fetch(XAI_IMAGES_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${env.XAI_API_KEY}`,
+          },
+          body: JSON.stringify(parsed),
+        });
+
+        const responseBody = await xaiRes.text();
+        return new Response(responseBody, {
+          status: xaiRes.status,
+          headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
+        });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Image generation failed';
+        console.error(`[ai-proxy] Image generation error: ${message}`);
+        return jsonResponse({ error: 'Failed to generate image' }, 502, origin);
       }
     }
 
