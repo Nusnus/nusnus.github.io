@@ -120,9 +120,10 @@ export function buildToolDefinitions(tools: AgentTool[]): Record<string, unknown
     }
   }
 
-  // Always include the client-side function tools
-  definitions.push(
-    {
+  // Include image generation tool only if enabled
+  const imageEnabled = tools.find((t) => t.id === 'image_generation')?.enabled ?? true;
+  if (imageEnabled) {
+    definitions.push({
       type: 'function',
       name: 'generate_image',
       description:
@@ -138,7 +139,11 @@ export function buildToolDefinitions(tools: AgentTool[]): Record<string, unknown
         },
         required: ['prompt'],
       },
-    },
+    });
+  }
+
+  // Always include the client-side function tools
+  definitions.push(
     {
       type: 'function',
       name: 'open_link',
