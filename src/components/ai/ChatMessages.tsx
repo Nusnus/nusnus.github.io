@@ -16,7 +16,7 @@ import type { ChatMessage } from '@lib/ai/types';
 import { renderMarkdown } from '@lib/ai/markdown';
 import { executeAction } from '@lib/ai/tools';
 import type { Language } from '@lib/ai/i18n';
-import { t } from '@lib/ai/i18n';
+import { t, LANGUAGES } from '@lib/ai/i18n';
 import { TTSButton } from './TTSButton';
 
 interface ChatMessagesProps {
@@ -59,13 +59,57 @@ function extractFollowUps(content: string): { body: string; suggestions: string[
   return { body, suggestions };
 }
 
-/** Skeleton loading shimmer for streaming messages. */
-function SkeletonLoader() {
+/** IDE-like thinking indicator — shows animated processing steps. */
+function ThinkingIndicator() {
+  const [step, setStep] = useState(0);
+  const steps = [
+    { label: 'Analyzing context', icon: '◈' },
+    { label: 'Searching knowledge base', icon: '◇' },
+    { label: 'Composing response', icon: '◆' },
+  ];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setStep((s) => (s + 1) % steps.length);
+    }, 2000);
+    return () => clearInterval(timer);
+  }, [steps.length]);
+
   return (
-    <div className="space-y-2.5 py-1">
-      <div className="cybernus-shimmer bg-bg-elevated h-3.5 w-4/5 rounded-md" />
-      <div className="cybernus-shimmer bg-bg-elevated h-3.5 w-3/5 rounded-md [animation-delay:200ms]" />
-      <div className="cybernus-shimmer bg-bg-elevated h-3.5 w-2/3 rounded-md [animation-delay:400ms]" />
+    <div className="space-y-1.5 py-1">
+      {steps.map((s, i) => (
+        <div
+          key={s.label}
+          className={cn(
+            'flex items-center gap-2 text-xs transition-all duration-500',
+            i < step ? 'text-[#00ff41]/50' : i === step ? 'text-[#00ff41]' : 'text-white/15',
+          )}
+        >
+          <span
+            className={cn(
+              'inline-block w-3 text-center text-[10px]',
+              i === step && 'animate-pulse',
+            )}
+          >
+            {i < step ? '✓' : s.icon}
+          </span>
+          <span className={cn(i === step && 'font-medium')}>{s.label}</span>
+          {i === step && (
+            <span className="inline-flex gap-0.5">
+              {[0, 1, 2].map((d) => (
+                <span
+                  key={d}
+                  className="bg-accent/60 inline-block h-1 w-1 rounded-full"
+                  style={{
+                    animation: 'roast-dot 1.4s ease-in-out infinite',
+                    animationDelay: `${d * 0.2}s`,
+                  }}
+                />
+              ))}
+            </span>
+          )}
+        </div>
+      ))}
     </div>
   );
 }
@@ -336,7 +380,7 @@ function ExpandedMarkdownView({
                         <SearchIndicator status={msg.searchStatus} strings={strings} />
                       ) : !msg.content ? (
                         isStreamingMsg ? (
-                          <SkeletonLoader />
+                          <ThinkingIndicator />
                         ) : (
                           <TypingIndicator />
                         )
@@ -512,7 +556,7 @@ const MessageItem = memo(function MessageItem({
               <SearchIndicator status={msg.searchStatus} strings={strings} />
             ) : !msg.content ? (
               isStreaming ? (
-                <SkeletonLoader />
+                <ThinkingIndicator />
               ) : (
                 <TypingIndicator />
               )
@@ -605,7 +649,10 @@ export function ChatMessages({
   }, [onExpandClose]);
 
   const isWelcomeOnly = useMemo(
-    () => messages.length === 1 && messages[0]?.role === 'assistant',
+    () =>
+      messages.length === 1 &&
+      messages[0]?.role === 'assistant' &&
+      LANGUAGES.some((l) => t(l.code).welcome === messages[0]?.content),
     [messages],
   );
 
@@ -655,7 +702,7 @@ export function ChatMessages({
           {isWelcomeOnly && (
             <div className="px-3 py-4 sm:px-4 sm:py-6 md:px-8 lg:px-12">
               <div
-                className="cybernus-fade-in-up mx-auto grid max-w-2xl gap-3 sm:grid-cols-2"
+                className="cybernus-fade-in-up mx-auto grid max-w-3xl gap-2.5 sm:grid-cols-2 lg:grid-cols-3"
                 style={{ animationDelay: '200ms' }}
               >
                 {SUGGESTED_QUESTIONS.map((q, idx) => (
@@ -663,22 +710,22 @@ export function ChatMessages({
                     key={q.label}
                     onClick={() => onSendMessage(q.prompt)}
                     disabled={isGenerating}
-                    className="group relative overflow-hidden rounded-xl border border-[#00ff41]/10 bg-[#0a0a0a]/80 p-4 text-left transition-all duration-300 hover:-translate-y-1 hover:border-[#00ff41]/30 hover:shadow-lg hover:shadow-[#00ff41]/5 disabled:opacity-50"
-                    style={{ animationDelay: `${(idx + 1) * 80}ms` }}
+                    className="group relative overflow-hidden rounded-xl border border-[#00ff41]/10 bg-[#0a0a0a]/80 p-3.5 text-left transition-all duration-300 hover:-translate-y-1 hover:border-[#00ff41]/30 hover:shadow-lg hover:shadow-[#00ff41]/5 disabled:opacity-50"
+                    style={{ animationDelay: `${(idx + 1) * 60}ms` }}
                   >
                     <div className="absolute inset-0 bg-gradient-to-br from-[#00ff41]/[0.03] to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
                     <div className="relative">
-                      <div className="mb-2 flex items-center gap-2">
-                        <span className="text-lg">{q.icon}</span>
-                        <span className="text-sm font-semibold text-[#00ff41]/90 transition-colors group-hover:text-[#00ff41]">
+                      <div className="mb-1.5 flex items-center gap-2">
+                        <span className="text-base leading-none">{q.icon}</span>
+                        <span className="text-[13px] font-semibold text-[#00ff41]/90 transition-colors group-hover:text-[#00ff41]">
                           {q.label}
                         </span>
                       </div>
-                      <p className="text-text-muted text-xs leading-relaxed transition-colors group-hover:text-gray-300">
+                      <p className="text-text-muted line-clamp-2 text-[11px] leading-relaxed transition-colors group-hover:text-gray-400">
                         {q.prompt}
                       </p>
                     </div>
-                    <ArrowRight className="absolute right-3 bottom-3 h-3.5 w-3.5 text-[#00ff41]/0 transition-all duration-300 group-hover:text-[#00ff41]/50" />
+                    <ArrowRight className="absolute right-2.5 bottom-2.5 h-3 w-3 text-[#00ff41]/0 transition-all duration-300 group-hover:text-[#00ff41]/40" />
                   </button>
                 ))}
               </div>
