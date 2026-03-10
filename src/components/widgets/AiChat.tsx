@@ -551,6 +551,18 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
   );
 
   /* ─── Session management ─── */
+
+  /** Start a fresh chat with a welcome message (replaces idle state). */
+  const startFreshChat = useCallback(() => {
+    const welcomeMsg: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: 'assistant',
+      content: t(language).welcome,
+    };
+    setMessages([welcomeMsg]);
+    setEngineState('ready');
+  }, [language]);
+
   const clearChat = useCallback(() => {
     // Save current messages before clearing so the session persists in history
     if (messages.length > 0 && messages.some((m) => m.role === 'user')) {
@@ -563,12 +575,11 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
     abortRef.current?.abort();
     finishGeneration();
     clearMessages();
-    setMessages([]);
     setActiveSession(null);
     setSessions(loadSessions());
-    setEngineState('idle');
+    startFreshChat();
     addLog('info', 'session', 'Chat cleared');
-  }, [addLog, messages, activeSessionId]);
+  }, [addLog, messages, activeSessionId, startFreshChat]);
 
   const switchSession = useCallback(
     (session: ChatSession) => {
@@ -597,13 +608,12 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
         abortRef.current?.abort();
         finishGeneration();
         clearMessages();
-        setMessages([]);
         setActiveSession(null);
-        setEngineState('idle');
+        startFreshChat();
       }
       addLog('info', 'session', 'Session deleted', { id: sessionId });
     },
-    [activeSessionId, addLog],
+    [activeSessionId, addLog, startFreshChat],
   );
 
   const handleClearAll = useCallback(() => {
@@ -612,13 +622,12 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
     abortRef.current?.abort();
     finishGeneration();
     clearAllSessions();
-    setMessages([]);
     setActiveSession(null);
     setSessions([]);
     setShowSidebar(false);
-    setEngineState('idle');
+    startFreshChat();
     addLog('info', 'session', 'All sessions cleared');
-  }, [addLog]);
+  }, [addLog, startFreshChat]);
 
   const handleStop = useCallback(() => {
     abortRef.current?.abort();
