@@ -92,6 +92,7 @@ export function TTSButton({ text, language }: TTSButtonProps) {
         'error',
         () => {
           setState('error');
+          if (audio.src.startsWith('blob:')) URL.revokeObjectURL(audio.src);
           audioRef.current = null;
         },
         { once: true },
