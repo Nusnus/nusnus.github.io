@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@lib/utils/cn';
 import { SUGGESTED_QUESTIONS } from '@lib/ai/config';
-import type { ChatMessage } from '@lib/ai/types';
+import type { ChatMessage, AgentActivityItem } from '@lib/ai/types';
 import { renderMarkdown } from '@lib/ai/markdown';
 import { executeAction } from '@lib/ai/tools';
 import type { Language } from '@lib/ai/i18n';
@@ -163,6 +163,99 @@ function SearchIndicator({
           ))}
         </span>
       )}
+    </div>
+  );
+}
+
+/**
+ * InlineAgentActivity — renders sub-agent activity inline in the conversation.
+ * Each agent has its own colour, icon, and name, creating a multi-agent feel.
+ */
+function InlineAgentActivity({ items }: { items: AgentActivityItem[] }) {
+  if (items.length === 0) return null;
+
+  return (
+    <div className="mb-3 space-y-1.5">
+      {items.map((item) => {
+        const isWorking = item.status === 'working';
+        return (
+          <div
+            key={item.toolType}
+            className={cn(
+              'inline-flex items-center gap-2.5 rounded-xl border px-3.5 py-2 text-xs font-medium backdrop-blur-sm transition-all duration-300',
+              isWorking ? 'border-white/10 bg-white/[0.03]' : 'border-white/5 bg-white/[0.01]',
+            )}
+          >
+            {/* Agent icon */}
+            <span
+              className={cn(
+                'flex h-5 w-5 items-center justify-center rounded-md',
+                isWorking && 'animate-pulse',
+              )}
+              style={{ backgroundColor: `${item.color}15` }}
+            >
+              <svg
+                className="h-3 w-3"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke={item.color}
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d={item.iconPath} />
+              </svg>
+            </span>
+
+            {/* Agent name */}
+            <span
+              className="text-[10px] font-bold tracking-wider uppercase"
+              style={{ color: item.color }}
+            >
+              {item.agent}
+            </span>
+
+            {/* Status label */}
+            <span className={cn('text-xs', isWorking ? 'text-white/50' : 'text-white/30')}>
+              {item.label}
+            </span>
+
+            {/* Working dots */}
+            {isWorking && (
+              <span className="inline-flex gap-0.5">
+                {[0, 1, 2].map((d) => (
+                  <span
+                    key={d}
+                    className="inline-block h-1 w-1 rounded-full"
+                    style={{
+                      backgroundColor: item.color,
+                      opacity: 0.6,
+                      animation: 'roast-dot 1.4s ease-in-out infinite',
+                      animationDelay: `${d * 0.2}s`,
+                    }}
+                  />
+                ))}
+              </span>
+            )}
+
+            {/* Done checkmark */}
+            {!isWorking && (
+              <svg
+                className="h-3 w-3"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke={item.color}
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                style={{ opacity: 0.5 }}
+              >
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -383,6 +476,11 @@ function ExpandedMarkdownView({
                       )}
                     </p>
                     <div className="text-text-primary/85 text-[15px] leading-relaxed">
+                      {/* Inline agent activity */}
+                      {!isUser && msg.agentActivity && msg.agentActivity.length > 0 && (
+                        <InlineAgentActivity items={msg.agentActivity} />
+                      )}
+
                       {msg.searchStatus ? (
                         <SearchIndicator status={msg.searchStatus} strings={strings} />
                       ) : !msg.content ? (
@@ -559,6 +657,11 @@ const MessageItem = memo(function MessageItem({
 
           {/* Content */}
           <div className="text-text-primary/85 text-sm leading-relaxed">
+            {/* Inline agent activity — shown above content */}
+            {!isUser && msg.agentActivity && msg.agentActivity.length > 0 && (
+              <InlineAgentActivity items={msg.agentActivity} />
+            )}
+
             {msg.searchStatus ? (
               <SearchIndicator status={msg.searchStatus} strings={strings} />
             ) : !msg.content ? (
@@ -709,7 +812,7 @@ export function ChatMessages({
           {isWelcomeOnly && (
             <div className="px-3 py-4 sm:px-4 sm:py-6 md:px-8 lg:px-12">
               <div
-                className="cybernus-fade-in-up mx-auto grid max-w-3xl gap-2.5 sm:grid-cols-2 lg:grid-cols-3"
+                className="cybernus-fade-in-up mx-auto grid max-w-3xl gap-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3"
                 style={{ animationDelay: '200ms' }}
               >
                 {SUGGESTED_QUESTIONS.map((q, idx) => (

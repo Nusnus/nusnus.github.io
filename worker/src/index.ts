@@ -56,6 +56,8 @@ const XAI_RESPONSES_URL = 'https://api.x.ai/v1/responses';
 const XAI_REALTIME_SECRETS_URL = 'https://api.x.ai/v1/realtime/client_secrets';
 const XAI_TTS_URL = 'https://api.x.ai/v1/tts';
 const XAI_IMAGES_URL = 'https://api.x.ai/v1/images/generations';
+const XAI_VIDEOS_URL = 'https://api.x.ai/v1/videos/generations';
+const XAI_VIDEOS_STATUS_URL = 'https://api.x.ai/v1/videos';
 
 /** Models visitors are allowed to use. Prevents switching to costly models. */
 const ALLOWED_MODELS: ReadonlySet<string> = new Set([
@@ -145,6 +147,30 @@ export default {
     }
     if (request.method === 'GET') {
       if (!isAllowed) return jsonResponse({ error: 'Forbidden' }, 403);
+
+      // ── Video status polling (GET /v1/videos/:requestId) ──
+      const getPath = new URL(request.url).pathname;
+      const videoMatch = getPath.match(/^\/v1\/videos\/([a-f0-9-]+)$/);
+      if (videoMatch) {
+        const requestId = videoMatch[1];
+        if (!env.XAI_API_KEY) return jsonResponse({ error: 'Server misconfigured' }, 500, origin);
+        try {
+          const xaiRes = await fetch(`${XAI_VIDEOS_STATUS_URL}/${requestId}`, {
+            method: 'GET',
+            headers: { Authorization: `Bearer ${env.XAI_API_KEY}` },
+          });
+          const responseBody = await xaiRes.text();
+          return new Response(responseBody, {
+            status: xaiRes.status,
+            headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
+          });
+        } catch (err) {
+          const message = err instanceof Error ? err.message : 'Video status check failed';
+          console.error(`[ai-proxy] Video status error: ${message}`);
+          return jsonResponse({ error: 'Failed to check video status' }, 502, origin);
+        }
+      }
+
       const ghResponse = await handleGitHubRoute(request, env.GITHUB_TOKEN, corsHeaders(origin));
       if (ghResponse) return ghResponse;
       return jsonResponse({ error: 'Not found' }, 404, origin);
@@ -282,6 +308,53 @@ export default {
         const message = err instanceof Error ? err.message : 'Image generation failed';
         console.error(`[ai-proxy] Image generation error: ${message}`);
         return jsonResponse({ error: 'Failed to generate image' }, 502, origin);
+      }
+    }
+
+    // ── Video generation endpoint ──
+    if (postPath === '/v1/videos/generations') {
+      if (!isAllowed) return jsonResponse({ error: 'Forbidden' }, 403);
+      if (!env.XAI_API_KEY) return jsonResponse({ error: 'Server misconfigured' }, 500, origin);
+
+      const vidClientIP = request.headers.get('CF-Connecting-IP') ?? 'unknown';
+      if (isRateLimited(vidClientIP)) {
+        return jsonResponse({ error: 'Rate limit exceeded. Try again shortly.' }, 429, origin);
+      }
+
+      try {
+        const vidBody = await request.text();
+        if (vidBody.length > MAX_REQUEST_BYTES) {
+          return jsonResponse({ error: 'Request too large' }, 413, origin);
+        }
+
+        let parsed: Record<string, unknown>;
+        try {
+          parsed = JSON.parse(vidBody) as Record<string, unknown>;
+        } catch {
+          return jsonResponse({ error: 'Invalid JSON' }, 400, origin);
+        }
+
+        // Force model to grok-imagine-video
+        parsed.model = 'grok-imagine-video';
+
+        const xaiRes = await fetch(XAI_VIDEOS_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${env.XAI_API_KEY}`,
+          },
+          body: JSON.stringify(parsed),
+        });
+
+        const responseBody = await xaiRes.text();
+        return new Response(responseBody, {
+          status: xaiRes.status,
+          headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
+        });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Video generation failed';
+        console.error(`[ai-proxy] Video generation error: ${message}`);
+        return jsonResponse({ error: 'Failed to generate video' }, 502, origin);
       }
     }
 

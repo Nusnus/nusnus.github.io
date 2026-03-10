@@ -5,8 +5,9 @@
  * (with syntax highlighting), [links](url), lists, horizontal rules,
  * paragraphs, Mermaid diagrams, [[Wikilinks]], > [!callouts], and tables.
  */
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useState, useCallback } from 'react';
 import type { ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 
 const MermaidBlock = lazy(() => import('@components/widgets/MermaidBlock'));
 
@@ -234,13 +235,63 @@ function HighlightedCodeBlock({
   lang: string;
   blockKey: number;
 }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = useCallback(() => {
+    navigator.clipboard.writeText(code).then(
+      () => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      },
+      () => {
+        /* clipboard access denied — silently ignore */
+      },
+    );
+  }, [code]);
+
   return (
-    <pre
-      key={blockKey}
-      className="bg-bg-elevated scrollbar-thin my-2 overflow-x-auto rounded-lg p-3 text-xs"
-    >
-      <code>{highlightCode(code, lang)}</code>
-    </pre>
+    <div key={blockKey} className="group/code relative my-2">
+      {/* Language badge + copy button */}
+      <div className="absolute top-0 right-0 z-10 flex items-center gap-1 rounded-tr-lg rounded-bl-lg bg-black/40 px-2 py-1 opacity-0 backdrop-blur-sm transition-opacity group-hover/code:opacity-100">
+        {lang && (
+          <span className="text-[9px] font-medium tracking-wider text-white/30 uppercase">
+            {lang}
+          </span>
+        )}
+        <button
+          onClick={handleCopy}
+          className="flex h-5 w-5 items-center justify-center rounded text-white/40 transition-colors hover:text-white/70"
+          aria-label="Copy code"
+          title="Copy"
+        >
+          {copied ? (
+            <svg
+              className="h-3 w-3 text-[#00ff41]"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+            >
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          ) : (
+            <svg
+              className="h-3 w-3"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+            </svg>
+          )}
+        </button>
+      </div>
+      <pre className="bg-bg-elevated scrollbar-thin overflow-x-auto rounded-lg p-3 text-xs">
+        <code>{highlightCode(code, lang)}</code>
+      </pre>
+    </div>
   );
 }
 
@@ -426,6 +477,14 @@ function renderBlock(block: string, key: number): ReactNode {
   const trimmed = block.trim();
   if (!trimmed) return null;
 
+  // Video block: <video>url|alt</video>
+  const videoBlockMatch = trimmed.match(/^<video>([^|]+)\|?(.*)<\/video>$/);
+  if (videoBlockMatch) {
+    const videoUrl = videoBlockMatch[1] ?? '';
+    const videoAlt = videoBlockMatch[2] ?? 'Generated video';
+    return <VideoPlayer key={key} src={videoUrl} alt={videoAlt} />;
+  }
+
   // Code block: ```lang\n...\n```
   const codeBlockMatch = trimmed.match(/^```(\w*)\n([\s\S]*?)```$/);
   if (codeBlockMatch) {
@@ -573,15 +632,9 @@ function renderInline(text: string): ReactNode {
     }
 
     if (match[2] !== undefined && match[3]) {
-      // ![alt](url) — inline image
+      // ![alt](url) — inline image with lightbox
       parts.push(
-        <img
-          key={match.index}
-          src={match[3]}
-          alt={match[2] || 'Generated image'}
-          className="my-2 max-w-full rounded-lg border border-[#00ff41]/20"
-          loading="lazy"
-        />,
+        <ChatImage key={match.index} src={match[3]} alt={match[2] || 'Generated image'} />,
       );
     } else if (match[4]) {
       // **bold**
@@ -653,4 +706,136 @@ function renderInline(text: string): ReactNode {
   }
 
   return parts.length === 1 ? parts[0] : parts;
+}
+
+/* ── Media Components ── */
+
+/** Inline image with click-to-expand lightbox. */
+function ChatImage({ src, alt }: { src: string; alt: string }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+
+  const handleClose = useCallback(() => setIsOpen(false), []);
+
+  return (
+    <>
+      <span className="group/img relative my-3 block">
+        {!loaded && (
+          <span className="bg-bg-elevated flex h-48 w-full animate-pulse items-center justify-center rounded-xl">
+            <span className="text-text-muted text-xs">Loading image...</span>
+          </span>
+        )}
+        <button
+          type="button"
+          onClick={() => setIsOpen(true)}
+          className={`block cursor-zoom-in border-0 bg-transparent p-0 ${loaded ? '' : 'hidden'}`}
+          aria-label={`Expand image: ${alt}`}
+        >
+          <img
+            src={src}
+            alt={alt}
+            className="max-w-full rounded-xl border border-[#00ff41]/15 shadow-lg shadow-black/20 transition-all duration-200 hover:border-[#00ff41]/30 hover:shadow-[#00ff41]/10"
+            loading="lazy"
+            onLoad={() => setLoaded(true)}
+          />
+        </button>
+        {loaded && (
+          <span className="pointer-events-none absolute right-2 bottom-2 flex items-center gap-1.5 rounded-lg bg-black/60 px-2 py-1 text-[10px] text-white/0 opacity-0 backdrop-blur-sm transition-all group-hover/img:text-white/60 group-hover/img:opacity-100">
+            Click to expand
+          </span>
+        )}
+      </span>
+
+      {/* Lightbox overlay */}
+      {isOpen &&
+        createPortal(<ImageLightbox src={src} alt={alt} onClose={handleClose} />, document.body)}
+    </>
+  );
+}
+
+/** Fullscreen image lightbox. */
+function ImageLightbox({ src, alt, onClose }: { src: string; alt: string; onClose: () => void }) {
+  return (
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- lightbox backdrop
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <button
+        onClick={onClose}
+        className="absolute top-4 right-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/70 transition-colors hover:bg-white/20 hover:text-white"
+        aria-label="Close"
+      >
+        <svg
+          className="h-5 w-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions -- prevent close on image click */}
+      <img
+        src={src}
+        alt={alt}
+        className="max-h-[90vh] max-w-[90vw] rounded-xl object-contain shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      />
+    </div>
+  );
+}
+
+/** Inline video player with native controls. */
+function VideoPlayer({ src, alt }: { src: string; alt: string }) {
+  const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState(false);
+
+  if (error) {
+    return (
+      <div className="bg-bg-elevated my-3 flex h-48 items-center justify-center rounded-xl border border-red-500/20">
+        <span className="text-text-muted text-sm">Video failed to load</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="group/vid relative my-3">
+      {!loaded && (
+        <div className="bg-bg-elevated flex h-48 w-full animate-pulse items-center justify-center rounded-xl">
+          <div className="flex flex-col items-center gap-2">
+            <svg className="h-8 w-8 animate-spin text-[#00ff41]/50" viewBox="0 0 24 24" fill="none">
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              />
+            </svg>
+            <span className="text-text-muted text-xs">Loading video...</span>
+          </div>
+        </div>
+      )}
+      {/* eslint-disable-next-line jsx-a11y/media-has-caption -- alt provided via aria-label */}
+      <video
+        src={src}
+        controls
+        playsInline
+        preload="metadata"
+        className={`max-w-full rounded-xl border border-[#00ff41]/15 shadow-lg shadow-black/20 ${loaded ? '' : 'hidden'}`}
+        onLoadedData={() => setLoaded(true)}
+        onError={() => setError(true)}
+        aria-label={alt}
+      />
+    </div>
+  );
 }

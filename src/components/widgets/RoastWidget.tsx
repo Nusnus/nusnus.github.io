@@ -2,10 +2,11 @@
  * RoastWidget — Floating 🔥 FAB that opens a compact chat bubble
  * and streams a roast from the AI via the Cloudflare Worker proxy.
  *
- * Replaces the old static <a href="/chat?roast=1"> FAB.
+ * Supports image generation — every roast includes a visual roast image.
  */
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { DEFAULT_CLOUD_MODEL_ID } from '@lib/ai/config';
+import { buildToolDefinitions, loadTools } from '@lib/cybernus/services/AgentService';
 
 type WidgetState = 'closed' | 'loading' | 'streaming' | 'done' | 'error';
 
@@ -94,23 +95,58 @@ ${
 
       setState('streaming');
 
-      const { content } = await cloudChatStream(
+      // Build tool definitions so Grok can generate images
+      const tools = buildToolDefinitions(loadTools());
+
+      const { content, toolCalls } = await cloudChatStream(
         messages,
         DEFAULT_CLOUD_MODEL_ID,
         (_token, accumulated) => {
           setResponse(accumulated);
         },
         controller.signal,
+        {
+          tools,
+          tool_choice: 'auto',
+        },
       );
+
+      // Handle image generation tool calls
+      let imageMarkdown = '';
+      const imageToolCalls = toolCalls.filter((tc) => tc.name === 'generate_image');
+      if (imageToolCalls.length > 0) {
+        try {
+          const { generateImage } = await import('@lib/ai/cloud');
+          const imageResults = await Promise.all(
+            imageToolCalls.map(async (tc) => {
+              try {
+                const args = JSON.parse(tc.arguments) as { prompt?: string };
+                if (!args.prompt) return '';
+                const url = await generateImage(args.prompt);
+                const safeAlt = (args.prompt ?? '').replace(/[[\]()]/g, '');
+                return `\n\n![${safeAlt}](${url})`;
+              } catch {
+                return '';
+              }
+            }),
+          );
+          imageMarkdown = imageResults.join('');
+        } catch {
+          // Image generation not available — skip silently
+        }
+      }
+
+      const finalContent = content + imageMarkdown;
 
       // Append this exchange to history so the next escalation sees it
       if (isEscalation || levelClamp === 0) {
         historyRef.current.push(
           { role: 'user', content: userMessage.content },
-          { role: 'assistant', content },
+          { role: 'assistant', content: finalContent },
         );
       }
 
+      setResponse(finalContent);
       setState('done');
     } catch (err) {
       if (controller.signal.aborted) {

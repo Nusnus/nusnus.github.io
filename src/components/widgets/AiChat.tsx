@@ -26,6 +26,7 @@ import {
   clearAllSessions,
 } from '@lib/ai/memory';
 import type { ChatSession } from '@lib/ai/memory';
+import { createAgentActivity, completeAgentActivity } from '@lib/cybernus/services/AgentService';
 import { ChatMessages } from '@components/ai/ChatMessages';
 import { ChatInput } from '@components/ai/ChatInput';
 import { ModelPicker } from '@components/ai/ModelPicker';
@@ -441,7 +442,13 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
                 const copy = [...prev];
                 const last = copy[copy.length - 1];
                 if (last?.role === 'assistant') {
-                  copy[copy.length - 1] = { ...last, searchStatus: 'searching' };
+                  const existing = last.agentActivity ?? [];
+                  const activity = createAgentActivity('web_search');
+                  copy[copy.length - 1] = {
+                    ...last,
+                    searchStatus: 'searching',
+                    agentActivity: [...existing, activity],
+                  };
                 }
                 return copy;
               });
@@ -453,7 +460,14 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
                 const copy = [...prev];
                 const last = copy[copy.length - 1];
                 if (last?.role === 'assistant') {
-                  copy[copy.length - 1] = { ...last, searchStatus: 'found' };
+                  const updated = (last.agentActivity ?? []).map((a) =>
+                    a.toolType === 'web_search' ? completeAgentActivity(a) : a,
+                  );
+                  copy[copy.length - 1] = {
+                    ...last,
+                    searchStatus: 'found',
+                    agentActivity: updated,
+                  };
                 }
                 return copy;
               });
@@ -461,10 +475,37 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
             onToolUse: (toolType: string) => {
               addLog('info', 'api', `Tool invoked: ${toolType}`);
               setActiveToolCalls((prev) => [...prev, toolType]);
+              setMessages((prev) => {
+                const copy = [...prev];
+                const last = copy[copy.length - 1];
+                if (last?.role === 'assistant') {
+                  const existing = last.agentActivity ?? [];
+                  // Avoid duplicate entries for the same tool type
+                  if (!existing.some((a) => a.toolType === toolType)) {
+                    const activity = createAgentActivity(toolType);
+                    copy[copy.length - 1] = {
+                      ...last,
+                      agentActivity: [...existing, activity],
+                    };
+                  }
+                }
+                return copy;
+              });
             },
             onToolDone: (toolType: string) => {
               addLog('info', 'api', `Tool completed: ${toolType}`);
               setActiveToolCalls((prev) => prev.filter((t) => t !== toolType));
+              setMessages((prev) => {
+                const copy = [...prev];
+                const last = copy[copy.length - 1];
+                if (last?.role === 'assistant') {
+                  const updated = (last.agentActivity ?? []).map((a) =>
+                    a.toolType === toolType ? completeAgentActivity(a) : a,
+                  );
+                  copy[copy.length - 1] = { ...last, agentActivity: updated };
+                }
+                return copy;
+              });
             },
           },
         );
@@ -478,9 +519,11 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
           toolCalls: result.toolCalls.length,
         });
 
-        // Map tool calls to actions (exclude generate_image — handled separately)
+        // Map tool calls to actions (exclude generate_image and generate_video — handled separately)
         const actions = mapToolCallsToActions(
-          result.toolCalls.filter((tc) => tc.name !== 'generate_image'),
+          result.toolCalls.filter(
+            (tc) => tc.name !== 'generate_image' && tc.name !== 'generate_video',
+          ),
         );
 
         // Handle image generation tool calls
@@ -489,6 +532,21 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
         if (imageToolCalls.length > 0) {
           setActiveToolCalls((prev) => [...prev, 'image_generation']);
           addLog('info', 'api', `Generating ${imageToolCalls.length} image(s)`);
+          // Add inline agent activity for image generation
+          setMessages((prev) => {
+            const copy = [...prev];
+            const last = copy[copy.length - 1];
+            if (last?.role === 'assistant') {
+              const existing = last.agentActivity ?? [];
+              if (!existing.some((a) => a.toolType === 'image_generation')) {
+                copy[copy.length - 1] = {
+                  ...last,
+                  agentActivity: [...existing, createAgentActivity('image_generation')],
+                };
+              }
+            }
+            return copy;
+          });
           try {
             const { generateImage } = await import('@lib/ai/cloud');
             const imageResults = await Promise.all(
@@ -510,13 +568,84 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
             imageMarkdown = imageResults.join('');
           } finally {
             setActiveToolCalls((prev) => prev.filter((t) => t !== 'image_generation'));
+            // Mark image agent as done
+            setMessages((prev) => {
+              const copy = [...prev];
+              const last = copy[copy.length - 1];
+              if (last?.role === 'assistant') {
+                const updated = (last.agentActivity ?? []).map((a) =>
+                  a.toolType === 'image_generation' ? completeAgentActivity(a) : a,
+                );
+                copy[copy.length - 1] = { ...last, agentActivity: updated };
+              }
+              return copy;
+            });
+          }
+        }
+
+        // Handle video generation tool calls
+        const videoToolCalls = result.toolCalls.filter((tc) => tc.name === 'generate_video');
+        let videoMarkdown = '';
+        if (videoToolCalls.length > 0) {
+          setActiveToolCalls((prev) => [...prev, 'video_generation']);
+          addLog('info', 'api', `Generating ${videoToolCalls.length} video(s)`);
+
+          // Add inline agent activity for video generation
+          setMessages((prev) => {
+            const copy = [...prev];
+            const last = copy[copy.length - 1];
+            if (last?.role === 'assistant') {
+              const existing = last.agentActivity ?? [];
+              if (!existing.some((a) => a.toolType === 'video_generation')) {
+                copy[copy.length - 1] = {
+                  ...last,
+                  agentActivity: [...existing, createAgentActivity('video_generation')],
+                };
+              }
+            }
+            return copy;
+          });
+
+          try {
+            const { generateVideo } = await import('@lib/ai/cloud');
+            const videoResults = await Promise.all(
+              videoToolCalls.map(async (tc) => {
+                try {
+                  const args = JSON.parse(tc.arguments) as { prompt?: string };
+                  if (!args.prompt) return '';
+                  const url = await generateVideo(args.prompt, controller.signal);
+                  const safeAlt = (args.prompt ?? '').replace(/[[\]()]/g, '');
+                  return `\n\n<video>${url}|${safeAlt}</video>`;
+                } catch (vidErr) {
+                  addLog('error', 'api', 'Video generation failed', {
+                    error: vidErr instanceof Error ? vidErr.message : 'Unknown',
+                  });
+                  return '\n\n*Video generation failed.*';
+                }
+              }),
+            );
+            videoMarkdown = videoResults.join('');
+          } finally {
+            setActiveToolCalls((prev) => prev.filter((t) => t !== 'video_generation'));
+            // Mark video agent as done
+            setMessages((prev) => {
+              const copy = [...prev];
+              const last = copy[copy.length - 1];
+              if (last?.role === 'assistant') {
+                const updated = (last.agentActivity ?? []).map((a) =>
+                  a.toolType === 'video_generation' ? completeAgentActivity(a) : a,
+                );
+                copy[copy.length - 1] = { ...last, agentActivity: updated };
+              }
+              return copy;
+            });
           }
         }
 
         // Build final assistant message
         // If the API returned only tool calls with no text, use a fallback so
         // the empty content doesn't trigger a permanent TypingIndicator.
-        const textContent = result.content + imageMarkdown;
+        const textContent = result.content + imageMarkdown + videoMarkdown;
         const finalAssistant: ChatMessage = {
           ...assistantMsg,
           content: textContent || (result.toolCalls.length > 0 ? '*(used tools only)*' : ''),

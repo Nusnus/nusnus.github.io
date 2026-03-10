@@ -104,6 +104,21 @@ export async function buildCloudContext(
         `- Bio: ${profile.bio}\n` +
         `- Followers: ${formatNumber(profile.followers)} · Public repos: ${profile.publicRepos}`,
     );
+
+    // ── Visual identity — "Sight" for Cybernus ──
+    const avatarLines = [`# Visual Identity — How Tomer Looks`];
+    if (profile.avatarUrl) {
+      avatarLines.push(`- GitHub avatar: ${profile.avatarUrl}`);
+    }
+    avatarLines.push(
+      `- LinkedIn profile: ${SOCIAL_LINKS.linkedin} (profile photo available)`,
+      `- X/Twitter profile: ${SOCIAL_LINKS.twitter} (profile photo available)`,
+      '',
+      `When asked to draw, illustrate, or generate an image of Tomer, use these profile photos as visual reference. ` +
+        `The generated image should resemble the real Tomer — match his appearance, facial features, and style from these public profiles. ` +
+        `Do NOT invent an appearance — always base it on the real photos available from the URLs above.`,
+    );
+    sections.push(avatarLines.join('\n'));
   }
 
   // ── Featured projects (full details) ──

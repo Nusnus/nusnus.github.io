@@ -412,3 +412,88 @@ export async function generateImage(prompt: string): Promise<string> {
   if (!url) throw new Error('No image URL returned');
   return url;
 }
+
+/* ─── Video Generation ─── */
+
+interface VideoGenerationStartResponse {
+  request_id?: string;
+  error?: { message: string };
+}
+
+interface VideoStatusResponse {
+  status: 'pending' | 'done' | 'expired';
+  video?: { url: string; duration: number };
+  error?: { message: string };
+}
+
+/** Maximum polling time for video generation (3 minutes). */
+const VIDEO_POLL_TIMEOUT_MS = 180_000;
+/** Polling interval for video status checks. */
+const VIDEO_POLL_INTERVAL_MS = 5_000;
+
+/**
+ * Generate a video via the xAI video generation API through the worker proxy.
+ * Handles the async polling flow — submits the request, polls for completion.
+ * Returns the temporary URL of the generated video.
+ *
+ * @param prompt Descriptive text prompt for the video. Be cinematic and specific.
+ * @param signal Optional AbortSignal to cancel the generation.
+ */
+export async function generateVideo(prompt: string, signal?: AbortSignal): Promise<string> {
+  // Step 1: Submit generation request
+  const startResponse = await fetch(`${WORKER_BASE_URL}/v1/videos/generations`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      prompt,
+      duration: 5,
+      aspect_ratio: '16:9',
+      resolution: '720p',
+    }),
+    signal: signal ?? null,
+  });
+
+  if (!startResponse.ok) {
+    let errorMessage = `Video generation failed (${startResponse.status})`;
+    try {
+      const data = (await startResponse.json()) as VideoGenerationStartResponse;
+      if (data.error?.message) errorMessage = data.error.message;
+    } catch {
+      // Use default error message
+    }
+    throw new Error(errorMessage);
+  }
+
+  const startData = (await startResponse.json()) as VideoGenerationStartResponse;
+  const requestId = startData.request_id;
+  if (!requestId) throw new Error('No request_id returned for video generation');
+
+  // Step 2: Poll for completion
+  const startTime = Date.now();
+  while (Date.now() - startTime < VIDEO_POLL_TIMEOUT_MS) {
+    if (signal?.aborted) throw new Error('Video generation aborted');
+
+    await new Promise((resolve) => setTimeout(resolve, VIDEO_POLL_INTERVAL_MS));
+
+    const statusResponse = await fetch(`${WORKER_BASE_URL}/v1/videos/${requestId}`, {
+      method: 'GET',
+      signal: signal ?? null,
+    });
+
+    if (!statusResponse.ok) continue;
+
+    const statusData = (await statusResponse.json()) as VideoStatusResponse;
+
+    if (statusData.status === 'done' && statusData.video?.url) {
+      return statusData.video.url;
+    }
+
+    if (statusData.status === 'expired') {
+      throw new Error('Video generation request expired');
+    }
+
+    // status === 'pending' — continue polling
+  }
+
+  throw new Error('Video generation timed out');
+}
