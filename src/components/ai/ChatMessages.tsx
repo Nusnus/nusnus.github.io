@@ -59,6 +59,13 @@ function extractFollowUps(content: string): { body: string; suggestions: string[
   return { body, suggestions };
 }
 
+/** Interval (ms) between animated thinking steps. */
+const THINKING_STEP_INTERVAL_MS = 2000;
+
+/** Shared SVG path for the user avatar icon. */
+const USER_AVATAR_PATH =
+  'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z';
+
 /** IDE-like thinking indicator — shows animated processing steps. */
 function ThinkingIndicator() {
   const [step, setStep] = useState(0);
@@ -71,7 +78,7 @@ function ThinkingIndicator() {
   useEffect(() => {
     const timer = setInterval(() => {
       setStep((s) => (s + 1) % steps.length);
-    }, 2000);
+    }, THINKING_STEP_INTERVAL_MS);
     return () => clearInterval(timer);
   }, [steps.length]);
 
@@ -348,7 +355,7 @@ function ExpandedMarkdownView({
                           viewBox="0 0 24 24"
                           fill="currentColor"
                         >
-                          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                          <path d={USER_AVATAR_PATH} />
                         </svg>
                       ) : (
                         <Sparkles className="text-accent h-4 w-4" />
@@ -518,7 +525,7 @@ const MessageItem = memo(function MessageItem({
                 viewBox="0 0 24 24"
                 fill="currentColor"
               >
-                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                <path d={USER_AVATAR_PATH} />
               </svg>
             ) : (
               <Sparkles className="text-accent h-3.5 w-3.5" />

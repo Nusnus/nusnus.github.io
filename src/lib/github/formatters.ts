@@ -18,24 +18,6 @@ export function formatEventType(type: string): string {
 }
 
 /**
- * Returns a Lucide icon name for a GitHub event type.
- */
-export function getEventIcon(type: string): string {
-  const map: Record<string, string> = {
-    PushEvent: 'git-commit-horizontal',
-    PullRequestEvent: 'git-pull-request',
-    PullRequestReviewEvent: 'check-circle',
-    IssueCommentEvent: 'message-square',
-    CreateEvent: 'plus-circle',
-    DeleteEvent: 'trash-2',
-    IssuesEvent: 'circle-dot',
-    ForkEvent: 'git-fork',
-    ReleaseEvent: 'tag',
-  };
-  return map[type] ?? 'activity';
-}
-
-/**
  * Returns a Tailwind color class for a GitHub event type.
  */
 export function getEventColor(type: string): string {
@@ -61,20 +43,18 @@ export function truncateCommitMessage(message: string, maxLen = 72): string {
   return `${firstLine.slice(0, maxLen - 1)}…`;
 }
 
-/**
- * Extracts the short repo name from a full name (e.g. "celery/celery" → "celery").
- */
-export function formatRepoName(fullName: string): string {
-  return fullName.split('/').pop() ?? fullName;
-}
+/** Heatmap activity level thresholds (contribution counts). */
+const ACTIVITY_THRESHOLD_LOW = 3;
+const ACTIVITY_THRESHOLD_MED = 6;
+const ACTIVITY_THRESHOLD_HIGH = 10;
 
 /**
  * Maps a contribution count to a 0–4 activity level for the heatmap.
  */
 export function getActivityLevel(count: number): number {
   if (count === 0) return 0;
-  if (count <= 3) return 1;
-  if (count <= 6) return 2;
-  if (count <= 10) return 3;
+  if (count <= ACTIVITY_THRESHOLD_LOW) return 1;
+  if (count <= ACTIVITY_THRESHOLD_MED) return 2;
+  if (count <= ACTIVITY_THRESHOLD_HIGH) return 3;
   return 4;
 }

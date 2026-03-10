@@ -7,6 +7,7 @@
  */
 
 import type { ProfileData, RepoData, ContributionGraphData } from '@lib/github/types';
+import { formatNumber } from '@lib/utils/date';
 
 /** Data consumed by the prompt builder — collected at build time in the Astro page. */
 export interface SystemPromptData {
@@ -69,26 +70,27 @@ Contact: GitHub @Nusnus · LinkedIn /in/tomernosrati · X @smilingnosrati · tom
  */
 export function buildSystemPrompt(data: SystemPromptData): string {
   const { profile, repos, graph } = data;
-  const fmt = (n: number) => n.toLocaleString('en-US');
 
   const stats: string[] = [];
 
   if (profile) {
-    stats.push(`GitHub: ${fmt(profile.followers)} followers, ${profile.publicRepos} repos`);
+    stats.push(
+      `GitHub: ${formatNumber(profile.followers)} followers, ${profile.publicRepos} repos`,
+    );
   }
 
   if (repos?.length) {
     const top = repos.slice(0, 4);
     for (const r of top) {
       const rank = r.contributorRank ? ` (#${r.contributorRank})` : '';
-      stats.push(`${r.fullName}: ${fmt(r.stars)}★${rank}`);
+      stats.push(`${r.fullName}: ${formatNumber(r.stars)}★${rank}`);
     }
   }
 
   if (graph) {
     stats.push(
-      `Last year: ${fmt(graph.totalContributions)} contributions, ` +
-        `${fmt(graph.totalCommits)} commits, ${fmt(graph.totalPRs)} PRs`,
+      `Last year: ${formatNumber(graph.totalContributions)} contributions, ` +
+        `${formatNumber(graph.totalCommits)} commits, ${formatNumber(graph.totalPRs)} PRs`,
     );
   }
 

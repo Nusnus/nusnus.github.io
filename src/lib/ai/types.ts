@@ -21,22 +21,3 @@ export interface ToolAction {
   /** URL or path to navigate to / open. */
   url: string;
 }
-
-/** A chunk of indexed content for RAG retrieval. */
-export interface SearchChunk {
-  /** Unique chunk identifier. */
-  id: string;
-  /** The text content of the chunk. */
-  content: string;
-  /** Human-readable source label (e.g., "Knowledge Base > About"). */
-  source: string;
-  /** Pre-extracted lowercase keywords for BM25 scoring. */
-  keywords: string[];
-}
-
-/** Pre-built search index serialized as a prop from the Astro page. */
-export interface SearchIndex {
-  chunks: SearchChunk[];
-  /** Average document length in keywords (used for BM25 normalisation). */
-  avgDocLength: number;
-}
