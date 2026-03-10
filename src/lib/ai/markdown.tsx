@@ -504,7 +504,7 @@ function renderBlock(block: string, key: number): ReactNode {
   const videoBlockMatch = trimmed.match(/^<video>([^|]+)\|?([\s\S]*?)<\/video>$/);
   if (videoBlockMatch) {
     const videoUrl = videoBlockMatch[1] ?? '';
-    const videoAlt = videoBlockMatch[2] ?? 'Generated video';
+    const videoAlt = videoBlockMatch[2] || 'Generated video';
     return <VideoPlayer key={key} src={videoUrl} alt={videoAlt} />;
   }
 
