@@ -158,7 +158,7 @@ ${
   useEffect(() => {
     const link = document.createElement('link');
     link.rel = 'prefetch';
-    link.href = '/chat';
+    link.href = '/cybernus';
     document.head.appendChild(link);
     return () => link.remove();
   }, []);
@@ -170,7 +170,7 @@ ${
       messages: [{ id: crypto.randomUUID(), role: 'assistant', content: response }],
     };
     sessionStorage.setItem('grok-roast-handoff', JSON.stringify(handoff));
-    window.location.href = '/chat';
+    window.location.href = '/cybernus';
   }, [response]);
 
   const isOpen = state !== 'closed';
