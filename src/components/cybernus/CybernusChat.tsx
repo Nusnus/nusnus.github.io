@@ -323,6 +323,7 @@ export default function CybernusChat() {
       if (id === activeSessionId) {
         abortAndReset();
         setMessages([]);
+        setActiveSessionId(null);
         setActiveSessionIdState(null);
       }
     },
