@@ -89,9 +89,10 @@ ${
       };
 
       // Build messages: system + visual reference + prior roast history (on escalation) + new user prompt
+      const visualRef = await buildVisualReferenceMessage();
       const messages = [
         systemMessage,
-        buildVisualReferenceMessage(),
+        ...(visualRef ? [visualRef] : []),
         ...(isEscalation ? historyRef.current : []),
         userMessage,
       ];

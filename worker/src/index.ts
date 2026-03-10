@@ -71,7 +71,7 @@ const ALLOWED_MODELS: ReadonlySet<string> = new Set([
 const DEFAULT_MODEL = 'grok-4-1-fast';
 
 /** Hard limits to prevent abuse. */
-const MAX_REQUEST_BYTES = 131_072; // 128 KB — accommodates full context + tools + chat history
+const MAX_REQUEST_BYTES = 262_144; // 256 KB — accommodates full context + base64 image + tools + chat history
 const MAX_OUTPUT_TOKENS_CAP = 1024;
 const MAX_INPUT_ITEMS = 80; // 1 system + up to 30 user + 30 assistant + margin
 
@@ -85,7 +85,7 @@ const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 function corsHeaders(origin: string): Record<string, string> {
   return {
     'Access-Control-Allow-Origin': origin,
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Max-Age': '86400',
   };

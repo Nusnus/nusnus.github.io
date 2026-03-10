@@ -16,7 +16,6 @@ import {
   SOCIAL_LINKS,
   safeRepoName,
   WORKER_BASE_URL,
-  SITE_URL,
 } from '@config';
 import { relativeTime, formatNumber } from '@lib/utils/date';
 import { getPersonality, type PersonalityLevel } from './personality';
@@ -216,8 +215,40 @@ export async function buildCloudContext(
   return sections.length > 0 ? `\n\n${sections.join('\n\n---\n\n')}` : '';
 }
 
-/** URL to the reference photo of Tomer, served from the site's public assets. */
-const TOMER_REFERENCE_PHOTO_URL = `${SITE_URL}/images/tomer-reference.jpg`;
+/**
+ * Path to the small reference photo of Tomer (served from public assets).
+ * The small version (~25 KB at 512×512) is fetched and inlined as a base64
+ * data URL so xAI can see it without needing to fetch an external URL
+ * (which may not yet be deployed).
+ */
+const TOMER_REFERENCE_PHOTO_PATH = '/images/tomer-reference-small.jpg';
+
+/** Cache the base64 data URL so we only fetch + convert once per session. */
+let cachedReferenceDataUrl: string | null = null;
+
+/**
+ * Fetch the reference photo from the local origin and convert to a base64
+ * data URL. Returns `null` if the image cannot be loaded (e.g. network error).
+ */
+async function getReferencePhotoDataUrl(): Promise<string | null> {
+  if (cachedReferenceDataUrl) return cachedReferenceDataUrl;
+  try {
+    const res = await fetch(TOMER_REFERENCE_PHOTO_PATH);
+    if (!res.ok) return null;
+    const blob = await res.blob();
+    return await new Promise<string | null>((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        cachedReferenceDataUrl = reader.result as string;
+        resolve(cachedReferenceDataUrl);
+      };
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Build a visual reference message containing Tomer's photo.
@@ -225,8 +256,14 @@ const TOMER_REFERENCE_PHOTO_URL = `${SITE_URL}/images/tomer-reference.jpg`;
  * This is a multimodal "user" message with the reference image so Grok can
  * actually SEE what Tomer looks like. It should be placed right after the
  * system message in the conversation input.
+ *
+ * The image is fetched from the local origin and inlined as a base64 data URL,
+ * avoiding external URL dependencies. Returns `null` if the image cannot be loaded.
  */
-export function buildVisualReferenceMessage(): CloudMessage {
+export async function buildVisualReferenceMessage(): Promise<CloudMessage | null> {
+  const dataUrl = await getReferencePhotoDataUrl();
+  if (!dataUrl) return null;
+
   const content: ContentPart[] = [
     {
       type: 'input_text',
@@ -237,7 +274,7 @@ export function buildVisualReferenceMessage(): CloudMessage {
     },
     {
       type: 'input_image',
-      image_url: TOMER_REFERENCE_PHOTO_URL,
+      image_url: dataUrl,
     },
   ];
   return { role: 'user', content };

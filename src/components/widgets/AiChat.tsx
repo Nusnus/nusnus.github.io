@@ -409,7 +409,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
 
         const fullHistory = [
           { role: 'system' as const, content: systemPrompt + context },
-          buildVisualReferenceMessage(),
+          ...(await buildVisualReferenceMessage().then((m) => (m ? [m] : []))),
           ...chatHistory,
         ];
 
