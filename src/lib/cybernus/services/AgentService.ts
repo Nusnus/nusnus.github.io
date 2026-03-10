@@ -247,7 +247,7 @@ export function buildToolDefinitions(tools: AgentTool[]): Record<string, unknown
       type: 'function',
       name: 'generate_video',
       description:
-        'Generate a short video (5 seconds, 720p) from a text prompt using xAI native video model. Use when the user asks to create a video, animation, or motion content. Produces cinematic, impressive results. Always make video prompts vivid, dramatic, and visually stunning — think Hollywood cinematography.',
+        'Generate a short video (10 seconds, 720p) from a text prompt using xAI native video model. Use when the user asks to create a video, animation, or motion content. Produces cinematic, impressive results. Always make video prompts vivid, dramatic, and visually stunning — think Hollywood cinematography.',
       parameters: {
         type: 'object',
         properties: {

@@ -7,7 +7,7 @@
 
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { cn } from '@lib/utils/cn';
-import type { ChatMessage } from '@lib/ai/types';
+import type { ChatMessage, AgentActivityItem } from '@lib/ai/types';
 import {
   CLOUD_MODELS,
   DEFAULT_CLOUD_MODEL_ID,
@@ -360,6 +360,8 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       // Track streaming progress in outer scope so catch block can access them
       let tokenCount = 0;
       let lastAccumulated = '';
+      // Track accumulated agent activity so it survives into the final message
+      let accumulatedAgentActivity: AgentActivityItem[] = [];
 
       const userMsg: ChatMessage = {
         id: crypto.randomUUID(),
@@ -438,16 +440,16 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
             onWebSearch: () => {
               addLog('info', 'api', 'Web search triggered');
               setActiveToolCalls((prev) => [...prev, 'web_search']);
+              const activity = createAgentActivity('web_search');
+              accumulatedAgentActivity = [...accumulatedAgentActivity, activity];
               setMessages((prev) => {
                 const copy = [...prev];
                 const last = copy[copy.length - 1];
                 if (last?.role === 'assistant') {
-                  const existing = last.agentActivity ?? [];
-                  const activity = createAgentActivity('web_search');
                   copy[copy.length - 1] = {
                     ...last,
                     searchStatus: 'searching',
-                    agentActivity: [...existing, activity],
+                    agentActivity: accumulatedAgentActivity,
                   };
                 }
                 return copy;
@@ -456,17 +458,17 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
             onWebSearchFound: () => {
               addLog('info', 'api', 'Web search results found');
               setActiveToolCalls((prev) => prev.filter((t) => t !== 'web_search'));
+              accumulatedAgentActivity = accumulatedAgentActivity.map((a) =>
+                a.toolType === 'web_search' ? completeAgentActivity(a) : a,
+              );
               setMessages((prev) => {
                 const copy = [...prev];
                 const last = copy[copy.length - 1];
                 if (last?.role === 'assistant') {
-                  const updated = (last.agentActivity ?? []).map((a) =>
-                    a.toolType === 'web_search' ? completeAgentActivity(a) : a,
-                  );
                   copy[copy.length - 1] = {
                     ...last,
                     searchStatus: 'found',
-                    agentActivity: updated,
+                    agentActivity: accumulatedAgentActivity,
                   };
                 }
                 return copy;
@@ -475,19 +477,20 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
             onToolUse: (toolType: string) => {
               addLog('info', 'api', `Tool invoked: ${toolType}`);
               setActiveToolCalls((prev) => [...prev, toolType]);
+              if (!accumulatedAgentActivity.some((a) => a.toolType === toolType)) {
+                accumulatedAgentActivity = [
+                  ...accumulatedAgentActivity,
+                  createAgentActivity(toolType),
+                ];
+              }
               setMessages((prev) => {
                 const copy = [...prev];
                 const last = copy[copy.length - 1];
                 if (last?.role === 'assistant') {
-                  const existing = last.agentActivity ?? [];
-                  // Avoid duplicate entries for the same tool type
-                  if (!existing.some((a) => a.toolType === toolType)) {
-                    const activity = createAgentActivity(toolType);
-                    copy[copy.length - 1] = {
-                      ...last,
-                      agentActivity: [...existing, activity],
-                    };
-                  }
+                  copy[copy.length - 1] = {
+                    ...last,
+                    agentActivity: accumulatedAgentActivity,
+                  };
                 }
                 return copy;
               });
@@ -495,14 +498,14 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
             onToolDone: (toolType: string) => {
               addLog('info', 'api', `Tool completed: ${toolType}`);
               setActiveToolCalls((prev) => prev.filter((t) => t !== toolType));
+              accumulatedAgentActivity = accumulatedAgentActivity.map((a) =>
+                a.toolType === toolType ? completeAgentActivity(a) : a,
+              );
               setMessages((prev) => {
                 const copy = [...prev];
                 const last = copy[copy.length - 1];
                 if (last?.role === 'assistant') {
-                  const updated = (last.agentActivity ?? []).map((a) =>
-                    a.toolType === toolType ? completeAgentActivity(a) : a,
-                  );
-                  copy[copy.length - 1] = { ...last, agentActivity: updated };
+                  copy[copy.length - 1] = { ...last, agentActivity: accumulatedAgentActivity };
                 }
                 return copy;
               });
@@ -533,17 +536,20 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
           setActiveToolCalls((prev) => [...prev, 'image_generation']);
           addLog('info', 'api', `Generating ${imageToolCalls.length} image(s)`);
           // Add inline agent activity for image generation
+          if (!accumulatedAgentActivity.some((a) => a.toolType === 'image_generation')) {
+            accumulatedAgentActivity = [
+              ...accumulatedAgentActivity,
+              createAgentActivity('image_generation'),
+            ];
+          }
           setMessages((prev) => {
             const copy = [...prev];
             const last = copy[copy.length - 1];
             if (last?.role === 'assistant') {
-              const existing = last.agentActivity ?? [];
-              if (!existing.some((a) => a.toolType === 'image_generation')) {
-                copy[copy.length - 1] = {
-                  ...last,
-                  agentActivity: [...existing, createAgentActivity('image_generation')],
-                };
-              }
+              copy[copy.length - 1] = {
+                ...last,
+                agentActivity: accumulatedAgentActivity,
+              };
             }
             return copy;
           });
@@ -569,14 +575,14 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
           } finally {
             setActiveToolCalls((prev) => prev.filter((t) => t !== 'image_generation'));
             // Mark image agent as done
+            accumulatedAgentActivity = accumulatedAgentActivity.map((a) =>
+              a.toolType === 'image_generation' ? completeAgentActivity(a) : a,
+            );
             setMessages((prev) => {
               const copy = [...prev];
               const last = copy[copy.length - 1];
               if (last?.role === 'assistant') {
-                const updated = (last.agentActivity ?? []).map((a) =>
-                  a.toolType === 'image_generation' ? completeAgentActivity(a) : a,
-                );
-                copy[copy.length - 1] = { ...last, agentActivity: updated };
+                copy[copy.length - 1] = { ...last, agentActivity: accumulatedAgentActivity };
               }
               return copy;
             });
@@ -591,17 +597,20 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
           addLog('info', 'api', `Generating ${videoToolCalls.length} video(s)`);
 
           // Add inline agent activity for video generation
+          if (!accumulatedAgentActivity.some((a) => a.toolType === 'video_generation')) {
+            accumulatedAgentActivity = [
+              ...accumulatedAgentActivity,
+              createAgentActivity('video_generation'),
+            ];
+          }
           setMessages((prev) => {
             const copy = [...prev];
             const last = copy[copy.length - 1];
             if (last?.role === 'assistant') {
-              const existing = last.agentActivity ?? [];
-              if (!existing.some((a) => a.toolType === 'video_generation')) {
-                copy[copy.length - 1] = {
-                  ...last,
-                  agentActivity: [...existing, createAgentActivity('video_generation')],
-                };
-              }
+              copy[copy.length - 1] = {
+                ...last,
+                agentActivity: accumulatedAgentActivity,
+              };
             }
             return copy;
           });
@@ -628,14 +637,14 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
           } finally {
             setActiveToolCalls((prev) => prev.filter((t) => t !== 'video_generation'));
             // Mark video agent as done
+            accumulatedAgentActivity = accumulatedAgentActivity.map((a) =>
+              a.toolType === 'video_generation' ? completeAgentActivity(a) : a,
+            );
             setMessages((prev) => {
               const copy = [...prev];
               const last = copy[copy.length - 1];
               if (last?.role === 'assistant') {
-                const updated = (last.agentActivity ?? []).map((a) =>
-                  a.toolType === 'video_generation' ? completeAgentActivity(a) : a,
-                );
-                copy[copy.length - 1] = { ...last, agentActivity: updated };
+                copy[copy.length - 1] = { ...last, agentActivity: accumulatedAgentActivity };
               }
               return copy;
             });
@@ -649,6 +658,10 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
         const finalAssistant: ChatMessage = {
           ...assistantMsg,
           content: textContent || (result.toolCalls.length > 0 ? '*(used tools only)*' : ''),
+          // Preserve agent activity accumulated during streaming
+          ...(accumulatedAgentActivity.length > 0 && {
+            agentActivity: accumulatedAgentActivity,
+          }),
         };
         if (actions.length > 0) finalAssistant.actions = actions;
 
