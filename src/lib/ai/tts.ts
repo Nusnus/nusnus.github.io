@@ -67,10 +67,10 @@ function stripMarkdown(text: string): string {
       .replace(/\*{1,3}([^*]+)\*{1,3}/g, '$1')
       // Remove heading markers
       .replace(/^#{1,6}\s+/gm, '')
+      // Remove images (must come before links)
+      .replace(/!\[.*?\]\(.*?\)/g, '')
       // Remove links, keep text
       .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-      // Remove images
-      .replace(/!\[.*?\]\(.*?\)/g, '')
       // Remove HTML tags
       .replace(/<[^>]+>/g, '')
       // Remove follow-up suggestions (→ prefixed lines)

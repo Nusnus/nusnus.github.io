@@ -108,7 +108,7 @@ export function SessionHistory({
           </div>
           {searchQuery && (
             <p className="text-text-muted mt-1 px-1 text-[10px]">
-              {filteredSessions.length} {strings.search.toLowerCase()}
+              {filteredSessions.length} {strings.searchResults}
             </p>
           )}
         </div>
