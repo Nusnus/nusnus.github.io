@@ -25,6 +25,8 @@ export interface TextContentPart {
 export interface ImageContentPart {
   type: 'input_image';
   image_url: string;
+  /** Resolution hint — 'high' uses more tokens but preserves facial detail. */
+  detail?: 'high' | 'low' | 'auto';
 }
 
 export type ContentPart = TextContentPart | ImageContentPart;

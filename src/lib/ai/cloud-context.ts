@@ -216,12 +216,12 @@ export async function buildCloudContext(
 }
 
 /**
- * Path to the small reference photo of Tomer (served from public assets).
- * The small version (~25 KB at 512×512) is fetched and inlined as a base64
- * data URL so xAI can see it without needing to fetch an external URL
- * (which may not yet be deployed).
+ * Path to the full-resolution reference photo of Tomer (served from public assets).
+ * Fetched and inlined as a base64 data URL so xAI can see it without needing
+ * to fetch an external URL (which may not yet be deployed).
+ * Using the original uncompressed photo (~1.9 MB) for maximum facial detail.
  */
-const TOMER_REFERENCE_PHOTO_PATH = '/images/tomer-reference-small.jpg';
+const TOMER_REFERENCE_PHOTO_PATH = '/images/tomer-reference.jpg';
 
 /** Cache the base64 data URL so we only fetch + convert once per session. */
 let cachedReferenceDataUrl: string | null = null;
@@ -275,6 +275,7 @@ export async function buildVisualReferenceMessage(): Promise<CloudMessage | null
     {
       type: 'input_image',
       image_url: dataUrl,
+      detail: 'high',
     },
   ];
   return { role: 'user', content };

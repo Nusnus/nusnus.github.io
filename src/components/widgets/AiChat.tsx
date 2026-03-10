@@ -889,6 +889,16 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
   handleVoiceToggleRef.current = handleVoiceToggle;
   sendMessageRef.current = sendMessage;
 
+  /* ─── Listen for "Make it a video" and other programmatic send-message events ─── */
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const text = (e as CustomEvent<{ text: string }>).detail?.text;
+      if (text) sendMessageRef.current?.(text);
+    };
+    window.addEventListener('cybernus:send-message', handler);
+    return () => window.removeEventListener('cybernus:send-message', handler);
+  }, []);
+
   /* ─── Search result handler ─── */
   const handleSearchSelect = useCallback(
     (sessionId: string) => {

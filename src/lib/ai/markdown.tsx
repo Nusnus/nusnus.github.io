@@ -741,6 +741,15 @@ function ChatImage({ src, alt }: { src: string; alt: string }) {
 
   const handleClose = useCallback(() => setIsOpen(false), []);
 
+  const handleMakeVideo = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    window.dispatchEvent(
+      new CustomEvent('cybernus:send-message', {
+        detail: { text: `Make this image into a video` },
+      }),
+    );
+  }, []);
+
   if (error) {
     return (
       <span className="bg-bg-elevated my-3 flex h-48 w-full items-center justify-center rounded-xl border border-red-500/20">
@@ -779,9 +788,32 @@ function ChatImage({ src, alt }: { src: string; alt: string }) {
           />
         </button>
         {loaded && (
-          <span className="pointer-events-none absolute right-2 bottom-2 flex items-center gap-1.5 rounded-lg bg-black/60 px-2 py-1 text-[10px] text-white/0 opacity-0 backdrop-blur-sm transition-all group-hover/img:text-white/60 group-hover/img:opacity-100">
-            Click to expand
-          </span>
+          <>
+            <span className="pointer-events-none absolute right-2 bottom-2 flex items-center gap-1.5 rounded-lg bg-black/60 px-2 py-1 text-[10px] text-white/0 opacity-0 backdrop-blur-sm transition-all group-hover/img:text-white/60 group-hover/img:opacity-100">
+              Click to expand
+            </span>
+            {/* "Make it a video" action button — appears on hover */}
+            <button
+              type="button"
+              onClick={handleMakeVideo}
+              className="absolute bottom-2 left-2 flex items-center gap-1.5 rounded-lg border border-[#00ff41]/20 bg-black/70 px-2.5 py-1.5 text-[11px] font-medium text-white/0 opacity-0 backdrop-blur-sm transition-all group-hover/img:text-white/80 group-hover/img:opacity-100 hover:border-[#00ff41]/40 hover:bg-black/80"
+              aria-label="Make this image into a video"
+            >
+              <svg
+                className="h-3.5 w-3.5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polygon points="23 7 16 12 23 17 23 7" />
+                <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+              </svg>
+              Make it a video
+            </button>
+          </>
         )}
       </span>
 
