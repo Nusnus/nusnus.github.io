@@ -26,7 +26,7 @@ interface Env {
 
 interface InputMessage {
   role: 'system' | 'user' | 'assistant';
-  content?: string | null;
+  content?: string | unknown[] | null;
 }
 
 interface ResponsesAPIRequest {
@@ -419,8 +419,13 @@ export default {
       if (!msg.role) {
         return jsonResponse({ error: 'Each input item must have a role' }, 400, origin);
       }
-      if (typeof msg.content !== 'string') {
-        return jsonResponse({ error: 'Each input item must have string content' }, 400, origin);
+      // Content can be a string or an array of content parts (multimodal)
+      if (typeof msg.content !== 'string' && !Array.isArray(msg.content)) {
+        return jsonResponse(
+          { error: 'Each input item must have string or array content' },
+          400,
+          origin,
+        );
       }
     }
 

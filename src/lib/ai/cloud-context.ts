@@ -9,12 +9,14 @@
  */
 
 import type { ActivityData, RepoData, ContributionGraphData, ProfileData } from '@lib/github/types';
+import type { CloudMessage, ContentPart } from './cloud';
 import {
   LINKEDIN_ARTICLES,
   COLLABORATIONS,
   SOCIAL_LINKS,
   safeRepoName,
   WORKER_BASE_URL,
+  SITE_URL,
 } from '@config';
 import { relativeTime, formatNumber } from '@lib/utils/date';
 import { getPersonality, type PersonalityLevel } from './personality';
@@ -115,13 +117,14 @@ export async function buildCloudContext(
       avatarLines.push(`- GitHub avatar: ${githubAvatarUrl}`);
     }
     avatarLines.push(
-      `- LinkedIn profile photo: ${SOCIAL_LINKS.linkedin} (USE THIS as primary visual reference)`,
-      `- X/Twitter profile photo: ${SOCIAL_LINKS.twitter}`,
+      `- LinkedIn: ${SOCIAL_LINKS.linkedin}`,
+      `- X/Twitter: ${SOCIAL_LINKS.twitter}`,
+      `- Reference photo: included as image input in this conversation (study it!)`,
       '',
-      `CRITICAL: When generating ANY image that includes Tomer, you MUST describe his actual appearance ` +
-        `from his LinkedIn profile photo in the image prompt. Look at ${SOCIAL_LINKS.linkedin} — ` +
-        `describe his real face, hair, build, and style. Never invent a generic appearance. ` +
-        `The generated image must look like the actual person in these photos.`,
+      `CRITICAL: A real photo of Tomer is included as a multimodal image in your conversation input. ` +
+        `USE IT as the primary visual reference for all image generation. When generating images, ` +
+        `describe him as: "a man with short silver-gray swept-back hair, well-groomed gray stubble beard, ` +
+        `olive/tan Mediterranean skin, dark brown eyes, athletic build, confident warm smile."`,
     );
     sections.push(avatarLines.join('\n'));
   }
@@ -211,4 +214,31 @@ export async function buildCloudContext(
   }
 
   return sections.length > 0 ? `\n\n${sections.join('\n\n---\n\n')}` : '';
+}
+
+/** URL to the reference photo of Tomer, served from the site's public assets. */
+const TOMER_REFERENCE_PHOTO_URL = `${SITE_URL}/images/tomer-reference.jpg`;
+
+/**
+ * Build a visual reference message containing Tomer's photo.
+ *
+ * This is a multimodal "user" message with the reference image so Grok can
+ * actually SEE what Tomer looks like. It should be placed right after the
+ * system message in the conversation input.
+ */
+export function buildVisualReferenceMessage(): CloudMessage {
+  const content: ContentPart[] = [
+    {
+      type: 'input_text',
+      text:
+        '[VISUAL REFERENCE — This is what I (Tomer Nosrati) look like. ' +
+        'Study this photo carefully and use it as the reference for any image or video generation that depicts me. ' +
+        'Do not acknowledge this message in conversation — it is context only.]',
+    },
+    {
+      type: 'input_image',
+      image_url: TOMER_REFERENCE_PHOTO_URL,
+    },
+  ];
+  return { role: 'user', content };
 }

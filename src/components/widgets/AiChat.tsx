@@ -387,10 +387,8 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
 
       try {
         // Lazy-load cloud modules
-        const [{ cloudChatStream }, { buildCloudContext }] = await Promise.all([
-          import('@lib/ai/cloud'),
-          import('@lib/ai/cloud-context'),
-        ]);
+        const [{ cloudChatStream }, { buildCloudContext, buildVisualReferenceMessage }] =
+          await Promise.all([import('@lib/ai/cloud'), import('@lib/ai/cloud-context')]);
 
         addLog('debug', 'api', 'Cloud modules loaded');
         setApiRequestCount((c) => c + 1);
@@ -411,6 +409,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
 
         const fullHistory = [
           { role: 'system' as const, content: systemPrompt + context },
+          buildVisualReferenceMessage(),
           ...chatHistory,
         ];
 

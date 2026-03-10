@@ -2,7 +2,6 @@ import { type RefObject, useMemo, useCallback, useState, useEffect, memo } from 
 import {
   ArrowRight,
   ExternalLink,
-  Globe,
   Sparkles,
   ZoomIn,
   ZoomOut,
@@ -132,70 +131,33 @@ function TypingIndicator() {
   );
 }
 
-/** Web search status indicator. */
-function SearchIndicator({
-  status,
-  strings,
-}: {
-  status: 'searching' | 'found';
-  strings: ReturnType<typeof t>;
-}) {
-  const isSearching = status === 'searching';
-  return (
-    <div
-      className={cn(
-        'inline-flex items-center gap-2.5 rounded-xl px-4 py-2.5 text-xs font-medium backdrop-blur-sm',
-        isSearching
-          ? 'border-border bg-bg-surface text-text-secondary border'
-          : 'border-accent/20 bg-accent-muted text-accent border',
-      )}
-    >
-      <Globe className={cn('h-3.5 w-3.5', isSearching && 'animate-spin')} />
-      <span>{isSearching ? strings.searchingWeb : strings.foundResults}</span>
-      {isSearching && (
-        <span className="inline-flex gap-0.5">
-          {[0, 150, 300].map((delay) => (
-            <span
-              key={delay}
-              className="bg-text-muted inline-block h-1 w-1 animate-bounce rounded-full"
-              style={{ animationDelay: `${delay}ms` }}
-            />
-          ))}
-        </span>
-      )}
-    </div>
-  );
-}
-
 /**
  * InlineAgentActivity — renders sub-agent activity inline in the conversation.
- * Each agent has its own colour, icon, and name, creating a multi-agent feel.
+ * Each agent appears as a mini conversation participant with its own avatar,
+ * name, and status — creating a genuine multi-agent chat experience.
  */
 function InlineAgentActivity({ items }: { items: AgentActivityItem[] }) {
   if (items.length === 0) return null;
 
   return (
-    <div className="mb-3 space-y-1.5">
+    <div className="mb-4 space-y-2">
       {items.map((item) => {
         const isWorking = item.status === 'working';
         return (
           <div
             key={item.toolType}
-            className={cn(
-              'inline-flex items-center gap-2.5 rounded-xl border px-3.5 py-2 text-xs font-medium backdrop-blur-sm transition-all duration-300',
-              isWorking ? 'border-white/10 bg-white/[0.03]' : 'border-white/5 bg-white/[0.01]',
-            )}
+            className="flex items-start gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3.5 py-3 transition-all duration-300"
           >
-            {/* Agent icon */}
-            <span
+            {/* Agent avatar */}
+            <div
               className={cn(
-                'flex h-5 w-5 items-center justify-center rounded-md',
+                'flex h-7 w-7 shrink-0 items-center justify-center rounded-lg',
                 isWorking && 'animate-pulse',
               )}
-              style={{ backgroundColor: `${item.color}15` }}
+              style={{ backgroundColor: `${item.color}18` }}
             >
               <svg
-                className="h-3 w-3"
+                className="h-3.5 w-3.5"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke={item.color}
@@ -205,54 +167,56 @@ function InlineAgentActivity({ items }: { items: AgentActivityItem[] }) {
               >
                 <path d={item.iconPath} />
               </svg>
-            </span>
+            </div>
 
-            {/* Agent name */}
-            <span
-              className="text-[10px] font-bold tracking-wider uppercase"
-              style={{ color: item.color }}
-            >
-              {item.agent}
-            </span>
-
-            {/* Status label */}
-            <span className={cn('text-xs', isWorking ? 'text-white/50' : 'text-white/30')}>
-              {item.label}
-            </span>
-
-            {/* Working dots */}
-            {isWorking && (
-              <span className="inline-flex gap-0.5">
-                {[0, 1, 2].map((d) => (
-                  <span
-                    key={d}
-                    className="inline-block h-1 w-1 rounded-full"
-                    style={{
-                      backgroundColor: item.color,
-                      opacity: 0.6,
-                      animation: 'roast-dot 1.4s ease-in-out infinite',
-                      animationDelay: `${d * 0.2}s`,
-                    }}
-                  />
-                ))}
-              </span>
-            )}
-
-            {/* Done checkmark */}
-            {!isWorking && (
-              <svg
-                className="h-3 w-3"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke={item.color}
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                style={{ opacity: 0.5 }}
+            {/* Agent name + status */}
+            <div className="min-w-0 flex-1">
+              <span
+                className="text-[11px] font-bold tracking-wider uppercase"
+                style={{ color: item.color }}
               >
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-            )}
+                {item.agent}
+              </span>
+              <div className="mt-0.5 flex items-center gap-2">
+                <span className={cn('text-xs', isWorking ? 'text-white/50' : 'text-white/35')}>
+                  {item.label}
+                </span>
+
+                {/* Working dots */}
+                {isWorking && (
+                  <span className="inline-flex gap-0.5">
+                    {[0, 1, 2].map((d) => (
+                      <span
+                        key={d}
+                        className="inline-block h-1 w-1 rounded-full"
+                        style={{
+                          backgroundColor: item.color,
+                          opacity: 0.6,
+                          animation: 'roast-dot 1.4s ease-in-out infinite',
+                          animationDelay: `${d * 0.2}s`,
+                        }}
+                      />
+                    ))}
+                  </span>
+                )}
+
+                {/* Done checkmark */}
+                {!isWorking && (
+                  <svg
+                    className="h-3 w-3"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke={item.color}
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    style={{ opacity: 0.4 }}
+                  >
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                )}
+              </div>
+            </div>
           </div>
         );
       })}
@@ -339,7 +303,6 @@ function ExpandedMarkdownView({
   language: Language;
 }) {
   const [expandedZoom, setExpandedZoom] = useState(DEFAULT_ZOOM);
-  const strings = t(language);
   const dir = language === 'he' ? 'rtl' : 'ltr';
 
   const handleZoomIn = useCallback(
@@ -421,7 +384,8 @@ function ExpandedMarkdownView({
             const isLastAssistant = !isUser && msgIndex === messages.length - 1;
             const isStreamingMsg = isGenerating && isLastAssistant;
 
-            if (!msg.content && !msg.searchStatus && !isStreamingMsg) return null;
+            if (!msg.content && !msg.searchStatus && !msg.agentActivity?.length && !isStreamingMsg)
+              return null;
 
             return (
               <div
@@ -481,12 +445,10 @@ function ExpandedMarkdownView({
                         <InlineAgentActivity items={msg.agentActivity} />
                       )}
 
-                      {msg.searchStatus ? (
-                        <SearchIndicator status={msg.searchStatus} strings={strings} />
-                      ) : !msg.content ? (
+                      {!msg.content ? (
                         isStreamingMsg ? (
                           <ThinkingIndicator />
-                        ) : (
+                        ) : msg.agentActivity?.length ? null : (
                           <TypingIndicator />
                         )
                       ) : isUser ? (
@@ -597,7 +559,6 @@ const MessageItem = memo(function MessageItem({
   language: Language;
 }) {
   const isUser = msg.role === 'user';
-  const strings = t(language);
 
   return (
     <div
@@ -662,12 +623,10 @@ const MessageItem = memo(function MessageItem({
               <InlineAgentActivity items={msg.agentActivity} />
             )}
 
-            {msg.searchStatus ? (
-              <SearchIndicator status={msg.searchStatus} strings={strings} />
-            ) : !msg.content ? (
+            {!msg.content ? (
               isStreaming ? (
                 <ThinkingIndicator />
-              ) : (
+              ) : msg.agentActivity?.length ? null : (
                 <TypingIndicator />
               )
             ) : !isUser ? (

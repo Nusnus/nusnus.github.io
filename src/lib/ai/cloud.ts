@@ -16,9 +16,22 @@ import type { ToolDefinition, ToolCallResult } from './tools';
 /** Worker base URL for non-responses endpoints. */
 const WORKER_BASE_URL = CLOUD_PROXY_URL.replace('/v1/responses', '');
 
+/** A single content part in a multimodal message. */
+export interface TextContentPart {
+  type: 'input_text';
+  text: string;
+}
+
+export interface ImageContentPart {
+  type: 'input_image';
+  image_url: string;
+}
+
+export type ContentPart = TextContentPart | ImageContentPart;
+
 export interface CloudMessage {
   role: 'system' | 'user' | 'assistant';
-  content: string;
+  content: string | ContentPart[];
 }
 
 /** Optional parameters for cloud chat requests. */

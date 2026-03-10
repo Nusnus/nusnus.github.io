@@ -78,10 +78,8 @@ ${
     : `The visitor already got ${levelClamp} roast${levelClamp > 1 ? 's' : ''} from you and just hit the ${fires} escalate button — they're literally asking you to go harder. You can see your previous roast${levelClamp > 1 ? 's' : ''} in the conversation. Acknowledge that they came back for more (be smug about it), then deliver a fresh roast that's rawer, more vulgar, more savage. Don't repeat material from your previous roast${levelClamp > 1 ? 's' : ''}. Keep it short, punchy, contextual to the page they're browsing.`
 }`;
 
-      const [{ cloudChatStream }, { buildCloudContext }] = await Promise.all([
-        import('@lib/ai/cloud'),
-        import('@lib/ai/cloud-context'),
-      ]);
+      const [{ cloudChatStream }, { buildCloudContext, buildVisualReferenceMessage }] =
+        await Promise.all([import('@lib/ai/cloud'), import('@lib/ai/cloud-context')]);
 
       const context = await buildCloudContext(roastContext);
       const systemMessage = { role: 'system' as const, content: context };
@@ -90,8 +88,13 @@ ${
         content: ESCALATE_PROMPTS[levelClamp] ?? 'Roast Tomer Nosrati 🔥',
       };
 
-      // Build messages: system + prior roast history (on escalation) + new user prompt
-      const messages = [systemMessage, ...(isEscalation ? historyRef.current : []), userMessage];
+      // Build messages: system + visual reference + prior roast history (on escalation) + new user prompt
+      const messages = [
+        systemMessage,
+        buildVisualReferenceMessage(),
+        ...(isEscalation ? historyRef.current : []),
+        userMessage,
+      ];
 
       setState('streaming');
 

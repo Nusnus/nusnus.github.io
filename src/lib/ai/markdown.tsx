@@ -434,9 +434,32 @@ function splitBlocks(text: string): string[] {
   const lines = text.split('\n');
   let current: string[] = [];
   let inCodeBlock = false;
+  let inVideoBlock = false;
 
   for (const line of lines) {
-    if (line.trim().startsWith('```')) {
+    // Track <video> blocks to keep them intact across blank lines
+    if (!inCodeBlock && !inVideoBlock && line.trim().startsWith('<video>')) {
+      if (current.length > 0) {
+        const joined = current.join('\n').trim();
+        if (joined) blocks.push(joined);
+        current = [];
+      }
+      current.push(line);
+      // Check if the tag closes on the same line
+      if (line.includes('</video>')) {
+        blocks.push(current.join('\n'));
+        current = [];
+      } else {
+        inVideoBlock = true;
+      }
+    } else if (inVideoBlock) {
+      current.push(line);
+      if (line.includes('</video>')) {
+        blocks.push(current.join('\n'));
+        current = [];
+        inVideoBlock = false;
+      }
+    } else if (line.trim().startsWith('```')) {
       if (inCodeBlock) {
         current.push(line);
         blocks.push(current.join('\n'));
@@ -477,8 +500,8 @@ function renderBlock(block: string, key: number): ReactNode {
   const trimmed = block.trim();
   if (!trimmed) return null;
 
-  // Video block: <video>url|alt</video>
-  const videoBlockMatch = trimmed.match(/^<video>([^|]+)\|?(.*)<\/video>$/);
+  // Video block: <video>url|alt</video> (alt text may span multiple lines)
+  const videoBlockMatch = trimmed.match(/^<video>([^|]+)\|?([\s\S]*?)<\/video>$/);
   if (videoBlockMatch) {
     const videoUrl = videoBlockMatch[1] ?? '';
     const videoAlt = videoBlockMatch[2] ?? 'Generated video';
