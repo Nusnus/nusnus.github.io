@@ -317,7 +317,7 @@ export async function cloudChatStream(
               e.item.type === 'code_execution_call' ||
               e.item.type === 'mcp_call'
             ) {
-              options?.onToolUse?.(e.item.type);
+              options?.onToolUse?.(e.item.type.replace(/_call$/, ''));
             }
           } else if (eventType === 'response.function_call_arguments.delta') {
             const e = raw as unknown as StreamFunctionCallArgsDelta;
@@ -332,7 +332,7 @@ export async function cloudChatStream(
               e.item.type === 'code_execution_call' ||
               e.item.type === 'mcp_call'
             ) {
-              options?.onToolDone?.(e.item.type);
+              options?.onToolDone?.(e.item.type.replace(/_call$/, ''));
             }
           } else if (eventType === 'response.failed') {
             const err = (raw as Record<string, unknown>).response as
