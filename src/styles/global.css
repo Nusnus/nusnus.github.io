@@ -385,7 +385,8 @@
   .cybernus-shimmer,
   .voice-ring,
   .wave-bar,
-  .thought-float {
+  .thought-float,
+  .sub-agent-slide-in {
     animation: none;
   }
   .cybernus-fade-in-up,
@@ -393,4 +394,47 @@
     animation: none;
     opacity: 1;
   }
+}
+
+/* Sub-agent task slide-in animation */
+@keyframes slide-in-from-right {
+  0% {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.sub-agent-slide-in {
+  animation: slide-in-from-right 300ms ease-out both;
+}
+
+/* Message entrance animation */
+@keyframes message-appear {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.message-appear {
+  animation: message-appear 300ms ease-out both;
+}
+
+/* Smooth progress bar fill */
+@keyframes progress-fill {
+  0% {
+    width: 0%;
+  }
+}
+
+.progress-fill {
+  animation: progress-fill 500ms ease-out;
 }

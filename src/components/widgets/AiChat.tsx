@@ -703,6 +703,8 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
   const isAtLimit = userMsgCount >= MAX_USER_MESSAGES;
   const currentPersonality = PERSONALITY_LEVELS[personality];
   const strings = t(language);
+  const dir = language === 'he' ? 'rtl' : 'ltr';
+  const isRTL = dir === 'rtl';
   const isRecording =
     voiceState === 'requesting-mic' ||
     voiceState === 'recording' ||
@@ -857,7 +859,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
   );
 
   return (
-    <div className="bg-bg-base flex h-full">
+    <div className="bg-bg-base flex h-full" dir={dir}>
       {/* Mobile sidebar backdrop */}
       {showSidebar && (
         // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- backdrop overlay
@@ -870,9 +872,12 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       {/* Sidebar — persistent on desktop, overlay on mobile */}
       <aside
         className={cn(
-          'border-accent/30 bg-bg-base flex h-full shrink-0 flex-col border-r',
+          'border-accent/30 bg-bg-base flex h-full shrink-0 flex-col',
+          isRTL ? 'border-l' : 'border-r',
           'md:relative md:flex md:w-[260px]',
-          showSidebar ? 'fixed inset-y-0 left-0 z-30 w-72' : 'hidden md:flex',
+          showSidebar
+            ? cn('fixed inset-y-0 z-30 w-72', isRTL ? 'right-0' : 'left-0')
+            : 'hidden md:flex',
         )}
       >
         {sidebarContent}

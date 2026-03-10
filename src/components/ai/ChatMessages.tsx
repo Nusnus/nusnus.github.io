@@ -1,4 +1,4 @@
-import { type RefObject, useMemo, useCallback, useState, useEffect } from 'react';
+import { type RefObject, useMemo, useCallback, useState, useEffect, useRef } from 'react';
 import {
   ArrowRight,
   ExternalLink,
@@ -9,11 +9,17 @@ import {
   Maximize2,
   X,
   RotateCcw,
+  Volume2,
+  VolumeX,
 } from 'lucide-react';
+import { isTTSSupported, speak, stopSpeaking } from '@lib/ai/tts';
+import type { TTSState } from '@lib/ai/tts';
 import { cn } from '@lib/utils/cn';
 import type { ChatMessage } from '@lib/ai/types';
 import { renderMarkdown } from '@lib/ai/markdown';
 import { executeAction } from '@lib/ai/tools';
+import { RichComponent } from '@components/ai/RichCards';
+import { SUGGESTED_QUESTIONS } from '@lib/ai/config';
 import type { Language } from '@lib/ai/i18n';
 import { t } from '@lib/ai/i18n';
 
@@ -450,6 +456,42 @@ export function ChatMessages({
     onExpandClose?.();
   }, [onExpandClose]);
 
+  /* ─── TTS state ─── */
+  const [ttsState, setTtsState] = useState<TTSState>('idle');
+  const [speakingMsgId, setSpeakingMsgId] = useState<string | null>(null);
+  const ttsCancelRef = useRef<(() => void) | null>(null);
+  const ttsSupported = useMemo(() => isTTSSupported(), []);
+
+  const handleSpeak = useCallback(
+    (msgId: string, content: string) => {
+      if (speakingMsgId === msgId && ttsState === 'speaking') {
+        // Stop current speech
+        ttsCancelRef.current?.();
+        ttsCancelRef.current = null;
+        setSpeakingMsgId(null);
+        setTtsState('idle');
+        return;
+      }
+
+      // Stop any previous speech and start new
+      stopSpeaking();
+      setSpeakingMsgId(msgId);
+      const { cancel } = speak(content, { language }, (state) => {
+        setTtsState(state);
+        if (state === 'idle') setSpeakingMsgId(null);
+      });
+      ttsCancelRef.current = cancel;
+    },
+    [speakingMsgId, ttsState, language],
+  );
+
+  // Cleanup TTS on unmount
+  useEffect(() => {
+    return () => {
+      stopSpeaking();
+    };
+  }, []);
+
   const isWelcomeOnly = useMemo(
     () => messages.length === 1 && messages[0]?.role === 'assistant',
     [messages],
@@ -522,15 +564,39 @@ export function ChatMessages({
 
                   {/* Message body */}
                   <div className="min-w-0 flex-1">
-                    {/* Role label */}
-                    <p
-                      className={cn(
-                        'mb-2 text-xs font-semibold tracking-wide',
-                        isUser ? 'text-text-secondary' : 'text-accent',
+                    {/* Role label + TTS button */}
+                    <div className="mb-2 flex items-center gap-2">
+                      <p
+                        className={cn(
+                          'text-xs font-semibold tracking-wide',
+                          isUser ? 'text-text-secondary' : 'text-accent',
+                        )}
+                      >
+                        {isUser ? 'You' : 'Cybernus'}
+                      </p>
+                      {!isUser && msg.content && !isStreaming && ttsSupported && (
+                        <button
+                          onClick={() => handleSpeak(msg.id, msg.content)}
+                          className={cn(
+                            'text-text-muted hover:text-accent rounded-md p-0.5 opacity-0 transition-all group-hover:opacity-100',
+                            speakingMsgId === msg.id &&
+                              ttsState === 'speaking' &&
+                              'text-accent opacity-100',
+                          )}
+                          aria-label={
+                            speakingMsgId === msg.id && ttsState === 'speaking'
+                              ? 'Stop speaking'
+                              : 'Read aloud'
+                          }
+                        >
+                          {speakingMsgId === msg.id && ttsState === 'speaking' ? (
+                            <VolumeX className="h-3.5 w-3.5" />
+                          ) : (
+                            <Volume2 className="h-3.5 w-3.5" />
+                          )}
+                        </button>
                       )}
-                    >
-                      {isUser ? 'You' : 'Cybernus'}
-                    </p>
+                    </div>
 
                     {/* Content */}
                     <div className="text-text-primary/85 text-sm leading-relaxed">
@@ -575,26 +641,41 @@ export function ChatMessages({
                       )}
                     </div>
 
-                    {/* Tool action buttons */}
-                    {msg.actions && msg.actions.length > 0 && (
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        {msg.actions.map((action, idx) => (
-                          <button
-                            key={idx}
-                            onClick={() => executeAction(action)}
-                            title={action.url}
-                            className="border-border bg-bg-surface text-accent hover:border-accent/30 hover:bg-accent-muted inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all"
-                          >
-                            {action.type === 'open_link' ? (
-                              <ExternalLink className="h-3 w-3" />
-                            ) : (
-                              <ArrowRight className="h-3 w-3" />
-                            )}
-                            {action.label}
-                          </button>
+                    {/* Rich component renders (MCP tools) */}
+                    {msg.actions &&
+                      msg.actions
+                        .filter((a) => a.type === 'render_component')
+                        .map((action, idx) => (
+                          <RichComponent
+                            key={`rc-${idx}`}
+                            componentType={action.componentType ?? 'unknown'}
+                            props={action.props ?? {}}
+                          />
                         ))}
-                      </div>
-                    )}
+
+                    {/* Tool action buttons (navigate / open_link) */}
+                    {msg.actions &&
+                      msg.actions.filter((a) => a.type !== 'render_component').length > 0 && (
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          {msg.actions
+                            .filter((a) => a.type !== 'render_component')
+                            .map((action, idx) => (
+                              <button
+                                key={idx}
+                                onClick={() => executeAction(action)}
+                                title={action.url}
+                                className="border-border bg-bg-surface text-accent hover:border-accent/30 hover:bg-accent-muted inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all"
+                              >
+                                {action.type === 'open_link' ? (
+                                  <ExternalLink className="h-3 w-3" />
+                                ) : (
+                                  <ArrowRight className="h-3 w-3" />
+                                )}
+                                {action.label}
+                              </button>
+                            ))}
+                        </div>
+                      )}
                   </div>
                 </div>
               </div>
@@ -609,12 +690,7 @@ export function ChatMessages({
                 style={{ animationDelay: '200ms' }}
               >
                 {(() => {
-                  const questions = [
-                    "What are Tomer's main open source contributions?",
-                    'Tell me about the Celery project',
-                    'What is pytest-celery and how does it work?',
-                    'Show me a visual breakdown of your GitHub activity',
-                  ];
+                  const questions = SUGGESTED_QUESTIONS[language] ?? SUGGESTED_QUESTIONS.en;
                   return questions.map((q) => (
                     <button
                       key={q}
