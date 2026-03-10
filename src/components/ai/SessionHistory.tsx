@@ -108,7 +108,7 @@ export function SessionHistory({
           </div>
           {searchQuery && (
             <p className="text-text-muted mt-1 px-1 text-[10px]">
-              {filteredSessions.length} result{filteredSessions.length !== 1 ? 's' : ''}
+              {filteredSessions.length} {strings.search.toLowerCase()}
             </p>
           )}
         </div>
@@ -124,7 +124,7 @@ export function SessionHistory({
         ) : filteredSessions.length === 0 ? (
           <div className="flex flex-col items-center gap-2 px-4 py-8">
             <Search className="text-border h-6 w-6" />
-            <p className="text-text-muted text-xs">No matching chats</p>
+            <p className="text-text-muted text-xs">{strings.noResults}</p>
           </div>
         ) : (
           <div className="space-y-0.5">
