@@ -361,7 +361,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
 
   /* ─── Send message ─── */
   const sendMessage = useCallback(
-    async (text: string) => {
+    async (text: string, displayText?: string) => {
       const trimmed = text.trim();
       if (!trimmed || isGenerating) return;
 
@@ -386,6 +386,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
         id: crypto.randomUUID(),
         role: 'user',
         content: trimmed,
+        ...(displayText !== undefined && { displayContent: displayText }),
       };
       const assistantMsg: ChatMessage = {
         id: crypto.randomUUID(),

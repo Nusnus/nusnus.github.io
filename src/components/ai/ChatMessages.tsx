@@ -23,7 +23,7 @@ interface ChatMessagesProps {
   messages: ChatMessage[];
   isGenerating: boolean;
   messagesEndRef: RefObject<HTMLDivElement | null>;
-  onSendMessage: (text: string) => void;
+  onSendMessage: (text: string, displayText?: string) => void;
   /** Callback when a user selects an option from an inline form (ask_user tool). */
   onFormSubmit?:
     | ((messageId: string, selectedId: string, value: string, customValue?: string) => void)
@@ -346,7 +346,7 @@ function ExpandedMarkdownView({
 }: {
   messages: ChatMessage[];
   onClose: () => void;
-  onSendMessage: (text: string) => void;
+  onSendMessage: (text: string, displayText?: string) => void;
   isGenerating: boolean;
   language: Language;
 }) {
@@ -506,7 +506,7 @@ function ExpandedMarkdownView({
                           <TypingIndicator />
                         )
                       ) : isUser ? (
-                        <p className="whitespace-pre-wrap">{msg.content}</p>
+                        <p className="whitespace-pre-wrap">{msg.displayContent ?? msg.content}</p>
                       ) : (
                         <AssistantContent
                           content={msg.content}
@@ -567,7 +567,7 @@ function AssistantContent({
 }: {
   content: string;
   isStreaming: boolean;
-  onSendMessage: (text: string) => void;
+  onSendMessage: (text: string, displayText?: string) => void;
   isGenerating: boolean;
 }) {
   const { body, suggestions } = useMemo(
@@ -620,7 +620,7 @@ const MessageItem = memo(function MessageItem({
   msg: ChatMessage;
   isStreaming: boolean;
   isGenerating: boolean;
-  onSendMessage: (text: string) => void;
+  onSendMessage: (text: string, displayText?: string) => void;
   onFormSubmit?:
     | ((messageId: string, selectedId: string, value: string, customValue?: string) => void)
     | undefined;
@@ -741,7 +741,7 @@ const MessageItem = memo(function MessageItem({
                 />
               </div>
             ) : (
-              <p className="whitespace-pre-wrap">{msg.content}</p>
+              <p className="whitespace-pre-wrap">{msg.displayContent ?? msg.content}</p>
             )}
           </div>
 
@@ -871,7 +871,7 @@ export function ChatMessages({
                 {SUGGESTED_QUESTIONS.map((q, idx) => (
                   <button
                     key={q.label}
-                    onClick={() => onSendMessage(q.prompt)}
+                    onClick={() => onSendMessage(q.prompt, q.displayText)}
                     disabled={isGenerating}
                     className="group relative overflow-hidden rounded-xl border border-[#00ff41]/10 bg-[#0a0a0a]/80 p-3.5 text-left transition-all duration-300 hover:-translate-y-1 hover:border-[#00ff41]/30 hover:shadow-lg hover:shadow-[#00ff41]/5 disabled:opacity-50"
                     style={{ animationDelay: `${(idx + 1) * 60}ms` }}
@@ -885,7 +885,7 @@ export function ChatMessages({
                         </span>
                       </div>
                       <p className="text-text-muted line-clamp-2 text-[11px] leading-relaxed transition-colors group-hover:text-gray-400">
-                        {q.prompt}
+                        {q.displayText ?? q.prompt}
                       </p>
                     </div>
                     <ArrowRight className="absolute right-2.5 bottom-2.5 h-3 w-3 text-[#00ff41]/0 transition-all duration-300 group-hover:text-[#00ff41]/40" />

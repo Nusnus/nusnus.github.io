@@ -65,6 +65,8 @@ export const SUGGESTED_QUESTIONS: readonly {
   icon: string;
   label: string;
   prompt: string;
+  /** Optional short text shown as the user message in chat instead of the full prompt. */
+  displayText?: string;
 }[] = [
   {
     icon: '🧬',
@@ -98,5 +100,6 @@ export const SUGGESTED_QUESTIONS: readonly {
     label: 'Draw Me',
     prompt:
       'I want a portrait of Tomer Nosrati — the architect of the Matrix. Before creating, ask me what format I prefer: photo, video, or photo first then animate to video.',
+    displayText: 'Draw me a portrait of Tomer Nosrati',
   },
 ];

@@ -49,6 +49,9 @@ export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
   content: string;
+  /** Optional display-only text shown in the UI instead of `content`.
+   *  When set, `content` is still sent to the AI but the user sees `displayContent`. */
+  displayContent?: string;
   /** Client-side actions parsed from the assistant's response. */
   actions?: ToolAction[];
   /** Web search phase: 'searching' while running, 'found' when complete (synthesizing). */
