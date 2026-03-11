@@ -7,7 +7,7 @@
 
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { cn } from '@lib/utils/cn';
-import type { ChatMessage, AgentActivityItem } from '@lib/ai/types';
+import type { ChatMessage, AgentActivityItem, ChatForm, ChatFormOption } from '@lib/ai/types';
 import {
   CLOUD_MODELS,
   DEFAULT_CLOUD_MODEL_ID,
@@ -130,6 +130,13 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
    *  so the sendMessage abort handler can detect stale contexts even when
    *  activeSessionId is null on both sides (null === null). */
   const sessionGenRef = useRef(0);
+
+  /** Pending form update from handleFormSubmit, applied atomically in sendMessage. */
+  const pendingFormUpdateRef = useRef<{
+    messageId: string;
+    selectedId: string;
+    customValue?: string;
+  } | null>(null);
 
   /* ─── Debug logging helper ─── */
   const addLog = useCallback(
@@ -354,11 +361,11 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
 
   /* ─── Send message ─── */
   const sendMessage = useCallback(
-    async (text: string) => {
+    async (text: string, options?: { displayText?: string; hidden?: boolean }) => {
       const trimmed = text.trim();
       if (!trimmed || isGenerating) return;
 
-      const userMessageCount = messages.filter((m) => m.role === 'user').length;
+      const userMessageCount = messages.filter((m) => m.role === 'user' && !m.hidden).length;
       if (userMessageCount >= MAX_USER_MESSAGES) return;
 
       // Capture generation counter so we can detect session-changing operations
@@ -379,6 +386,8 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
         id: crypto.randomUUID(),
         role: 'user',
         content: trimmed,
+        ...(options?.displayText !== undefined && { displayContent: options.displayText }),
+        ...(options?.hidden && { hidden: true }),
       };
       const assistantMsg: ChatMessage = {
         id: crypto.randomUUID(),
@@ -387,6 +396,30 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       };
 
       const updated = [...messages, userMsg, assistantMsg];
+
+      // Apply any pending form update (from handleFormSubmit) atomically
+      // so the selectedId isn't lost when setMessages overwrites state.
+      const formUpdate = pendingFormUpdateRef.current;
+      if (formUpdate) {
+        for (let i = 0; i < updated.length; i++) {
+          const m = updated[i];
+          if (m && m.id === formUpdate.messageId && m.form) {
+            updated[i] = {
+              ...m,
+              form: {
+                ...m.form,
+                selectedId: formUpdate.selectedId,
+                ...(formUpdate.customValue !== undefined && {
+                  customValue: formUpdate.customValue,
+                }),
+              },
+            };
+            break;
+          }
+        }
+        pendingFormUpdateRef.current = null;
+      }
+
       setMessages(updated);
       setIsGenerating(true);
       setStreamTokenCount(0);
@@ -446,7 +479,16 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
           },
           controller.signal,
           {
-            tools: getToolsForModel(selectedCloudModelId),
+            tools: (() => {
+              const allTools = getToolsForModel(selectedCloudModelId);
+              // If the previous assistant message had a form (ask_user), strip
+              // ask_user from available tools so the AI cannot re-ask.
+              const prevAssistant = messages[messages.length - 1];
+              if (prevAssistant?.role === 'assistant' && prevAssistant.form) {
+                return allTools.filter((t) => !('name' in t && t.name === 'ask_user'));
+              }
+              return allTools;
+            })(),
             tool_choice: 'auto',
             onWebSearch: () => {
               addLog('info', 'api', 'Web search triggered');
@@ -537,10 +579,13 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
           toolCalls: result.toolCalls.length,
         });
 
-        // Map tool calls to actions (exclude generate_image and generate_video — handled separately)
+        // Map tool calls to actions (exclude generate_image, generate_video, ask_user — handled separately)
         const actions = mapToolCallsToActions(
           result.toolCalls.filter(
-            (tc) => tc.name !== 'generate_image' && tc.name !== 'generate_video',
+            (tc) =>
+              tc.name !== 'generate_image' &&
+              tc.name !== 'generate_video' &&
+              tc.name !== 'ask_user',
           ),
         );
 
@@ -634,13 +679,61 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
         // If the API returned only tool calls with no text, use a fallback so
         // the empty content doesn't trigger a permanent TypingIndicator.
         const textContent = result.content + mediaMarkdown;
+
+        // Parse ask_user tool calls → attach form to assistant message
+        let formData: ChatForm | undefined;
+        const askUserCall = result.toolCalls.find((tc) => tc.name === 'ask_user');
+        if (askUserCall) {
+          try {
+            const args = JSON.parse(askUserCall.arguments) as {
+              question?: string;
+              options?: { id?: string; label?: string; description?: string; value?: string }[];
+              allow_other?: boolean;
+            };
+            if (args.question && Array.isArray(args.options) && args.options.length > 0) {
+              const options: ChatFormOption[] = args.options
+                .filter(
+                  (o): o is { id: string; label: string; value: string; description?: string } =>
+                    typeof o.id === 'string' &&
+                    typeof o.label === 'string' &&
+                    typeof o.value === 'string' &&
+                    o.value.trim().length > 0,
+                )
+                .map((o) => ({
+                  id: o.id,
+                  label: o.label,
+                  ...(o.description !== undefined && { description: o.description }),
+                  value: o.value,
+                }));
+              if (options.length > 0) {
+                formData = {
+                  question: args.question,
+                  options,
+                  allowOther: args.allow_other !== false,
+                  selectedId: null,
+                };
+                addLog('info', 'api', 'ask_user form parsed', {
+                  question: args.question,
+                  optionCount: options.length,
+                });
+              }
+            }
+          } catch {
+            addLog('warn', 'api', 'Failed to parse ask_user arguments');
+          }
+        }
+
         const finalAssistant: ChatMessage = {
           ...assistantMsg,
-          content: textContent || (result.toolCalls.length > 0 ? '*(used tools only)*' : ''),
+          content:
+            textContent ||
+            (formData ? '' : result.toolCalls.length > 0 ? '*(used tools only)*' : ''),
           // Preserve agent activity accumulated during streaming
           ...(accumulatedAgentActivity.length > 0 && {
             agentActivity: accumulatedAgentActivity,
           }),
+          // Attach form if ask_user was called
+          ...(formData && { form: formData }),
         };
         if (actions.length > 0) finalAssistant.actions = actions;
 
@@ -865,6 +958,31 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
   handleVoiceToggleRef.current = handleVoiceToggle;
   sendMessageRef.current = sendMessage;
 
+  /* ─── Form submission handler (ask_user tool) ─── */
+  const handleFormSubmit = useCallback(
+    (messageId: string, selectedId: string, value: string, customValue?: string) => {
+      // Store form update in ref — sendMessage will apply it atomically
+      // when building the updated messages array, preventing the stale
+      // closure from overwriting the selectedId.
+      pendingFormUpdateRef.current = {
+        messageId,
+        selectedId,
+        ...(customValue !== undefined && { customValue }),
+      };
+
+      // Find the form's question and option label to give the AI clear context
+      // that this is a definitive selection, not a new question.
+      const formMsg = messages.find((m) => m.id === messageId);
+      const option = formMsg?.form?.options.find((o) => o.id === selectedId);
+      const label = option?.label ?? customValue ?? value;
+      const contextMessage = `I chose: ${label}. Proceed with this choice — do not ask again.`;
+
+      // Send as hidden user message (the form selection is the visible interaction).
+      sendMessage(contextMessage, { hidden: true });
+    },
+    [sendMessage, messages],
+  );
+
   /* ─── Listen for "Make it a video" and other programmatic send-message events ─── */
   useEffect(() => {
     const handler = (e: Event) => {
@@ -892,7 +1010,10 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
     () => CLOUD_MODELS.find((m) => m.id === selectedCloudModelId),
     [selectedCloudModelId],
   );
-  const userMsgCount = useMemo(() => messages.filter((m) => m.role === 'user').length, [messages]);
+  const userMsgCount = useMemo(
+    () => messages.filter((m) => m.role === 'user' && !m.hidden).length,
+    [messages],
+  );
   const isAtLimit = userMsgCount >= MAX_USER_MESSAGES;
   const currentPersonality = PERSONALITY_LEVELS[personality];
   const strings = t(language);
@@ -1212,6 +1333,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
               isGenerating={isGenerating}
               messagesEndRef={messagesEndRef}
               onSendMessage={sendMessage}
+              onFormSubmit={handleFormSubmit}
               language={language}
               onExpandClose={() => requestAnimationFrame(() => inputRef.current?.focus())}
             />

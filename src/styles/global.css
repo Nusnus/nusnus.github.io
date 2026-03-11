@@ -287,6 +287,16 @@
   animation: fade-in 300ms ease-out both;
 }
 
+/* IDE step appearance — used by ThinkingIndicator and InlineAgentActivity */
+.ide-step-appear {
+  animation: fade-in-up 250ms ease-out both;
+}
+
+/* Chat form appearance — used by InlineChatForm */
+.chat-form-appear {
+  animation: fade-in-up 300ms ease-out both;
+}
+
 .cybernus-shimmer {
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.04), transparent);
   background-size: 200% 100%;
@@ -395,7 +405,9 @@
     animation: none;
   }
   .cybernus-fade-in-up,
-  .cybernus-fade-in {
+  .cybernus-fade-in,
+  .ide-step-appear,
+  .chat-form-appear {
     animation: none;
     opacity: 1;
   }

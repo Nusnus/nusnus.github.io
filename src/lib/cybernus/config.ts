@@ -61,7 +61,13 @@ export const VOICE_OPTIONS = [
 ] as const;
 
 /** Suggested questions shown on the welcome screen. */
-export const SUGGESTED_QUESTIONS = [
+export const SUGGESTED_QUESTIONS: readonly {
+  icon: string;
+  label: string;
+  prompt: string;
+  /** Optional short text shown as the user message in chat instead of the full prompt. */
+  displayText?: string;
+}[] = [
   {
     icon: '🧬',
     label: 'The Origin Story',
@@ -93,6 +99,7 @@ export const SUGGESTED_QUESTIONS = [
     icon: '🎨',
     label: 'Draw Me',
     prompt:
-      'Draw a portrait of Tomer Nosrati — show me what the architect of the Matrix looks like',
+      'I want a portrait of Tomer Nosrati — the architect of the Matrix. Before creating, ask me what format I prefer: photo, video, or photo first then animate to video.',
+    displayText: 'Draw me a portrait of Tomer Nosrati',
   },
-] as const;
+];
