@@ -365,7 +365,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       const trimmed = text.trim();
       if (!trimmed || isGenerating) return;
 
-      const userMessageCount = messages.filter((m) => m.role === 'user').length;
+      const userMessageCount = messages.filter((m) => m.role === 'user' && !m.hidden).length;
       if (userMessageCount >= MAX_USER_MESSAGES) return;
 
       // Capture generation counter so we can detect session-changing operations
@@ -1010,7 +1010,10 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
     () => CLOUD_MODELS.find((m) => m.id === selectedCloudModelId),
     [selectedCloudModelId],
   );
-  const userMsgCount = useMemo(() => messages.filter((m) => m.role === 'user').length, [messages]);
+  const userMsgCount = useMemo(
+    () => messages.filter((m) => m.role === 'user' && !m.hidden).length,
+    [messages],
+  );
   const isAtLimit = userMsgCount >= MAX_USER_MESSAGES;
   const currentPersonality = PERSONALITY_LEVELS[personality];
   const strings = t(language);
