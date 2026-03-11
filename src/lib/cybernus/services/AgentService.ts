@@ -281,7 +281,7 @@ export function buildToolDefinitions(tools: AgentTool[]): ToolDefinition[] {
     type: 'function',
     name: 'ask_user',
     description:
-      "Present an interactive in-chat form to the user with multiple-choice options. Use this when you need to clarify the user's intent or preference before proceeding — for example, choosing between output formats (photo vs video), picking a topic branch, or confirming a creative direction. The user can select one of the provided options or type a custom answer. Each option has a label and a value; the value is what gets sent back as the user's reply. Keep options concise (2–5 choices). Always include allow_other so users can type a free-form answer.",
+      "Present an interactive in-chat form to the user with multiple-choice options. Use this when you need to clarify the user's intent or preference before proceeding — for example, choosing between output formats (photo vs video), picking a topic branch, or confirming a creative direction. The user can select one of the provided options or type a custom answer. Each option has a label and a value; the value is what gets sent back as the user's reply. Keep options concise (2–5 choices). Always include allow_other so users can type a free-form answer. IMPORTANT: After calling ask_user, the user's NEXT message will be their selection from the form. Do NOT call ask_user again — instead, act on their choice immediately (e.g. generate the image, create the video, proceed with their selected option). Never re-ask the same or similar question.",
     parameters: {
       type: 'object',
       properties: {

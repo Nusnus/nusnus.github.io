@@ -960,8 +960,9 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
         selectedId,
         ...(customValue !== undefined && { customValue }),
       };
-      // Send the selected value as the user's next message
-      sendMessage(value);
+      // Send the selected value as the user's next message (hidden — the form
+      // selection is the visible interaction, no need for a "You: ..." bubble).
+      sendMessage(value, { hidden: true });
     },
     [sendMessage],
   );
