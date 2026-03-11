@@ -361,7 +361,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
 
   /* ─── Send message ─── */
   const sendMessage = useCallback(
-    async (text: string, displayText?: string) => {
+    async (text: string, options?: { displayText?: string; hidden?: boolean }) => {
       const trimmed = text.trim();
       if (!trimmed || isGenerating) return;
 
@@ -386,7 +386,8 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
         id: crypto.randomUUID(),
         role: 'user',
         content: trimmed,
-        ...(displayText !== undefined && { displayContent: displayText }),
+        ...(options?.displayText !== undefined && { displayContent: options.displayText }),
+        ...(options?.hidden && { hidden: true }),
       };
       const assistantMsg: ChatMessage = {
         id: crypto.randomUUID(),
@@ -715,8 +716,9 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
 
         const finalAssistant: ChatMessage = {
           ...assistantMsg,
-          content:
-            textContent || (result.toolCalls.length > 0 && !formData ? '*(used tools only)*' : ''),
+          content: formData
+            ? ''
+            : textContent || (result.toolCalls.length > 0 ? '*(used tools only)*' : ''),
           // Preserve agent activity accumulated during streaming
           ...(accumulatedAgentActivity.length > 0 && {
             agentActivity: accumulatedAgentActivity,

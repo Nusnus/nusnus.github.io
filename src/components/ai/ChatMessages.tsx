@@ -23,7 +23,7 @@ interface ChatMessagesProps {
   messages: ChatMessage[];
   isGenerating: boolean;
   messagesEndRef: RefObject<HTMLDivElement | null>;
-  onSendMessage: (text: string, displayText?: string) => void;
+  onSendMessage: (text: string, options?: { displayText?: string; hidden?: boolean }) => void;
   /** Callback when a user selects an option from an inline form (ask_user tool). */
   onFormSubmit?:
     | ((messageId: string, selectedId: string, value: string, customValue?: string) => void)
@@ -346,7 +346,7 @@ function ExpandedMarkdownView({
 }: {
   messages: ChatMessage[];
   onClose: () => void;
-  onSendMessage: (text: string, displayText?: string) => void;
+  onSendMessage: (text: string, options?: { displayText?: string; hidden?: boolean }) => void;
   isGenerating: boolean;
   language: Language;
 }) {
@@ -431,6 +431,9 @@ function ExpandedMarkdownView({
             const isUser = msg.role === 'user';
             const isLastAssistant = !isUser && msgIndex === messages.length - 1;
             const isStreamingMsg = isGenerating && isLastAssistant;
+
+            // Skip hidden messages (e.g. suggestion card prompts)
+            if (msg.hidden) return null;
 
             if (
               !msg.content &&
@@ -567,7 +570,7 @@ function AssistantContent({
 }: {
   content: string;
   isStreaming: boolean;
-  onSendMessage: (text: string, displayText?: string) => void;
+  onSendMessage: (text: string, options?: { displayText?: string; hidden?: boolean }) => void;
   isGenerating: boolean;
 }) {
   const { body, suggestions } = useMemo(
@@ -620,7 +623,7 @@ const MessageItem = memo(function MessageItem({
   msg: ChatMessage;
   isStreaming: boolean;
   isGenerating: boolean;
-  onSendMessage: (text: string, displayText?: string) => void;
+  onSendMessage: (text: string, options?: { displayText?: string; hidden?: boolean }) => void;
   onFormSubmit?:
     | ((messageId: string, selectedId: string, value: string, customValue?: string) => void)
     | undefined;
@@ -847,6 +850,9 @@ export function ChatMessages({
             const isLastAssistant = !isUser && msgIndex === messages.length - 1;
             const isStreaming = isGenerating && isLastAssistant;
 
+            // Skip hidden messages (e.g. suggestion card prompts)
+            if (msg.hidden) return null;
+
             return (
               <MessageItem
                 key={msg.id}
@@ -871,7 +877,12 @@ export function ChatMessages({
                 {SUGGESTED_QUESTIONS.map((q, idx) => (
                   <button
                     key={q.label}
-                    onClick={() => onSendMessage(q.prompt, q.displayText)}
+                    onClick={() =>
+                      onSendMessage(q.prompt, {
+                        ...(q.displayText !== undefined && { displayText: q.displayText }),
+                        hidden: q.displayText !== undefined,
+                      })
+                    }
                     disabled={isGenerating}
                     className="group relative overflow-hidden rounded-xl border border-[#00ff41]/10 bg-[#0a0a0a]/80 p-3.5 text-left transition-all duration-300 hover:-translate-y-1 hover:border-[#00ff41]/30 hover:shadow-lg hover:shadow-[#00ff41]/5 disabled:opacity-50"
                     style={{ animationDelay: `${(idx + 1) * 60}ms` }}
