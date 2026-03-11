@@ -15,8 +15,13 @@ import { buildToolDefinitions, loadTools } from '@lib/cybernus/services/AgentSer
 /**
  * Tool definition for the xAI Responses API.
  * Supports built-in tools, function tools, and remote MCP tools.
+ * All variants share a `type` field; function tools additionally have `name`.
  */
-export type ToolDefinition = Record<string, unknown>;
+export interface ToolDefinition {
+  type: string;
+  name?: string;
+  [key: string]: unknown;
+}
 
 /** Raw tool call as returned by the xAI Responses API. */
 export interface ToolCallResult {

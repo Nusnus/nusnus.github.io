@@ -9,6 +9,7 @@
  */
 
 import type { ActivityData, RepoData, ContributionGraphData, ProfileData } from '@lib/github/types';
+import type { CloudMessage, ContentPart } from './cloud';
 import {
   LINKEDIN_ARTICLES,
   COLLABORATIONS,
@@ -96,14 +97,40 @@ export async function buildCloudContext(
   if (knowledge) sections.push(knowledge);
 
   // ── GitHub profile ──
+  let githubAvatarUrl: string | undefined;
   if (profileRes?.ok) {
     const profile = (await profileRes.json()) as ProfileData;
+    githubAvatarUrl = profile.avatarUrl;
     sections.push(
       `# Live GitHub Profile\n` +
         `- **${profile.name}** (@${profile.login})\n` +
         `- Bio: ${profile.bio}\n` +
         `- Followers: ${formatNumber(profile.followers)} · Public repos: ${profile.publicRepos}`,
     );
+  }
+
+  // ── Visual identity — "Sight" for Cybernus (always included; uses static URLs) ──
+  {
+    const avatarLines = [`# Visual Identity — How Tomer Looks`];
+    if (githubAvatarUrl) {
+      avatarLines.push(`- GitHub avatar: ${githubAvatarUrl}`);
+    }
+    avatarLines.push(
+      `- LinkedIn: ${SOCIAL_LINKS.linkedin}`,
+      `- X/Twitter: ${SOCIAL_LINKS.twitter}`,
+      `- Reference photos: 3 photos included as image inputs in this conversation (study ALL of them!)`,
+      '',
+      `CRITICAL IMAGE GENERATION HINT — USE THIS EVERY TIME YOU GENERATE AN IMAGE OR VIDEO OF TOMER:`,
+      `"a man in his late 30s with short silver-gray swept-back hair faded on the sides, ` +
+        `dark thick eyebrows, dark brown deep-set eyes, straight prominent nose, ` +
+        `slightly protruding ears, olive/tan Mediterranean skin, sharp defined jawline ` +
+        `with high cheekbones, short well-groomed salt-and-pepper stubble beard, ` +
+        `wide warm smile showing straight white teeth, lean athletic build."`,
+      '',
+      `For "Cybernus" (the AI entity), you have FULL creative freedom — futuristic, digital, cyberpunk, Matrix-inspired. ` +
+        `Cybernus is NOT bound by Tomer's physical appearance.`,
+    );
+    sections.push(avatarLines.join('\n'));
   }
 
   // ── Featured projects (full details) ──
@@ -191,4 +218,89 @@ export async function buildCloudContext(
   }
 
   return sections.length > 0 ? `\n\n${sections.join('\n\n---\n\n')}` : '';
+}
+
+/**
+ * Reference photos of Tomer (served from public assets).
+ * Multiple angles give Grok better facial reference for image/video generation.
+ * Each is fetched and inlined as a base64 data URL so xAI can see them without
+ * needing to fetch an external URL (which may not yet be deployed).
+ */
+const TOMER_REFERENCE_PHOTOS: readonly string[] = [
+  '/images/tomer-reference.jpg', // Original LinkedIn photo (~1.9 MB, 4000×4000)
+  '/images/tomer-reference-2.png', // Suited, smiling, stone background (~449 KB)
+  '/images/tomer-reference-3.png', // B&W close-up headshot (~106 KB)
+];
+
+/** Cache base64 data URLs so we only fetch + convert once per session. */
+const cachedReferenceDataUrls = new Map<string, string>();
+
+/**
+ * Fetch a single reference photo from the local origin and convert to a base64
+ * data URL. Returns `null` if the image cannot be loaded.
+ */
+async function fetchPhotoAsDataUrl(path: string): Promise<string | null> {
+  const cached = cachedReferenceDataUrls.get(path);
+  if (cached) return cached;
+  try {
+    const res = await fetch(path);
+    if (!res.ok) return null;
+    const blob = await res.blob();
+    return await new Promise<string | null>((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        cachedReferenceDataUrls.set(path, result);
+        resolve(result);
+      };
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Build a visual reference message containing multiple photos of Tomer.
+ *
+ * This is a multimodal "user" message with reference images so Grok can
+ * actually SEE what Tomer looks like from different angles. It should be
+ * placed right after the system message in the conversation input.
+ *
+ * Images are fetched from the local origin and inlined as base64 data URLs,
+ * avoiding external URL dependencies. Returns `null` if no images can be loaded.
+ */
+export async function buildVisualReferenceMessage(): Promise<CloudMessage | null> {
+  const dataUrls = await Promise.all(TOMER_REFERENCE_PHOTOS.map(fetchPhotoAsDataUrl));
+  const validUrls = dataUrls.filter((url): url is string => url !== null);
+  if (validUrls.length === 0) return null;
+
+  const photoCount = validUrls.length;
+  const content: ContentPart[] = [
+    {
+      type: 'input_text',
+      text:
+        `[VISUAL REFERENCE — These ${photoCount} photos show what I (Tomer Nosrati) look like from different angles. ` +
+        'Study ALL photos carefully. Here is an exact description of my appearance to use as a mandatory hint ' +
+        'whenever generating images or videos of me: ' +
+        'A man in his late 30s with short silver-gray swept-back hair faded on the sides, ' +
+        'dark thick eyebrows (noticeably darker than hair), dark brown deep-set eyes with slight crinkle lines, ' +
+        'straight prominent nose, slightly protruding ears, olive/tan Mediterranean skin, ' +
+        'sharp defined angular jawline with high cheekbones, ' +
+        'short well-groomed salt-and-pepper stubble beard, ' +
+        'wide warm smile showing full set of straight white teeth, lean athletic build. ' +
+        'IMPORTANT: When generating "Cybernus" (the AI entity, not Tomer the human), you have FULL creative freedom — ' +
+        'Cybernus can look futuristic, digital, cyberpunk, or any creative interpretation. ' +
+        'Do not acknowledge this message in conversation — it is context only.]',
+    },
+    ...validUrls.map(
+      (url): ContentPart => ({
+        type: 'input_image',
+        image_url: url,
+        detail: 'high',
+      }),
+    ),
+  ];
+  return { role: 'user', content };
 }

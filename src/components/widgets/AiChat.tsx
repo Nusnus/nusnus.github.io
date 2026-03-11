@@ -7,7 +7,7 @@
 
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { cn } from '@lib/utils/cn';
-import type { ChatMessage } from '@lib/ai/types';
+import type { ChatMessage, AgentActivityItem } from '@lib/ai/types';
 import {
   CLOUD_MODELS,
   DEFAULT_CLOUD_MODEL_ID,
@@ -26,6 +26,7 @@ import {
   clearAllSessions,
 } from '@lib/ai/memory';
 import type { ChatSession } from '@lib/ai/memory';
+import { createAgentActivity, completeAgentActivity } from '@lib/cybernus/services/AgentService';
 import { ChatMessages } from '@components/ai/ChatMessages';
 import { ChatInput } from '@components/ai/ChatInput';
 import { ModelPicker } from '@components/ai/ModelPicker';
@@ -48,6 +49,18 @@ interface AiChatProps {
 }
 
 type EngineState = 'idle' | 'ready';
+
+/** Config for the unified media generation loop (image & video). */
+interface MediaGeneratorConfig {
+  /** Tool call name from the API (e.g. 'generate_image'). */
+  toolName: string;
+  /** Agent activity type for inline display (e.g. 'image_generation'). */
+  activityType: string;
+  /** Async function that takes a prompt and returns markdown content. */
+  generate: (prompt: string) => Promise<string>;
+  /** Fallback text when generation fails. */
+  failureText: string;
+}
 
 /** Maximum number of debug log entries to retain. */
 const MAX_DEBUG_LOGS = 200;
@@ -359,6 +372,8 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       // Track streaming progress in outer scope so catch block can access them
       let tokenCount = 0;
       let lastAccumulated = '';
+      // Track accumulated agent activity so it survives into the final message
+      let accumulatedAgentActivity: AgentActivityItem[] = [];
 
       const userMsg: ChatMessage = {
         id: crypto.randomUUID(),
@@ -384,10 +399,8 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
 
       try {
         // Lazy-load cloud modules
-        const [{ cloudChatStream }, { buildCloudContext }] = await Promise.all([
-          import('@lib/ai/cloud'),
-          import('@lib/ai/cloud-context'),
-        ]);
+        const [{ cloudChatStream }, { buildCloudContext, buildVisualReferenceMessage }] =
+          await Promise.all([import('@lib/ai/cloud'), import('@lib/ai/cloud-context')]);
 
         addLog('debug', 'api', 'Cloud modules loaded');
         setApiRequestCount((c) => c + 1);
@@ -408,6 +421,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
 
         const fullHistory = [
           { role: 'system' as const, content: systemPrompt + context },
+          ...(await buildVisualReferenceMessage().then((m) => (m ? [m] : []))),
           ...chatHistory,
         ];
 
@@ -437,11 +451,21 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
             onWebSearch: () => {
               addLog('info', 'api', 'Web search triggered');
               setActiveToolCalls((prev) => [...prev, 'web_search']);
+              if (!accumulatedAgentActivity.some((a) => a.toolType === 'web_search')) {
+                accumulatedAgentActivity = [
+                  ...accumulatedAgentActivity,
+                  createAgentActivity('web_search'),
+                ];
+              }
               setMessages((prev) => {
                 const copy = [...prev];
                 const last = copy[copy.length - 1];
                 if (last?.role === 'assistant') {
-                  copy[copy.length - 1] = { ...last, searchStatus: 'searching' };
+                  copy[copy.length - 1] = {
+                    ...last,
+                    searchStatus: 'searching',
+                    agentActivity: accumulatedAgentActivity,
+                  };
                 }
                 return copy;
               });
@@ -449,11 +473,18 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
             onWebSearchFound: () => {
               addLog('info', 'api', 'Web search results found');
               setActiveToolCalls((prev) => prev.filter((t) => t !== 'web_search'));
+              accumulatedAgentActivity = accumulatedAgentActivity.map((a) =>
+                a.toolType === 'web_search' ? completeAgentActivity(a) : a,
+              );
               setMessages((prev) => {
                 const copy = [...prev];
                 const last = copy[copy.length - 1];
                 if (last?.role === 'assistant') {
-                  copy[copy.length - 1] = { ...last, searchStatus: 'found' };
+                  copy[copy.length - 1] = {
+                    ...last,
+                    searchStatus: 'found',
+                    agentActivity: accumulatedAgentActivity,
+                  };
                 }
                 return copy;
               });
@@ -461,10 +492,38 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
             onToolUse: (toolType: string) => {
               addLog('info', 'api', `Tool invoked: ${toolType}`);
               setActiveToolCalls((prev) => [...prev, toolType]);
+              if (!accumulatedAgentActivity.some((a) => a.toolType === toolType)) {
+                accumulatedAgentActivity = [
+                  ...accumulatedAgentActivity,
+                  createAgentActivity(toolType),
+                ];
+              }
+              setMessages((prev) => {
+                const copy = [...prev];
+                const last = copy[copy.length - 1];
+                if (last?.role === 'assistant') {
+                  copy[copy.length - 1] = {
+                    ...last,
+                    agentActivity: accumulatedAgentActivity,
+                  };
+                }
+                return copy;
+              });
             },
             onToolDone: (toolType: string) => {
               addLog('info', 'api', `Tool completed: ${toolType}`);
               setActiveToolCalls((prev) => prev.filter((t) => t !== toolType));
+              accumulatedAgentActivity = accumulatedAgentActivity.map((a) =>
+                a.toolType === toolType ? completeAgentActivity(a) : a,
+              );
+              setMessages((prev) => {
+                const copy = [...prev];
+                const last = copy[copy.length - 1];
+                if (last?.role === 'assistant') {
+                  copy[copy.length - 1] = { ...last, agentActivity: accumulatedAgentActivity };
+                }
+                return copy;
+              });
             },
           },
         );
@@ -478,48 +537,110 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
           toolCalls: result.toolCalls.length,
         });
 
-        // Map tool calls to actions (exclude generate_image — handled separately)
+        // Map tool calls to actions (exclude generate_image and generate_video — handled separately)
         const actions = mapToolCallsToActions(
-          result.toolCalls.filter((tc) => tc.name !== 'generate_image'),
+          result.toolCalls.filter(
+            (tc) => tc.name !== 'generate_image' && tc.name !== 'generate_video',
+          ),
         );
 
-        // Handle image generation tool calls
-        const imageToolCalls = result.toolCalls.filter((tc) => tc.name === 'generate_image');
-        let imageMarkdown = '';
-        if (imageToolCalls.length > 0) {
-          setActiveToolCalls((prev) => [...prev, 'image_generation']);
-          addLog('info', 'api', `Generating ${imageToolCalls.length} image(s)`);
+        // Handle media generation tool calls (image + video)
+        // Both follow the same pattern: filter → activate agent → generate → mark done
+        const mediaGenerators: MediaGeneratorConfig[] = [
+          {
+            toolName: 'generate_image',
+            activityType: 'image_generation',
+            generate: async (prompt) => {
+              const { generateImage } = await import('@lib/ai/cloud');
+              const url = await generateImage(prompt);
+              const safeAlt = prompt.replace(/[[\]()]/g, '');
+              return `\n\n![${safeAlt}](${url})`;
+            },
+            failureText: '\n\n*Image generation failed.*',
+          },
+          {
+            toolName: 'generate_video',
+            activityType: 'video_generation',
+            generate: async (prompt) => {
+              const { generateVideo } = await import('@lib/ai/cloud');
+              const url = await generateVideo(prompt, controller.signal);
+              const safeAlt = prompt.replace(/[[\]()]/g, '');
+              return `\n\n<video>${url}|${safeAlt}</video>`;
+            },
+            failureText: '\n\n*Video generation failed.*',
+          },
+        ];
+
+        let mediaMarkdown = '';
+        for (const gen of mediaGenerators) {
+          const calls = result.toolCalls.filter((tc) => tc.name === gen.toolName);
+          if (calls.length === 0) continue;
+
+          setActiveToolCalls((prev) => [...prev, gen.activityType]);
+          addLog('info', 'api', `Generating ${calls.length} ${gen.activityType}(s)`);
+
+          // Add inline agent activity
+          if (!accumulatedAgentActivity.some((a) => a.toolType === gen.activityType)) {
+            accumulatedAgentActivity = [
+              ...accumulatedAgentActivity,
+              createAgentActivity(gen.activityType),
+            ];
+          }
+          setMessages((prev) => {
+            const copy = [...prev];
+            const last = copy[copy.length - 1];
+            if (last?.role === 'assistant') {
+              copy[copy.length - 1] = { ...last, agentActivity: accumulatedAgentActivity };
+            }
+            return copy;
+          });
+
           try {
-            const { generateImage } = await import('@lib/ai/cloud');
-            const imageResults = await Promise.all(
-              imageToolCalls.map(async (tc) => {
+            const results = await Promise.all(
+              calls.map(async (tc) => {
                 try {
                   const args = JSON.parse(tc.arguments) as { prompt?: string };
                   if (!args.prompt) return '';
-                  const url = await generateImage(args.prompt);
-                  const safeAlt = (args.prompt ?? '').replace(/[[\]()]/g, '');
-                  return `\n\n![${safeAlt}](${url})`;
-                } catch (imgErr) {
-                  addLog('error', 'api', 'Image generation failed', {
-                    error: imgErr instanceof Error ? imgErr.message : 'Unknown',
+                  return await gen.generate(args.prompt);
+                } catch (err) {
+                  addLog('error', 'api', `${gen.activityType} failed`, {
+                    error: err instanceof Error ? err.message : 'Unknown',
                   });
-                  return '\n\n*Image generation failed.*';
+                  return gen.failureText;
                 }
               }),
             );
-            imageMarkdown = imageResults.join('');
+            mediaMarkdown += results.join('');
           } finally {
-            setActiveToolCalls((prev) => prev.filter((t) => t !== 'image_generation'));
+            setActiveToolCalls((prev) => prev.filter((t) => t !== gen.activityType));
+            accumulatedAgentActivity = accumulatedAgentActivity.map((a) =>
+              a.toolType === gen.activityType ? completeAgentActivity(a) : a,
+            );
+            setMessages((prev) => {
+              const copy = [...prev];
+              const last = copy[copy.length - 1];
+              if (last?.role === 'assistant') {
+                copy[copy.length - 1] = { ...last, agentActivity: accumulatedAgentActivity };
+              }
+              return copy;
+            });
           }
+
+          // Bail out if the user aborted during generation
+          if (controller.signal.aborted) throw new Error('aborted');
         }
 
         // Build final assistant message
         // If the API returned only tool calls with no text, use a fallback so
         // the empty content doesn't trigger a permanent TypingIndicator.
-        const textContent = result.content + imageMarkdown;
+        const textContent = result.content + mediaMarkdown;
         const finalAssistant: ChatMessage = {
           ...assistantMsg,
           content: textContent || (result.toolCalls.length > 0 ? '*(used tools only)*' : ''),
+          // Preserve agent activity accumulated during streaming
+          ...(accumulatedAgentActivity.length > 0 && {
+            agentActivity: accumulatedAgentActivity,
+          }),
         };
         if (actions.length > 0) finalAssistant.actions = actions;
 
@@ -743,6 +864,16 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
   }, [voiceState, addLog, language]);
   handleVoiceToggleRef.current = handleVoiceToggle;
   sendMessageRef.current = sendMessage;
+
+  /* ─── Listen for "Make it a video" and other programmatic send-message events ─── */
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const text = (e as CustomEvent<{ text: string }>).detail?.text;
+      if (text) sendMessageRef.current?.(text);
+    };
+    window.addEventListener('cybernus:send-message', handler);
+    return () => window.removeEventListener('cybernus:send-message', handler);
+  }, []);
 
   /* ─── Search result handler ─── */
   const handleSearchSelect = useCallback(
