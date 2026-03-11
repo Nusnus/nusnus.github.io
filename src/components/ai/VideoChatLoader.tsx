@@ -53,15 +53,19 @@ export const VideoChatLoader = memo(function VideoChatLoader({
 
   // Cycle through loading messages
   useEffect(() => {
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
     intervalRef.current = setInterval(() => {
       setFadeIn(false);
-      setTimeout(() => {
+      timeoutId = setTimeout(() => {
         setMsgIndex((prev) => (prev + 1) % LOADING_MESSAGES.length);
         setFadeIn(true);
       }, 300);
     }, 3000);
 
-    return () => clearInterval(intervalRef.current);
+    return () => {
+      clearInterval(intervalRef.current);
+      if (timeoutId !== undefined) clearTimeout(timeoutId);
+    };
   }, []);
 
   // Animate dots for progress feel
