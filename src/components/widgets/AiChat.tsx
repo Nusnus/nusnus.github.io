@@ -131,6 +131,13 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
    *  activeSessionId is null on both sides (null === null). */
   const sessionGenRef = useRef(0);
 
+  /** Pending form update from handleFormSubmit, applied atomically in sendMessage. */
+  const pendingFormUpdateRef = useRef<{
+    messageId: string;
+    selectedId: string;
+    customValue?: string;
+  } | null>(null);
+
   /* ─── Debug logging helper ─── */
   const addLog = useCallback(
     (
@@ -387,6 +394,30 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       };
 
       const updated = [...messages, userMsg, assistantMsg];
+
+      // Apply any pending form update (from handleFormSubmit) atomically
+      // so the selectedId isn't lost when setMessages overwrites state.
+      const formUpdate = pendingFormUpdateRef.current;
+      if (formUpdate) {
+        for (let i = 0; i < updated.length; i++) {
+          const m = updated[i];
+          if (m && m.id === formUpdate.messageId && m.form) {
+            updated[i] = {
+              ...m,
+              form: {
+                ...m.form,
+                selectedId: formUpdate.selectedId,
+                ...(formUpdate.customValue !== undefined && {
+                  customValue: formUpdate.customValue,
+                }),
+              },
+            };
+            break;
+          }
+        }
+        pendingFormUpdateRef.current = null;
+      }
+
       setMessages(updated);
       setIsGenerating(true);
       setStreamTokenCount(0);
@@ -916,21 +947,14 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
   /* ─── Form submission handler (ask_user tool) ─── */
   const handleFormSubmit = useCallback(
     (messageId: string, selectedId: string, value: string, customValue?: string) => {
-      // Mark the form as answered in the message
-      setMessages((prev) =>
-        prev.map((m) =>
-          m.id === messageId && m.form
-            ? {
-                ...m,
-                form: {
-                  ...m.form,
-                  selectedId,
-                  ...(customValue !== undefined && { customValue }),
-                },
-              }
-            : m,
-        ),
-      );
+      // Store form update in ref — sendMessage will apply it atomically
+      // when building the updated messages array, preventing the stale
+      // closure from overwriting the selectedId.
+      pendingFormUpdateRef.current = {
+        messageId,
+        selectedId,
+        ...(customValue !== undefined && { customValue }),
+      };
       // Send the selected value as the user's next message
       sendMessage(value);
     },
