@@ -830,26 +830,24 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
         };
         if (actions.length > 0) finalAssistant.actions = actions;
 
-        // Compute final messages directly (don't rely on React state updater
-        // timing — in React 18 batched updates, the updater runs during render,
-        // not synchronously when setState is called)
-        let finalMessages = [...updated.slice(0, -1), finalAssistant];
-
-        // Update UI state (show video + form immediately)
-        setMessages(finalMessages);
-
-        // Video Chat mode: await the TTS promise that was started in parallel with video generation
+        // Video Chat mode: await TTS BEFORE rendering the final message.
+        // TTS was started in parallel with video generation and is typically
+        // faster, so it should be done by now. This ensures the player mounts
+        // with both videoUrl AND audioUrl, preventing silent auto-play.
         if (isVideoChatMode && ttsPromise) {
           const ttsAudioUrl = await ttsPromise;
           if (ttsAudioUrl) {
-            const updatedAssistant: ChatMessage = {
-              ...finalAssistant,
-              videoChatAudioUrl: ttsAudioUrl,
-            };
-            finalMessages = [...updated.slice(0, -1), updatedAssistant];
-            setMessages(finalMessages);
+            finalAssistant.videoChatAudioUrl = ttsAudioUrl;
           }
         }
+
+        // Compute final messages directly (don't rely on React state updater
+        // timing — in React 18 batched updates, the updater runs during render,
+        // not synchronously when setState is called)
+        const finalMessages = [...updated.slice(0, -1), finalAssistant];
+
+        // Update UI state (show video + form + audio together)
+        setMessages(finalMessages);
 
         // Video Chat mode: start pre-generating videos for all options in parallel
         // while the user decides which option to pick. This leverages the user's

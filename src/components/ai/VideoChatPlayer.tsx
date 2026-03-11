@@ -100,20 +100,32 @@ export const VideoChatPlayer = memo(function VideoChatPlayer({
     };
   }, [audioUrl]);
 
-  // Track progress
+  // Track progress based on the LONGER of video/audio duration.
+  // This ensures the progress bar reflects the full experience length.
   useEffect(() => {
     const video = videoRef.current;
+    const audio = audioRef.current;
     if (!video) return;
 
     const onTimeUpdate = () => {
-      if (video.duration > 0) {
-        setProgress(video.currentTime / video.duration);
+      const audioDur = audio?.duration || 0;
+      const videoDur = video.duration || 0;
+      const maxDur = Math.max(videoDur, audioDur) || videoDur;
+
+      if (maxDur > 0) {
+        // When audio is longer, track audio progress; otherwise track video
+        const current = audioDur > videoDur ? (audio?.currentTime ?? 0) : video.currentTime;
+        setProgress(Math.min(current / maxDur, 1));
       }
     };
 
     video.addEventListener('timeupdate', onTimeUpdate);
-    return () => video.removeEventListener('timeupdate', onTimeUpdate);
-  }, [isLoading]);
+    if (audio) audio.addEventListener('timeupdate', onTimeUpdate);
+    return () => {
+      video.removeEventListener('timeupdate', onTimeUpdate);
+      if (audio) audio.removeEventListener('timeupdate', onTimeUpdate);
+    };
+  }, [isLoading, audioUrl]);
 
   // Handle playback completion
   const checkComplete = useCallback(() => {
@@ -135,13 +147,36 @@ export const VideoChatPlayer = memo(function VideoChatPlayer({
   }, [onPlaybackComplete]);
 
   const handleVideoEnd = useCallback(() => {
+    // If TTS audio is still playing, loop the video so it doesn't freeze
+    // on the last frame. The video keeps playing until audio finishes.
+    const audio = audioRef.current;
+    if (audio && !audio.ended && !audio.paused) {
+      const video = videoRef.current;
+      if (video) {
+        video.currentTime = 0;
+        video.play().catch(() => {
+          /* ignore */
+        });
+        return; // Don't check completion yet — audio is still going
+      }
+    }
     checkComplete();
   }, [checkComplete]);
 
   const handleAudioEnd = useCallback(() => {
     setShowCaption(false);
-    checkComplete();
-  }, [checkComplete]);
+    // Pause the (possibly looping) video so it doesn't keep playing after
+    // the voiceover is done, then mark playback as complete.
+    const video = videoRef.current;
+    if (video && !video.ended) {
+      video.pause();
+    }
+    playbackCompleteRef.current = true;
+    setIsPlaying(false);
+    setHasPlayed(true);
+    setProgress(1);
+    onPlaybackComplete?.();
+  }, [onPlaybackComplete]);
 
   // Manual play (when auto-play is blocked)
   const handleManualPlay = useCallback(async () => {
