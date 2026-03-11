@@ -144,6 +144,7 @@ export default function CybernusChat() {
       setActiveSessionIdState(null);
       setMessages(roastMessages);
       const id = saveMessages(roastMessages);
+      setActiveSessionId(id);
       setActiveSessionIdState(id);
     } else {
       const restored = loadMessages();
@@ -188,7 +189,10 @@ export default function CybernusChat() {
     if (persistTimer.current !== null) window.clearTimeout(persistTimer.current);
     persistTimer.current = window.setTimeout(() => {
       const id = saveMessages(messages, activeSessionId ?? undefined);
-      if (id !== activeSessionId) setActiveSessionIdState(id);
+      if (id !== activeSessionId) {
+        setActiveSessionId(id);
+        setActiveSessionIdState(id);
+      }
       setSessions(loadSessions());
     }, 300);
     return () => {
