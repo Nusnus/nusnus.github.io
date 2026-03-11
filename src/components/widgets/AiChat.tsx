@@ -50,6 +50,18 @@ interface AiChatProps {
 
 type EngineState = 'idle' | 'ready';
 
+/** Config for the unified media generation loop (image & video). */
+interface MediaGeneratorConfig {
+  /** Tool call name from the API (e.g. 'generate_image'). */
+  toolName: string;
+  /** Agent activity type for inline display (e.g. 'image_generation'). */
+  activityType: string;
+  /** Async function that takes a prompt and returns markdown content. */
+  generate: (prompt: string) => Promise<string>;
+  /** Fallback text when generation fails. */
+  failureText: string;
+}
+
 /** Maximum number of debug log entries to retain. */
 const MAX_DEBUG_LOGS = 200;
 
@@ -532,54 +544,77 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
           ),
         );
 
-        // Handle image generation tool calls
-        const imageToolCalls = result.toolCalls.filter((tc) => tc.name === 'generate_image');
-        let imageMarkdown = '';
-        if (imageToolCalls.length > 0) {
-          setActiveToolCalls((prev) => [...prev, 'image_generation']);
-          addLog('info', 'api', `Generating ${imageToolCalls.length} image(s)`);
-          // Add inline agent activity for image generation
-          if (!accumulatedAgentActivity.some((a) => a.toolType === 'image_generation')) {
+        // Handle media generation tool calls (image + video)
+        // Both follow the same pattern: filter → activate agent → generate → mark done
+        const mediaGenerators: MediaGeneratorConfig[] = [
+          {
+            toolName: 'generate_image',
+            activityType: 'image_generation',
+            generate: async (prompt) => {
+              const { generateImage } = await import('@lib/ai/cloud');
+              const url = await generateImage(prompt);
+              const safeAlt = prompt.replace(/[[\]()]/g, '');
+              return `\n\n![${safeAlt}](${url})`;
+            },
+            failureText: '\n\n*Image generation failed.*',
+          },
+          {
+            toolName: 'generate_video',
+            activityType: 'video_generation',
+            generate: async (prompt) => {
+              const { generateVideo } = await import('@lib/ai/cloud');
+              const url = await generateVideo(prompt, controller.signal);
+              const safeAlt = prompt.replace(/[[\]()]/g, '');
+              return `\n\n<video>${url}|${safeAlt}</video>`;
+            },
+            failureText: '\n\n*Video generation failed.*',
+          },
+        ];
+
+        let mediaMarkdown = '';
+        for (const gen of mediaGenerators) {
+          const calls = result.toolCalls.filter((tc) => tc.name === gen.toolName);
+          if (calls.length === 0) continue;
+
+          setActiveToolCalls((prev) => [...prev, gen.activityType]);
+          addLog('info', 'api', `Generating ${calls.length} ${gen.activityType}(s)`);
+
+          // Add inline agent activity
+          if (!accumulatedAgentActivity.some((a) => a.toolType === gen.activityType)) {
             accumulatedAgentActivity = [
               ...accumulatedAgentActivity,
-              createAgentActivity('image_generation'),
+              createAgentActivity(gen.activityType),
             ];
           }
           setMessages((prev) => {
             const copy = [...prev];
             const last = copy[copy.length - 1];
             if (last?.role === 'assistant') {
-              copy[copy.length - 1] = {
-                ...last,
-                agentActivity: accumulatedAgentActivity,
-              };
+              copy[copy.length - 1] = { ...last, agentActivity: accumulatedAgentActivity };
             }
             return copy;
           });
+
           try {
-            const { generateImage } = await import('@lib/ai/cloud');
-            const imageResults = await Promise.all(
-              imageToolCalls.map(async (tc) => {
+            const results = await Promise.all(
+              calls.map(async (tc) => {
                 try {
                   const args = JSON.parse(tc.arguments) as { prompt?: string };
                   if (!args.prompt) return '';
-                  const url = await generateImage(args.prompt);
-                  const safeAlt = (args.prompt ?? '').replace(/[[\]()]/g, '');
-                  return `\n\n![${safeAlt}](${url})`;
-                } catch (imgErr) {
-                  addLog('error', 'api', 'Image generation failed', {
-                    error: imgErr instanceof Error ? imgErr.message : 'Unknown',
+                  return await gen.generate(args.prompt);
+                } catch (err) {
+                  addLog('error', 'api', `${gen.activityType} failed`, {
+                    error: err instanceof Error ? err.message : 'Unknown',
                   });
-                  return '\n\n*Image generation failed.*';
+                  return gen.failureText;
                 }
               }),
             );
-            imageMarkdown = imageResults.join('');
+            mediaMarkdown += results.join('');
           } finally {
-            setActiveToolCalls((prev) => prev.filter((t) => t !== 'image_generation'));
-            // Mark image agent as done
+            setActiveToolCalls((prev) => prev.filter((t) => t !== gen.activityType));
             accumulatedAgentActivity = accumulatedAgentActivity.map((a) =>
-              a.toolType === 'image_generation' ? completeAgentActivity(a) : a,
+              a.toolType === gen.activityType ? completeAgentActivity(a) : a,
             );
             setMessages((prev) => {
               const copy = [...prev];
@@ -590,80 +625,15 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
               return copy;
             });
           }
+
+          // Bail out if the user aborted during generation
+          if (controller.signal.aborted) throw new Error('aborted');
         }
-
-        // Bail out if the user aborted during image generation
-        if (controller.signal.aborted) throw new Error('aborted');
-
-        // Handle video generation tool calls
-        const videoToolCalls = result.toolCalls.filter((tc) => tc.name === 'generate_video');
-        let videoMarkdown = '';
-        if (videoToolCalls.length > 0) {
-          setActiveToolCalls((prev) => [...prev, 'video_generation']);
-          addLog('info', 'api', `Generating ${videoToolCalls.length} video(s)`);
-
-          // Add inline agent activity for video generation
-          if (!accumulatedAgentActivity.some((a) => a.toolType === 'video_generation')) {
-            accumulatedAgentActivity = [
-              ...accumulatedAgentActivity,
-              createAgentActivity('video_generation'),
-            ];
-          }
-          setMessages((prev) => {
-            const copy = [...prev];
-            const last = copy[copy.length - 1];
-            if (last?.role === 'assistant') {
-              copy[copy.length - 1] = {
-                ...last,
-                agentActivity: accumulatedAgentActivity,
-              };
-            }
-            return copy;
-          });
-
-          try {
-            const { generateVideo } = await import('@lib/ai/cloud');
-            const videoResults = await Promise.all(
-              videoToolCalls.map(async (tc) => {
-                try {
-                  const args = JSON.parse(tc.arguments) as { prompt?: string };
-                  if (!args.prompt) return '';
-                  const url = await generateVideo(args.prompt, controller.signal);
-                  const safeAlt = (args.prompt ?? '').replace(/[[\]()]/g, '');
-                  return `\n\n<video>${url}|${safeAlt}</video>`;
-                } catch (vidErr) {
-                  addLog('error', 'api', 'Video generation failed', {
-                    error: vidErr instanceof Error ? vidErr.message : 'Unknown',
-                  });
-                  return '\n\n*Video generation failed.*';
-                }
-              }),
-            );
-            videoMarkdown = videoResults.join('');
-          } finally {
-            setActiveToolCalls((prev) => prev.filter((t) => t !== 'video_generation'));
-            // Mark video agent as done
-            accumulatedAgentActivity = accumulatedAgentActivity.map((a) =>
-              a.toolType === 'video_generation' ? completeAgentActivity(a) : a,
-            );
-            setMessages((prev) => {
-              const copy = [...prev];
-              const last = copy[copy.length - 1];
-              if (last?.role === 'assistant') {
-                copy[copy.length - 1] = { ...last, agentActivity: accumulatedAgentActivity };
-              }
-              return copy;
-            });
-          }
-        }
-
-        // Bail out if the user aborted during video generation
-        if (controller.signal.aborted) throw new Error('aborted');
 
         // Build final assistant message
         // If the API returned only tool calls with no text, use a fallback so
         // the empty content doesn't trigger a permanent TypingIndicator.
-        const textContent = result.content + imageMarkdown + videoMarkdown;
+        const textContent = result.content + mediaMarkdown;
         const finalAssistant: ChatMessage = {
           ...assistantMsg,
           content: textContent || (result.toolCalls.length > 0 ? '*(used tools only)*' : ''),

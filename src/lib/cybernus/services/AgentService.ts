@@ -8,6 +8,7 @@
 
 import type { AgentTool, AgentToolCall } from '../types';
 import type { AgentActivityItem } from '@lib/ai/types';
+import type { ToolDefinition } from '@lib/ai/tools';
 
 const STORAGE_KEY = 'cybernus-agent-tools';
 
@@ -22,6 +23,16 @@ interface AgentPersona {
   iconPath: string;
   color: string;
 }
+
+/** Shared persona for DeepWiki / MCP tools. */
+const ARCHIVIST_PERSONA: AgentPersona = {
+  agent: 'Archivist',
+  workingLabel: 'Querying DeepWiki...',
+  doneLabel: 'DeepWiki search complete',
+  iconPath:
+    'M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15z',
+  color: '#ce93d8',
+};
 
 const AGENT_PERSONAS: Record<string, AgentPersona> = {
   web_search: {
@@ -47,23 +58,9 @@ const AGENT_PERSONAS: Record<string, AgentPersona> = {
     iconPath: 'M16 18l6-6-6-6M8 6l-6 6 6 6',
     color: '#a5d6a7',
   },
-  deepwiki: {
-    agent: 'Archivist',
-    workingLabel: 'Querying DeepWiki...',
-    doneLabel: 'DeepWiki search complete',
-    iconPath:
-      'M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15z',
-    color: '#ce93d8',
-  },
-  // MCP calls arrive as 'mcp' (from 'mcp_call' → strip '_call'). Map to Archivist.
-  mcp: {
-    agent: 'Archivist',
-    workingLabel: 'Querying DeepWiki...',
-    doneLabel: 'DeepWiki search complete',
-    iconPath:
-      'M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15z',
-    color: '#ce93d8',
-  },
+  deepwiki: ARCHIVIST_PERSONA,
+  // MCP calls arrive as 'mcp' (from 'mcp_call' → strip '_call'). Alias to same persona.
+  mcp: ARCHIVIST_PERSONA,
   image_generation: {
     agent: 'Vision',
     workingLabel: 'Generating image...',
@@ -204,8 +201,8 @@ export function toggleTool(toolId: string, enabled: boolean): AgentTool[] {
  * Build xAI Responses API tool definitions from enabled agent tools.
  * Returns the tools array to include in the API request.
  */
-export function buildToolDefinitions(tools: AgentTool[]): Record<string, unknown>[] {
-  const definitions: Record<string, unknown>[] = [];
+export function buildToolDefinitions(tools: AgentTool[]): ToolDefinition[] {
+  const definitions: ToolDefinition[] = [];
 
   for (const tool of tools) {
     if (!tool.enabled) continue;

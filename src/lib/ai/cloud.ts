@@ -485,6 +485,9 @@ export async function generateVideo(prompt: string, signal?: AbortSignal): Promi
 
   // Step 2: Poll for completion
   const startTime = Date.now();
+  let consecutiveErrors = 0;
+  const MAX_CONSECUTIVE_ERRORS = 5;
+
   while (Date.now() - startTime < VIDEO_POLL_TIMEOUT_MS) {
     if (signal?.aborted) throw new Error('Video generation aborted');
 
@@ -495,8 +498,17 @@ export async function generateVideo(prompt: string, signal?: AbortSignal): Promi
       signal: signal ?? null,
     });
 
-    if (!statusResponse.ok) continue;
+    if (!statusResponse.ok) {
+      consecutiveErrors++;
+      if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
+        throw new Error(
+          `Video polling failed ${MAX_CONSECUTIVE_ERRORS} times consecutively (HTTP ${statusResponse.status})`,
+        );
+      }
+      continue;
+    }
 
+    consecutiveErrors = 0; // Reset on success
     const statusData = (await statusResponse.json()) as VideoStatusResponse;
 
     if (statusData.status === 'done' && statusData.video?.url) {

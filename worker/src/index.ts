@@ -149,15 +149,12 @@ export default {
       const getPath = new URL(request.url).pathname;
 
       // ── Video status polling (GET /v1/videos/:requestId) ──
+      // Exempt from rate limiting — lightweight status check polled every 5s
       const videoMatch = getPath.match(/^\/v1\/videos\/([a-f0-9-]+)$/);
       if (videoMatch) {
         const requestId = videoMatch[1];
         if (!env.XAI_API_KEY) return jsonResponse({ error: 'Server misconfigured' }, 500, origin);
 
-        const vidPollIP = request.headers.get('CF-Connecting-IP') ?? 'unknown';
-        if (isRateLimited(vidPollIP)) {
-          return jsonResponse({ error: 'Rate limit exceeded. Try again shortly.' }, 429, origin);
-        }
         try {
           const xaiRes = await fetch(`${XAI_VIDEOS_STATUS_URL}/${requestId}`, {
             method: 'GET',
