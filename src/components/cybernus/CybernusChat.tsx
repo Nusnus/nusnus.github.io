@@ -348,6 +348,7 @@ export default function CybernusChat() {
     clearAllSessions();
     setSessions([]);
     setMessages([]);
+    setActiveSessionId(null);
     setActiveSessionIdState(null);
     setError('');
     setSidebarOpen(false);
