@@ -1065,6 +1065,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
 
   const exitVideoChat = useCallback(() => {
     setIsVideoChatMode(false);
+    sessionGenRef.current++;
     abortRef.current?.abort();
     setIsGenerating(false);
     setMessages([]);
