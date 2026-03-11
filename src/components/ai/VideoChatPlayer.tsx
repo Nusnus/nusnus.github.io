@@ -113,7 +113,7 @@ export const VideoChatPlayer = memo(function VideoChatPlayer({
 
     video.addEventListener('timeupdate', onTimeUpdate);
     return () => video.removeEventListener('timeupdate', onTimeUpdate);
-  }, []);
+  }, [isLoading]);
 
   // Handle playback completion
   const checkComplete = useCallback(() => {

@@ -1038,22 +1038,29 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
   );
 
   /* ─── Video Chat mode handlers ─── */
+  const videoChatPendingStartRef = useRef(false);
+
   const startVideoChat = useCallback(() => {
     // Set up video chat mode
     setIsVideoChatMode(true);
     setEngineState('ready');
     setMessages([]);
+    videoChatPendingStartRef.current = true;
 
-    // Send the initial trigger message (hidden) to kick off the first video response
-    setTimeout(() => {
+    addLog('info', 'session', 'Video Chat mode started');
+  }, [addLog]);
+
+  // Send the initial trigger message once React has re-rendered with isVideoChatMode=true,
+  // guaranteeing the sendMessage closure includes VIDEO_CHAT_SYSTEM_PROMPT.
+  useEffect(() => {
+    if (isVideoChatMode && videoChatPendingStartRef.current) {
+      videoChatPendingStartRef.current = false;
       sendMessageRef.current?.(
         'Start the video chat. Introduce yourself as Cybernus with a compelling cinematic opening.',
         { hidden: true },
       );
-    }, 100);
-
-    addLog('info', 'session', 'Video Chat mode started');
-  }, [addLog]);
+    }
+  }, [isVideoChatMode]);
 
   const exitVideoChat = useCallback(() => {
     setIsVideoChatMode(false);

@@ -169,7 +169,7 @@ export const VideoChatView = memo(function VideoChatView({
             {isWaitingForVideo && !latestVideoMsg && <VideoChatLoader variant="initial" />}
 
             {/* Video player */}
-            {latestVideoMsg && (
+            {latestVideoMsg && !isVideoFailed && (
               <VideoChatPlayer
                 key={latestVideoMsg.id}
                 videoUrl={latestVideoMsg.videoChatUrl ?? ''}
