@@ -867,6 +867,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
 
   /* ─── Session management ─── */
   const clearChat = useCallback(() => {
+    setIsVideoChatMode(false);
     // Save current messages before clearing so the session persists in history
     if (messages.length > 0 && messages.some((m) => m.role === 'user')) {
       saveMessages(messages, activeSessionId ?? undefined);
@@ -887,6 +888,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
 
   const switchSession = useCallback(
     (session: ChatSession) => {
+      setIsVideoChatMode(false);
       // Increment generation counter and update ref before aborting
       sessionGenRef.current++;
       activeSessionIdRef.current = session.id;
@@ -907,6 +909,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       deleteSession(sessionId);
       setSessions(loadSessions());
       if (activeSessionId === sessionId) {
+        setIsVideoChatMode(false);
         sessionGenRef.current++;
         activeSessionIdRef.current = null;
         abortRef.current?.abort();
@@ -922,6 +925,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
   );
 
   const handleClearAll = useCallback(() => {
+    setIsVideoChatMode(false);
     sessionGenRef.current++;
     activeSessionIdRef.current = null;
     abortRef.current?.abort();
