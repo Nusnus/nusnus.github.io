@@ -4,10 +4,10 @@
     "fullName": "celery/celery",
     "description": "Distributed Task Queue (development branch)",
     "htmlUrl": "https://github.com/celery/celery",
-    "stars": 28255,
-    "forks": 4987,
-    "openIssues": 775,
-    "lastPush": "2026-03-09T16:53:23Z",
+    "stars": 28263,
+    "forks": 4988,
+    "openIssues": 771,
+    "lastPush": "2026-03-10T15:04:28Z",
     "language": "Python",
     "role": "owner",
     "contributorRank": 3
@@ -30,12 +30,12 @@
     "fullName": "celery/kombu",
     "description": "Messaging library for Python.",
     "htmlUrl": "https://github.com/celery/kombu",
-    "stars": 3106,
-    "forks": 987,
-    "openIssues": 230,
-    "lastPush": "2026-03-09T16:53:30Z",
+    "stars": 3108,
+    "forks": 988,
+    "openIssues": 231,
+    "lastPush": "2026-03-10T15:19:44Z",
     "language": "Python",
     "role": "owner",
-    "contributorRank": 6
+    "contributorRank": 7
   }
 ]
