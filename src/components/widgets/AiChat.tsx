@@ -43,6 +43,8 @@ import { getLanguage, setLanguage as setStoredLanguage, LANGUAGES, t } from '@li
 import type { Language } from '@lib/ai/i18n';
 import { VoiceSession, isVoiceSupported } from '@lib/ai/voice';
 import type { VoiceState } from '@lib/ai/voice';
+import { VideoChatView } from '@components/ai/VideoChatView';
+import { VIDEO_CHAT_SYSTEM_PROMPT } from '@lib/ai/cloud-context';
 
 interface AiChatProps {
   systemPrompt: string;
@@ -97,6 +99,9 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
   const [showSearch, setShowSearch] = useState(false);
   const [showAgentPanel, setShowAgentPanel] = useState(false);
   const [activeToolCalls, setActiveToolCalls] = useState<string[]>([]);
+
+  /* ─── Video Chat mode ─── */
+  const [isVideoChatMode, setIsVideoChatMode] = useState(false);
 
   /* ─── Voice state ─── */
   const [voiceState, setVoiceState] = useState<VoiceState>('idle');
@@ -453,7 +458,10 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
         });
 
         const fullHistory = [
-          { role: 'system' as const, content: systemPrompt + context },
+          {
+            role: 'system' as const,
+            content: systemPrompt + context + (isVideoChatMode ? VIDEO_CHAT_SYSTEM_PROMPT : ''),
+          },
           ...(await buildVisualReferenceMessage().then((m) => (m ? [m] : []))),
           ...chatHistory,
         ];
@@ -591,6 +599,8 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
 
         // Handle media generation tool calls (image + video)
         // Both follow the same pattern: filter → activate agent → generate → mark done
+        // In Video Chat mode, video URLs are captured separately (not embedded in markdown).
+        let videoChatVideoUrl: string | undefined;
         const mediaGenerators: MediaGeneratorConfig[] = [
           {
             toolName: 'generate_image',
@@ -609,10 +619,15 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
             generate: async (prompt) => {
               const { generateVideo } = await import('@lib/ai/cloud');
               const url = await generateVideo(prompt, controller.signal);
+              // In video chat mode, capture URL for the VideoChatPlayer
+              if (isVideoChatMode) {
+                videoChatVideoUrl = url;
+                return ''; // Don't embed in markdown
+              }
               const safeAlt = prompt.replace(/[[\]()]/g, '');
               return `\n\n<video>${url}|${safeAlt}</video>`;
             },
-            failureText: '\n\n*Video generation failed.*',
+            failureText: isVideoChatMode ? '' : '\n\n*Video generation failed.*',
           },
         ];
 
@@ -734,16 +749,44 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
           }),
           // Attach form if ask_user was called
           ...(formData && { form: formData }),
+          // Video Chat mode fields
+          ...(isVideoChatMode && videoChatVideoUrl && { videoChatUrl: videoChatVideoUrl }),
+          ...(isVideoChatMode &&
+            result.content.trim() && { videoChatSpokenText: result.content.trim() }),
         };
         if (actions.length > 0) finalAssistant.actions = actions;
 
         // Compute final messages directly (don't rely on React state updater
         // timing — in React 18 batched updates, the updater runs during render,
         // not synchronously when setState is called)
-        const finalMessages = [...updated.slice(0, -1), finalAssistant];
+        let finalMessages = [...updated.slice(0, -1), finalAssistant];
 
-        // Update UI state
+        // Update UI state (show video + form immediately)
         setMessages(finalMessages);
+
+        // Video Chat mode: generate TTS voiceover for the spoken text
+        if (isVideoChatMode && result.content.trim()) {
+          try {
+            addLog('info', 'api', 'Generating TTS for video chat voiceover');
+            const { textToSpeech } = await import('@lib/cybernus/services/VoiceService');
+            const audioElement = await textToSpeech(result.content.trim(), controller.signal);
+            // Convert the audio element's src to an accessible URL
+            const ttsAudioUrl = audioElement.src;
+            // Update the final assistant message with the audio URL
+            const updatedAssistant: ChatMessage = {
+              ...finalAssistant,
+              videoChatAudioUrl: ttsAudioUrl,
+            };
+            finalMessages = [...updated.slice(0, -1), updatedAssistant];
+            setMessages(finalMessages);
+            addLog('info', 'api', 'TTS voiceover generated for video chat');
+          } catch (ttsErr) {
+            addLog('warn', 'api', 'TTS generation failed for video chat', {
+              error: ttsErr instanceof Error ? ttsErr.message : 'Unknown',
+            });
+            // Continue without TTS — video will play silently
+          }
+        }
 
         // Persist to localStorage
         // Skip save if a session-changing operation occurred during streaming
@@ -807,7 +850,16 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
         }
       }
     },
-    [messages, isGenerating, systemPrompt, selectedCloudModelId, personality, language, addLog],
+    [
+      messages,
+      isGenerating,
+      systemPrompt,
+      selectedCloudModelId,
+      personality,
+      language,
+      addLog,
+      isVideoChatMode,
+    ],
   );
 
   /* ─── Session management ─── */
@@ -982,6 +1034,32 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
     },
     [sendMessage, messages],
   );
+
+  /* ─── Video Chat mode handlers ─── */
+  const startVideoChat = useCallback(() => {
+    // Set up video chat mode
+    setIsVideoChatMode(true);
+    setEngineState('ready');
+    setMessages([]);
+
+    // Send the initial trigger message (hidden) to kick off the first video response
+    setTimeout(() => {
+      sendMessageRef.current?.(
+        'Start the video chat. Introduce yourself as Cybernus with a compelling cinematic opening.',
+      );
+    }, 100);
+
+    addLog('info', 'session', 'Video Chat mode started');
+  }, [addLog]);
+
+  const exitVideoChat = useCallback(() => {
+    setIsVideoChatMode(false);
+    abortRef.current?.abort();
+    setIsGenerating(false);
+    setMessages([]);
+    setEngineState('idle');
+    addLog('info', 'session', 'Video Chat mode exited');
+  }, [addLog]);
 
   /* ─── Listen for "Make it a video" and other programmatic send-message events ─── */
   useEffect(() => {
@@ -1215,7 +1293,15 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
 
       {/* Main content area */}
       <div className="flex min-w-0 flex-1 flex-col">
-        {engineState === 'idle' ? (
+        {isVideoChatMode ? (
+          /* ─── Video Chat mode ─── */
+          <VideoChatView
+            messages={messages}
+            isGenerating={isGenerating}
+            onFormSubmit={handleFormSubmit}
+            onExit={exitVideoChat}
+          />
+        ) : engineState === 'idle' ? (
           /* ─── Idle screen ─── */
           <>
             {/* Mobile header for idle */}
@@ -1244,6 +1330,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
               hasSavedChat={getActiveSessionId() !== null}
               onContinue={() => initEngine(true)}
               onNewChat={() => initEngine(false)}
+              onStartVideoChat={startVideoChat}
               language={language}
             />
           </>

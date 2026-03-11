@@ -394,6 +394,36 @@
   animation-delay: var(--float-delay, 0s);
 }
 
+/* ─── Video Chat Animations ─── */
+
+@keyframes video-chat-options-appear {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.video-chat-options-appear {
+  animation: video-chat-options-appear 400ms ease-out both;
+}
+
+@keyframes video-chat-caption {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.video-chat-caption {
+  animation: video-chat-caption 500ms ease-out both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .matrix-rain-char,
   .cybernus-scan-line::after,
@@ -407,7 +437,9 @@
   .cybernus-fade-in-up,
   .cybernus-fade-in,
   .ide-step-appear,
-  .chat-form-appear {
+  .chat-form-appear,
+  .video-chat-options-appear,
+  .video-chat-caption {
     animation: none;
     opacity: 1;
   }

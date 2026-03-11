@@ -62,6 +62,12 @@ export interface ChatMessage {
   agentActivity?: AgentActivityItem[];
   /** Dynamic in-chat form for user interaction (populated by `ask_user` tool). */
   form?: ChatForm;
+  /** Video Chat mode: URL of the generated video for this message. */
+  videoChatUrl?: string;
+  /** Video Chat mode: object URL of the TTS audio for voiceover. */
+  videoChatAudioUrl?: string;
+  /** Video Chat mode: the spoken text (used for TTS generation). */
+  videoChatSpokenText?: string;
 }
 
 /** A client-side action the assistant can suggest. */
