@@ -432,7 +432,13 @@ function ExpandedMarkdownView({
             const isLastAssistant = !isUser && msgIndex === messages.length - 1;
             const isStreamingMsg = isGenerating && isLastAssistant;
 
-            if (!msg.content && !msg.searchStatus && !msg.agentActivity?.length && !isStreamingMsg)
+            if (
+              !msg.content &&
+              !msg.searchStatus &&
+              !msg.agentActivity?.length &&
+              !msg.form &&
+              !isStreamingMsg
+            )
               return null;
 
             return (
@@ -493,7 +499,7 @@ function ExpandedMarkdownView({
                         <InlineAgentActivity items={msg.agentActivity} />
                       )}
 
-                      {!msg.content ? (
+                      {!msg.content && !msg.form ? (
                         isStreamingMsg ? (
                           <ThinkingIndicator />
                         ) : msg.agentActivity?.length ? null : (
@@ -689,7 +695,7 @@ const MessageItem = memo(function MessageItem({
               <InlineAgentActivity items={msg.agentActivity} />
             )}
 
-            {!msg.content ? (
+            {!msg.content && !msg.form ? (
               isStreaming ? (
                 <ThinkingIndicator />
               ) : msg.agentActivity?.length ? null : (

@@ -97,6 +97,6 @@ export const SUGGESTED_QUESTIONS: readonly {
     icon: '🎨',
     label: 'Draw Me',
     prompt:
-      'I want a portrait of Tomer Nosrati — the architect of the Matrix. Before you create anything, ask me what format I prefer using the ask_user tool: photo portrait, video portrait, or photo first then animate it into a video.',
+      'I want a portrait of Tomer Nosrati — the architect of the Matrix. Before creating, ask me what format I prefer: photo, video, or photo first then animate to video.',
   },
 ];
