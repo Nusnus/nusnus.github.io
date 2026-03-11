@@ -1085,10 +1085,20 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
   sendMessageRef.current = sendMessage;
 
   /* ─── Video Chat: parallel pre-generation of option videos ─── */
+
+  /** Revoke any blob URLs in the pre-gen cache to prevent memory leaks. */
+  const revokePreGenBlobUrls = () => {
+    for (const result of preGenCacheRef.current.values()) {
+      if (result.audioUrl?.startsWith('blob:')) {
+        URL.revokeObjectURL(result.audioUrl);
+      }
+    }
+  };
   const startOptionsPreGen = useCallback(
     (options: ChatFormOption[], historyMessages: ChatMessage[]) => {
       // Cancel any existing pre-gen tasks
       for (const ctrl of preGenControllersRef.current.values()) ctrl.abort();
+      revokePreGenBlobUrls();
       preGenCacheRef.current.clear();
       preGenControllersRef.current.clear();
       preGenPromisesRef.current.clear();
@@ -1262,6 +1272,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
           setActiveSession(sid);
           setSessions(loadSessions());
           // Clean up pre-gen refs
+          revokePreGenBlobUrls();
           preGenCacheRef.current.clear();
           preGenControllersRef.current.clear();
           preGenPromisesRef.current.clear();
@@ -1310,8 +1321,14 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
             }),
           );
           setIsGenerating(true);
+          const genAtWait = sessionGenRef.current;
           promise
             .then((result) => {
+              // Guard against stale callbacks after session-changing operations
+              if (sessionGenRef.current !== genAtWait) {
+                setIsGenerating(false);
+                return;
+              }
               if (result?.videoUrl) {
                 applyResult(result);
               } else {
@@ -1319,6 +1336,10 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
               }
             })
             .catch(() => {
+              if (sessionGenRef.current !== genAtWait) {
+                setIsGenerating(false);
+                return;
+              }
               fallback();
             });
           return;
@@ -1370,6 +1391,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
     setIsVideoChatMode(false);
     // Cancel all pre-generation tasks
     for (const ctrl of preGenControllersRef.current.values()) ctrl.abort();
+    revokePreGenBlobUrls();
     preGenCacheRef.current.clear();
     preGenControllersRef.current.clear();
     preGenPromisesRef.current.clear();
