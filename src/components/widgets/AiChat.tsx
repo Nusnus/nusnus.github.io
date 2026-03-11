@@ -1271,8 +1271,17 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
           const sid = saveMessages(finalMessages, activeSessionIdRef.current ?? undefined);
           setActiveSession(sid);
           setSessions(loadSessions());
-          // Clean up pre-gen refs
-          revokePreGenBlobUrls();
+          // Clean up pre-gen refs (skip selected option's audio — it's now owned by the player)
+          const selectedAudioUrl = result.audioUrl;
+          for (const cachedResult of preGenCacheRef.current.values()) {
+            if (
+              cachedResult.audioUrl &&
+              cachedResult.audioUrl !== selectedAudioUrl &&
+              cachedResult.audioUrl.startsWith('blob:')
+            ) {
+              URL.revokeObjectURL(cachedResult.audioUrl);
+            }
+          }
           preGenCacheRef.current.clear();
           preGenControllersRef.current.clear();
           preGenPromisesRef.current.clear();
