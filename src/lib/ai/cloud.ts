@@ -259,6 +259,8 @@ function labelForToolItem(itemType: string, serverLabel?: string): string | null
   switch (itemType) {
     case 'web_search_call':
       return 'Web search';
+    case 'x_search_call':
+      return 'X search';
     case 'code_interpreter_call':
       return 'Python';
     case 'mcp_call':
