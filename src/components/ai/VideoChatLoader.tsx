@@ -3,8 +3,8 @@
  *
  * Shown while the AI generates a video response (10-30 seconds).
  * Features rotating cinematic messages, animated film-strip frames,
- * pulsing glow effects, and a progress-like animation to keep users
- * engaged during the wait.
+ * pulsing glow effects, and a fake estimated-time progress bar to
+ * keep users engaged during the wait.
  */
 
 import { useState, useEffect, memo, useRef } from 'react';
@@ -21,6 +21,9 @@ const LOADING_MESSAGES = [
   'Curating the story...',
   'Assembling the sequence...',
 ];
+
+/** Estimated total generation time in seconds. Progress bar fills to ~90% over this period. */
+const ESTIMATED_DURATION_S = 25;
 
 /** Film strip frame — a single decorative frame */
 function FilmFrame({ delay, side }: { delay: number; side: 'left' | 'right' }) {
@@ -48,33 +51,55 @@ export const VideoChatLoader = memo(function VideoChatLoader({
     Math.floor(Math.random() * LOADING_MESSAGES.length),
   );
   const [fadeIn, setFadeIn] = useState(true);
-  const [dots, setDots] = useState(0);
-  const intervalRef = useRef<ReturnType<typeof setInterval>>(undefined);
+  const [progress, setProgress] = useState(0);
+  const [elapsedS, setElapsedS] = useState(0);
+  const startTimeRef = useRef(0);
+
+  // Initialize startTime once on mount (avoid impure Date.now() in render)
+  useEffect(() => {
+    startTimeRef.current = Date.now();
+  }, []);
 
   // Cycle through loading messages
   useEffect(() => {
-    let timeoutId: ReturnType<typeof setTimeout> | undefined;
-    intervalRef.current = setInterval(() => {
+    const timeoutIds: ReturnType<typeof setTimeout>[] = [];
+    const intervalId = setInterval(() => {
       setFadeIn(false);
-      timeoutId = setTimeout(() => {
+      const tid = setTimeout(() => {
         setMsgIndex((prev) => (prev + 1) % LOADING_MESSAGES.length);
         setFadeIn(true);
       }, 300);
+      timeoutIds.push(tid);
     }, 3000);
 
     return () => {
-      clearInterval(intervalRef.current);
-      if (timeoutId !== undefined) clearTimeout(timeoutId);
+      clearInterval(intervalId);
+      timeoutIds.forEach((tid) => clearTimeout(tid));
     };
   }, []);
 
-  // Animate dots for progress feel
+  // Fake progress bar: fills to ~92% over ESTIMATED_DURATION_S using easeOutQuart,
+  // then crawls very slowly. Jumps to 100% only when the component unmounts (video arrives).
   useEffect(() => {
-    const dotInterval = setInterval(() => {
-      setDots((prev) => (prev + 1) % 4);
-    }, 500);
-    return () => clearInterval(dotInterval);
+    const tick = () => {
+      const elapsed = (Date.now() - startTimeRef.current) / 1000;
+      const ratio = Math.min(elapsed / ESTIMATED_DURATION_S, 1);
+      // easeOutQuart: fast start, slow finish — feels natural
+      const eased = 1 - Math.pow(1 - ratio, 4);
+      // Cap at 92% and then crawl slowly beyond the estimate
+      const capped = eased * 0.92;
+      const crawl = ratio >= 1 ? Math.min((elapsed - ESTIMATED_DURATION_S) * 0.002, 0.07) : 0;
+      setProgress(Math.min(capped + crawl, 0.99));
+      setElapsedS(Math.round(elapsed));
+    };
+
+    const id = setInterval(tick, 200);
+    tick();
+    return () => clearInterval(id);
   }, []);
+
+  const pct = Math.round(progress * 100);
+  const remaining = Math.max(0, ESTIMATED_DURATION_S - elapsedS);
 
   return (
     <div className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-2xl border border-[#00ff41]/10 bg-[#0a0a0a]">
@@ -149,20 +174,6 @@ export const VideoChatLoader = memo(function VideoChatLoader({
           >
             {LOADING_MESSAGES[msgIndex]}
           </span>
-
-          {/* Animated dots */}
-          <div className="flex items-center gap-1.5">
-            {[0, 1, 2].map((i) => (
-              <div
-                key={i}
-                className="h-1 w-1 rounded-full transition-all duration-300"
-                style={{
-                  backgroundColor: i < dots ? 'rgba(0, 255, 65, 0.6)' : 'rgba(0, 255, 65, 0.15)',
-                  transform: i < dots ? 'scale(1.2)' : 'scale(1)',
-                }}
-              />
-            ))}
-          </div>
         </div>
 
         {/* Subtitle text */}
@@ -173,9 +184,17 @@ export const VideoChatLoader = memo(function VideoChatLoader({
         </span>
       </div>
 
-      {/* Bottom shimmer bar — fake progress feel */}
-      <div className="absolute inset-x-0 bottom-0 h-0.5 overflow-hidden bg-white/[0.03]">
-        <div className="video-chat-loader-shimmer h-full w-1/3 bg-gradient-to-r from-transparent via-[#00ff41]/30 to-transparent" />
+      {/* Progress bar — fake estimated-time progress */}
+      <div className="absolute inset-x-0 bottom-0 h-1.5 overflow-hidden bg-white/[0.05]">
+        <div
+          className="h-full bg-gradient-to-r from-[#00ff41]/60 via-[#00ff41] to-[#00ff41]/60 transition-[width] duration-500 ease-out"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      {/* Progress percentage + ETA */}
+      <div className="absolute right-3 bottom-3 flex items-center gap-2 text-[10px] text-white/30 sm:right-4 sm:bottom-3.5 sm:text-xs">
+        <span>{pct}%</span>
+        {remaining > 0 && <span>~{remaining}s</span>}
       </div>
     </div>
   );

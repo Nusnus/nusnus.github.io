@@ -203,13 +203,7 @@ export const VideoChatView = memo(function VideoChatView({
             )}
 
             {/* Generating next video indicator */}
-            {isGenerating && isFormAnswered && (
-              <div className="mt-6 flex items-center justify-center gap-3">
-                <div className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#00ff41]/60 [animation-delay:0ms]" />
-                <div className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#00ff41]/50 [animation-delay:150ms]" />
-                <div className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#00ff41]/40 [animation-delay:300ms]" />
-              </div>
-            )}
+            {isGenerating && isFormAnswered && <VideoChatLoader variant="generating" />}
           </div>
 
           {/* Options area */}

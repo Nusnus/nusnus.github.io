@@ -604,6 +604,40 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
         // Both follow the same pattern: filter → activate agent → generate → mark done
         // In Video Chat mode, video URLs are captured separately (not embedded in markdown).
         let videoChatVideoUrl: string | undefined;
+
+        // Video Chat mode: start TTS generation in PARALLEL with video generation.
+        // We have the text content already from the AI stream — no need to wait for video.
+        let ttsPromise: Promise<string | undefined> | undefined;
+        if (isVideoChatMode && result.content.trim()) {
+          ttsPromise = (async () => {
+            try {
+              addLog('info', 'api', 'Generating TTS for video chat voiceover (parallel)');
+              const { textToSpeech } = await import('@lib/cybernus/services/VoiceService');
+              const audioElement = await textToSpeech(result.content.trim(), controller.signal);
+              addLog('info', 'api', 'TTS voiceover generated for video chat');
+              return audioElement.src;
+            } catch (ttsErr) {
+              addLog('warn', 'api', 'TTS generation failed for video chat', {
+                error: ttsErr instanceof Error ? ttsErr.message : 'Unknown',
+              });
+              return undefined;
+            }
+          })();
+
+          // Update message with spoken text immediately so the UI shows the loader
+          setMessages((prev) => {
+            const copy = [...prev];
+            const last = copy[copy.length - 1];
+            if (last?.role === 'assistant') {
+              copy[copy.length - 1] = {
+                ...last,
+                videoChatSpokenText: result.content.trim(),
+              };
+            }
+            return copy;
+          });
+        }
+
         const mediaGenerators: MediaGeneratorConfig[] = [
           {
             toolName: 'generate_image',
@@ -767,27 +801,16 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
         // Update UI state (show video + form immediately)
         setMessages(finalMessages);
 
-        // Video Chat mode: generate TTS voiceover for the spoken text
-        if (isVideoChatMode && result.content.trim()) {
-          try {
-            addLog('info', 'api', 'Generating TTS for video chat voiceover');
-            const { textToSpeech } = await import('@lib/cybernus/services/VoiceService');
-            const audioElement = await textToSpeech(result.content.trim(), controller.signal);
-            // Convert the audio element's src to an accessible URL
-            const ttsAudioUrl = audioElement.src;
-            // Update the final assistant message with the audio URL
+        // Video Chat mode: await the TTS promise that was started in parallel with video generation
+        if (isVideoChatMode && ttsPromise) {
+          const ttsAudioUrl = await ttsPromise;
+          if (ttsAudioUrl) {
             const updatedAssistant: ChatMessage = {
               ...finalAssistant,
               videoChatAudioUrl: ttsAudioUrl,
             };
             finalMessages = [...updated.slice(0, -1), updatedAssistant];
             setMessages(finalMessages);
-            addLog('info', 'api', 'TTS voiceover generated for video chat');
-          } catch (ttsErr) {
-            addLog('warn', 'api', 'TTS generation failed for video chat', {
-              error: ttsErr instanceof Error ? ttsErr.message : 'Unknown',
-            });
-            // Continue without TTS — video will play silently
           }
         }
 
