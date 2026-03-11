@@ -510,14 +510,14 @@ function ExpandedMarkdownView({
                         )
                       ) : isUser ? (
                         <p className="whitespace-pre-wrap">{msg.displayContent ?? msg.content}</p>
-                      ) : (
+                      ) : msg.content ? (
                         <AssistantContent
                           content={msg.content}
                           isStreaming={isStreamingMsg}
                           onSendMessage={onSendMessage}
                           isGenerating={isGenerating}
                         />
-                      )}
+                      ) : null}
                     </div>
 
                     {msg.actions && msg.actions.length > 0 && (
@@ -715,7 +715,7 @@ const MessageItem = memo(function MessageItem({
               ) : msg.agentActivity?.length ? null : (
                 <TypingIndicator />
               )
-            ) : !isUser ? (
+            ) : !isUser && msg.content ? (
               <div
                 role="button"
                 tabIndex={0}
@@ -743,9 +743,9 @@ const MessageItem = memo(function MessageItem({
                   isGenerating={isGenerating}
                 />
               </div>
-            ) : (
+            ) : isUser ? (
               <p className="whitespace-pre-wrap">{msg.displayContent ?? msg.content}</p>
-            )}
+            ) : null}
           </div>
 
           {/* Tool action buttons */}
