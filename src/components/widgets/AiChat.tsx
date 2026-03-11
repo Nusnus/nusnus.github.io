@@ -111,7 +111,9 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
   const voiceStateRef = useRef(voiceState);
   voiceStateRef.current = voiceState;
   const handleVoiceToggleRef = useRef<(() => void) | null>(null);
-  const sendMessageRef = useRef<((text: string) => void) | null>(null);
+  const sendMessageRef = useRef<
+    ((text: string, options?: { displayText?: string; hidden?: boolean }) => void) | null
+  >(null);
   const transcriptPreviewRef = useRef(transcriptPreview);
   transcriptPreviewRef.current = transcriptPreview;
   const inputRef_value = useRef(input);
@@ -1046,6 +1048,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
     setTimeout(() => {
       sendMessageRef.current?.(
         'Start the video chat. Introduce yourself as Cybernus with a compelling cinematic opening.',
+        { hidden: true },
       );
     }, 100);
 

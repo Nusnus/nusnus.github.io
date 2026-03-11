@@ -59,6 +59,9 @@ export const VideoChatView = memo(function VideoChatView({
   const isVideoLoading =
     isGenerating && !!latestVideoMsg?.videoChatSpokenText && !latestVideoMsg?.videoChatUrl;
 
+  // Check if video generation failed (generation finished but no video URL)
+  const isVideoFailed = !isGenerating && !!latestVideoMsg && !latestVideoMsg.videoChatUrl;
+
   // Reset playback state when a new video message arrives
   // This is the React-recommended "derive state from props" pattern.
   const [trackedVideoId, setTrackedVideoId] = useState<string | null>(null);
@@ -116,9 +119,11 @@ export const VideoChatView = memo(function VideoChatView({
     [handleOtherSubmit],
   );
 
-  // Show options after playback or if already answered
+  // Show options after playback, if video failed, or if already answered
   const showOptions =
-    (playbackDone || isFormAnswered) && latestForm && latestForm.options.length > 0;
+    (playbackDone || isFormAnswered || isVideoFailed) &&
+    latestForm &&
+    latestForm.options.length > 0;
 
   return (
     <div className="flex h-full flex-col bg-black">
@@ -170,9 +175,31 @@ export const VideoChatView = memo(function VideoChatView({
                 videoUrl={latestVideoMsg.videoChatUrl ?? ''}
                 audioUrl={latestVideoMsg.videoChatAudioUrl}
                 spokenText={latestVideoMsg.videoChatSpokenText}
-                isLoading={isVideoLoading || !latestVideoMsg.videoChatUrl}
+                isLoading={(isVideoLoading || !latestVideoMsg.videoChatUrl) && isGenerating}
                 onPlaybackComplete={handlePlaybackComplete}
               />
+            )}
+
+            {/* Video generation failed — show error with spoken text fallback */}
+            {isVideoFailed && (
+              <div className="mt-4 flex flex-col items-center gap-3 rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-5">
+                <svg
+                  className="h-6 w-6 text-red-400/60"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                >
+                  <path d="M23 7l-7 5 7 5V7zM14 5H3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z" />
+                  <line x1="4" y1="4" x2="20" y2="20" strokeWidth="2" />
+                </svg>
+                <span className="text-sm text-white/50">Video generation failed</span>
+                {latestVideoMsg.videoChatSpokenText && (
+                  <p className="mt-1 text-center text-sm leading-relaxed text-white/70">
+                    {latestVideoMsg.videoChatSpokenText}
+                  </p>
+                )}
+              </div>
             )}
 
             {/* Generating next video indicator */}
