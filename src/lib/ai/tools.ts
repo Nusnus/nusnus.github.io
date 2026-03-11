@@ -123,6 +123,7 @@ const DEEPWIKI_MCP: ToolDefinition = {
  */
 export const CYBERNUS_TOOLS: readonly ToolDefinition[] = [
   { type: 'web_search' },
+  { type: 'x_search' },
   { type: 'code_interpreter' },
   DEEPWIKI_MCP,
   ...FUNCTION_TOOLS,
