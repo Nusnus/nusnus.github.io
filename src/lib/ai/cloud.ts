@@ -10,12 +10,28 @@
  * This module is only used when the "Cloud" provider is selected.
  */
 
+import { WORKER_BASE_URL } from '@config';
 import { CLOUD_PROXY_URL, CLOUD_GENERATION_CONFIG } from './config';
 import type { ToolDefinition, ToolCallResult } from './tools';
 
+/* ─── Content parts (multi-modal messages) ─── */
+
+export interface TextContentPart {
+  type: 'input_text';
+  text: string;
+}
+
+export interface ImageContentPart {
+  type: 'input_image';
+  image_url: string;
+  detail?: 'low' | 'high' | 'auto';
+}
+
+export type ContentPart = TextContentPart | ImageContentPart;
+
 export interface CloudMessage {
   role: 'system' | 'user' | 'assistant';
-  content: string;
+  content: string | ContentPart[];
 }
 
 /** Optional parameters for cloud chat requests. */
@@ -418,4 +434,129 @@ export async function cloudChatStream(
     toolCalls,
     ...(reasoningTokens > 0 && { reasoningTokens }),
   };
+}
+
+/* ─── Image Generation ─── */
+
+interface ImageGenerationResponse {
+  data?: { url: string }[];
+  error?: { message: string };
+}
+
+/**
+ * Generate an image via the xAI image generation API through the worker proxy.
+ * Returns the temporary URL of the generated image.
+ */
+export async function generateImage(prompt: string): Promise<string> {
+  const response = await fetch(`${WORKER_BASE_URL}/v1/images/generations`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt, response_format: 'url' }),
+  });
+
+  if (!response.ok) {
+    let errorMessage = `Image generation failed (${response.status})`;
+    try {
+      const data = (await response.json()) as ImageGenerationResponse;
+      if (data.error?.message) errorMessage = data.error.message;
+    } catch {
+      // Use default error message
+    }
+    throw new Error(errorMessage);
+  }
+
+  const data = (await response.json()) as ImageGenerationResponse;
+  const url = data.data?.[0]?.url;
+  if (!url) throw new Error('No image URL returned');
+  return url;
+}
+
+/* ─── Video Generation ─── */
+
+interface VideoGenerationStartResponse {
+  request_id?: string;
+  error?: { message: string };
+}
+
+interface VideoStatusResponse {
+  status: 'pending' | 'done' | 'expired';
+  video?: { url: string; duration: number };
+  error?: { message: string };
+}
+
+/** Maximum polling time for video generation (3 minutes). */
+const VIDEO_POLL_TIMEOUT_MS = 180_000;
+/** Polling interval for video status checks. */
+const VIDEO_POLL_INTERVAL_MS = 5_000;
+
+/**
+ * Generate a video via the xAI video generation API through the worker proxy.
+ * Handles the async polling flow — submits the request, polls for completion.
+ * Returns the temporary URL of the generated video.
+ */
+export async function generateVideo(prompt: string, signal?: AbortSignal): Promise<string> {
+  const startResponse = await fetch(`${WORKER_BASE_URL}/v1/videos/generations`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      prompt,
+      duration: 10,
+      aspect_ratio: '16:9',
+      resolution: '720p',
+    }),
+    signal: signal ?? null,
+  });
+
+  if (!startResponse.ok) {
+    let errorMessage = `Video generation failed (${startResponse.status})`;
+    try {
+      const data = (await startResponse.json()) as VideoGenerationStartResponse;
+      if (data.error?.message) errorMessage = data.error.message;
+    } catch {
+      // Use default error message
+    }
+    throw new Error(errorMessage);
+  }
+
+  const startData = (await startResponse.json()) as VideoGenerationStartResponse;
+  const requestId = startData.request_id;
+  if (!requestId) throw new Error('No request_id returned for video generation');
+
+  const startTime = Date.now();
+  let consecutiveErrors = 0;
+  const MAX_CONSECUTIVE_ERRORS = 5;
+
+  while (Date.now() - startTime < VIDEO_POLL_TIMEOUT_MS) {
+    if (signal?.aborted) throw new Error('Video generation aborted');
+
+    await new Promise((resolve) => setTimeout(resolve, VIDEO_POLL_INTERVAL_MS));
+
+    const statusResponse = await fetch(`${WORKER_BASE_URL}/v1/videos/${requestId}`, {
+      method: 'GET',
+      signal: signal ?? null,
+    });
+
+    if (!statusResponse.ok) {
+      consecutiveErrors++;
+      if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
+        throw new Error(
+          `Video polling failed ${MAX_CONSECUTIVE_ERRORS} times consecutively (HTTP ${statusResponse.status})`,
+        );
+      }
+      continue;
+    }
+
+    consecutiveErrors = 0;
+    const statusData = (await statusResponse.json()) as VideoStatusResponse;
+
+    if (statusData.status === 'done' && statusData.video?.url) {
+      return statusData.video.url;
+    }
+
+    if (statusData.status === 'expired') {
+      throw new Error('Video generation request expired');
+    }
+  }
+
+  throw new Error('Video generation timed out');
 }

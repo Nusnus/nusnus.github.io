@@ -5,6 +5,22 @@
  * Keep this file lean — Cybernus-specific types live in @lib/cybernus/types.
  */
 
+/** Agent activity indicator shown during streaming. */
+export interface AgentActivityItem {
+  /** Agent display name (e.g. "Scout Agent", "Vision Agent"). */
+  agent: string;
+  /** Tool type being used (e.g. "web_search", "generate_image"). */
+  toolType: string;
+  /** Short status label (e.g. "Searching the web...", "Generating image..."). */
+  label: string;
+  /** Current status. */
+  status: 'working' | 'done';
+  /** SVG icon path (viewBox 0 0 24 24). */
+  iconPath: string;
+  /** CSS color for the activity indicator. */
+  color: string;
+}
+
 /** A single message in the chat conversation. */
 export interface ChatMessage {
   id: string;
@@ -23,6 +39,8 @@ export interface ChatMessage {
   reasoningTokens?: number;
   /** True while the model is still reasoning (before first output token). */
   isThinking?: boolean;
+  /** Structured agent activity items for rich UI rendering. */
+  agentActivity?: AgentActivityItem[];
 }
 
 /** A client-side action the assistant can suggest. */

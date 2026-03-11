@@ -20,15 +20,19 @@ import type { ToolAction } from './types';
  *
  * Union covers every native tool type Cybernus uses:
  * - `web_search` — xAI's built-in live search
- * - `code_interpreter` — Python sandbox (OpenAI-compat naming)
+ * - `x_search` — xAI's X/Twitter search
+ * - `code_interpreter` / `code_execution` — Python sandbox
  * - `mcp` — remote MCP server (Streaming HTTP / SSE transport only)
  * - `function` — custom client-side actions (flat schema, no nested key)
  */
 export type ToolDefinition =
-  | { type: 'web_search' }
-  | { type: 'code_interpreter' }
+  | { type: 'web_search'; name?: string }
+  | { type: 'x_search'; name?: string }
+  | { type: 'code_interpreter'; name?: string }
+  | { type: 'code_execution'; name?: string }
   | {
       type: 'mcp';
+      name?: string;
       server_url: string;
       server_label: string;
       /** Optional allowlist — if omitted, all MCP server tools are available. */

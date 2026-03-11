@@ -330,7 +330,7 @@ export function ThoughtsPanel({ side = 'right' }: ThoughtsPanelProps) {
       </div>
 
       {/* Floating thoughts container */}
-      <div className="absolute inset-0 pt-10">
+      <div className="pointer-events-none absolute inset-0 pt-10">
         {thoughts.map((thought) => (
           <div
             key={thought.id}
