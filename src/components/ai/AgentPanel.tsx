@@ -25,6 +25,8 @@ const TOOL_ICONS: Record<string, string> = {
   code: 'M16 18l6-6-6-6M8 6l-6 6 6 6',
   book: 'M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15z',
   image: 'M21 3H3v18h18V3zM8.5 10a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zM21 15l-5-5L5 21',
+  video:
+    'M23 7l-7 5 7 5V7zM14 5H3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z',
 };
 
 export function AgentPanel({ language, activeToolCalls, onClose }: AgentPanelProps) {

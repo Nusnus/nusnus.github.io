@@ -83,4 +83,16 @@ export const SUGGESTED_QUESTIONS = [
     label: 'Roast Mode',
     prompt: 'Roast Tomer Nosrati — no mercy, full send',
   },
+  {
+    icon: '👑',
+    label: 'Open Source Empire',
+    prompt:
+      'How does Tomer lead the Celery organization? What does it take to manage 10+ packages powering companies like Instagram and Robinhood?',
+  },
+  {
+    icon: '🎨',
+    label: 'Draw Me',
+    prompt:
+      'Draw a portrait of Tomer Nosrati — show me what the architect of the Matrix looks like',
+  },
 ] as const;

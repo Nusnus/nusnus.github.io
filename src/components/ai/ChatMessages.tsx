@@ -2,7 +2,6 @@ import { type RefObject, useMemo, useCallback, useState, useEffect, memo } from 
 import {
   ArrowRight,
   ExternalLink,
-  Globe,
   Sparkles,
   ZoomIn,
   ZoomOut,
@@ -12,7 +11,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@lib/utils/cn';
 import { SUGGESTED_QUESTIONS } from '@lib/ai/config';
-import type { ChatMessage } from '@lib/ai/types';
+import type { ChatMessage, AgentActivityItem } from '@lib/ai/types';
 import { renderMarkdown } from '@lib/ai/markdown';
 import { executeAction } from '@lib/ai/tools';
 import type { Language } from '@lib/ai/i18n';
@@ -59,6 +58,13 @@ function extractFollowUps(content: string): { body: string; suggestions: string[
   return { body, suggestions };
 }
 
+/** Interval (ms) between animated thinking steps. */
+const THINKING_STEP_INTERVAL_MS = 2000;
+
+/** Shared SVG path for the user avatar icon. */
+const USER_AVATAR_PATH =
+  'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z';
+
 /** IDE-like thinking indicator — shows animated processing steps. */
 function ThinkingIndicator() {
   const [step, setStep] = useState(0);
@@ -71,7 +77,7 @@ function ThinkingIndicator() {
   useEffect(() => {
     const timer = setInterval(() => {
       setStep((s) => (s + 1) % steps.length);
-    }, 2000);
+    }, THINKING_STEP_INTERVAL_MS);
     return () => clearInterval(timer);
   }, [steps.length]);
 
@@ -125,37 +131,95 @@ function TypingIndicator() {
   );
 }
 
-/** Web search status indicator. */
-function SearchIndicator({
-  status,
-  strings,
-}: {
-  status: 'searching' | 'found';
-  strings: ReturnType<typeof t>;
-}) {
-  const isSearching = status === 'searching';
+/**
+ * InlineAgentActivity — renders sub-agent activity inline in the conversation.
+ * Each agent appears as a mini conversation participant with its own avatar,
+ * name, and status — creating a genuine multi-agent chat experience.
+ */
+function InlineAgentActivity({ items }: { items: AgentActivityItem[] }) {
+  if (items.length === 0) return null;
+
   return (
-    <div
-      className={cn(
-        'inline-flex items-center gap-2.5 rounded-xl px-4 py-2.5 text-xs font-medium backdrop-blur-sm',
-        isSearching
-          ? 'border-border bg-bg-surface text-text-secondary border'
-          : 'border-accent/20 bg-accent-muted text-accent border',
-      )}
-    >
-      <Globe className={cn('h-3.5 w-3.5', isSearching && 'animate-spin')} />
-      <span>{isSearching ? strings.searchingWeb : strings.foundResults}</span>
-      {isSearching && (
-        <span className="inline-flex gap-0.5">
-          {[0, 150, 300].map((delay) => (
-            <span
-              key={delay}
-              className="bg-text-muted inline-block h-1 w-1 animate-bounce rounded-full"
-              style={{ animationDelay: `${delay}ms` }}
-            />
-          ))}
-        </span>
-      )}
+    <div className="mb-4 space-y-2">
+      {items.map((item) => {
+        const isWorking = item.status === 'working';
+        return (
+          <div
+            key={item.toolType}
+            className="flex items-start gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3.5 py-3 transition-all duration-300"
+          >
+            {/* Agent avatar */}
+            <div
+              className={cn(
+                'flex h-7 w-7 shrink-0 items-center justify-center rounded-lg',
+                isWorking && 'animate-pulse',
+              )}
+              style={{ backgroundColor: `${item.color}18` }}
+            >
+              <svg
+                className="h-3.5 w-3.5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke={item.color}
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d={item.iconPath} />
+              </svg>
+            </div>
+
+            {/* Agent name + status */}
+            <div className="min-w-0 flex-1">
+              <span
+                className="text-[11px] font-bold tracking-wider uppercase"
+                style={{ color: item.color }}
+              >
+                {item.agent}
+              </span>
+              <div className="mt-0.5 flex items-center gap-2">
+                <span className={cn('text-xs', isWorking ? 'text-white/50' : 'text-white/35')}>
+                  {item.label}
+                </span>
+
+                {/* Working dots */}
+                {isWorking && (
+                  <span className="inline-flex gap-0.5">
+                    {[0, 1, 2].map((d) => (
+                      <span
+                        key={d}
+                        className="inline-block h-1 w-1 rounded-full"
+                        style={{
+                          backgroundColor: item.color,
+                          opacity: 0.6,
+                          animation: 'roast-dot 1.4s ease-in-out infinite',
+                          animationDelay: `${d * 0.2}s`,
+                        }}
+                      />
+                    ))}
+                  </span>
+                )}
+
+                {/* Done checkmark */}
+                {!isWorking && (
+                  <svg
+                    className="h-3 w-3"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke={item.color}
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    style={{ opacity: 0.4 }}
+                  >
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -239,7 +303,6 @@ function ExpandedMarkdownView({
   language: Language;
 }) {
   const [expandedZoom, setExpandedZoom] = useState(DEFAULT_ZOOM);
-  const strings = t(language);
   const dir = language === 'he' ? 'rtl' : 'ltr';
 
   const handleZoomIn = useCallback(
@@ -321,7 +384,8 @@ function ExpandedMarkdownView({
             const isLastAssistant = !isUser && msgIndex === messages.length - 1;
             const isStreamingMsg = isGenerating && isLastAssistant;
 
-            if (!msg.content && !msg.searchStatus && !isStreamingMsg) return null;
+            if (!msg.content && !msg.searchStatus && !msg.agentActivity?.length && !isStreamingMsg)
+              return null;
 
             return (
               <div
@@ -348,7 +412,7 @@ function ExpandedMarkdownView({
                           viewBox="0 0 24 24"
                           fill="currentColor"
                         >
-                          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                          <path d={USER_AVATAR_PATH} />
                         </svg>
                       ) : (
                         <Sparkles className="text-accent h-4 w-4" />
@@ -376,12 +440,15 @@ function ExpandedMarkdownView({
                       )}
                     </p>
                     <div className="text-text-primary/85 text-[15px] leading-relaxed">
-                      {msg.searchStatus ? (
-                        <SearchIndicator status={msg.searchStatus} strings={strings} />
-                      ) : !msg.content ? (
+                      {/* Inline agent activity */}
+                      {!isUser && msg.agentActivity && msg.agentActivity.length > 0 && (
+                        <InlineAgentActivity items={msg.agentActivity} />
+                      )}
+
+                      {!msg.content ? (
                         isStreamingMsg ? (
                           <ThinkingIndicator />
-                        ) : (
+                        ) : msg.agentActivity?.length ? null : (
                           <TypingIndicator />
                         )
                       ) : isUser ? (
@@ -492,7 +559,6 @@ const MessageItem = memo(function MessageItem({
   language: Language;
 }) {
   const isUser = msg.role === 'user';
-  const strings = t(language);
 
   return (
     <div
@@ -518,7 +584,7 @@ const MessageItem = memo(function MessageItem({
                 viewBox="0 0 24 24"
                 fill="currentColor"
               >
-                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                <path d={USER_AVATAR_PATH} />
               </svg>
             ) : (
               <Sparkles className="text-accent h-3.5 w-3.5" />
@@ -552,12 +618,15 @@ const MessageItem = memo(function MessageItem({
 
           {/* Content */}
           <div className="text-text-primary/85 text-sm leading-relaxed">
-            {msg.searchStatus ? (
-              <SearchIndicator status={msg.searchStatus} strings={strings} />
-            ) : !msg.content ? (
+            {/* Inline agent activity — shown above content */}
+            {!isUser && msg.agentActivity && msg.agentActivity.length > 0 && (
+              <InlineAgentActivity items={msg.agentActivity} />
+            )}
+
+            {!msg.content ? (
               isStreaming ? (
                 <ThinkingIndicator />
-              ) : (
+              ) : msg.agentActivity?.length ? null : (
                 <TypingIndicator />
               )
             ) : !isUser ? (
@@ -702,7 +771,7 @@ export function ChatMessages({
           {isWelcomeOnly && (
             <div className="px-3 py-4 sm:px-4 sm:py-6 md:px-8 lg:px-12">
               <div
-                className="cybernus-fade-in-up mx-auto grid max-w-3xl gap-2.5 sm:grid-cols-2 lg:grid-cols-3"
+                className="cybernus-fade-in-up mx-auto grid max-w-3xl gap-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3"
                 style={{ animationDelay: '200ms' }}
               >
                 {SUGGESTED_QUESTIONS.map((q, idx) => (

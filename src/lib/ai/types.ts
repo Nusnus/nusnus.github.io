@@ -2,6 +2,22 @@
  * Shared types for the Cybernus AI chatbot subsystem.
  */
 
+/** Inline agent activity record — displayed inside conversation messages. */
+export interface AgentActivityItem {
+  /** Agent display name (e.g. "Scout Agent", "Vision Agent"). */
+  agent: string;
+  /** Tool type being used (e.g. "web_search", "generate_image"). */
+  toolType: string;
+  /** Short status label (e.g. "Searching the web...", "Generating image..."). */
+  label: string;
+  /** Current status. */
+  status: 'working' | 'done';
+  /** SVG icon path (viewBox 0 0 24 24). */
+  iconPath: string;
+  /** Accent colour for this agent. */
+  color: string;
+}
+
 /** A single message in the chat conversation. */
 export interface ChatMessage {
   id: string;
@@ -13,6 +29,8 @@ export interface ChatMessage {
   searchStatus?: 'searching' | 'found';
   /** Timestamp when the message was created. */
   timestamp?: number;
+  /** Inline sub-agent activity tracked during generation. */
+  agentActivity?: AgentActivityItem[];
 }
 
 /** A client-side action the assistant can suggest. */
@@ -26,23 +44,4 @@ export interface ToolAction {
   componentType?: string;
   /** Props for the rendered component. */
   props?: Record<string, string>;
-}
-
-/** A chunk of indexed content for RAG retrieval. */
-export interface SearchChunk {
-  /** Unique chunk identifier. */
-  id: string;
-  /** The text content of the chunk. */
-  content: string;
-  /** Human-readable source label (e.g., "Knowledge Base > About"). */
-  source: string;
-  /** Pre-extracted lowercase keywords for BM25 scoring. */
-  keywords: string[];
-}
-
-/** Pre-built search index serialized as a prop from the Astro page. */
-export interface SearchIndex {
-  chunks: SearchChunk[];
-  /** Average document length in keywords (used for BM25 normalisation). */
-  avgDocLength: number;
 }

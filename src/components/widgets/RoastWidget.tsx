@@ -2,10 +2,11 @@
  * RoastWidget — Floating 🔥 FAB that opens a compact chat bubble
  * and streams a roast from the AI via the Cloudflare Worker proxy.
  *
- * Replaces the old static <a href="/cybernus?roast=1"> FAB.
+ * Supports image generation — every roast includes a visual roast image.
  */
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { DEFAULT_CLOUD_MODEL_ID } from '@lib/ai/config';
+import { buildToolDefinitions, loadTools } from '@lib/cybernus/services/AgentService';
 
 type WidgetState = 'closed' | 'loading' | 'streaming' | 'done' | 'error';
 
@@ -77,10 +78,8 @@ ${
     : `The visitor already got ${levelClamp} roast${levelClamp > 1 ? 's' : ''} from you and just hit the ${fires} escalate button — they're literally asking you to go harder. You can see your previous roast${levelClamp > 1 ? 's' : ''} in the conversation. Acknowledge that they came back for more (be smug about it), then deliver a fresh roast that's rawer, more vulgar, more savage. Don't repeat material from your previous roast${levelClamp > 1 ? 's' : ''}. Keep it short, punchy, contextual to the page they're browsing.`
 }`;
 
-      const [{ cloudChatStream }, { buildCloudContext }] = await Promise.all([
-        import('@lib/ai/cloud'),
-        import('@lib/ai/cloud-context'),
-      ]);
+      const [{ cloudChatStream }, { buildCloudContext, buildVisualReferenceMessage }] =
+        await Promise.all([import('@lib/ai/cloud'), import('@lib/ai/cloud-context')]);
 
       const context = await buildCloudContext(roastContext);
       const systemMessage = { role: 'system' as const, content: context };
@@ -89,28 +88,72 @@ ${
         content: ESCALATE_PROMPTS[levelClamp] ?? 'Roast Tomer Nosrati 🔥',
       };
 
-      // Build messages: system + prior roast history (on escalation) + new user prompt
-      const messages = [systemMessage, ...(isEscalation ? historyRef.current : []), userMessage];
+      // Build messages: system + visual reference + prior roast history (on escalation) + new user prompt
+      const visualRef = await buildVisualReferenceMessage();
+      const messages = [
+        systemMessage,
+        ...(visualRef ? [visualRef] : []),
+        ...(isEscalation ? historyRef.current : []),
+        userMessage,
+      ];
 
       setState('streaming');
 
-      const { content } = await cloudChatStream(
+      // Build tool definitions so Grok can generate images (exclude video — too slow for roast widget)
+      const tools = buildToolDefinitions(loadTools()).filter((t) => t.name !== 'generate_video');
+
+      const { content, toolCalls } = await cloudChatStream(
         messages,
         DEFAULT_CLOUD_MODEL_ID,
         (_token, accumulated) => {
           setResponse(accumulated);
         },
         controller.signal,
+        {
+          tools,
+          tool_choice: 'auto',
+        },
       );
+
+      // Handle image generation tool calls
+      let imageMarkdown = '';
+      const imageToolCalls = toolCalls.filter((tc) => tc.name === 'generate_image');
+      if (imageToolCalls.length > 0) {
+        try {
+          const { generateImage } = await import('@lib/ai/cloud');
+          const imageResults = await Promise.all(
+            imageToolCalls.map(async (tc) => {
+              try {
+                const args = JSON.parse(tc.arguments) as { prompt?: string };
+                if (!args.prompt) return '';
+                const url = await generateImage(args.prompt);
+                const safeAlt = (args.prompt ?? '').replace(/[[\]()]/g, '');
+                return `\n\n![${safeAlt}](${url})`;
+              } catch {
+                return '';
+              }
+            }),
+          );
+          imageMarkdown = imageResults.join('');
+        } catch {
+          // Image generation not available — skip silently
+        }
+      }
+
+      const finalContent = content + imageMarkdown;
+
+      // If user closed the widget during image generation, don't reopen
+      if (controller.signal.aborted) return;
 
       // Append this exchange to history so the next escalation sees it
       if (isEscalation || levelClamp === 0) {
         historyRef.current.push(
           { role: 'user', content: userMessage.content },
-          { role: 'assistant', content },
+          { role: 'assistant', content: finalContent },
         );
       }
 
+      setResponse(finalContent);
       setState('done');
     } catch (err) {
       if (controller.signal.aborted) {
