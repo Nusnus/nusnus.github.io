@@ -536,6 +536,17 @@ function ExpandedMarkdownView({
                         ))}
                       </div>
                     )}
+
+                    {/* Dynamic in-chat form (read-only in expanded view) */}
+                    {!isUser && msg.form && (
+                      <InlineChatForm
+                        form={msg.form}
+                        onSubmit={() => {
+                          /* read-only in expanded view */
+                        }}
+                        disabled={true}
+                      />
+                    )}
                   </div>
                 </div>
               </div>
