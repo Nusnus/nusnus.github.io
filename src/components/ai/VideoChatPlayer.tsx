@@ -63,6 +63,9 @@ export const VideoChatPlayer = memo(function VideoChatPlayer({
       const video = videoRef.current;
       const audio = audioRef.current;
 
+      // Reset completion flag so checkComplete fires again after replay
+      playbackCompleteRef.current = false;
+
       const playBoth = async () => {
         try {
           // Start video (muted — the TTS audio is the voice track)
@@ -85,6 +88,17 @@ export const VideoChatPlayer = memo(function VideoChatPlayer({
       playBoth();
     }
   }, [videoReady, audioReady, hasPlayed, isLoading]);
+
+  // Clean up TTS blob URL when audioUrl changes or on unmount to prevent memory leaks.
+  // The textToSpeech() function creates blob URLs that are never auto-revoked since
+  // the original Audio element's 'ended' listener never fires (we use a different element).
+  useEffect(() => {
+    return () => {
+      if (audioUrl && audioUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(audioUrl);
+      }
+    };
+  }, [audioUrl]);
 
   // Track progress
   useEffect(() => {
