@@ -166,6 +166,7 @@ export const VideoChatView = memo(function VideoChatView({
             {/* Video player */}
             {latestVideoMsg && (
               <VideoChatPlayer
+                key={latestVideoMsg.id}
                 videoUrl={latestVideoMsg.videoChatUrl ?? ''}
                 audioUrl={latestVideoMsg.videoChatAudioUrl}
                 spokenText={latestVideoMsg.videoChatSpokenText}
