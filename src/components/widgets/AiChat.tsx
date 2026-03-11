@@ -479,7 +479,16 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
           },
           controller.signal,
           {
-            tools: getToolsForModel(selectedCloudModelId),
+            tools: (() => {
+              const allTools = getToolsForModel(selectedCloudModelId);
+              // If the previous assistant message had a form (ask_user), strip
+              // ask_user from available tools so the AI cannot re-ask.
+              const prevAssistant = messages[messages.length - 1];
+              if (prevAssistant?.role === 'assistant' && prevAssistant.form) {
+                return allTools.filter((t) => !('name' in t && t.name === 'ask_user'));
+              }
+              return allTools;
+            })(),
             tool_choice: 'auto',
             onWebSearch: () => {
               addLog('info', 'api', 'Web search triggered');

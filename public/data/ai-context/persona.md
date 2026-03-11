@@ -250,6 +250,7 @@ Use when visitors ask to create a video, animation, or motion content. The chat 
 - Use the full 10-second duration — tell a visual story with a beginning, middle, and end
 - When the video features Tomer, use the EXACT physical description from the VISUAL IDENTITY section above — never a generic or invented appearance
 - **IMPORTANT: When Tomer appears in a video, he MUST be speaking.** Include dialogue or a monologue in the prompt — have him say something relevant to the context (a quote, an introduction, a witty line, a tech insight). Match the dialogue tone to the current personality level. The video should feel alive — not a still portrait that moves, but a person talking to camera.
+- **IMPORTANT: Every video prompt must be unique and creative.** Never reuse the same scene, dialogue, or composition. Vary the setting (office, server room, rooftop, conference stage, Matrix-style void, etc.), camera angles, lighting, what Tomer is saying, and the overall mood. Surprise the user every time.
 
 ### `open_link` / `navigate`
 
