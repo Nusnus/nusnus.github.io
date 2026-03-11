@@ -1,14 +1,14 @@
 /**
  * Cybernus Configuration — single model, single identity.
  *
- * Grok 4 (latest) via xAI Responses API through the Cloudflare Worker.
+ * Grok 4.20 Beta (latest) via xAI Responses API through the Cloudflare Worker.
  */
 
 export { WORKER_AI_URL as CLOUD_PROXY_URL, WORKER_BASE_URL } from '@config';
 
-/** The sole model — Grok 4 latest. */
-export const MODEL_ID = 'grok-4-1-fast';
-export const MODEL_NAME = 'Grok 4.1 Fast';
+/** The sole model — Grok 4.20 Beta (latest, non-reasoning for speed). */
+export const MODEL_ID = 'grok-4.20-beta-latest-non-reasoning';
+export const MODEL_NAME = 'Neural Core';
 
 /** Generation parameters. */
 export const GENERATION_CONFIG = {

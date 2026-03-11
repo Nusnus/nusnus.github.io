@@ -12,8 +12,8 @@ describe('AI config', () => {
     expect(CLOUD_MODELS).toHaveLength(1);
   });
 
-  it('default model is grok-4-1-fast', () => {
-    expect(DEFAULT_CLOUD_MODEL_ID).toBe('grok-4-1-fast');
+  it('default model is grok-4.20-beta-latest-non-reasoning', () => {
+    expect(DEFAULT_CLOUD_MODEL_ID).toBe('grok-4.20-beta-latest-non-reasoning');
   });
 
   it('default model is marked as recommended', () => {

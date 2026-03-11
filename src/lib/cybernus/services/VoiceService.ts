@@ -372,7 +372,7 @@ export class LiveVoiceSession {
           JSON.stringify({
             type: 'session.update',
             session: {
-              model: 'grok-4-1-fast',
+              model: 'grok-4.20-beta-latest-non-reasoning',
               voice: CYBERNUS_VOICE_ID,
               instructions: this.systemPrompt,
               input_audio_format: 'pcm16',

@@ -61,6 +61,8 @@ const XAI_VIDEOS_STATUS_URL = 'https://api.x.ai/v1/videos';
 
 /** Models visitors are allowed to use. Prevents switching to costly models. */
 const ALLOWED_MODELS: ReadonlySet<string> = new Set([
+  'grok-4.20-beta-latest-non-reasoning',
+  'grok-4.20-beta-latest',
   'grok-4-1-fast',
   'grok-4-1-fast-reasoning',
   'grok-4-1-fast-non-reasoning',
@@ -68,7 +70,7 @@ const ALLOWED_MODELS: ReadonlySet<string> = new Set([
   'grok-code-fast-1',
 ]);
 
-const DEFAULT_MODEL = 'grok-4-1-fast';
+const DEFAULT_MODEL = 'grok-4.20-beta-latest-non-reasoning';
 
 /** Hard limits to prevent abuse. */
 const MAX_REQUEST_BYTES = 6_291_456; // 6 MB — /v1/responses only (full context + multiple base64 reference photos)

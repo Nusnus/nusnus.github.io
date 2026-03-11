@@ -453,15 +453,23 @@ const VIDEO_POLL_INTERVAL_MS = 5_000;
  *
  * @param prompt Descriptive text prompt for the video. Be cinematic and specific.
  * @param signal Optional AbortSignal to cancel the generation.
+ * @param duration Video duration in seconds (1-15). Defaults to 5.
  */
-export async function generateVideo(prompt: string, signal?: AbortSignal): Promise<string> {
+export async function generateVideo(
+  prompt: string,
+  signal?: AbortSignal,
+  duration = 5,
+): Promise<string> {
+  // Clamp duration to API limits (1-15 seconds)
+  const clampedDuration = Math.max(1, Math.min(15, Math.round(duration)));
+
   // Step 1: Submit generation request
   const startResponse = await fetch(`${WORKER_BASE_URL}/v1/videos/generations`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       prompt,
-      duration: 5,
+      duration: clampedDuration,
       aspect_ratio: '16:9',
       resolution: '720p',
     }),

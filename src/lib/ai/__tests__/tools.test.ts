@@ -6,34 +6,34 @@ import { getToolsForModel, mapToolCallsToActions } from '@lib/ai/tools';
 
 describe('tools', () => {
   describe('getToolsForModel', () => {
-    it('returns tool definitions for grok-4-1-fast', () => {
-      const tools = getToolsForModel('grok-4-1-fast');
+    it('returns tool definitions for grok-4.20-beta-latest-non-reasoning', () => {
+      const tools = getToolsForModel('grok-4.20-beta-latest-non-reasoning');
       expect(tools.length).toBeGreaterThan(0);
     });
 
     it('includes web_search tool', () => {
-      const tools = getToolsForModel('grok-4-1-fast');
+      const tools = getToolsForModel('grok-4.20-beta-latest-non-reasoning');
       expect(tools.some((t) => t.type === 'web_search')).toBe(true);
     });
 
     it('includes function tools (open_link, navigate)', () => {
-      const tools = getToolsForModel('grok-4-1-fast');
+      const tools = getToolsForModel('grok-4.20-beta-latest-non-reasoning');
       expect(tools.some((t) => t.type === 'function' && t.name === 'open_link')).toBe(true);
       expect(tools.some((t) => t.type === 'function' && t.name === 'navigate')).toBe(true);
     });
 
     it('includes MCP tools', () => {
-      const tools = getToolsForModel('grok-4-1-fast');
+      const tools = getToolsForModel('grok-4.20-beta-latest-non-reasoning');
       expect(tools.some((t) => t.type === 'mcp')).toBe(true);
     });
 
     it('includes x_search tool', () => {
-      const tools = getToolsForModel('grok-4-1-fast');
+      const tools = getToolsForModel('grok-4.20-beta-latest-non-reasoning');
       expect(tools.some((t) => t.type === 'x_search')).toBe(true);
     });
 
     it('includes code_execution tool', () => {
-      const tools = getToolsForModel('grok-4-1-fast');
+      const tools = getToolsForModel('grok-4.20-beta-latest-non-reasoning');
       expect(tools.some((t) => t.type === 'code_execution')).toBe(true);
     });
   });
