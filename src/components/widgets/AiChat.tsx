@@ -716,9 +716,9 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
 
         const finalAssistant: ChatMessage = {
           ...assistantMsg,
-          content: formData
-            ? ''
-            : textContent || (result.toolCalls.length > 0 ? '*(used tools only)*' : ''),
+          content:
+            textContent ||
+            (formData ? '' : result.toolCalls.length > 0 ? '*(used tools only)*' : ''),
           // Preserve agent activity accumulated during streaming
           ...(accumulatedAgentActivity.length > 0 && {
             agentActivity: accumulatedAgentActivity,
