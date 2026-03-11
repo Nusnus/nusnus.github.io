@@ -7,7 +7,7 @@
 
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { cn } from '@lib/utils/cn';
-import type { ChatMessage, AgentActivityItem } from '@lib/ai/types';
+import type { ChatMessage, AgentActivityItem, ChatForm, ChatFormOption } from '@lib/ai/types';
 import {
   CLOUD_MODELS,
   DEFAULT_CLOUD_MODEL_ID,
@@ -537,10 +537,13 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
           toolCalls: result.toolCalls.length,
         });
 
-        // Map tool calls to actions (exclude generate_image and generate_video — handled separately)
+        // Map tool calls to actions (exclude generate_image, generate_video, ask_user — handled separately)
         const actions = mapToolCallsToActions(
           result.toolCalls.filter(
-            (tc) => tc.name !== 'generate_image' && tc.name !== 'generate_video',
+            (tc) =>
+              tc.name !== 'generate_image' &&
+              tc.name !== 'generate_video' &&
+              tc.name !== 'ask_user',
           ),
         );
 
@@ -634,6 +637,49 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
         // If the API returned only tool calls with no text, use a fallback so
         // the empty content doesn't trigger a permanent TypingIndicator.
         const textContent = result.content + mediaMarkdown;
+
+        // Parse ask_user tool calls → attach form to assistant message
+        let formData: ChatForm | undefined;
+        const askUserCall = result.toolCalls.find((tc) => tc.name === 'ask_user');
+        if (askUserCall) {
+          try {
+            const args = JSON.parse(askUserCall.arguments) as {
+              question?: string;
+              options?: { id?: string; label?: string; description?: string; value?: string }[];
+              allow_other?: boolean;
+            };
+            if (args.question && Array.isArray(args.options) && args.options.length > 0) {
+              const options: ChatFormOption[] = args.options
+                .filter(
+                  (o): o is { id: string; label: string; value: string; description?: string } =>
+                    typeof o.id === 'string' &&
+                    typeof o.label === 'string' &&
+                    typeof o.value === 'string',
+                )
+                .map((o) => ({
+                  id: o.id,
+                  label: o.label,
+                  ...(o.description !== undefined && { description: o.description }),
+                  value: o.value,
+                }));
+              if (options.length > 0) {
+                formData = {
+                  question: args.question,
+                  options,
+                  allowOther: args.allow_other !== false,
+                  selectedId: null,
+                };
+                addLog('info', 'api', 'ask_user form parsed', {
+                  question: args.question,
+                  optionCount: options.length,
+                });
+              }
+            }
+          } catch {
+            addLog('warn', 'api', 'Failed to parse ask_user arguments');
+          }
+        }
+
         const finalAssistant: ChatMessage = {
           ...assistantMsg,
           content: textContent || (result.toolCalls.length > 0 ? '*(used tools only)*' : ''),
@@ -641,6 +687,8 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
           ...(accumulatedAgentActivity.length > 0 && {
             agentActivity: accumulatedAgentActivity,
           }),
+          // Attach form if ask_user was called
+          ...(formData && { form: formData }),
         };
         if (actions.length > 0) finalAssistant.actions = actions;
 
@@ -864,6 +912,30 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
   }, [voiceState, addLog, language]);
   handleVoiceToggleRef.current = handleVoiceToggle;
   sendMessageRef.current = sendMessage;
+
+  /* ─── Form submission handler (ask_user tool) ─── */
+  const handleFormSubmit = useCallback(
+    (messageId: string, selectedId: string, value: string, customValue?: string) => {
+      // Mark the form as answered in the message
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === messageId && m.form
+            ? {
+                ...m,
+                form: {
+                  ...m.form,
+                  selectedId,
+                  ...(customValue !== undefined && { customValue }),
+                },
+              }
+            : m,
+        ),
+      );
+      // Send the selected value as the user's next message
+      sendMessage(value);
+    },
+    [sendMessage],
+  );
 
   /* ─── Listen for "Make it a video" and other programmatic send-message events ─── */
   useEffect(() => {
@@ -1212,6 +1284,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
               isGenerating={isGenerating}
               messagesEndRef={messagesEndRef}
               onSendMessage={sendMessage}
+              onFormSubmit={handleFormSubmit}
               language={language}
               onExpandClose={() => requestAnimationFrame(() => inputRef.current?.focus())}
             />

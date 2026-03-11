@@ -76,6 +76,14 @@ const AGENT_PERSONAS: Record<string, AgentPersona> = {
       'M23 7l-7 5 7 5V7zM14 5H3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z',
     color: '#ffcc80',
   },
+  ask_user: {
+    agent: 'Concierge',
+    workingLabel: 'Preparing options...',
+    doneLabel: 'Awaiting your choice',
+    iconPath:
+      'M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z',
+    color: '#81d4fa',
+  },
 };
 
 const FALLBACK_PERSONA: AgentPersona = {
@@ -267,6 +275,57 @@ export function buildToolDefinitions(tools: AgentTool[]): ToolDefinition[] {
       },
     });
   }
+
+  // ask_user — dynamic in-chat form for clarifying user intent
+  definitions.push({
+    type: 'function',
+    name: 'ask_user',
+    description:
+      "Present an interactive in-chat form to the user with multiple-choice options. Use this when you need to clarify the user's intent or preference before proceeding — for example, choosing between output formats (photo vs video), picking a topic branch, or confirming a creative direction. The user can select one of the provided options or type a custom answer. Each option has a label and a value; the value is what gets sent back as the user's reply. Keep options concise (2–5 choices). Always include allow_other so users can type a free-form answer.",
+    parameters: {
+      type: 'object',
+      properties: {
+        question: {
+          type: 'string',
+          description: 'The question to display above the options',
+        },
+        options: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              id: {
+                type: 'string',
+                description: 'Unique short identifier (e.g. "photo", "video")',
+              },
+              label: {
+                type: 'string',
+                description:
+                  'Display label, may include an emoji prefix (e.g. "📸 Photo portrait")',
+              },
+              description: {
+                type: 'string',
+                description: 'Optional one-line description shown below the label',
+              },
+              value: {
+                type: 'string',
+                description:
+                  "The text that will be sent as the user's message when this option is selected",
+              },
+            },
+            required: ['id', 'label', 'value'],
+          },
+          description: 'List of 2–5 options to present',
+        },
+        allow_other: {
+          type: 'boolean',
+          description:
+            'Whether to show a free-text "Other" input so the user can type a custom answer. Defaults to true.',
+        },
+      },
+      required: ['question', 'options'],
+    },
+  });
 
   // Always include the client-side function tools
   definitions.push(

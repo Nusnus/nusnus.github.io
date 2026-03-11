@@ -17,12 +17,17 @@ import { executeAction } from '@lib/ai/tools';
 import type { Language } from '@lib/ai/i18n';
 import { t, LANGUAGES } from '@lib/ai/i18n';
 import { TTSButton } from './TTSButton';
+import { InlineChatForm } from './InlineChatForm';
 
 interface ChatMessagesProps {
   messages: ChatMessage[];
   isGenerating: boolean;
   messagesEndRef: RefObject<HTMLDivElement | null>;
   onSendMessage: (text: string) => void;
+  /** Callback when a user selects an option from an inline form (ask_user tool). */
+  onFormSubmit?:
+    | ((messageId: string, selectedId: string, value: string, customValue?: string) => void)
+    | undefined;
   language: Language;
   /** Called after the expanded (zoomed) view closes. */
   onExpandClose?: () => void;
@@ -58,64 +63,100 @@ function extractFollowUps(content: string): { body: string; suggestions: string[
   return { body, suggestions };
 }
 
-/** Interval (ms) between animated thinking steps. */
-const THINKING_STEP_INTERVAL_MS = 2000;
+/** Timing (ms) between progressive thinking steps. */
+const THINKING_STEP_DELAYS: readonly number[] = [800, 1800];
 
 /** Shared SVG path for the user avatar icon. */
 const USER_AVATAR_PATH =
   'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z';
 
-/** IDE-like thinking indicator — shows animated processing steps. */
+/**
+ * IDE-like thinking indicator — shows progressive (non-looping) steps.
+ *
+ * Steps advance forward on fixed timers and never cycle back.
+ * The final step stays active with animated dots until real content arrives.
+ */
 function ThinkingIndicator() {
   const [step, setStep] = useState(0);
+
   const steps = [
-    { label: 'Analyzing context', icon: '◈' },
-    { label: 'Searching knowledge base', icon: '◇' },
-    { label: 'Composing response', icon: '◆' },
+    { label: 'Initializing context' },
+    { label: 'Analyzing query' },
+    { label: 'Generating response' },
   ];
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setStep((s) => (s + 1) % steps.length);
-    }, THINKING_STEP_INTERVAL_MS);
-    return () => clearInterval(timer);
-  }, [steps.length]);
+    // Schedule each step transition once — no looping
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    THINKING_STEP_DELAYS.forEach((delay, i) => {
+      timers.push(setTimeout(() => setStep(i + 1), delay));
+    });
+    return () => timers.forEach(clearTimeout);
+  }, []);
 
   return (
-    <div className="space-y-1.5 py-1">
-      {steps.map((s, i) => (
-        <div
-          key={s.label}
-          className={cn(
-            'flex items-center gap-2 text-xs transition-all duration-500',
-            i < step ? 'text-[#00ff41]/50' : i === step ? 'text-[#00ff41]' : 'text-white/15',
-          )}
-        >
-          <span
+    <div className="space-y-1 py-1">
+      {steps.map((s, i) => {
+        const isDone = i < step;
+        const isActive = i === step;
+        const isPending = i > step;
+
+        return (
+          <div
+            key={s.label}
             className={cn(
-              'inline-block w-3 text-center text-[10px]',
-              i === step && 'animate-pulse',
+              'ide-step-appear flex items-center gap-2 font-mono text-xs transition-all duration-300',
+              isDone && 'text-[#00ff41]/40',
+              isActive && 'text-[#00ff41]',
+              isPending && 'text-white/10',
             )}
+            style={{ animationDelay: `${i * 100}ms` }}
           >
-            {i < step ? '✓' : s.icon}
-          </span>
-          <span className={cn(i === step && 'font-medium')}>{s.label}</span>
-          {i === step && (
-            <span className="inline-flex gap-0.5">
-              {[0, 1, 2].map((d) => (
-                <span
-                  key={d}
-                  className="bg-accent/60 inline-block h-1 w-1 rounded-full"
-                  style={{
-                    animation: 'roast-dot 1.4s ease-in-out infinite',
-                    animationDelay: `${d * 0.2}s`,
-                  }}
-                />
-              ))}
+            {/* Step indicator */}
+            <span className="flex h-4 w-4 shrink-0 items-center justify-center text-[10px]">
+              {isDone ? (
+                <svg
+                  className="h-3 w-3"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              ) : isActive ? (
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inset-0 animate-ping rounded-full bg-[#00ff41] opacity-30" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-[#00ff41]" />
+                </span>
+              ) : (
+                <span className="inline-block h-1 w-1 rounded-full bg-current opacity-40" />
+              )}
             </span>
-          )}
-        </div>
-      ))}
+
+            {/* Label */}
+            <span className={cn(isActive && 'font-medium')}>{s.label}</span>
+
+            {/* Active dots — only on the current step */}
+            {isActive && (
+              <span className="inline-flex gap-0.5">
+                {[0, 1, 2].map((d) => (
+                  <span
+                    key={d}
+                    className="inline-block h-1 w-1 rounded-full bg-[#00ff41]/60"
+                    style={{
+                      animation: 'roast-dot 1.4s ease-in-out infinite',
+                      animationDelay: `${d * 0.2}s`,
+                    }}
+                  />
+                ))}
+              </span>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -132,91 +173,98 @@ function TypingIndicator() {
 }
 
 /**
- * InlineAgentActivity — renders sub-agent activity inline in the conversation.
- * Each agent appears as a mini conversation participant with its own avatar,
- * name, and status — creating a genuine multi-agent chat experience.
+ * InlineAgentActivity — IDE-style tool activity display.
+ *
+ * Each agent step renders as a compact, monospace-styled status line
+ * with a spinner (working) or checkmark (done), matching the aesthetic
+ * of modern IDE chat panels (Cursor, Copilot, etc.).
  */
 function InlineAgentActivity({ items }: { items: AgentActivityItem[] }) {
   if (items.length === 0) return null;
 
   return (
-    <div className="mb-4 space-y-2">
+    <div className="mb-3 space-y-0.5 rounded-lg border border-white/[0.06] bg-white/[0.015] px-3 py-2">
       {items.map((item) => {
         const isWorking = item.status === 'working';
         return (
           <div
             key={item.toolType}
-            className="flex items-start gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3.5 py-3 transition-all duration-300"
+            className="ide-step-appear flex items-center gap-2.5 py-1 font-mono text-xs"
           >
-            {/* Agent avatar */}
-            <div
-              className={cn(
-                'flex h-7 w-7 shrink-0 items-center justify-center rounded-lg',
-                isWorking && 'animate-pulse',
+            {/* Status indicator */}
+            <span className="flex h-4 w-4 shrink-0 items-center justify-center">
+              {isWorking ? (
+                <span className="relative flex h-2 w-2">
+                  <span
+                    className="absolute inset-0 rounded-full opacity-30"
+                    style={{
+                      backgroundColor: item.color,
+                      animation: 'ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite',
+                    }}
+                  />
+                  <span
+                    className="relative inline-flex h-2 w-2 rounded-full"
+                    style={{ backgroundColor: item.color }}
+                  />
+                </span>
+              ) : (
+                <svg
+                  className="h-3 w-3"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke={item.color}
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  style={{ opacity: 0.5 }}
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
               )}
-              style={{ backgroundColor: `${item.color}18` }}
+            </span>
+
+            {/* Agent icon */}
+            <svg
+              className="h-3.5 w-3.5 shrink-0"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke={item.color}
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ opacity: isWorking ? 0.9 : 0.4 }}
             >
-              <svg
-                className="h-3.5 w-3.5"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke={item.color}
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d={item.iconPath} />
-              </svg>
-            </div>
+              <path d={item.iconPath} />
+            </svg>
 
             {/* Agent name + status */}
-            <div className="min-w-0 flex-1">
-              <span
-                className="text-[11px] font-bold tracking-wider uppercase"
-                style={{ color: item.color }}
-              >
-                {item.agent}
+            <span
+              className="text-[11px] font-bold tracking-wider uppercase"
+              style={{ color: item.color, opacity: isWorking ? 0.9 : 0.4 }}
+            >
+              {item.agent}
+            </span>
+            <span className={cn('text-[11px]', isWorking ? 'text-white/50' : 'text-white/25')}>
+              {item.label}
+            </span>
+
+            {/* Working dots */}
+            {isWorking && (
+              <span className="inline-flex gap-0.5">
+                {[0, 1, 2].map((d) => (
+                  <span
+                    key={d}
+                    className="inline-block h-1 w-1 rounded-full"
+                    style={{
+                      backgroundColor: item.color,
+                      opacity: 0.6,
+                      animation: 'roast-dot 1.4s ease-in-out infinite',
+                      animationDelay: `${d * 0.2}s`,
+                    }}
+                  />
+                ))}
               </span>
-              <div className="mt-0.5 flex items-center gap-2">
-                <span className={cn('text-xs', isWorking ? 'text-white/50' : 'text-white/35')}>
-                  {item.label}
-                </span>
-
-                {/* Working dots */}
-                {isWorking && (
-                  <span className="inline-flex gap-0.5">
-                    {[0, 1, 2].map((d) => (
-                      <span
-                        key={d}
-                        className="inline-block h-1 w-1 rounded-full"
-                        style={{
-                          backgroundColor: item.color,
-                          opacity: 0.6,
-                          animation: 'roast-dot 1.4s ease-in-out infinite',
-                          animationDelay: `${d * 0.2}s`,
-                        }}
-                      />
-                    ))}
-                  </span>
-                )}
-
-                {/* Done checkmark */}
-                {!isWorking && (
-                  <svg
-                    className="h-3 w-3"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke={item.color}
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    style={{ opacity: 0.4 }}
-                  >
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                )}
-              </div>
-            </div>
+            )}
           </div>
         );
       })}
@@ -548,6 +596,7 @@ const MessageItem = memo(function MessageItem({
   isStreaming,
   isGenerating,
   onSendMessage,
+  onFormSubmit,
   onExpand,
   language,
 }: {
@@ -555,10 +604,27 @@ const MessageItem = memo(function MessageItem({
   isStreaming: boolean;
   isGenerating: boolean;
   onSendMessage: (text: string) => void;
+  onFormSubmit?:
+    | ((messageId: string, selectedId: string, value: string, customValue?: string) => void)
+    | undefined;
   onExpand: () => void;
   language: Language;
 }) {
   const isUser = msg.role === 'user';
+
+  const handleFormOptionSubmit = useCallback(
+    (value: string) => {
+      if (!msg.form || !onFormSubmit) return;
+      // Find the option that matches this value, or treat it as custom "other"
+      const matchedOption = msg.form.options.find((o) => o.value === value);
+      if (matchedOption) {
+        onFormSubmit(msg.id, matchedOption.id, value);
+      } else {
+        onFormSubmit(msg.id, '__other__', value, value);
+      }
+    },
+    [msg.id, msg.form, onFormSubmit],
+  );
 
   return (
     <div
@@ -682,6 +748,15 @@ const MessageItem = memo(function MessageItem({
               ))}
             </div>
           )}
+
+          {/* Dynamic in-chat form (ask_user tool) */}
+          {!isUser && msg.form && (
+            <InlineChatForm
+              form={msg.form}
+              onSubmit={handleFormOptionSubmit}
+              disabled={isGenerating}
+            />
+          )}
         </div>
       </div>
     </div>
@@ -694,6 +769,7 @@ export function ChatMessages({
   isGenerating,
   messagesEndRef,
   onSendMessage,
+  onFormSubmit,
   language,
   onExpandClose,
 }: ChatMessagesProps) {
@@ -761,6 +837,7 @@ export function ChatMessages({
                 isStreaming={isStreaming}
                 isGenerating={isGenerating}
                 onSendMessage={onSendMessage}
+                onFormSubmit={onFormSubmit}
                 onExpand={handleExpand}
                 language={language}
               />
