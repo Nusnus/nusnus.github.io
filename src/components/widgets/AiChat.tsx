@@ -75,6 +75,52 @@ function isWelcomeMessage(content: string): boolean {
   return LANGUAGES.some((l) => t(l.code).welcome === content);
 }
 
+/** Parse ask_user tool call arguments into a ChatForm (or undefined on failure). */
+function parseAskUserForm(toolCallArgs: string): ChatForm | undefined {
+  try {
+    const args = JSON.parse(toolCallArgs) as {
+      question?: string;
+      options?: { id?: string; label?: string; description?: string; value?: string }[];
+      allow_other?: boolean;
+    };
+    if (args.question && Array.isArray(args.options) && args.options.length > 0) {
+      const options: ChatFormOption[] = args.options
+        .filter(
+          (o): o is { id: string; label: string; value: string; description?: string } =>
+            typeof o.id === 'string' &&
+            typeof o.label === 'string' &&
+            typeof o.value === 'string' &&
+            o.value.trim().length > 0,
+        )
+        .map((o) => ({
+          id: o.id,
+          label: o.label,
+          ...(o.description !== undefined && { description: o.description }),
+          value: o.value,
+        }));
+      if (options.length > 0) {
+        return {
+          question: args.question,
+          options,
+          allowOther: args.allow_other !== false,
+          selectedId: null,
+        };
+      }
+    }
+  } catch {
+    // Parse failure — return undefined
+  }
+  return undefined;
+}
+
+/** Pre-generated video chat result for a single option. */
+interface VideoChatPreGenResult {
+  textContent: string;
+  videoUrl?: string;
+  audioUrl?: string;
+  formData?: ChatForm;
+}
+
 /** Main Cybernus chat component — cloud-only architecture with professional UI. */
 export default function AiChat({ systemPrompt }: AiChatProps) {
   /* ─── Core state ─── */
@@ -144,6 +190,23 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
     selectedId: string;
     customValue?: string;
   } | null>(null);
+
+  /** Ref tracking latest messages for use in async pre-gen callbacks. */
+  const messagesRef = useRef(messages);
+  messagesRef.current = messages;
+
+  /** Allow the next sendMessage call to bypass the isGenerating check (used by pre-gen fallback). */
+  const forceNextSendRef = useRef(false);
+
+  /** Pre-generation cache/controllers for video chat option videos. */
+  const preGenCacheRef = useRef(new Map<string, VideoChatPreGenResult>());
+  const preGenControllersRef = useRef(new Map<string, AbortController>());
+  const preGenPromisesRef = useRef(new Map<string, Promise<VideoChatPreGenResult | null>>());
+
+  /** Ref to the startOptionsPreGen function (avoids circular useCallback deps). */
+  const startOptionsPreGenRef = useRef<
+    ((options: ChatFormOption[], historyMessages: ChatMessage[]) => void) | null
+  >(null);
 
   /* ─── Debug logging helper ─── */
   const addLog = useCallback(
@@ -370,7 +433,9 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
   const sendMessage = useCallback(
     async (text: string, options?: { displayText?: string; hidden?: boolean }) => {
       const trimmed = text.trim();
-      if (!trimmed || isGenerating) return;
+      const forced = forceNextSendRef.current;
+      forceNextSendRef.current = false;
+      if (!trimmed || (isGenerating && !forced)) return;
 
       const userMessageCount = messages.filter((m) => m.role === 'user' && !m.hidden).length;
       if (userMessageCount >= MAX_USER_MESSAGES) return;
@@ -736,41 +801,13 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
         let formData: ChatForm | undefined;
         const askUserCall = result.toolCalls.find((tc) => tc.name === 'ask_user');
         if (askUserCall) {
-          try {
-            const args = JSON.parse(askUserCall.arguments) as {
-              question?: string;
-              options?: { id?: string; label?: string; description?: string; value?: string }[];
-              allow_other?: boolean;
-            };
-            if (args.question && Array.isArray(args.options) && args.options.length > 0) {
-              const options: ChatFormOption[] = args.options
-                .filter(
-                  (o): o is { id: string; label: string; value: string; description?: string } =>
-                    typeof o.id === 'string' &&
-                    typeof o.label === 'string' &&
-                    typeof o.value === 'string' &&
-                    o.value.trim().length > 0,
-                )
-                .map((o) => ({
-                  id: o.id,
-                  label: o.label,
-                  ...(o.description !== undefined && { description: o.description }),
-                  value: o.value,
-                }));
-              if (options.length > 0) {
-                formData = {
-                  question: args.question,
-                  options,
-                  allowOther: args.allow_other !== false,
-                  selectedId: null,
-                };
-                addLog('info', 'api', 'ask_user form parsed', {
-                  question: args.question,
-                  optionCount: options.length,
-                });
-              }
-            }
-          } catch {
+          formData = parseAskUserForm(askUserCall.arguments);
+          if (formData) {
+            addLog('info', 'api', 'ask_user form parsed', {
+              question: formData.question,
+              optionCount: formData.options.length,
+            });
+          } else {
             addLog('warn', 'api', 'Failed to parse ask_user arguments');
           }
         }
@@ -812,6 +849,13 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
             finalMessages = [...updated.slice(0, -1), updatedAssistant];
             setMessages(finalMessages);
           }
+        }
+
+        // Video Chat mode: start pre-generating videos for all options in parallel
+        // while the user decides which option to pick. This leverages the user's
+        // "thinking time" to get a head start on the next video generation.
+        if (isVideoChatMode && formData && formData.options.length > 0) {
+          startOptionsPreGenRef.current?.(formData.options, finalMessages);
         }
 
         // Persist to localStorage
@@ -1040,29 +1084,257 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
   handleVoiceToggleRef.current = handleVoiceToggle;
   sendMessageRef.current = sendMessage;
 
+  /* ─── Video Chat: parallel pre-generation of option videos ─── */
+  const startOptionsPreGen = useCallback(
+    (options: ChatFormOption[], historyMessages: ChatMessage[]) => {
+      // Cancel any existing pre-gen tasks
+      for (const ctrl of preGenControllersRef.current.values()) ctrl.abort();
+      preGenCacheRef.current.clear();
+      preGenControllersRef.current.clear();
+      preGenPromisesRef.current.clear();
+
+      addLog('info', 'api', `Starting pre-gen for ${options.length} options`);
+
+      for (const option of options) {
+        const ctrl = new AbortController();
+        preGenControllersRef.current.set(option.id, ctrl);
+
+        const promise = (async (): Promise<VideoChatPreGenResult | null> => {
+          try {
+            const [
+              { cloudChatStream: streamFn, generateVideo: genVideo },
+              { buildCloudContext, buildVisualReferenceMessage },
+            ] = await Promise.all([import('@lib/ai/cloud'), import('@lib/ai/cloud-context')]);
+
+            const contextMsg = `I chose: ${option.label}. Proceed with this choice — do not ask again.`;
+            const userChoice: ChatMessage = {
+              id: crypto.randomUUID(),
+              role: 'user',
+              content: contextMsg,
+              hidden: true,
+            };
+
+            const chatHistory = trimHistory(
+              [...historyMessages, userChoice]
+                .filter((m) => m.content.length > 0 && !isWelcomeMessage(m.content))
+                .map((m) => ({ role: m.role, content: m.content })),
+            );
+
+            const context = await buildCloudContext(undefined, personality, language);
+            const fullHistory = [
+              {
+                role: 'system' as const,
+                content: systemPrompt + context + VIDEO_CHAT_SYSTEM_PROMPT,
+              },
+              ...(await buildVisualReferenceMessage().then((m) => (m ? [m] : []))),
+              ...chatHistory,
+            ];
+
+            const tools = getToolsForModel(selectedCloudModelId);
+            const result = await streamFn(
+              fullHistory,
+              selectedCloudModelId,
+              () => undefined, // no-op: background pre-gen doesn't stream to UI
+              ctrl.signal,
+              { tools, tool_choice: 'auto' },
+            );
+
+            if (ctrl.signal.aborted) return null;
+
+            // Generate video + TTS in parallel
+            const videoCall = result.toolCalls.find((tc) => tc.name === 'generate_video');
+            const videoPromise = videoCall
+              ? (async () => {
+                  try {
+                    const args = JSON.parse(videoCall.arguments) as { prompt?: string };
+                    if (!args.prompt) return undefined;
+                    return await genVideo(args.prompt, ctrl.signal);
+                  } catch {
+                    return undefined;
+                  }
+                })()
+              : Promise.resolve(undefined);
+
+            const preGenTtsPromise = result.content.trim()
+              ? (async () => {
+                  try {
+                    const { textToSpeech } = await import('@lib/cybernus/services/VoiceService');
+                    const audioElement = await textToSpeech(result.content.trim(), ctrl.signal);
+                    return audioElement.src;
+                  } catch {
+                    return undefined;
+                  }
+                })()
+              : Promise.resolve(undefined);
+
+            const [videoUrl, audioUrl] = await Promise.all([videoPromise, preGenTtsPromise]);
+            if (ctrl.signal.aborted) return null;
+
+            // Parse ask_user for next set of options
+            let nextForm: ChatForm | undefined;
+            const askCall = result.toolCalls.find((tc) => tc.name === 'ask_user');
+            if (askCall) {
+              nextForm = parseAskUserForm(askCall.arguments);
+            }
+
+            const preGenResult: VideoChatPreGenResult = {
+              textContent: result.content,
+              ...(videoUrl && { videoUrl }),
+              ...(audioUrl && { audioUrl }),
+              ...(nextForm && { formData: nextForm }),
+            };
+
+            preGenCacheRef.current.set(option.id, preGenResult);
+            addLog('info', 'api', `Pre-gen done: ${option.label}`, {
+              hasVideo: !!videoUrl,
+              hasAudio: !!audioUrl,
+            });
+
+            return preGenResult;
+          } catch (err) {
+            if (!ctrl.signal.aborted) {
+              addLog('warn', 'api', `Pre-gen failed: ${option.label}`, {
+                error: err instanceof Error ? err.message : 'Unknown',
+              });
+            }
+            return null;
+          }
+        })();
+
+        preGenPromisesRef.current.set(option.id, promise);
+      }
+    },
+    [systemPrompt, personality, language, selectedCloudModelId, addLog],
+  );
+  startOptionsPreGenRef.current = startOptionsPreGen;
+
   /* ─── Form submission handler (ask_user tool) ─── */
   const handleFormSubmit = useCallback(
     (messageId: string, selectedId: string, value: string, customValue?: string) => {
-      // Store form update in ref — sendMessage will apply it atomically
-      // when building the updated messages array, preventing the stale
-      // closure from overwriting the selectedId.
+      const formMsg = messages.find((m) => m.id === messageId);
+      const option = formMsg?.form?.options.find((o) => o.id === selectedId);
+      const label = option?.label ?? customValue ?? value;
+
+      // In video chat mode, check pre-generated results first
+      if (isVideoChatMode && selectedId !== '__other__') {
+        // Cancel pre-gen for all other options
+        for (const [id, ctrl] of preGenControllersRef.current) {
+          if (id !== selectedId) ctrl.abort();
+        }
+
+        /** Apply a completed pre-gen result directly (skips sendMessage). */
+        const applyResult = (result: VideoChatPreGenResult) => {
+          const currentMessages = messagesRef.current;
+          // Mark the form as selected in the existing message
+          const withFormUpdate = currentMessages.map((m) => {
+            if (m.id === messageId && m.form) {
+              return {
+                ...m,
+                form: {
+                  ...m.form,
+                  selectedId,
+                  ...(customValue !== undefined && { customValue }),
+                },
+              };
+            }
+            return m;
+          });
+          const userMsg: ChatMessage = {
+            id: crypto.randomUUID(),
+            role: 'user',
+            content: `I chose: ${label}. Proceed with this choice — do not ask again.`,
+            hidden: true,
+          };
+          const assistantMsg: ChatMessage = {
+            id: crypto.randomUUID(),
+            role: 'assistant',
+            content: result.textContent || '',
+            ...(result.videoUrl && { videoChatUrl: result.videoUrl }),
+            ...(result.audioUrl && { videoChatAudioUrl: result.audioUrl }),
+            ...(result.textContent && { videoChatSpokenText: result.textContent }),
+            ...(result.formData && { form: result.formData }),
+          };
+          const finalMessages = [...withFormUpdate, userMsg, assistantMsg];
+          setMessages(finalMessages);
+          setIsGenerating(false);
+          // Persist to localStorage
+          const sid = saveMessages(finalMessages, activeSessionIdRef.current ?? undefined);
+          setActiveSession(sid);
+          setSessions(loadSessions());
+          // Clean up pre-gen refs
+          preGenCacheRef.current.clear();
+          preGenControllersRef.current.clear();
+          preGenPromisesRef.current.clear();
+          addLog('info', 'api', 'Applied pre-generated video result', { label });
+          // Start new pre-gen for the new options
+          if (result.formData && result.formData.options.length > 0) {
+            startOptionsPreGenRef.current?.(result.formData.options, finalMessages);
+          }
+        };
+
+        /** Fallback to normal sendMessage when pre-gen is unavailable. */
+        const fallback = () => {
+          pendingFormUpdateRef.current = {
+            messageId,
+            selectedId,
+            ...(customValue !== undefined && { customValue }),
+          };
+          const contextMessage = `I chose: ${label}. Proceed with this choice — do not ask again.`;
+          forceNextSendRef.current = true;
+          sendMessageRef.current?.(contextMessage, { hidden: true });
+        };
+
+        const cached = preGenCacheRef.current.get(selectedId);
+        if (cached?.videoUrl) {
+          // Pre-gen complete — apply directly
+          applyResult(cached);
+          return;
+        }
+
+        const promise = preGenPromisesRef.current.get(selectedId);
+        if (promise) {
+          // Pre-gen in progress — show loading and wait for it
+          setMessages((prev) =>
+            prev.map((m) => {
+              if (m.id === messageId && m.form) {
+                return {
+                  ...m,
+                  form: {
+                    ...m.form,
+                    selectedId,
+                    ...(customValue !== undefined && { customValue }),
+                  },
+                };
+              }
+              return m;
+            }),
+          );
+          setIsGenerating(true);
+          promise
+            .then((result) => {
+              if (result?.videoUrl) {
+                applyResult(result);
+              } else {
+                fallback();
+              }
+            })
+            .catch(() => {
+              fallback();
+            });
+          return;
+        }
+      }
+
+      // Normal flow — store form update and send message
       pendingFormUpdateRef.current = {
         messageId,
         selectedId,
         ...(customValue !== undefined && { customValue }),
       };
-
-      // Find the form's question and option label to give the AI clear context
-      // that this is a definitive selection, not a new question.
-      const formMsg = messages.find((m) => m.id === messageId);
-      const option = formMsg?.form?.options.find((o) => o.id === selectedId);
-      const label = option?.label ?? customValue ?? value;
       const contextMessage = `I chose: ${label}. Proceed with this choice — do not ask again.`;
-
-      // Send as hidden user message (the form selection is the visible interaction).
       sendMessage(contextMessage, { hidden: true });
     },
-    [sendMessage, messages],
+    [sendMessage, messages, isVideoChatMode, addLog],
   );
 
   /* ─── Video Chat mode handlers ─── */
@@ -1072,7 +1344,11 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
     // Set up video chat mode
     setIsVideoChatMode(true);
     setEngineState('ready');
+    sessionGenRef.current++;
+    activeSessionIdRef.current = null;
+    clearMessages();
     setMessages([]);
+    setActiveSession(null);
     videoChatPendingStartRef.current = true;
 
     addLog('info', 'session', 'Video Chat mode started');
@@ -1092,6 +1368,11 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
 
   const exitVideoChat = useCallback(() => {
     setIsVideoChatMode(false);
+    // Cancel all pre-generation tasks
+    for (const ctrl of preGenControllersRef.current.values()) ctrl.abort();
+    preGenCacheRef.current.clear();
+    preGenControllersRef.current.clear();
+    preGenPromisesRef.current.clear();
     sessionGenRef.current++;
     activeSessionIdRef.current = null;
     abortRef.current?.abort();
