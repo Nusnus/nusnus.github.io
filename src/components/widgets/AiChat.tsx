@@ -969,11 +969,18 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
         selectedId,
         ...(customValue !== undefined && { customValue }),
       };
-      // Send the selected value as the user's next message (hidden — the form
-      // selection is the visible interaction, no need for a "You: ..." bubble).
-      sendMessage(value, { hidden: true });
+
+      // Find the form's question and option label to give the AI clear context
+      // that this is a definitive selection, not a new question.
+      const formMsg = messages.find((m) => m.id === messageId);
+      const option = formMsg?.form?.options.find((o) => o.id === selectedId);
+      const label = option?.label ?? customValue ?? value;
+      const contextMessage = `I chose: ${label}. Proceed with this choice — do not ask again.`;
+
+      // Send as hidden user message (the form selection is the visible interaction).
+      sendMessage(contextMessage, { hidden: true });
     },
-    [sendMessage],
+    [sendMessage, messages],
   );
 
   /* ─── Listen for "Make it a video" and other programmatic send-message events ─── */
