@@ -714,7 +714,12 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
         const finalAssistant: ChatMessage = {
           ...assistantMsg,
           content:
-            textContent || (result.toolCalls.length > 0 && !formData ? '*(used tools only)*' : ''),
+            textContent ||
+            (formData
+              ? formData.question
+              : result.toolCalls.length > 0
+                ? '*(used tools only)*'
+                : ''),
           // Preserve agent activity accumulated during streaming
           ...(accumulatedAgentActivity.length > 0 && {
             agentActivity: accumulatedAgentActivity,
