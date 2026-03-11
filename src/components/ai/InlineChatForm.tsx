@@ -74,7 +74,7 @@ export const InlineChatForm = memo(function InlineChatForm({
       <div className="grid gap-2 sm:grid-cols-2">
         {form.options.map((option) => {
           const isSelected = form.selectedId === option.id;
-          const isOtherSelected = isAnswered && !isSelected && !isCustomAnswer;
+          const isOtherSelected = isAnswered && !isSelected;
 
           return (
             <button
