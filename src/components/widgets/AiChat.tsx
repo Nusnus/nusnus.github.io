@@ -493,8 +493,9 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
               const allTools = getToolsForModel(selectedCloudModelId);
               // If the previous assistant message had a form (ask_user), strip
               // ask_user from available tools so the AI cannot re-ask.
+              // Exception: in video chat mode, every turn needs ask_user for options.
               const prevAssistant = messages[messages.length - 1];
-              if (prevAssistant?.role === 'assistant' && prevAssistant.form) {
+              if (!isVideoChatMode && prevAssistant?.role === 'assistant' && prevAssistant.form) {
                 return allTools.filter((t) => !('name' in t && t.name === 'ask_user'));
               }
               return allTools;
