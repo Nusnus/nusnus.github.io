@@ -685,7 +685,8 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
                   (o): o is { id: string; label: string; value: string; description?: string } =>
                     typeof o.id === 'string' &&
                     typeof o.label === 'string' &&
-                    typeof o.value === 'string',
+                    typeof o.value === 'string' &&
+                    o.value.trim().length > 0,
                 )
                 .map((o) => ({
                   id: o.id,
