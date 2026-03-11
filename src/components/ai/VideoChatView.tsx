@@ -17,6 +17,7 @@ import { useState, useCallback, useRef, useEffect, memo } from 'react';
 import { cn } from '@lib/utils/cn';
 import type { ChatMessage, ChatFormOption } from '@lib/ai/types';
 import { VideoChatPlayer } from './VideoChatPlayer';
+import { VideoChatLoader } from './VideoChatLoader';
 
 interface VideoChatViewProps {
   messages: ChatMessage[];
@@ -160,20 +161,7 @@ export const VideoChatView = memo(function VideoChatView({
           {/* Video area */}
           <div className="w-full max-w-2xl">
             {/* Initial loading state (no video yet) */}
-            {isWaitingForVideo && !latestVideoMsg && (
-              <div className="flex aspect-video w-full items-center justify-center rounded-2xl border border-[#00ff41]/10 bg-[#0a0a0a]">
-                <div className="flex flex-col items-center gap-3">
-                  <div className="relative h-14 w-14">
-                    <div className="absolute inset-0 animate-spin rounded-full border-2 border-transparent border-t-[#00ff41]" />
-                    <div
-                      className="absolute inset-2 animate-spin rounded-full border-2 border-transparent border-t-[#00ff41]/40"
-                      style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}
-                    />
-                  </div>
-                  <span className="text-sm text-[#00ff41]/60">Preparing your video...</span>
-                </div>
-              </div>
-            )}
+            {isWaitingForVideo && !latestVideoMsg && <VideoChatLoader variant="initial" />}
 
             {/* Video player */}
             {latestVideoMsg && (

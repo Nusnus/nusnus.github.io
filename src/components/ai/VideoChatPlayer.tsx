@@ -10,6 +10,7 @@
 
 import { useState, useCallback, useRef, useEffect, memo } from 'react';
 import { cn } from '@lib/utils/cn';
+import { VideoChatLoader } from './VideoChatLoader';
 
 interface VideoChatPlayerProps {
   /** URL of the generated video. */
@@ -42,6 +43,19 @@ export const VideoChatPlayer = memo(function VideoChatPlayer({
   const [showCaption, setShowCaption] = useState(false);
   const [progress, setProgress] = useState(0);
   const playbackCompleteRef = useRef(false);
+
+  // Reset audioReady when audioUrl prop transitions from undefined → value
+  // (TTS finishes after initial render). This ensures auto-play waits for TTS.
+  const [prevAudioUrl, setPrevAudioUrl] = useState(audioUrl);
+  if (audioUrl !== prevAudioUrl) {
+    setPrevAudioUrl(audioUrl);
+    setAudioReady(!audioUrl);
+    // If the video already auto-played without audio, reset so it re-triggers
+    if (audioUrl && hasPlayed) {
+      setHasPlayed(false);
+      setIsPlaying(false);
+    }
+  }
 
   // Auto-play when both video and audio are ready
   useEffect(() => {
@@ -184,29 +198,7 @@ export const VideoChatPlayer = memo(function VideoChatPlayer({
   return (
     <div className="video-chat-player group relative w-full overflow-hidden rounded-2xl bg-black shadow-2xl shadow-black/40">
       {/* Loading state */}
-      {isLoading && (
-        <div className="flex aspect-video w-full items-center justify-center bg-black/80">
-          <div className="flex flex-col items-center gap-3">
-            <div className="relative h-12 w-12">
-              <div className="absolute inset-0 animate-spin rounded-full border-2 border-transparent border-t-[#00ff41]" />
-              <div
-                className="absolute inset-1 animate-spin rounded-full border-2 border-transparent border-t-[#00ff41]/50"
-                style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}
-              />
-              <svg
-                className="absolute inset-0 m-auto h-5 w-5 text-[#00ff41]/70"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path d="M23 7l-7 5 7 5V7zM14 5H3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z" />
-              </svg>
-            </div>
-            <span className="text-sm font-medium text-[#00ff41]/60">Generating video...</span>
-          </div>
-        </div>
-      )}
+      {isLoading && <VideoChatLoader variant="generating" />}
 
       {/* Video element */}
       {!isLoading && (

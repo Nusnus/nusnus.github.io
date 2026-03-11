@@ -424,6 +424,78 @@
   animation: video-chat-caption 500ms ease-out both;
 }
 
+/* Loader: pulsing rings */
+@keyframes video-chat-loader-ring {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.08);
+  }
+}
+
+.video-chat-loader-ring {
+  animation: video-chat-loader-ring 2.5s ease-in-out infinite;
+}
+
+/* Loader: ambient glow pulse */
+@keyframes video-chat-loader-glow {
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: translate(-50%, -50%) scale(1.15);
+  }
+}
+
+.video-chat-loader-glow {
+  animation: video-chat-loader-glow 4s ease-in-out infinite;
+}
+
+/* Loader: film strip frame float */
+@keyframes video-chat-film-frame {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  20% {
+    opacity: 0.6;
+    transform: translateY(0);
+  }
+  80% {
+    opacity: 0.6;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+.video-chat-film-frame {
+  animation: video-chat-film-frame 4s ease-in-out infinite;
+}
+
+/* Loader: shimmer bar */
+@keyframes video-chat-loader-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(400%);
+  }
+}
+
+.video-chat-loader-shimmer {
+  animation: video-chat-loader-shimmer 2s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .matrix-rain-char,
   .cybernus-scan-line::after,
@@ -439,7 +511,11 @@
   .ide-step-appear,
   .chat-form-appear,
   .video-chat-options-appear,
-  .video-chat-caption {
+  .video-chat-caption,
+  .video-chat-loader-ring,
+  .video-chat-loader-glow,
+  .video-chat-film-frame,
+  .video-chat-loader-shimmer {
     animation: none;
     opacity: 1;
   }
