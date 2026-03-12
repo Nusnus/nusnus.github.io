@@ -716,10 +716,29 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
           if (videoCall) {
             try {
               const args = JSON.parse(videoCall.arguments) as { prompt?: string };
-              const dialogueMatch = args.prompt?.match(/saying:\s*"([^"]+)"/i);
-              if (dialogueMatch?.[1]) {
-                videoChatTtsText = dialogueMatch[1];
-                addLog('info', 'api', 'Extracted TTS text from video prompt (content was empty)');
+              if (args.prompt) {
+                // Try multiple patterns to extract spoken dialogue from video prompt:
+                // 1. saying: "text" or says: "text" (with colon)
+                // 2. saying "text" or speaks "text" (without colon)
+                // 3. Single-quoted variants
+                const patterns = [
+                  /(?:saying|says|speaking|speaks):\s*"([^"]+)"/i,
+                  /(?:saying|says|speaking|speaks)\s+"([^"]+)"/i,
+                  /(?:saying|says|speaking|speaks):\s*'([^']+)'/i,
+                  /(?:saying|says|speaking|speaks)\s+'([^']+)'/i,
+                ];
+                for (const pattern of patterns) {
+                  const match = args.prompt.match(pattern);
+                  if (match?.[1]) {
+                    videoChatTtsText = match[1];
+                    addLog(
+                      'info',
+                      'api',
+                      'Extracted TTS text from video prompt (content was empty)',
+                    );
+                    break;
+                  }
+                }
               }
             } catch {
               // Ignore parse errors
@@ -729,17 +748,36 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
         if (isVideoChatMode && videoChatTtsText) {
           ttsPromise = (async () => {
             try {
-              addLog('info', 'api', 'Generating TTS for video chat voiceover (parallel)');
               const { textToSpeech } = await import('@lib/cybernus/services/VoiceService');
-              const audioElement = await textToSpeech(videoChatTtsText, controller.signal);
-              addLog('info', 'api', 'TTS voiceover generated for video chat');
-              return audioElement.src;
-            } catch (ttsErr) {
-              addLog('warn', 'api', 'TTS generation failed for video chat', {
-                error: ttsErr instanceof Error ? ttsErr.message : 'Unknown',
+              // Attempt TTS with one retry on failure
+              for (let attempt = 0; attempt < 2; attempt++) {
+                try {
+                  if (attempt === 0) {
+                    addLog('info', 'api', 'Generating TTS for video chat voiceover (parallel)');
+                  } else {
+                    addLog('info', 'api', 'Retrying TTS generation (attempt 2)');
+                  }
+                  const audioElement = await textToSpeech(videoChatTtsText, controller.signal);
+                  addLog('info', 'api', 'TTS voiceover generated for video chat');
+                  return audioElement.src;
+                } catch (ttsErr) {
+                  if (controller.signal.aborted) return undefined;
+                  if (attempt === 1) {
+                    addLog('warn', 'api', 'TTS generation failed for video chat after retry', {
+                      error: ttsErr instanceof Error ? ttsErr.message : 'Unknown',
+                    });
+                    return undefined;
+                  }
+                  // Brief pause before retry
+                  await new Promise((r) => setTimeout(r, 500));
+                }
+              }
+            } catch (importErr) {
+              addLog('warn', 'api', 'TTS module import failed', {
+                error: importErr instanceof Error ? importErr.message : 'Unknown',
               });
-              return undefined;
             }
+            return undefined;
           })();
 
           // Update message with spoken text immediately so the UI shows the loader
@@ -1300,8 +1338,21 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
               if (videoCallForTts) {
                 try {
                   const args = JSON.parse(videoCallForTts.arguments) as { prompt?: string };
-                  const dialogueMatch = args.prompt?.match(/saying:\s*"([^"]+)"/i);
-                  if (dialogueMatch?.[1]) preGenTtsText = dialogueMatch[1];
+                  if (args.prompt) {
+                    const patterns = [
+                      /(?:saying|says|speaking|speaks):\s*"([^"]+)"/i,
+                      /(?:saying|says|speaking|speaks)\s+"([^"]+)"/i,
+                      /(?:saying|says|speaking|speaks):\s*'([^']+)'/i,
+                      /(?:saying|says|speaking|speaks)\s+'([^']+)'/i,
+                    ];
+                    for (const pattern of patterns) {
+                      const match = args.prompt.match(pattern);
+                      if (match?.[1]) {
+                        preGenTtsText = match[1];
+                        break;
+                      }
+                    }
+                  }
                 } catch {
                   // Ignore parse errors
                 }
@@ -1327,11 +1378,19 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
               ? (async () => {
                   try {
                     const { textToSpeech } = await import('@lib/cybernus/services/VoiceService');
-                    const audioElement = await textToSpeech(preGenTtsText, ctrl.signal);
-                    return audioElement.src;
+                    for (let attempt = 0; attempt < 2; attempt++) {
+                      try {
+                        const audioElement = await textToSpeech(preGenTtsText, ctrl.signal);
+                        return audioElement.src;
+                      } catch {
+                        if (ctrl.signal.aborted) return undefined;
+                        if (attempt === 0) await new Promise((r) => setTimeout(r, 500));
+                      }
+                    }
                   } catch {
-                    return undefined;
+                    // Import failed — degrade gracefully without TTS
                   }
+                  return undefined;
                 })()
               : Promise.resolve(undefined);
 
