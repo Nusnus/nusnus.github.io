@@ -22,6 +22,8 @@ import { handleGitHubRoute } from './github';
 interface Env {
   XAI_API_KEY: string;
   GITHUB_TOKEN: string;
+  /** Resend API key for billing-alert emails. Optional — if unset, alerts are only logged. */
+  RESEND_API_KEY?: string;
 }
 
 interface InputMessage {
@@ -83,6 +85,12 @@ const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
 const RATE_LIMIT_MAX_REQUESTS = 20; // per IP per window
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 
+/** Billing-alert email cooldown — max 1 email per hour (per isolate). */
+const BILLING_ALERT_COOLDOWN_MS = 3_600_000; // 1 hour
+let lastBillingAlertSentAt = 0;
+const ADMIN_EMAIL = 'tomer.nosrati@gmail.com';
+const RESEND_API_URL = 'https://api.resend.com/emails';
+
 // ─── Helpers ─────────────────────────────────────────────────────────
 
 function corsHeaders(origin: string): Record<string, string> {
@@ -124,6 +132,85 @@ function isRateLimited(ip: string): boolean {
   return entry.count > RATE_LIMIT_MAX_REQUESTS;
 }
 
+// ─── Billing Alert ───────────────────────────────────────────────────
+
+/** Returns true if the xAI response body indicates a billing/credits error. */
+function isBillingError(responseBody: string): boolean {
+  const lower = responseBody.toLowerCase();
+  return (
+    lower.includes('used all available credits') ||
+    lower.includes('spending limit') ||
+    lower.includes('insufficient_quota') ||
+    lower.includes('billing')
+  );
+}
+
+/**
+ * Send a billing-alert email via Resend (fire-and-forget, never throws).
+ * Rate-limited to 1 email per hour to avoid spam.
+ */
+async function sendBillingAlert(env: Env, endpoint: string, responseBody: string): Promise<void> {
+  const now = Date.now();
+  if (now - lastBillingAlertSentAt < BILLING_ALERT_COOLDOWN_MS) return;
+  lastBillingAlertSentAt = now;
+
+  if (!env.RESEND_API_KEY) {
+    console.warn(
+      '[ai-proxy] Billing error detected but RESEND_API_KEY is not configured — skipping email alert.',
+    );
+    return;
+  }
+
+  try {
+    const res = await fetch(RESEND_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${env.RESEND_API_KEY}`,
+      },
+      body: JSON.stringify({
+        from: 'Cybernus Alerts <alerts@cybernus.dev>',
+        to: [ADMIN_EMAIL],
+        subject: '⚠️ xAI API Billing Alert — Credits Exhausted',
+        html: `
+          <h2>xAI API Billing Alert</h2>
+          <p><strong>Time:</strong> ${new Date().toISOString()}</p>
+          <p><strong>Endpoint:</strong> ${endpoint}</p>
+          <p><strong>Error response:</strong></p>
+          <pre style="background:#f4f4f4;padding:12px;border-radius:6px;overflow:auto;">${responseBody.slice(0, 2000)}</pre>
+          <p>Please add funds or raise the spending limit in your <a href="https://console.x.ai">xAI dashboard</a>.</p>
+        `,
+      }),
+    });
+    if (!res.ok) {
+      const errText = await res.text().catch(() => 'unknown');
+      console.error(`[ai-proxy] Failed to send billing alert email: ${res.status} ${errText}`);
+    } else {
+      console.log('[ai-proxy] Billing alert email sent to admin.');
+    }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'unknown';
+    console.error(`[ai-proxy] Failed to send billing alert email: ${msg}`);
+  }
+}
+
+/**
+ * Check an xAI upstream response for billing errors and fire an alert if needed.
+ * Returns the response body string so callers can reuse it.
+ */
+async function checkAndAlertBilling(
+  env: Env,
+  xaiResponse: Response,
+  endpoint: string,
+): Promise<string> {
+  const responseBody = await xaiResponse.text();
+  if (!xaiResponse.ok && isBillingError(responseBody)) {
+    // Fire-and-forget — don't block the response
+    void sendBillingAlert(env, endpoint, responseBody);
+  }
+  return responseBody;
+}
+
 // ─── Worker ──────────────────────────────────────────────────────────
 
 export default {
@@ -162,7 +249,7 @@ export default {
             method: 'GET',
             headers: { Authorization: `Bearer ${env.XAI_API_KEY}` },
           });
-          const responseBody = await xaiRes.text();
+          const responseBody = await checkAndAlertBilling(env, xaiRes, '/v1/videos/:id');
           return new Response(responseBody, {
             status: xaiRes.status,
             headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
@@ -212,7 +299,7 @@ export default {
           body: JSON.stringify({ expires_after: { seconds: 300 } }),
         });
 
-        const body = await xaiRes.text();
+        const body = await checkAndAlertBilling(env, xaiRes, '/v1/realtime/client_secrets');
         return new Response(body, {
           status: xaiRes.status,
           headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
@@ -250,6 +337,9 @@ export default {
 
         if (!xaiRes.ok || !xaiRes.body) {
           const errorBody = await xaiRes.text().catch(() => 'TTS error');
+          if (isBillingError(errorBody)) {
+            void sendBillingAlert(env, '/v1/tts', errorBody);
+          }
           return new Response(errorBody, {
             status: xaiRes.status || 502,
             headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
@@ -307,7 +397,7 @@ export default {
           body: JSON.stringify(parsed),
         });
 
-        const responseBody = await xaiRes.text();
+        const responseBody = await checkAndAlertBilling(env, xaiRes, '/v1/images/generations');
         return new Response(responseBody, {
           status: xaiRes.status,
           headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
@@ -354,7 +444,7 @@ export default {
           body: JSON.stringify(parsed),
         });
 
-        const responseBody = await xaiRes.text();
+        const responseBody = await checkAndAlertBilling(env, xaiRes, '/v1/videos/generations');
         return new Response(responseBody, {
           status: xaiRes.status,
           headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
@@ -466,6 +556,9 @@ export default {
         // Pipe the SSE stream straight through to the client
         if (!xaiResponse.ok || !xaiResponse.body) {
           const errorBody = await xaiResponse.text().catch(() => 'Upstream error');
+          if (isBillingError(errorBody)) {
+            void sendBillingAlert(env, '/v1/responses (stream)', errorBody);
+          }
           return new Response(errorBody, {
             status: xaiResponse.status || 502,
             headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
@@ -483,7 +576,7 @@ export default {
       }
 
       // Non-streaming: return full JSON response
-      const responseBody = await xaiResponse.text();
+      const responseBody = await checkAndAlertBilling(env, xaiResponse, '/v1/responses');
 
       // Forward xAI status code (200, 400, 429, 500, etc.)
       return new Response(responseBody, {
