@@ -40,7 +40,9 @@ export const VideoChatPlayer = memo(function VideoChatPlayer({
   const audioRef = useRef<HTMLAudioElement>(null);
   const progressRef = useRef<HTMLDivElement>(null);
   const [videoReady, setVideoReady] = useState(false);
-  const [audioReady, setAudioReady] = useState(!audioUrl);
+  // Audio is "ready" only when there's no audio to wait for.
+  // If spokenText exists, we expect TTS audio — don't mark ready until it arrives.
+  const [audioReady, setAudioReady] = useState(!audioUrl && !spokenText);
   const [isPlaying, setIsPlaying] = useState(false);
   const [hasPlayed, setHasPlayed] = useState(false);
   const [videoError, setVideoError] = useState(false);
@@ -52,7 +54,9 @@ export const VideoChatPlayer = memo(function VideoChatPlayer({
   const [prevAudioUrl, setPrevAudioUrl] = useState(audioUrl);
   if (audioUrl !== prevAudioUrl) {
     setPrevAudioUrl(audioUrl);
-    setAudioReady(!audioUrl);
+    // If audio just arrived, mark not ready until it loads (onCanPlayThrough).
+    // If audio was removed, mark ready only if there's no spoken text expecting it.
+    setAudioReady(!audioUrl && !spokenText);
     // If the video already auto-played without audio, reset so it re-triggers
     if (audioUrl && hasPlayed) {
       setHasPlayed(false);
@@ -224,12 +228,14 @@ export const VideoChatPlayer = memo(function VideoChatPlayer({
       setIsPlaying(true);
       setShowCaption(true);
     } catch {
-      // Fallback: unmute video
+      // Fallback: play video muted (the generated video has no audio track —
+      // unmuting it would still be silent). Audio overlay is best-effort.
       if (video) {
-        video.muted = false;
+        video.muted = true;
         try {
           await video.play();
           setIsPlaying(true);
+          setShowCaption(true);
         } catch {
           /* give up */
         }
