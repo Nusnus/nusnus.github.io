@@ -555,6 +555,42 @@
 .video-chat-loader-shimmer {
   animation: video-chat-loader-shimmer 2s ease-in-out infinite;
 }
+
+/* ─── Video Chat Mobile-Native Enhancements ─── */
+
+/* Smooth spring-like press feedback for option cards on touch devices */
+@media (pointer: coarse) {
+  .video-chat-options-appear button {
+    transition: transform 150ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+}
+
+/* Prevent rubber-banding / overscroll in video chat */
+.video-chat-player {
+  -webkit-user-select: none;
+  user-select: none;
+  /* GPU-composited layer for smoother rendering on Android */
+  will-change: transform;
+  /* Prevent long-press context menu on Android */
+  -webkit-touch-callout: none;
+}
+
+/* Ensure video element doesn't show native Android controls overlay */
+.video-chat-player video::-webkit-media-controls {
+  display: none !important;
+}
+
+.video-chat-player video::-webkit-media-controls-enclosure {
+  display: none !important;
+}
+
+/* GPU-accelerated option card transitions for Android */
+.video-chat-options-appear {
+  will-change: opacity, transform;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .matrix-rain-char,
   .cybernus-scan-line::after,

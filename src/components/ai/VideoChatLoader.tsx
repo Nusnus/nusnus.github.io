@@ -113,22 +113,22 @@ export const VideoChatLoader = memo(function VideoChatLoader({
   }, []);
 
   return (
-    <div className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-2xl border border-[#00ff41]/10 bg-[#0a0a0a]">
+    <div className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-xl border border-[#00ff41]/10 bg-[#0a0a0a] sm:rounded-2xl">
       {/* Background ambient glow */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="video-chat-loader-glow absolute top-1/2 left-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#00ff41]/[0.04] blur-3xl sm:h-80 sm:w-80" />
       </div>
 
-      {/* Film strip decorative frames — left side */}
-      <div className="absolute top-0 left-0 h-full w-14 overflow-hidden opacity-30 sm:w-16">
+      {/* Film strip decorative frames — left side (hidden on very small screens) */}
+      <div className="absolute top-0 left-0 hidden h-full w-14 overflow-hidden opacity-30 sm:block sm:w-16">
         <FilmFrame delay={0} side="left" />
         <FilmFrame delay={0.8} side="left" />
         <FilmFrame delay={1.6} side="left" />
         <FilmFrame delay={2.4} side="left" />
       </div>
 
-      {/* Film strip decorative frames — right side */}
-      <div className="absolute top-0 right-0 h-full w-14 overflow-hidden opacity-30 sm:w-16">
+      {/* Film strip decorative frames — right side (hidden on very small screens) */}
+      <div className="absolute top-0 right-0 hidden h-full w-14 overflow-hidden opacity-30 sm:block sm:w-16">
         <FilmFrame delay={0.4} side="right" />
         <FilmFrame delay={1.2} side="right" />
         <FilmFrame delay={2.0} side="right" />
@@ -136,7 +136,7 @@ export const VideoChatLoader = memo(function VideoChatLoader({
       </div>
 
       {/* Main content */}
-      <div className="relative z-10 flex flex-col items-center gap-5 px-6 sm:gap-6">
+      <div className="relative z-10 flex flex-col items-center gap-4 px-4 sm:gap-6 sm:px-6">
         {/* Animated icon */}
         <div className="relative">
           {/* Outer pulsing ring */}
@@ -204,7 +204,7 @@ export const VideoChatLoader = memo(function VideoChatLoader({
         />
       </div>
       {/* Progress percentage + ETA — direct DOM updates via ref */}
-      <div className="absolute right-3 bottom-3 flex items-center gap-2 text-[10px] text-white/30 sm:right-4 sm:bottom-3.5 sm:text-xs">
+      <div className="absolute right-2 bottom-2.5 flex items-center gap-2 text-[10px] text-white/30 sm:right-4 sm:bottom-3.5 sm:text-xs">
         <span ref={pctRef}>0%</span>
         <span ref={etaRef} />
       </div>
