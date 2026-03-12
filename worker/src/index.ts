@@ -61,6 +61,8 @@ const XAI_VIDEOS_STATUS_URL = 'https://api.x.ai/v1/videos';
 
 /** Models visitors are allowed to use. Prevents switching to costly models. */
 const ALLOWED_MODELS: ReadonlySet<string> = new Set([
+  'grok-4.20-beta-latest-non-reasoning',
+  'grok-4.20-beta-latest',
   'grok-4-1-fast',
   'grok-4-1-fast-reasoning',
   'grok-4-1-fast-non-reasoning',
@@ -68,18 +70,23 @@ const ALLOWED_MODELS: ReadonlySet<string> = new Set([
   'grok-code-fast-1',
 ]);
 
-const DEFAULT_MODEL = 'grok-4-1-fast';
+const DEFAULT_MODEL = 'grok-4.20-beta-latest';
 
 /** Hard limits to prevent abuse. */
 const MAX_REQUEST_BYTES = 6_291_456; // 6 MB — /v1/responses only (full context + multiple base64 reference photos)
 const MAX_SMALL_REQUEST_BYTES = 131_072; // 128 KB — TTS, image, and video endpoints
-const MAX_OUTPUT_TOKENS_CAP = 4096;
+const MAX_OUTPUT_TOKENS_CAP = 16_384;
 const MAX_INPUT_ITEMS = 80; // 1 system + up to 30 user + 30 assistant + margin
 
 /** Simple in-memory rate limiter (per-isolate, resets on cold start). */
 const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
 const RATE_LIMIT_MAX_REQUESTS = 20; // per IP per window
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+
+/** Billing-alert cooldown — max 1 alert per hour (per isolate). */
+const BILLING_ALERT_COOLDOWN_MS = 3_600_000; // 1 hour
+let lastBillingAlertSentAt = 0;
+const GITHUB_ISSUES_URL = 'https://api.github.com/repos/Nusnus/nusnus.github.io/issues';
 
 // ─── Helpers ─────────────────────────────────────────────────────────
 
@@ -122,6 +129,98 @@ function isRateLimited(ip: string): boolean {
   return entry.count > RATE_LIMIT_MAX_REQUESTS;
 }
 
+// ─── Billing Alert ───────────────────────────────────────────────────
+
+/** Returns true if the xAI response body indicates a billing/credits error. */
+function isBillingError(responseBody: string): boolean {
+  const lower = responseBody.toLowerCase();
+  return (
+    lower.includes('used all available credits') ||
+    lower.includes('spending limit') ||
+    lower.includes('insufficient_quota') ||
+    lower.includes('billing_hard_limit_reached') ||
+    lower.includes('billing error')
+  );
+}
+
+/**
+ * Create a GitHub issue as a billing alert (fire-and-forget, never throws).
+ * Rate-limited to 1 alert per hour to avoid spam.
+ * Uses the existing GITHUB_TOKEN — no external service needed.
+ */
+async function sendBillingAlert(env: Env, endpoint: string, responseBody: string): Promise<void> {
+  const now = Date.now();
+  if (now - lastBillingAlertSentAt < BILLING_ALERT_COOLDOWN_MS) return;
+  lastBillingAlertSentAt = now;
+
+  if (!env.GITHUB_TOKEN) {
+    console.warn(
+      '[ai-proxy] Billing error detected but GITHUB_TOKEN is not configured — skipping alert.',
+    );
+    return;
+  }
+
+  try {
+    const timestamp = new Date().toISOString();
+    const truncatedBody = responseBody.slice(0, 2000);
+    const res = await fetch(GITHUB_ISSUES_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${env.GITHUB_TOKEN}`,
+        Accept: 'application/vnd.github+json',
+        'User-Agent': 'ai-proxy-worker',
+      },
+      body: JSON.stringify({
+        title: `⚠️ xAI API Billing Alert — Credits Exhausted (${endpoint})`,
+        body: [
+          '## xAI API Billing Alert',
+          '',
+          `**Time:** ${timestamp}`,
+          `**Endpoint:** \`${endpoint}\``,
+          '',
+          '**Error response:**',
+          '```json',
+          truncatedBody,
+          '```',
+          '',
+          'Please add funds or raise the spending limit in the [xAI dashboard](https://console.x.ai).',
+          '',
+          '---',
+          '*This issue was auto-created by the ai-proxy Cloudflare Worker.*',
+        ].join('\n'),
+        labels: ['billing-alert'],
+      }),
+    });
+    if (!res.ok) {
+      const errText = await res.text().catch(() => 'unknown');
+      console.error(`[ai-proxy] Failed to create billing alert issue: ${res.status} ${errText}`);
+    } else {
+      console.log('[ai-proxy] Billing alert issue created on GitHub.');
+    }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'unknown';
+    console.error(`[ai-proxy] Failed to create billing alert issue: ${msg}`);
+  }
+}
+
+/**
+ * Check an xAI upstream response for billing errors and fire an alert if needed.
+ * Returns the response body string so callers can reuse it.
+ */
+async function checkAndAlertBilling(
+  env: Env,
+  xaiResponse: Response,
+  endpoint: string,
+): Promise<string> {
+  const responseBody = await xaiResponse.text();
+  if (!xaiResponse.ok && isBillingError(responseBody)) {
+    // Fire-and-forget — don't block the response
+    void sendBillingAlert(env, endpoint, responseBody);
+  }
+  return responseBody;
+}
+
 // ─── Worker ──────────────────────────────────────────────────────────
 
 export default {
@@ -160,7 +259,7 @@ export default {
             method: 'GET',
             headers: { Authorization: `Bearer ${env.XAI_API_KEY}` },
           });
-          const responseBody = await xaiRes.text();
+          const responseBody = await checkAndAlertBilling(env, xaiRes, '/v1/videos/:id');
           return new Response(responseBody, {
             status: xaiRes.status,
             headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
@@ -210,7 +309,7 @@ export default {
           body: JSON.stringify({ expires_after: { seconds: 300 } }),
         });
 
-        const body = await xaiRes.text();
+        const body = await checkAndAlertBilling(env, xaiRes, '/v1/realtime/client_secrets');
         return new Response(body, {
           status: xaiRes.status,
           headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
@@ -248,6 +347,9 @@ export default {
 
         if (!xaiRes.ok || !xaiRes.body) {
           const errorBody = await xaiRes.text().catch(() => 'TTS error');
+          if (isBillingError(errorBody)) {
+            void sendBillingAlert(env, '/v1/tts', errorBody);
+          }
           return new Response(errorBody, {
             status: xaiRes.status || 502,
             headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
@@ -305,7 +407,7 @@ export default {
           body: JSON.stringify(parsed),
         });
 
-        const responseBody = await xaiRes.text();
+        const responseBody = await checkAndAlertBilling(env, xaiRes, '/v1/images/generations');
         return new Response(responseBody, {
           status: xaiRes.status,
           headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
@@ -352,7 +454,7 @@ export default {
           body: JSON.stringify(parsed),
         });
 
-        const responseBody = await xaiRes.text();
+        const responseBody = await checkAndAlertBilling(env, xaiRes, '/v1/videos/generations');
         return new Response(responseBody, {
           status: xaiRes.status,
           headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
@@ -464,6 +566,9 @@ export default {
         // Pipe the SSE stream straight through to the client
         if (!xaiResponse.ok || !xaiResponse.body) {
           const errorBody = await xaiResponse.text().catch(() => 'Upstream error');
+          if (isBillingError(errorBody)) {
+            void sendBillingAlert(env, '/v1/responses (stream)', errorBody);
+          }
           return new Response(errorBody, {
             status: xaiResponse.status || 502,
             headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
@@ -481,7 +586,7 @@ export default {
       }
 
       // Non-streaming: return full JSON response
-      const responseBody = await xaiResponse.text();
+      const responseBody = await checkAndAlertBilling(env, xaiResponse, '/v1/responses');
 
       // Forward xAI status code (200, 400, 429, 500, etc.)
       return new Response(responseBody, {

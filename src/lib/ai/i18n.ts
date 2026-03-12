@@ -100,6 +100,7 @@ interface UIStrings {
   searchingX: string;
   executingCode: string;
   queryingMcp: string;
+  videoChat: string;
 }
 
 const TRANSLATIONS: Record<Language, UIStrings> = {
@@ -152,6 +153,7 @@ const TRANSLATIONS: Record<Language, UIStrings> = {
     searchingX: 'Searching X',
     executingCode: 'Executing code',
     queryingMcp: 'Querying agent',
+    videoChat: 'Video Chat',
   },
   es: {
     welcome:
@@ -202,6 +204,7 @@ const TRANSLATIONS: Record<Language, UIStrings> = {
     searchingX: 'Buscando en X',
     executingCode: 'Ejecutando codigo',
     queryingMcp: 'Consultando agente',
+    videoChat: 'Video Chat',
   },
   he: {
     welcome:
@@ -252,6 +255,7 @@ const TRANSLATIONS: Record<Language, UIStrings> = {
     searchingX: 'X מחפש ב',
     executingCode: 'מריץ קוד',
     queryingMcp: 'שולח שאילתה לסוכן',
+    videoChat: 'וידאו צ׳אט',
   },
 };
 

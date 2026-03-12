@@ -261,14 +261,14 @@ export function buildToolDefinitions(tools: AgentTool[]): ToolDefinition[] {
       type: 'function',
       name: 'generate_video',
       description:
-        'Generate a short video (10 seconds, 720p) from a text prompt using xAI native video model. Use when the user asks to create a video, animation, or motion content. Produces cinematic, impressive results. Always make video prompts vivid, dramatic, and visually stunning — think Hollywood cinematography.',
+        'Generate a short video (720p, 16:9) from a text prompt using xAI native video model. In Video Chat mode, the prompt MUST show the Cybernus character speaking directly to camera with the exact dialogue embedded. Include facial close-up, natural speaking behaviors, and the character description. For non-Video Chat uses: create cinematic, dramatic videos. Always make prompts vivid and specific.',
       parameters: {
         type: 'object',
         properties: {
           prompt: {
             type: 'string',
             description:
-              'Detailed cinematic text prompt describing the video to generate. Be vivid, dramatic, and specific. Include camera movements, lighting, atmosphere. Think movie trailer quality.',
+              'Detailed text prompt describing the video to generate. For Video Chat: must show the character speaking to camera with dialogue embedded (e.g., \'The character speaks directly to camera, saying: "..."\'). Include character appearance, setting, and mood. For other uses: be cinematic and dramatic.',
           },
         },
         required: ['prompt'],

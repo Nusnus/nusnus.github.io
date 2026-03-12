@@ -57,6 +57,8 @@ export interface CloudChatOptions {
    * reasoning content is encrypted by xAI — only the count is exposed.
    */
   onReasoning?: (tokens: number) => void;
+  /** Called when a function_call item is fully streamed (arguments complete). */
+  onFunctionCallDone?: (name: string, args: string) => void;
 }
 
 /** Result from cloud chat containing both content and tool calls. */
@@ -394,6 +396,11 @@ export async function cloudChatStream(
           }
           // Legacy callback for RoastWidget compat
           if (e.item.type === 'web_search_call') options?.onWebSearchFound?.();
+          // Notify caller that a function call is fully streamed
+          if (e.item.type === 'function_call') {
+            const acc = toolCallAccumulator.get(e.output_index);
+            if (acc) options?.onFunctionCallDone?.(acc.name, acc.arguments);
+          }
         } else if (eventType === 'response.in_progress' || eventType === 'response.completed') {
           // Grok 4 streams usage snapshots on these events — extract reasoning_tokens
           reportUsage((raw as { response?: unknown }).response);
@@ -495,14 +502,26 @@ const VIDEO_POLL_INTERVAL_MS = 5_000;
  * Generate a video via the xAI video generation API through the worker proxy.
  * Handles the async polling flow — submits the request, polls for completion.
  * Returns the temporary URL of the generated video.
+ *
+ * @param prompt Descriptive text prompt for the video. Be cinematic and specific.
+ * @param signal Optional AbortSignal to cancel the generation.
+ * @param duration Video duration in seconds (1-15). Defaults to 5.
  */
-export async function generateVideo(prompt: string, signal?: AbortSignal): Promise<string> {
+export async function generateVideo(
+  prompt: string,
+  signal?: AbortSignal,
+  duration = 5,
+): Promise<string> {
+  // Clamp duration to API limits (1-15 seconds)
+  const clampedDuration = Math.max(1, Math.min(15, Math.round(duration)));
+
+  // Step 1: Submit generation request
   const startResponse = await fetch(`${WORKER_BASE_URL}/v1/videos/generations`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       prompt,
-      duration: 10,
+      duration: clampedDuration,
       aspect_ratio: '16:9',
       resolution: '720p',
     }),
