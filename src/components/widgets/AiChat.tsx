@@ -1368,6 +1368,15 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
         }
       }
 
+      // Cancel any in-flight pre-gen tasks (e.g. user typed a custom "Other" response)
+      if (isVideoChatMode) {
+        for (const ctrl of preGenControllersRef.current.values()) ctrl.abort();
+        revokePreGenBlobUrls();
+        preGenCacheRef.current.clear();
+        preGenControllersRef.current.clear();
+        preGenPromisesRef.current.clear();
+      }
+
       // Normal flow — store form update and send message
       pendingFormUpdateRef.current = {
         messageId,
