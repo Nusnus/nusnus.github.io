@@ -963,6 +963,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
   /* ─── Session management ─── */
   const clearChat = useCallback(() => {
     setIsVideoChatMode(false);
+    cleanupPreGen();
     // Save current messages before clearing so the session persists in history
     if (messages.length > 0 && messages.some((m) => m.role === 'user')) {
       saveMessages(messages, activeSessionId ?? undefined);
@@ -984,6 +985,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
   const switchSession = useCallback(
     (session: ChatSession) => {
       setIsVideoChatMode(false);
+      cleanupPreGen();
       // Increment generation counter and update ref before aborting
       sessionGenRef.current++;
       activeSessionIdRef.current = session.id;
@@ -1005,6 +1007,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       setSessions(loadSessions());
       if (activeSessionId === sessionId) {
         setIsVideoChatMode(false);
+        cleanupPreGen();
         sessionGenRef.current++;
         activeSessionIdRef.current = null;
         abortRef.current?.abort();
@@ -1021,6 +1024,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
 
   const handleClearAll = useCallback(() => {
     setIsVideoChatMode(false);
+    cleanupPreGen();
     sessionGenRef.current++;
     activeSessionIdRef.current = null;
     abortRef.current?.abort();
@@ -1122,14 +1126,19 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       }
     }
   };
+
+  /** Cancel all pre-gen tasks, revoke blob URLs, and clear caches. */
+  const cleanupPreGen = () => {
+    for (const ctrl of preGenControllersRef.current.values()) ctrl.abort();
+    revokePreGenBlobUrls();
+    preGenCacheRef.current.clear();
+    preGenControllersRef.current.clear();
+    preGenPromisesRef.current.clear();
+  };
   const startOptionsPreGen = useCallback(
     (options: ChatFormOption[], historyMessages: ChatMessage[]) => {
       // Cancel any existing pre-gen tasks
-      for (const ctrl of preGenControllersRef.current.values()) ctrl.abort();
-      revokePreGenBlobUrls();
-      preGenCacheRef.current.clear();
-      preGenControllersRef.current.clear();
-      preGenPromisesRef.current.clear();
+      cleanupPreGen();
 
       addLog('info', 'api', `Starting pre-gen for ${options.length} options`);
 
@@ -1387,11 +1396,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
 
       // Cancel any in-flight pre-gen tasks (e.g. user typed a custom "Other" response)
       if (isVideoChatMode) {
-        for (const ctrl of preGenControllersRef.current.values()) ctrl.abort();
-        revokePreGenBlobUrls();
-        preGenCacheRef.current.clear();
-        preGenControllersRef.current.clear();
-        preGenPromisesRef.current.clear();
+        cleanupPreGen();
       }
 
       // Normal flow — store form update and send message
@@ -1437,12 +1442,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
 
   const exitVideoChat = useCallback(() => {
     setIsVideoChatMode(false);
-    // Cancel all pre-generation tasks
-    for (const ctrl of preGenControllersRef.current.values()) ctrl.abort();
-    revokePreGenBlobUrls();
-    preGenCacheRef.current.clear();
-    preGenControllersRef.current.clear();
-    preGenPromisesRef.current.clear();
+    cleanupPreGen();
     sessionGenRef.current++;
     activeSessionIdRef.current = null;
     abortRef.current?.abort();

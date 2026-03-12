@@ -124,26 +124,30 @@ export const VideoChatPlayer = memo(function VideoChatPlayer({
     }
   }, [videoReady, audioReady, hasPlayed, isLoading]);
 
-  // Clean up media elements and TTS blob URL on unmount to release memory.
+  // Clean up media elements on unmount to release memory.
+  // Reads refs at cleanup time so it always captures the mounted elements,
+  // regardless of when isLoading transitions.
   useEffect(() => {
-    const video = videoRef.current;
-    const audio = audioRef.current;
-    const currentAudioUrl = audioUrl;
-
     return () => {
-      // Release video element resources
+      const video = videoRef.current;
+      const audio = audioRef.current;
       if (video) {
         video.pause();
         video.removeAttribute('src');
         video.load(); // forces resource release
       }
-      // Release audio element resources
       if (audio) {
         audio.pause();
         audio.removeAttribute('src');
         audio.load();
       }
-      // Revoke TTS blob URL
+    };
+  }, []);
+
+  // Revoke TTS blob URL when it changes or on unmount.
+  useEffect(() => {
+    const currentAudioUrl = audioUrl;
+    return () => {
       if (currentAudioUrl && currentAudioUrl.startsWith('blob:')) {
         URL.revokeObjectURL(currentAudioUrl);
       }
