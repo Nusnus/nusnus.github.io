@@ -4,5 +4,4 @@ compatibility_date = "2025-01-01"
 
 # Secrets are stored via:
 #   cd worker && npx wrangler secret put XAI_API_KEY
-#   cd worker && npx wrangler secret put RESEND_API_KEY    # optional — billing alert emails
 

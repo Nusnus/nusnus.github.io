@@ -22,8 +22,6 @@ import { handleGitHubRoute } from './github';
 interface Env {
   XAI_API_KEY: string;
   GITHUB_TOKEN: string;
-  /** Resend API key for billing-alert emails. Optional — if unset, alerts are only logged. */
-  RESEND_API_KEY?: string;
 }
 
 interface InputMessage {
@@ -85,11 +83,10 @@ const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
 const RATE_LIMIT_MAX_REQUESTS = 20; // per IP per window
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 
-/** Billing-alert email cooldown — max 1 email per hour (per isolate). */
+/** Billing-alert cooldown — max 1 alert per hour (per isolate). */
 const BILLING_ALERT_COOLDOWN_MS = 3_600_000; // 1 hour
 let lastBillingAlertSentAt = 0;
-const ADMIN_EMAIL = 'tomer.nosrati@gmail.com';
-const RESEND_API_URL = 'https://api.resend.com/emails';
+const GITHUB_ISSUES_URL = 'https://api.github.com/repos/Nusnus/nusnus.github.io/issues';
 
 // ─── Helpers ─────────────────────────────────────────────────────────
 
@@ -134,16 +131,6 @@ function isRateLimited(ip: string): boolean {
 
 // ─── Billing Alert ───────────────────────────────────────────────────
 
-/** Escape HTML special characters to prevent injection in email templates. */
-function escapeHtml(str: string): string {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-
 /** Returns true if the xAI response body indicates a billing/credits error. */
 function isBillingError(responseBody: string): boolean {
   const lower = responseBody.toLowerCase();
@@ -157,51 +144,63 @@ function isBillingError(responseBody: string): boolean {
 }
 
 /**
- * Send a billing-alert email via Resend (fire-and-forget, never throws).
- * Rate-limited to 1 email per hour to avoid spam.
+ * Create a GitHub issue as a billing alert (fire-and-forget, never throws).
+ * Rate-limited to 1 alert per hour to avoid spam.
+ * Uses the existing GITHUB_TOKEN — no external service needed.
  */
 async function sendBillingAlert(env: Env, endpoint: string, responseBody: string): Promise<void> {
   const now = Date.now();
   if (now - lastBillingAlertSentAt < BILLING_ALERT_COOLDOWN_MS) return;
   lastBillingAlertSentAt = now;
 
-  if (!env.RESEND_API_KEY) {
+  if (!env.GITHUB_TOKEN) {
     console.warn(
-      '[ai-proxy] Billing error detected but RESEND_API_KEY is not configured — skipping email alert.',
+      '[ai-proxy] Billing error detected but GITHUB_TOKEN is not configured — skipping alert.',
     );
     return;
   }
 
   try {
-    const res = await fetch(RESEND_API_URL, {
+    const timestamp = new Date().toISOString();
+    const truncatedBody = responseBody.slice(0, 2000);
+    const res = await fetch(GITHUB_ISSUES_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${env.RESEND_API_KEY}`,
+        Authorization: `Bearer ${env.GITHUB_TOKEN}`,
+        Accept: 'application/vnd.github+json',
+        'User-Agent': 'ai-proxy-worker',
       },
       body: JSON.stringify({
-        from: 'Cybernus Alerts <alerts@cybernus.dev>',
-        to: [ADMIN_EMAIL],
-        subject: '⚠️ xAI API Billing Alert — Credits Exhausted',
-        html: `
-          <h2>xAI API Billing Alert</h2>
-          <p><strong>Time:</strong> ${new Date().toISOString()}</p>
-          <p><strong>Endpoint:</strong> ${escapeHtml(endpoint)}</p>
-          <p><strong>Error response:</strong></p>
-          <pre style="background:#f4f4f4;padding:12px;border-radius:6px;overflow:auto;">${escapeHtml(responseBody.slice(0, 2000))}</pre>
-          <p>Please add funds or raise the spending limit in your <a href="https://console.x.ai">xAI dashboard</a>.</p>
-        `,
+        title: `⚠️ xAI API Billing Alert — Credits Exhausted (${endpoint})`,
+        body: [
+          '## xAI API Billing Alert',
+          '',
+          `**Time:** ${timestamp}`,
+          `**Endpoint:** \`${endpoint}\``,
+          '',
+          '**Error response:**',
+          '```json',
+          truncatedBody,
+          '```',
+          '',
+          'Please add funds or raise the spending limit in the [xAI dashboard](https://console.x.ai).',
+          '',
+          '---',
+          '*This issue was auto-created by the ai-proxy Cloudflare Worker.*',
+        ].join('\n'),
+        labels: ['billing-alert'],
       }),
     });
     if (!res.ok) {
       const errText = await res.text().catch(() => 'unknown');
-      console.error(`[ai-proxy] Failed to send billing alert email: ${res.status} ${errText}`);
+      console.error(`[ai-proxy] Failed to create billing alert issue: ${res.status} ${errText}`);
     } else {
-      console.log('[ai-proxy] Billing alert email sent to admin.');
+      console.log('[ai-proxy] Billing alert issue created on GitHub.');
     }
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'unknown';
-    console.error(`[ai-proxy] Failed to send billing alert email: ${msg}`);
+    console.error(`[ai-proxy] Failed to create billing alert issue: ${msg}`);
   }
 }
 
