@@ -361,7 +361,7 @@ export const VideoChatPlayer = memo(function VideoChatPlayer({
               <div
                 ref={progressRef}
                 className={`h-full ${hasPlayed ? 'bg-[#00ff41]/40' : 'bg-[#00ff41]'}`}
-                style={{ width: '0%', willChange: 'width' }}
+                style={{ width: hasPlayed ? '100%' : '0%', willChange: 'width' }}
               />
             </div>
           )}
