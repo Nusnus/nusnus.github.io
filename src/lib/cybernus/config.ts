@@ -10,11 +10,16 @@ export { WORKER_AI_URL as CLOUD_PROXY_URL, WORKER_BASE_URL } from '@config';
 export const MODEL_ID = 'grok-4.20-beta-latest';
 export const MODEL_NAME = 'Neural Core';
 
-/** Generation parameters. */
+/** Generation parameters.
+ * max_output_tokens is set high (16 384) because the reasoning model
+ * consumes part of this budget for internal reasoning tokens. A lower
+ * value can cause the response to be truncated before all tool calls
+ * (e.g. ask_user) are emitted.
+ */
 export const GENERATION_CONFIG = {
   temperature: 0.85,
   top_p: 0.9,
-  max_output_tokens: 4096,
+  max_output_tokens: 16_384,
 } as const;
 
 /** Maximum user messages per session. */

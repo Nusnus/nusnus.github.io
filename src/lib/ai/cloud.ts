@@ -50,6 +50,8 @@ export interface CloudChatOptions {
   onToolUse?: (toolType: string) => void;
   /** Called when a tool invocation completes. */
   onToolDone?: (toolType: string) => void;
+  /** Called when a function_call item is fully streamed (arguments complete). */
+  onFunctionCallDone?: (name: string, args: string) => void;
 }
 
 /** Result from cloud chat containing both content and tool calls. */
@@ -342,6 +344,13 @@ export async function cloudChatStream(
             const e = raw as unknown as StreamOutputItemDone;
             if (e.item.type === 'web_search_call') {
               options?.onWebSearchFound?.();
+            } else if (e.item.type === 'function_call') {
+              // Notify caller that a function call is fully streamed.
+              // The accumulated arguments for this index are already complete.
+              const acc = toolCallAccumulator.get(e.output_index);
+              if (acc) {
+                options?.onFunctionCallDone?.(acc.name, acc.arguments);
+              }
             } else if (
               e.item.type === 'x_search_call' ||
               e.item.type === 'code_execution_call' ||

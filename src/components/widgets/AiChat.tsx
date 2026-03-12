@@ -512,6 +512,8 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
       const controller = new AbortController();
       abortRef.current = controller;
       const requestStart = Date.now();
+      // Track whether pre-gen was started early (during streaming) to avoid double-start
+      let earlyPreGenStarted = false;
 
       try {
         // Lazy-load cloud modules
@@ -576,7 +578,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
               }
               return allTools;
             })(),
-            tool_choice: 'auto',
+            tool_choice: isVideoChatMode ? 'required' : 'auto',
             onWebSearch: () => {
               addLog('info', 'api', 'Web search triggered');
               setActiveToolCalls((prev) => [...prev, 'web_search']);
@@ -653,6 +655,28 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
                 }
                 return copy;
               });
+            },
+            // Video Chat: start pre-gen immediately when ask_user arguments are
+            // fully streamed — don't wait for video/TTS generation to finish first.
+            onFunctionCallDone: (name: string, args: string) => {
+              if (name !== 'ask_user' || !isVideoChatMode || earlyPreGenStarted) return;
+              const earlyForm = parseAskUserForm(args);
+              if (!earlyForm || earlyForm.options.length === 0) return;
+
+              earlyPreGenStarted = true;
+              addLog(
+                'info',
+                'api',
+                `Early pre-gen: ask_user streamed with ${earlyForm.options.length} options — starting immediately`,
+              );
+
+              // Build a preliminary assistant message using the text accumulated so far
+              const earlyAssistant: ChatMessage = {
+                ...assistantMsg,
+                content: lastAccumulated || '(generating...)',
+              };
+              const earlyMessages = [...updated.slice(0, -1), earlyAssistant];
+              startOptionsPreGenRef.current?.(earlyForm.options, earlyMessages);
             },
           },
         );
@@ -843,6 +867,31 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
           }
         }
 
+        // Video Chat fallback: if the reasoning model didn't call ask_user
+        // (e.g. due to truncation or reasoning decisions), generate default
+        // continuation options so the user isn't stuck without choices.
+        if (isVideoChatMode && !formData) {
+          addLog('warn', 'api', 'Video Chat: ask_user not called — generating fallback options');
+          formData = {
+            question: 'What would you like to explore?',
+            options: [
+              { id: 'continue', label: '🔄 Continue the conversation', value: 'Continue' },
+              {
+                id: 'deeper',
+                label: '🔍 Go deeper on this topic',
+                value: 'Go deeper on this topic',
+              },
+              {
+                id: 'surprise',
+                label: '🎲 Surprise me',
+                value: 'Surprise me with something unexpected',
+              },
+            ],
+            allowOther: true,
+            selectedId: null,
+          };
+        }
+
         const finalAssistant: ChatMessage = {
           ...assistantMsg,
           content:
@@ -882,7 +931,8 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
         // Video Chat mode: start pre-generating videos for all options in parallel
         // while the user decides which option to pick. This leverages the user's
         // "thinking time" to get a head start on the next video generation.
-        if (isVideoChatMode && formData && formData.options.length > 0) {
+        // Skip if pre-gen was already started early via onFunctionCallDone.
+        if (isVideoChatMode && formData && formData.options.length > 0 && !earlyPreGenStarted) {
           startOptionsPreGenRef.current?.(formData.options, finalMessages);
         }
 
@@ -1189,14 +1239,29 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
               selectedCloudModelId,
               () => undefined, // no-op: background pre-gen doesn't stream to UI
               ctrl.signal,
-              { tools, tool_choice: 'auto' },
+              { tools, tool_choice: 'required' },
             );
 
             if (ctrl.signal.aborted) return null;
 
+            // Extract TTS text — same fallback as main flow: if content is empty
+            // (reasoning model), extract spoken dialogue from the video prompt.
+            let preGenTtsText = result.content.trim();
+            if (!preGenTtsText) {
+              const videoCallForTts = result.toolCalls.find((tc) => tc.name === 'generate_video');
+              if (videoCallForTts) {
+                try {
+                  const args = JSON.parse(videoCallForTts.arguments) as { prompt?: string };
+                  const dialogueMatch = args.prompt?.match(/saying:\s*"([^"]+)"/i);
+                  if (dialogueMatch?.[1]) preGenTtsText = dialogueMatch[1];
+                } catch {
+                  // Ignore parse errors
+                }
+              }
+            }
+
             // Generate video + TTS in parallel
-            const spokenText = result.content.trim();
-            const videoDuration = estimateVideoDuration(spokenText || 'short response');
+            const videoDuration = estimateVideoDuration(preGenTtsText || 'short response');
             const videoCall = result.toolCalls.find((tc) => tc.name === 'generate_video');
             const videoPromise = videoCall
               ? (async () => {
@@ -1210,11 +1275,11 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
                 })()
               : Promise.resolve(undefined);
 
-            const preGenTtsPromise = result.content.trim()
+            const preGenTtsPromise = preGenTtsText
               ? (async () => {
                   try {
                     const { textToSpeech } = await import('@lib/cybernus/services/VoiceService');
-                    const audioElement = await textToSpeech(result.content.trim(), ctrl.signal);
+                    const audioElement = await textToSpeech(preGenTtsText, ctrl.signal);
                     return audioElement.src;
                   } catch {
                     return undefined;
@@ -1225,15 +1290,28 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
             const [videoUrl, audioUrl] = await Promise.all([videoPromise, preGenTtsPromise]);
             if (ctrl.signal.aborted) return null;
 
-            // Parse ask_user for next set of options
+            // Parse ask_user for next set of options (with fallback for video chat)
             let nextForm: ChatForm | undefined;
             const askCall = result.toolCalls.find((tc) => tc.name === 'ask_user');
             if (askCall) {
               nextForm = parseAskUserForm(askCall.arguments);
             }
+            if (!nextForm) {
+              // Fallback options for pre-gen — ensures the chain always continues
+              nextForm = {
+                question: 'What would you like to explore?',
+                options: [
+                  { id: 'continue', label: '🔄 Continue', value: 'Continue' },
+                  { id: 'deeper', label: '🔍 Go deeper', value: 'Go deeper on this topic' },
+                  { id: 'surprise', label: '🎲 Surprise me', value: 'Surprise me' },
+                ],
+                allowOther: true,
+                selectedId: null,
+              };
+            }
 
             const preGenResult: VideoChatPreGenResult = {
-              textContent: result.content,
+              textContent: preGenTtsText || result.content,
               ...(videoUrl && { videoUrl }),
               ...(audioUrl && { audioUrl }),
               ...(nextForm && { formData: nextForm }),

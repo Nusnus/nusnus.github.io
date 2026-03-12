@@ -192,6 +192,7 @@ export const VideoChatPlayer = memo(function VideoChatPlayer({
   }, [checkComplete]);
 
   const handleAudioEnd = useCallback(() => {
+    if (playbackCompleteRef.current) return;
     setShowCaption(false);
     // Pause the (possibly looping) video so it doesn't keep playing after
     // the voiceover is done, then mark playback as complete.
