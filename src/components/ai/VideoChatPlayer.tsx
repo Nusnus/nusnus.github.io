@@ -64,6 +64,14 @@ export const VideoChatPlayer = memo(function VideoChatPlayer({
     }
   }
 
+  // Safety timeout: if we're waiting for TTS audio that never arrives (e.g. TTS failed
+  // but spokenText exists), give up after 10 s and allow the video to auto-play silently.
+  useEffect(() => {
+    if (audioReady || audioUrl) return; // already ready or audio will trigger onCanPlayThrough
+    const timer = setTimeout(() => setAudioReady(true), 10_000);
+    return () => clearTimeout(timer);
+  }, [audioReady, audioUrl]);
+
   // Progress bar update via direct DOM manipulation + requestAnimationFrame.
   // This avoids React re-renders during playback (~60 FPS updates go straight to DOM).
   // The RAF loop runs only while isPlaying is true.

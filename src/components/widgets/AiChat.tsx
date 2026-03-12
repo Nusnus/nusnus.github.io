@@ -747,29 +747,35 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
         }
         if (isVideoChatMode && videoChatTtsText) {
           ttsPromise = (async () => {
-            const { textToSpeech } = await import('@lib/cybernus/services/VoiceService');
-            // Attempt TTS with one retry on failure
-            for (let attempt = 0; attempt < 2; attempt++) {
-              try {
-                if (attempt === 0) {
-                  addLog('info', 'api', 'Generating TTS for video chat voiceover (parallel)');
-                } else {
-                  addLog('info', 'api', 'Retrying TTS generation (attempt 2)');
+            try {
+              const { textToSpeech } = await import('@lib/cybernus/services/VoiceService');
+              // Attempt TTS with one retry on failure
+              for (let attempt = 0; attempt < 2; attempt++) {
+                try {
+                  if (attempt === 0) {
+                    addLog('info', 'api', 'Generating TTS for video chat voiceover (parallel)');
+                  } else {
+                    addLog('info', 'api', 'Retrying TTS generation (attempt 2)');
+                  }
+                  const audioElement = await textToSpeech(videoChatTtsText, controller.signal);
+                  addLog('info', 'api', 'TTS voiceover generated for video chat');
+                  return audioElement.src;
+                } catch (ttsErr) {
+                  if (controller.signal.aborted) return undefined;
+                  if (attempt === 1) {
+                    addLog('warn', 'api', 'TTS generation failed for video chat after retry', {
+                      error: ttsErr instanceof Error ? ttsErr.message : 'Unknown',
+                    });
+                    return undefined;
+                  }
+                  // Brief pause before retry
+                  await new Promise((r) => setTimeout(r, 500));
                 }
-                const audioElement = await textToSpeech(videoChatTtsText, controller.signal);
-                addLog('info', 'api', 'TTS voiceover generated for video chat');
-                return audioElement.src;
-              } catch (ttsErr) {
-                if (controller.signal.aborted) return undefined;
-                if (attempt === 1) {
-                  addLog('warn', 'api', 'TTS generation failed for video chat after retry', {
-                    error: ttsErr instanceof Error ? ttsErr.message : 'Unknown',
-                  });
-                  return undefined;
-                }
-                // Brief pause before retry
-                await new Promise((r) => setTimeout(r, 500));
               }
+            } catch (importErr) {
+              addLog('warn', 'api', 'TTS module import failed', {
+                error: importErr instanceof Error ? importErr.message : 'Unknown',
+              });
             }
             return undefined;
           })();
@@ -1370,15 +1376,19 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
 
             const preGenTtsPromise = preGenTtsText
               ? (async () => {
-                  const { textToSpeech } = await import('@lib/cybernus/services/VoiceService');
-                  for (let attempt = 0; attempt < 2; attempt++) {
-                    try {
-                      const audioElement = await textToSpeech(preGenTtsText, ctrl.signal);
-                      return audioElement.src;
-                    } catch {
-                      if (ctrl.signal.aborted) return undefined;
-                      if (attempt === 0) await new Promise((r) => setTimeout(r, 500));
+                  try {
+                    const { textToSpeech } = await import('@lib/cybernus/services/VoiceService');
+                    for (let attempt = 0; attempt < 2; attempt++) {
+                      try {
+                        const audioElement = await textToSpeech(preGenTtsText, ctrl.signal);
+                        return audioElement.src;
+                      } catch {
+                        if (ctrl.signal.aborted) return undefined;
+                        if (attempt === 0) await new Promise((r) => setTimeout(r, 500));
+                      }
                     }
+                  } catch {
+                    // Import failed — degrade gracefully without TTS
                   }
                   return undefined;
                 })()
