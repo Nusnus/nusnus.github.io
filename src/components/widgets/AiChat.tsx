@@ -868,28 +868,76 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
         }
 
         // Video Chat fallback: if the reasoning model didn't call ask_user
-        // (e.g. due to truncation or reasoning decisions), generate default
-        // continuation options so the user isn't stuck without choices.
+        // (e.g. due to truncation or reasoning decisions), make a lightweight
+        // follow-up API call to generate dynamic options. Falls back to
+        // hardcoded options if the retry also fails.
         if (isVideoChatMode && !formData) {
-          addLog('warn', 'api', 'Video Chat: ask_user not called — generating fallback options');
-          formData = {
-            question: 'What would you like to explore?',
-            options: [
-              { id: 'continue', label: '🔄 Continue the conversation', value: 'Continue' },
-              {
-                id: 'deeper',
-                label: '🔍 Go deeper on this topic',
-                value: 'Go deeper on this topic',
-              },
-              {
-                id: 'surprise',
-                label: '🎲 Surprise me',
-                value: 'Surprise me with something unexpected',
-              },
-            ],
-            allowOther: true,
-            selectedId: null,
-          };
+          addLog(
+            'warn',
+            'api',
+            'Video Chat: ask_user not called — retrying with dedicated options call',
+          );
+          try {
+            const { cloudChat: cloudChatNonStream } = await import('@lib/ai/cloud');
+            const askUserTool = getToolsForModel(selectedCloudModelId).find(
+              (t) => 'name' in t && t.name === 'ask_user',
+            );
+            if (askUserTool) {
+              // Lightweight call: only provide ask_user tool, force usage
+              const optionsResult = await cloudChatNonStream(
+                [
+                  ...fullHistory,
+                  {
+                    role: 'assistant' as const,
+                    content:
+                      videoChatTtsText || result.content || 'I just introduced myself as Cybernus.',
+                  },
+                  {
+                    role: 'user' as const,
+                    content:
+                      'Now call ask_user with 2-5 engaging, creative conversation options for me to choose from. Each option should have an emoji-prefixed label.',
+                  },
+                ],
+                selectedCloudModelId,
+                { tools: [askUserTool], tool_choice: 'required' },
+              );
+              const retryAskUser = optionsResult.toolCalls.find((tc) => tc.name === 'ask_user');
+              if (retryAskUser) {
+                formData = parseAskUserForm(retryAskUser.arguments);
+                if (formData) {
+                  addLog('info', 'api', 'ask_user retry succeeded', {
+                    optionCount: formData.options.length,
+                  });
+                }
+              }
+            }
+          } catch (retryErr) {
+            addLog('warn', 'api', 'ask_user retry failed', {
+              error: retryErr instanceof Error ? retryErr.message : 'Unknown',
+            });
+          }
+
+          // Ultimate fallback: hardcoded options
+          if (!formData) {
+            formData = {
+              question: 'What would you like to explore?',
+              options: [
+                { id: 'continue', label: '🔄 Continue the conversation', value: 'Continue' },
+                {
+                  id: 'deeper',
+                  label: '🔍 Go deeper on this topic',
+                  value: 'Go deeper on this topic',
+                },
+                {
+                  id: 'surprise',
+                  label: '🎲 Surprise me',
+                  value: 'Surprise me with something unexpected',
+                },
+              ],
+              allowOther: true,
+              selectedId: null,
+            };
+          }
         }
 
         const finalAssistant: ChatMessage = {
@@ -1290,14 +1338,42 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
             const [videoUrl, audioUrl] = await Promise.all([videoPromise, preGenTtsPromise]);
             if (ctrl.signal.aborted) return null;
 
-            // Parse ask_user for next set of options (with fallback for video chat)
+            // Parse ask_user for next set of options.
+            // If the model didn't call ask_user, retry with a dedicated call.
             let nextForm: ChatForm | undefined;
             const askCall = result.toolCalls.find((tc) => tc.name === 'ask_user');
             if (askCall) {
               nextForm = parseAskUserForm(askCall.arguments);
             }
+            if (!nextForm && !ctrl.signal.aborted) {
+              try {
+                const { cloudChat: nonStreamChat } = await import('@lib/ai/cloud');
+                const askTool = tools.find((t) => 'name' in t && t.name === 'ask_user');
+                if (askTool) {
+                  const retryResult = await nonStreamChat(
+                    [
+                      ...fullHistory,
+                      {
+                        role: 'assistant' as const,
+                        content: preGenTtsText || result.content || 'Response given.',
+                      },
+                      {
+                        role: 'user' as const,
+                        content:
+                          'Now call ask_user with 2-5 engaging, creative conversation options for me to choose from. Each option should have an emoji-prefixed label.',
+                      },
+                    ],
+                    selectedCloudModelId,
+                    { tools: [askTool], tool_choice: 'required' },
+                  );
+                  const retryAsk = retryResult.toolCalls.find((tc) => tc.name === 'ask_user');
+                  if (retryAsk) nextForm = parseAskUserForm(retryAsk.arguments);
+                }
+              } catch {
+                // Retry failed — use hardcoded fallback below
+              }
+            }
             if (!nextForm) {
-              // Fallback options for pre-gen — ensures the chain always continues
               nextForm = {
                 question: 'What would you like to explore?',
                 options: [
