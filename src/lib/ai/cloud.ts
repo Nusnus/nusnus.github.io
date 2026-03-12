@@ -50,6 +50,8 @@ export interface CloudChatOptions {
   onToolUse?: (toolType: string) => void;
   /** Called when a tool invocation completes. */
   onToolDone?: (toolType: string) => void;
+  /** Called when a function_call item is fully streamed (arguments complete). */
+  onFunctionCallDone?: (name: string, args: string) => void;
 }
 
 /** Result from cloud chat containing both content and tool calls. */
@@ -342,6 +344,13 @@ export async function cloudChatStream(
             const e = raw as unknown as StreamOutputItemDone;
             if (e.item.type === 'web_search_call') {
               options?.onWebSearchFound?.();
+            } else if (e.item.type === 'function_call') {
+              // Notify caller that a function call is fully streamed.
+              // The accumulated arguments for this index are already complete.
+              const acc = toolCallAccumulator.get(e.output_index);
+              if (acc) {
+                options?.onFunctionCallDone?.(acc.name, acc.arguments);
+              }
             } else if (
               e.item.type === 'x_search_call' ||
               e.item.type === 'code_execution_call' ||
@@ -453,15 +462,23 @@ const VIDEO_POLL_INTERVAL_MS = 5_000;
  *
  * @param prompt Descriptive text prompt for the video. Be cinematic and specific.
  * @param signal Optional AbortSignal to cancel the generation.
+ * @param duration Video duration in seconds (1-15). Defaults to 5.
  */
-export async function generateVideo(prompt: string, signal?: AbortSignal): Promise<string> {
+export async function generateVideo(
+  prompt: string,
+  signal?: AbortSignal,
+  duration = 5,
+): Promise<string> {
+  // Clamp duration to API limits (1-15 seconds)
+  const clampedDuration = Math.max(1, Math.min(15, Math.round(duration)));
+
   // Step 1: Submit generation request
   const startResponse = await fetch(`${WORKER_BASE_URL}/v1/videos/generations`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       prompt,
-      duration: 10,
+      duration: clampedDuration,
       aspect_ratio: '16:9',
       resolution: '720p',
     }),
