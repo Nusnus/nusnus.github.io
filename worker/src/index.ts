@@ -134,6 +134,16 @@ function isRateLimited(ip: string): boolean {
 
 // ─── Billing Alert ───────────────────────────────────────────────────
 
+/** Escape HTML special characters to prevent injection in email templates. */
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 /** Returns true if the xAI response body indicates a billing/credits error. */
 function isBillingError(responseBody: string): boolean {
   const lower = responseBody.toLowerCase();
@@ -141,7 +151,8 @@ function isBillingError(responseBody: string): boolean {
     lower.includes('used all available credits') ||
     lower.includes('spending limit') ||
     lower.includes('insufficient_quota') ||
-    lower.includes('billing')
+    lower.includes('billing_hard_limit_reached') ||
+    lower.includes('billing error')
   );
 }
 
@@ -175,9 +186,9 @@ async function sendBillingAlert(env: Env, endpoint: string, responseBody: string
         html: `
           <h2>xAI API Billing Alert</h2>
           <p><strong>Time:</strong> ${new Date().toISOString()}</p>
-          <p><strong>Endpoint:</strong> ${endpoint}</p>
+          <p><strong>Endpoint:</strong> ${escapeHtml(endpoint)}</p>
           <p><strong>Error response:</strong></p>
-          <pre style="background:#f4f4f4;padding:12px;border-radius:6px;overflow:auto;">${responseBody.slice(0, 2000)}</pre>
+          <pre style="background:#f4f4f4;padding:12px;border-radius:6px;overflow:auto;">${escapeHtml(responseBody.slice(0, 2000))}</pre>
           <p>Please add funds or raise the spending limit in your <a href="https://console.x.ai">xAI dashboard</a>.</p>
         `,
       }),
