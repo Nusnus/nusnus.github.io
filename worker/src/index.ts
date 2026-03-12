@@ -70,12 +70,12 @@ const ALLOWED_MODELS: ReadonlySet<string> = new Set([
   'grok-code-fast-1',
 ]);
 
-const DEFAULT_MODEL = 'grok-4.20-beta-latest-non-reasoning';
+const DEFAULT_MODEL = 'grok-4.20-beta-latest';
 
 /** Hard limits to prevent abuse. */
 const MAX_REQUEST_BYTES = 6_291_456; // 6 MB — /v1/responses only (full context + multiple base64 reference photos)
 const MAX_SMALL_REQUEST_BYTES = 131_072; // 128 KB — TTS, image, and video endpoints
-const MAX_OUTPUT_TOKENS_CAP = 1024;
+const MAX_OUTPUT_TOKENS_CAP = 4096;
 const MAX_INPUT_ITEMS = 80; // 1 system + up to 30 user + 30 assistant + margin
 
 /** Simple in-memory rate limiter (per-isolate, resets on cold start). */

@@ -113,7 +113,9 @@ export const VideoChatPlayer = memo(function VideoChatPlayer({
           setIsPlaying(true);
           setShowCaption(true);
         } catch {
-          // Auto-play blocked — show play button
+          // Auto-play blocked — pause video too so the manual play
+          // button shows cleanly (video may already be playing muted).
+          if (video) video.pause();
           setIsPlaying(false);
         }
       };

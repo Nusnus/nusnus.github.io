@@ -1,7 +1,7 @@
 /**
  * Cybernus AI Configuration — single model architecture.
  *
- * All inference runs through xAI Grok 4.20 Beta via the Cloudflare Worker proxy.
+ * All inference runs through xAI Grok 4.20 Beta (reasoning) via the Cloudflare Worker proxy.
  * Shared generation config, history trimming, and suggested questions
  * are canonical in `@lib/cybernus/config` and re-exported here.
  */
@@ -29,15 +29,15 @@ export interface CloudModelInfo {
   recommended?: boolean;
 }
 
-/** Single model: Grok 4.20 Beta (latest, non-reasoning for speed). */
+/** Single model: Grok 4.20 Beta (latest, reasoning enabled). */
 export const CLOUD_MODELS: CloudModelInfo[] = [
   {
-    id: 'grok-4.20-beta-latest-non-reasoning',
+    id: 'grok-4.20-beta-latest',
     name: 'Neural Core',
     description:
-      'Latest flagship AI engine with industry-leading speed, 2M context window, agentic tool calling, and lowest hallucination rate.',
+      'Latest flagship AI engine with reasoning, 2M context window, agentic tool calling, and lowest hallucination rate.',
     recommended: true,
   },
 ];
 
-export const DEFAULT_CLOUD_MODEL_ID = 'grok-4.20-beta-latest-non-reasoning';
+export const DEFAULT_CLOUD_MODEL_ID = 'grok-4.20-beta-latest';

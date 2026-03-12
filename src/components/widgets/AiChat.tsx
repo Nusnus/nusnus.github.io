@@ -683,13 +683,31 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
 
         // Video Chat mode: start TTS generation in PARALLEL with video generation.
         // We have the text content already from the AI stream — no need to wait for video.
+        // If the model returned only tool calls (no text content), extract the spoken
+        // dialogue embedded in the generate_video prompt as a TTS fallback.
         let ttsPromise: Promise<string | undefined> | undefined;
-        if (isVideoChatMode && result.content.trim()) {
+        let videoChatTtsText = result.content.trim();
+        if (isVideoChatMode && !videoChatTtsText) {
+          const videoCall = result.toolCalls.find((tc) => tc.name === 'generate_video');
+          if (videoCall) {
+            try {
+              const args = JSON.parse(videoCall.arguments) as { prompt?: string };
+              const dialogueMatch = args.prompt?.match(/saying:\s*"([^"]+)"/i);
+              if (dialogueMatch?.[1]) {
+                videoChatTtsText = dialogueMatch[1];
+                addLog('info', 'api', 'Extracted TTS text from video prompt (content was empty)');
+              }
+            } catch {
+              // Ignore parse errors
+            }
+          }
+        }
+        if (isVideoChatMode && videoChatTtsText) {
           ttsPromise = (async () => {
             try {
               addLog('info', 'api', 'Generating TTS for video chat voiceover (parallel)');
               const { textToSpeech } = await import('@lib/cybernus/services/VoiceService');
-              const audioElement = await textToSpeech(result.content.trim(), controller.signal);
+              const audioElement = await textToSpeech(videoChatTtsText, controller.signal);
               addLog('info', 'api', 'TTS voiceover generated for video chat');
               return audioElement.src;
             } catch (ttsErr) {
@@ -838,8 +856,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
           ...(formData && { form: formData }),
           // Video Chat mode fields
           ...(isVideoChatMode && videoChatVideoUrl && { videoChatUrl: videoChatVideoUrl }),
-          ...(isVideoChatMode &&
-            result.content.trim() && { videoChatSpokenText: result.content.trim() }),
+          ...(isVideoChatMode && videoChatTtsText && { videoChatSpokenText: videoChatTtsText }),
         };
         if (actions.length > 0) finalAssistant.actions = actions;
 
