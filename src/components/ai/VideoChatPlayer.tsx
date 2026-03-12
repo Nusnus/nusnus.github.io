@@ -293,8 +293,6 @@ export const VideoChatPlayer = memo(function VideoChatPlayer({
             onLoadedMetadata={() => setVideoReady(true)}
             onEnded={handleVideoEnd}
             onError={() => setVideoError(true)}
-            // Prevent iOS from opening fullscreen player
-            style={{ WebkitMediaPlaybackRequiresUserAction: false } as React.CSSProperties}
           />
 
           {/* TTS audio element (invisible) */}
