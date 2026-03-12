@@ -5,6 +5,9 @@
  * Features rotating cinematic messages, animated film-strip frames,
  * pulsing glow effects, and a fake estimated-time progress bar to
  * keep users engaged during the wait.
+ *
+ * Performance: progress bar and ETA use direct DOM manipulation via
+ * refs + requestAnimationFrame — no React re-renders during animation.
  */
 
 import { useState, useEffect, memo, useRef } from 'react';
@@ -51,16 +54,18 @@ export const VideoChatLoader = memo(function VideoChatLoader({
     Math.floor(Math.random() * LOADING_MESSAGES.length),
   );
   const [fadeIn, setFadeIn] = useState(true);
-  const [progress, setProgress] = useState(0);
-  const [elapsedS, setElapsedS] = useState(0);
   const startTimeRef = useRef(0);
+  const progressBarRef = useRef<HTMLDivElement>(null);
+  const pctRef = useRef<HTMLSpanElement>(null);
+  const etaRef = useRef<HTMLSpanElement>(null);
+  const rafIdRef = useRef(0);
 
-  // Initialize startTime once on mount (avoid impure Date.now() in render)
+  // Initialize startTime once on mount
   useEffect(() => {
     startTimeRef.current = Date.now();
   }, []);
 
-  // Cycle through loading messages
+  // Cycle through loading messages (only state-driven animation that needs re-renders)
   useEffect(() => {
     const timeoutIds: ReturnType<typeof setTimeout>[] = [];
     const intervalId = setInterval(() => {
@@ -78,8 +83,8 @@ export const VideoChatLoader = memo(function VideoChatLoader({
     };
   }, []);
 
-  // Fake progress bar: fills to ~92% over ESTIMATED_DURATION_S using easeOutQuart,
-  // then crawls very slowly. Jumps to 100% only when the component unmounts (video arrives).
+  // Progress bar animation via requestAnimationFrame + direct DOM manipulation.
+  // Updates bar width, percentage text, and ETA without any React re-renders.
   useEffect(() => {
     const tick = () => {
       const elapsed = (Date.now() - startTimeRef.current) / 1000;
@@ -89,17 +94,23 @@ export const VideoChatLoader = memo(function VideoChatLoader({
       // Cap at 92% and then crawl slowly beyond the estimate
       const capped = eased * 0.92;
       const crawl = ratio >= 1 ? Math.min((elapsed - ESTIMATED_DURATION_S) * 0.002, 0.07) : 0;
-      setProgress(Math.min(capped + crawl, 0.99));
-      setElapsedS(Math.round(elapsed));
+      const progress = Math.min(capped + crawl, 0.99);
+      const pct = Math.round(progress * 100);
+      const remaining = Math.max(0, ESTIMATED_DURATION_S - Math.round(elapsed));
+
+      // Direct DOM updates — no setState, no re-render
+      if (progressBarRef.current) progressBarRef.current.style.width = `${pct}%`;
+      if (pctRef.current) pctRef.current.textContent = `${pct}%`;
+      if (etaRef.current) {
+        etaRef.current.textContent = remaining > 0 ? `~${remaining}s` : '';
+      }
+
+      rafIdRef.current = requestAnimationFrame(tick);
     };
 
-    const id = setInterval(tick, 200);
-    tick();
-    return () => clearInterval(id);
+    rafIdRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafIdRef.current);
   }, []);
-
-  const pct = Math.round(progress * 100);
-  const remaining = Math.max(0, ESTIMATED_DURATION_S - elapsedS);
 
   return (
     <div className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-2xl border border-[#00ff41]/10 bg-[#0a0a0a]">
@@ -184,17 +195,18 @@ export const VideoChatLoader = memo(function VideoChatLoader({
         </span>
       </div>
 
-      {/* Progress bar — fake estimated-time progress */}
+      {/* Progress bar — direct DOM updates via ref, no re-renders */}
       <div className="absolute inset-x-0 bottom-0 h-1.5 overflow-hidden bg-white/[0.05]">
         <div
-          className="h-full bg-gradient-to-r from-[#00ff41]/60 via-[#00ff41] to-[#00ff41]/60 transition-[width] duration-500 ease-out"
-          style={{ width: `${pct}%` }}
+          ref={progressBarRef}
+          className="h-full bg-gradient-to-r from-[#00ff41]/60 via-[#00ff41] to-[#00ff41]/60"
+          style={{ width: '0%', willChange: 'width' }}
         />
       </div>
-      {/* Progress percentage + ETA */}
+      {/* Progress percentage + ETA — direct DOM updates via ref */}
       <div className="absolute right-3 bottom-3 flex items-center gap-2 text-[10px] text-white/30 sm:right-4 sm:bottom-3.5 sm:text-xs">
-        <span>{pct}%</span>
-        {remaining > 0 && <span>~{remaining}s</span>}
+        <span ref={pctRef}>0%</span>
+        <span ref={etaRef} />
       </div>
     </div>
   );

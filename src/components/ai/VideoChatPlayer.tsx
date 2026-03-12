@@ -5,11 +5,14 @@
  * Auto-plays when both video and audio are ready. Shows a subtle
  * spoken-text caption overlay during playback.
  *
+ * Performance: progress bar updates use direct DOM manipulation
+ * via refs — no React re-renders during playback. Video/audio
+ * elements are properly cleaned up on unmount to release memory.
+ *
  * After playback completes, the ask_user options appear below.
  */
 
 import { useState, useCallback, useRef, useEffect, memo } from 'react';
-import { cn } from '@lib/utils/cn';
 import { VideoChatLoader } from './VideoChatLoader';
 
 interface VideoChatPlayerProps {
@@ -35,13 +38,13 @@ export const VideoChatPlayer = memo(function VideoChatPlayer({
 }: VideoChatPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const progressRef = useRef<HTMLDivElement>(null);
   const [videoReady, setVideoReady] = useState(false);
   const [audioReady, setAudioReady] = useState(!audioUrl);
   const [isPlaying, setIsPlaying] = useState(false);
   const [hasPlayed, setHasPlayed] = useState(false);
   const [videoError, setVideoError] = useState(false);
   const [showCaption, setShowCaption] = useState(false);
-  const [progress, setProgress] = useState(0);
   const playbackCompleteRef = useRef(false);
 
   // Reset audioReady when audioUrl prop transitions from undefined → value
@@ -56,6 +59,36 @@ export const VideoChatPlayer = memo(function VideoChatPlayer({
       setIsPlaying(false);
     }
   }
+
+  // Progress bar update via direct DOM manipulation + requestAnimationFrame.
+  // This avoids React re-renders during playback (~60 FPS updates go straight to DOM).
+  // The RAF loop runs only while isPlaying is true.
+  useEffect(() => {
+    if (!isPlaying) return;
+
+    let id = 0;
+    const tick = () => {
+      const video = videoRef.current;
+      const audio = audioRef.current;
+      const bar = progressRef.current;
+      if (!video || !bar) return;
+
+      const audioDur = audio?.duration || 0;
+      const videoDur = video.duration || 0;
+      const maxDur = Math.max(videoDur, audioDur) || videoDur;
+
+      if (maxDur > 0) {
+        const current = audioDur > videoDur ? (audio?.currentTime ?? 0) : video.currentTime;
+        const pct = Math.min(current / maxDur, 1) * 100;
+        bar.style.width = `${pct}%`;
+      }
+
+      id = requestAnimationFrame(tick);
+    };
+
+    id = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(id);
+  }, [isPlaying]);
 
   // Auto-play when both video and audio are ready
   useEffect(() => {
@@ -89,43 +122,31 @@ export const VideoChatPlayer = memo(function VideoChatPlayer({
     }
   }, [videoReady, audioReady, hasPlayed, isLoading]);
 
-  // Clean up TTS blob URL when audioUrl changes or on unmount to prevent memory leaks.
-  // The textToSpeech() function creates blob URLs that are never auto-revoked since
-  // the original Audio element's 'ended' listener never fires (we use a different element).
-  useEffect(() => {
-    return () => {
-      if (audioUrl && audioUrl.startsWith('blob:')) {
-        URL.revokeObjectURL(audioUrl);
-      }
-    };
-  }, [audioUrl]);
-
-  // Track progress based on the LONGER of video/audio duration.
-  // This ensures the progress bar reflects the full experience length.
+  // Clean up media elements and TTS blob URL on unmount to release memory.
   useEffect(() => {
     const video = videoRef.current;
     const audio = audioRef.current;
-    if (!video) return;
+    const currentAudioUrl = audioUrl;
 
-    const onTimeUpdate = () => {
-      const audioDur = audio?.duration || 0;
-      const videoDur = video.duration || 0;
-      const maxDur = Math.max(videoDur, audioDur) || videoDur;
-
-      if (maxDur > 0) {
-        // When audio is longer, track audio progress; otherwise track video
-        const current = audioDur > videoDur ? (audio?.currentTime ?? 0) : video.currentTime;
-        setProgress(Math.min(current / maxDur, 1));
+    return () => {
+      // Release video element resources
+      if (video) {
+        video.pause();
+        video.removeAttribute('src');
+        video.load(); // forces resource release
+      }
+      // Release audio element resources
+      if (audio) {
+        audio.pause();
+        audio.removeAttribute('src');
+        audio.load();
+      }
+      // Revoke TTS blob URL
+      if (currentAudioUrl && currentAudioUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(currentAudioUrl);
       }
     };
-
-    video.addEventListener('timeupdate', onTimeUpdate);
-    if (audio) audio.addEventListener('timeupdate', onTimeUpdate);
-    return () => {
-      video.removeEventListener('timeupdate', onTimeUpdate);
-      if (audio) audio.removeEventListener('timeupdate', onTimeUpdate);
-    };
-  }, [isLoading, audioUrl]);
+  }, [audioUrl]);
 
   // Handle playback completion
   const checkComplete = useCallback(() => {
@@ -138,10 +159,11 @@ export const VideoChatPlayer = memo(function VideoChatPlayer({
 
     if (videoEnded && audioEnded) {
       playbackCompleteRef.current = true;
+      // Set progress bar to 100% directly
+      if (progressRef.current) progressRef.current.style.width = '100%';
       setIsPlaying(false);
       setHasPlayed(true);
       setShowCaption(false);
-      setProgress(1);
       onPlaybackComplete?.();
     }
   }, [onPlaybackComplete]);
@@ -172,9 +194,10 @@ export const VideoChatPlayer = memo(function VideoChatPlayer({
       video.pause();
     }
     playbackCompleteRef.current = true;
+    // Set progress bar to 100% directly
+    if (progressRef.current) progressRef.current.style.width = '100%';
     setIsPlaying(false);
     setHasPlayed(true);
-    setProgress(1);
     onPlaybackComplete?.();
   }, [onPlaybackComplete]);
 
@@ -214,7 +237,8 @@ export const VideoChatPlayer = memo(function VideoChatPlayer({
 
     playbackCompleteRef.current = false;
     setHasPlayed(false);
-    setProgress(0);
+    // Reset progress bar directly
+    if (progressRef.current) progressRef.current.style.width = '0%';
 
     if (video) {
       video.currentTime = 0;
@@ -257,7 +281,7 @@ export const VideoChatPlayer = memo(function VideoChatPlayer({
             ref={videoRef}
             src={videoUrl}
             playsInline
-            preload="auto"
+            preload="metadata"
             className="aspect-video w-full object-cover"
             onLoadedMetadata={() => setVideoReady(true)}
             onEnded={handleVideoEnd}
@@ -331,15 +355,13 @@ export const VideoChatPlayer = memo(function VideoChatPlayer({
             </div>
           )}
 
-          {/* Progress bar */}
+          {/* Progress bar — direct DOM updates, no React re-renders */}
           {(isPlaying || hasPlayed) && (
             <div className="absolute inset-x-0 bottom-0 h-1">
               <div
-                className={cn(
-                  'h-full transition-all duration-200',
-                  hasPlayed ? 'bg-[#00ff41]/40' : 'bg-[#00ff41]',
-                )}
-                style={{ width: `${progress * 100}%` }}
+                ref={progressRef}
+                className={`h-full ${hasPlayed ? 'bg-[#00ff41]/40' : 'bg-[#00ff41]'}`}
+                style={{ width: '0%', willChange: 'width' }}
               />
             </div>
           )}
