@@ -1,6 +1,94 @@
 {
   "events": [
     {
+      "id": "9306570748",
+      "type": "DeleteEvent",
+      "repo": "Nusnus/nusnus.github.io",
+      "title": "Delete",
+      "url": "https://github.com/Nusnus/nusnus.github.io",
+      "createdAt": "2026-03-12T05:29:46Z"
+    },
+    {
+      "id": "9306570173",
+      "type": "PushEvent",
+      "repo": "Nusnus/nusnus.github.io",
+      "title": "Push",
+      "url": "https://github.com/Nusnus/nusnus.github.io",
+      "createdAt": "2026-03-12T05:29:45Z"
+    },
+    {
+      "id": "7318639700",
+      "type": "PullRequestEvent",
+      "repo": "Nusnus/nusnus.github.io",
+      "title": "Pull Request",
+      "url": "https://github.com/Nusnus/nusnus.github.io",
+      "createdAt": "2026-03-12T05:29:43Z"
+    },
+    {
+      "id": "7304544155",
+      "type": "PullRequestEvent",
+      "repo": "Nusnus/nusnus.github.io",
+      "title": "Pull Request",
+      "url": "https://github.com/Nusnus/nusnus.github.io",
+      "createdAt": "2026-03-11T18:40:34Z"
+    },
+    {
+      "id": "9289987132",
+      "type": "DeleteEvent",
+      "repo": "Nusnus/nusnus.github.io",
+      "title": "Delete",
+      "url": "https://github.com/Nusnus/nusnus.github.io",
+      "createdAt": "2026-03-11T18:28:12Z"
+    },
+    {
+      "id": "9289986635",
+      "type": "PushEvent",
+      "repo": "Nusnus/nusnus.github.io",
+      "title": "Push",
+      "url": "https://github.com/Nusnus/nusnus.github.io",
+      "createdAt": "2026-03-11T18:28:11Z"
+    },
+    {
+      "id": "7304138851",
+      "type": "PullRequestEvent",
+      "repo": "Nusnus/nusnus.github.io",
+      "title": "Pull Request",
+      "url": "https://github.com/Nusnus/nusnus.github.io",
+      "createdAt": "2026-03-11T18:28:09Z"
+    },
+    {
+      "id": "7296977169",
+      "type": "PullRequestEvent",
+      "repo": "Nusnus/nusnus.github.io",
+      "title": "Pull Request",
+      "url": "https://github.com/Nusnus/nusnus.github.io",
+      "createdAt": "2026-03-11T15:05:23Z"
+    },
+    {
+      "id": "9275770968",
+      "type": "DeleteEvent",
+      "repo": "Nusnus/nusnus.github.io",
+      "title": "Delete",
+      "url": "https://github.com/Nusnus/nusnus.github.io",
+      "createdAt": "2026-03-11T12:14:06Z"
+    },
+    {
+      "id": "9275770077",
+      "type": "PushEvent",
+      "repo": "Nusnus/nusnus.github.io",
+      "title": "Push",
+      "url": "https://github.com/Nusnus/nusnus.github.io",
+      "createdAt": "2026-03-11T12:14:04Z"
+    },
+    {
+      "id": "7290901246",
+      "type": "PullRequestEvent",
+      "repo": "Nusnus/nusnus.github.io",
+      "title": "Pull Request",
+      "url": "https://github.com/Nusnus/nusnus.github.io",
+      "createdAt": "2026-03-11T12:14:03Z"
+    },
+    {
       "id": "7275808900",
       "type": "PullRequestEvent",
       "repo": "Nusnus/nusnus.github.io",
@@ -145,20 +233,20 @@
       "createdAt": "2026-03-10T01:06:35Z"
     },
     {
-      "id": "9213965409",
-      "type": "DeleteEvent",
-      "repo": "Nusnus/nusnus.github.io",
-      "title": "Delete",
-      "url": "https://github.com/Nusnus/nusnus.github.io",
-      "createdAt": "2026-03-09T23:53:49Z"
-    },
-    {
       "id": "9213965227",
       "type": "PushEvent",
       "repo": "Nusnus/nusnus.github.io",
       "title": "Push",
       "url": "https://github.com/Nusnus/nusnus.github.io",
       "createdAt": "2026-03-09T23:53:48Z"
+    },
+    {
+      "id": "9213965409",
+      "type": "DeleteEvent",
+      "repo": "Nusnus/nusnus.github.io",
+      "title": "Delete",
+      "url": "https://github.com/Nusnus/nusnus.github.io",
+      "createdAt": "2026-03-09T23:53:49Z"
     },
     {
       "id": "7233186791",
@@ -1497,14 +1585,6 @@
       "createdAt": "2026-02-24T23:13:17Z"
     },
     {
-      "id": "8765869755",
-      "type": "PushEvent",
-      "repo": "Nusnus/celery",
-      "title": "Push",
-      "url": "https://github.com/Nusnus/celery",
-      "createdAt": "2026-02-24T21:08:31Z"
-    },
-    {
       "id": "6821690353",
       "type": "PullRequestEvent",
       "repo": "celery/billiard",
@@ -1539,8 +1619,8 @@
   ],
   "todaySummary": {
     "commits": 1,
-    "prsOpened": 2,
-    "prsReviewed": 1,
+    "prsOpened": 1,
+    "prsReviewed": 0,
     "issueComments": 0
   }
 }
