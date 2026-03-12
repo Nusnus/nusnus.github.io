@@ -126,16 +126,19 @@ export const VideoChatView = memo(function VideoChatView({
     latestForm.options.length > 0;
 
   return (
-    <div className="flex h-full flex-col bg-black">
-      {/* Top bar — minimal, transparent */}
-      <div className="relative z-10 flex shrink-0 items-center justify-between px-4 py-3 sm:px-6">
+    <div className="flex h-full flex-col bg-black" style={{ overscrollBehavior: 'none' }}>
+      {/* Top bar — minimal, transparent, safe-area aware */}
+      <div
+        className="relative z-10 flex shrink-0 items-center justify-between px-4 py-3 sm:px-6"
+        style={{ paddingTop: 'max(0.75rem, env(safe-area-inset-top))' }}
+      >
         <button
           onClick={onExit}
-          className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-white/60 backdrop-blur-sm transition-all hover:border-white/20 hover:bg-white/10 hover:text-white/80 sm:px-4 sm:py-2 sm:text-sm"
+          className="flex min-h-[44px] min-w-[44px] items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-white/60 backdrop-blur-sm transition-all hover:border-white/20 hover:bg-white/10 hover:text-white/80 active:scale-95 sm:min-h-0 sm:min-w-0 sm:px-4 sm:py-2 sm:text-sm"
           aria-label="Exit video chat"
         >
           <svg
-            className="h-3.5 w-3.5 sm:h-4 sm:w-4"
+            className="h-4 w-4 sm:h-4 sm:w-4"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -157,14 +160,14 @@ export const VideoChatView = memo(function VideoChatView({
             VIDEO CHAT
           </span>
         </div>
-        <div className="w-16 sm:w-20" /> {/* Spacer for centering */}
+        <div className="w-[44px] sm:w-20" /> {/* Spacer for centering */}
       </div>
 
       {/* Main content — scrollable */}
       <div className="scrollbar-thin flex min-h-0 flex-1 flex-col overflow-y-auto">
-        <div className="flex flex-1 flex-col items-center justify-center px-3 py-4 sm:px-6 sm:py-8">
-          {/* Video area */}
-          <div className="w-full max-w-2xl">
+        <div className="flex flex-1 flex-col items-center justify-center px-2 py-3 sm:px-6 sm:py-8">
+          {/* Video area — full-width on mobile, constrained on larger screens */}
+          <div className="w-full sm:max-w-2xl">
             {/* Initial loading state (no video yet) */}
             {isWaitingForVideo && !latestVideoMsg && <VideoChatLoader variant="initial" />}
 
@@ -208,16 +211,16 @@ export const VideoChatView = memo(function VideoChatView({
 
           {/* Options area */}
           {showOptions && (
-            <div className="video-chat-options-appear mt-6 w-full max-w-2xl sm:mt-8">
+            <div className="video-chat-options-appear mt-4 w-full sm:mt-8 sm:max-w-2xl">
               {/* Question */}
               {latestForm.question && (
-                <p className="mb-4 text-center text-sm font-medium text-white/70 sm:mb-5 sm:text-base">
+                <p className="mb-3 text-center text-sm font-medium text-white/70 sm:mb-5 sm:text-base">
                   {latestForm.question}
                 </p>
               )}
 
               {/* Option cards — stacked on mobile, grid on larger screens */}
-              <div className="grid gap-2.5 sm:grid-cols-2 sm:gap-3">
+              <div className="grid gap-2 sm:grid-cols-2 sm:gap-3">
                 {latestForm.options.map((option) => {
                   const isSelected = latestForm.selectedId === option.id;
                   const isOtherSelected = isFormAnswered && !isSelected;
@@ -228,12 +231,12 @@ export const VideoChatView = memo(function VideoChatView({
                       onClick={() => handleOptionClick(option)}
                       disabled={isFormAnswered || isGenerating}
                       className={cn(
-                        'group/opt relative overflow-hidden rounded-xl border p-4 text-left transition-all duration-200 sm:p-5',
+                        'group/opt relative min-h-[48px] overflow-hidden rounded-xl border p-3.5 text-left transition-all duration-200 active:scale-[0.97] sm:p-5',
                         isSelected
                           ? 'border-[#00ff41]/40 bg-[#00ff41]/10 ring-1 ring-[#00ff41]/20'
                           : isOtherSelected
                             ? 'border-white/[0.04] bg-white/[0.02] opacity-30'
-                            : 'border-white/[0.08] bg-white/[0.03] hover:border-[#00ff41]/25 hover:bg-[#00ff41]/[0.05] active:scale-[0.98]',
+                            : 'border-white/[0.08] bg-white/[0.03] hover:border-[#00ff41]/25 hover:bg-[#00ff41]/[0.05]',
                         (isFormAnswered || isGenerating) && !isSelected && 'cursor-default',
                       )}
                     >
@@ -279,12 +282,12 @@ export const VideoChatView = memo(function VideoChatView({
 
               {/* "Other" option */}
               {latestForm.allowOther && !isFormAnswered && (
-                <div className="mt-2.5 sm:mt-3">
+                <div className="mt-2 sm:mt-3">
                   {!showOtherInput ? (
                     <button
                       onClick={handleOtherToggle}
                       disabled={isFormAnswered || isGenerating}
-                      className="w-full rounded-xl border border-dashed border-white/[0.08] px-4 py-3 text-left text-sm text-white/40 transition-all hover:border-[#00ff41]/20 hover:bg-white/[0.02] hover:text-white/60 sm:py-3.5"
+                      className="w-full rounded-xl border border-dashed border-white/[0.08] px-4 py-3.5 text-left text-sm text-white/40 transition-all hover:border-[#00ff41]/20 hover:bg-white/[0.02] hover:text-white/60 active:scale-[0.98]"
                     >
                       <span className="flex items-center gap-2">
                         <svg
@@ -302,7 +305,7 @@ export const VideoChatView = memo(function VideoChatView({
                       </span>
                     </button>
                   ) : (
-                    <div className="video-chat-options-appear flex items-center gap-2 rounded-xl border border-white/[0.1] bg-white/[0.03] px-4 py-3">
+                    <div className="video-chat-options-appear flex items-center gap-2 rounded-xl border border-white/[0.1] bg-white/[0.03] px-3 py-3 sm:px-4">
                       <input
                         ref={otherInputRef}
                         type="text"
@@ -310,12 +313,14 @@ export const VideoChatView = memo(function VideoChatView({
                         onChange={(e) => setOtherText(e.target.value)}
                         onKeyDown={handleOtherKeyDown}
                         placeholder="Type your response..."
-                        className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-white/30 sm:text-base"
+                        className="min-w-0 flex-1 bg-transparent text-base text-white outline-none placeholder:text-white/30 sm:text-base"
+                        enterKeyHint="send"
+                        autoComplete="off"
                       />
                       <button
                         onClick={handleOtherSubmit}
                         disabled={!otherText.trim()}
-                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#00ff41]/10 text-[#00ff41] transition-colors hover:bg-[#00ff41]/20 disabled:opacity-30"
+                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#00ff41]/10 text-[#00ff41] transition-colors hover:bg-[#00ff41]/20 active:scale-95 disabled:opacity-30 sm:h-9 sm:w-9"
                         aria-label="Send"
                       >
                         <svg
@@ -348,7 +353,11 @@ export const VideoChatView = memo(function VideoChatView({
             </div>
           )}
 
-          <div ref={scrollRef} className="h-4" />
+          <div
+            ref={scrollRef}
+            className="h-4"
+            style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+          />
         </div>
       </div>
     </div>
