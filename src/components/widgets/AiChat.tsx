@@ -725,7 +725,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
             if (last?.role === 'assistant') {
               copy[copy.length - 1] = {
                 ...last,
-                videoChatSpokenText: result.content.trim(),
+                videoChatSpokenText: videoChatTtsText,
               };
             }
             return copy;
@@ -750,7 +750,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
             generate: async (prompt) => {
               const { generateVideo } = await import('@lib/ai/cloud');
               // In video chat mode, match video duration to spoken text length
-              const duration = isVideoChatMode ? estimateVideoDuration(result.content) : 10;
+              const duration = isVideoChatMode ? estimateVideoDuration(videoChatTtsText) : 10;
               const url = await generateVideo(prompt, controller.signal, duration);
               // In video chat mode, capture URL for the VideoChatPlayer
               if (isVideoChatMode) {
