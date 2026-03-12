@@ -1135,6 +1135,12 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
     preGenControllersRef.current.clear();
     preGenPromisesRef.current.clear();
   };
+
+  // Abort pre-gen tasks and revoke blob URLs on unmount.
+  useEffect(() => {
+    return () => cleanupPreGen();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional unmount-only cleanup
+  }, []);
   const startOptionsPreGen = useCallback(
     (options: ChatFormOption[], historyMessages: ChatMessage[]) => {
       // Cancel any existing pre-gen tasks

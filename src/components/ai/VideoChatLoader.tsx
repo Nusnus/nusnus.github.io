@@ -35,7 +35,7 @@ function FilmFrame({ delay, side }: { delay: number; side: 'left' | 'right' }) {
       className="video-chat-film-frame absolute h-8 w-12 rounded border border-[#00ff41]/15 bg-[#00ff41]/[0.03] sm:h-10 sm:w-14"
       style={{
         animationDelay: `${delay}s`,
-        [side]: side === 'left' ? '8px' : '8px',
+        [side]: '8px',
         top: `${((delay * 60) % 80) + 5}%`,
       }}
     />
