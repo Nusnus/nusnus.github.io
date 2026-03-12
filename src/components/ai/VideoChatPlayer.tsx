@@ -276,7 +276,10 @@ export const VideoChatPlayer = memo(function VideoChatPlayer({
   }
 
   return (
-    <div className="video-chat-player group relative w-full overflow-hidden rounded-xl bg-black shadow-2xl shadow-black/40 sm:rounded-2xl">
+    <div
+      className="video-chat-player group relative w-full overflow-hidden rounded-xl bg-black shadow-2xl shadow-black/40 sm:rounded-2xl"
+      style={{ transform: 'translateZ(0)' }}
+    >
       {/* Loading state */}
       {isLoading && <VideoChatLoader variant="generating" />}
 

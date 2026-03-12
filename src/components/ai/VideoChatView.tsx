@@ -19,6 +19,25 @@ import type { ChatMessage, ChatFormOption } from '@lib/ai/types';
 import { VideoChatPlayer } from './VideoChatPlayer';
 import { VideoChatLoader } from './VideoChatLoader';
 
+/**
+ * Set the Android Chrome / PWA theme-color meta tag.
+ * Returns the previous value so it can be restored on unmount.
+ */
+function setThemeColor(color: string): string | null {
+  const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+  if (meta) {
+    const prev = meta.content;
+    meta.content = color;
+    return prev;
+  }
+  // Create one if it doesn't exist
+  const newMeta = document.createElement('meta');
+  newMeta.name = 'theme-color';
+  newMeta.content = color;
+  document.head.appendChild(newMeta);
+  return null;
+}
+
 interface VideoChatViewProps {
   messages: ChatMessage[];
   isGenerating: boolean;
@@ -80,6 +99,14 @@ export const VideoChatView = memo(function VideoChatView({
     }
   }, [playbackDone, isFormAnswered]);
 
+  // Set Android Chrome theme-color to black for immersive nav bar, restore on exit
+  useEffect(() => {
+    const prev = setThemeColor('#000000');
+    return () => {
+      setThemeColor(prev ?? '#0a0a0a');
+    };
+  }, []);
+
   const handlePlaybackComplete = useCallback(() => {
     setPlaybackDone(true);
   }, []);
@@ -126,7 +153,10 @@ export const VideoChatView = memo(function VideoChatView({
     latestForm.options.length > 0;
 
   return (
-    <div className="flex h-full flex-col bg-black" style={{ overscrollBehavior: 'none' }}>
+    <div
+      className="flex h-full flex-col bg-black"
+      style={{ overscrollBehavior: 'none', WebkitOverflowScrolling: 'touch' }}
+    >
       {/* Top bar — minimal, transparent, safe-area aware */}
       <div
         className="relative z-10 flex shrink-0 items-center justify-between px-4 py-3 sm:px-6"
@@ -134,7 +164,7 @@ export const VideoChatView = memo(function VideoChatView({
       >
         <button
           onClick={onExit}
-          className="flex min-h-[44px] min-w-[44px] items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-white/60 backdrop-blur-sm transition-all hover:border-white/20 hover:bg-white/10 hover:text-white/80 active:scale-95 sm:min-h-0 sm:min-w-0 sm:px-4 sm:py-2 sm:text-sm"
+          className="flex min-h-[44px] min-w-[44px] items-center justify-center gap-2 rounded-full border border-white/10 bg-black/60 px-3 py-1.5 text-xs font-medium text-white/60 backdrop-blur-sm transition-all hover:border-white/20 hover:bg-white/10 hover:text-white/80 active:scale-95 sm:min-h-0 sm:min-w-0 sm:px-4 sm:py-2 sm:text-sm"
           aria-label="Exit video chat"
         >
           <svg
@@ -163,8 +193,11 @@ export const VideoChatView = memo(function VideoChatView({
         <div className="w-[44px] sm:w-20" /> {/* Spacer for centering */}
       </div>
 
-      {/* Main content — scrollable */}
-      <div className="scrollbar-thin flex min-h-0 flex-1 flex-col overflow-y-auto">
+      {/* Main content — scrollable, overscroll contained for Android glow prevention */}
+      <div
+        className="scrollbar-thin flex min-h-0 flex-1 flex-col overflow-y-auto"
+        style={{ overscrollBehavior: 'contain' }}
+      >
         <div className="flex flex-1 flex-col items-center justify-center px-2 py-3 sm:px-6 sm:py-8">
           {/* Video area — full-width on mobile, constrained on larger screens */}
           <div className="w-full sm:max-w-2xl">
@@ -315,6 +348,7 @@ export const VideoChatView = memo(function VideoChatView({
                         placeholder="Type your response..."
                         className="min-w-0 flex-1 bg-transparent text-base text-white outline-none placeholder:text-white/30 sm:text-base"
                         enterKeyHint="send"
+                        inputMode="text"
                         autoComplete="off"
                       />
                       <button
