@@ -257,7 +257,7 @@ export const VideoChatPlayer = memo(function VideoChatPlayer({
 
   if (videoError) {
     return (
-      <div className="flex aspect-video w-full items-center justify-center rounded-2xl border border-red-500/20 bg-black/60">
+      <div className="flex aspect-video w-full items-center justify-center rounded-xl border border-red-500/20 bg-black/60 sm:rounded-2xl">
         <div className="flex flex-col items-center gap-2 text-center">
           <svg
             className="h-8 w-8 text-red-400/60"
@@ -276,7 +276,10 @@ export const VideoChatPlayer = memo(function VideoChatPlayer({
   }
 
   return (
-    <div className="video-chat-player group relative w-full overflow-hidden rounded-2xl bg-black shadow-2xl shadow-black/40">
+    <div
+      className="video-chat-player group relative w-full overflow-hidden rounded-xl bg-black shadow-2xl shadow-black/40 sm:rounded-2xl"
+      style={{ transform: 'translateZ(0)' }}
+    >
       {/* Loading state */}
       {isLoading && <VideoChatLoader variant="generating" />}
 
@@ -311,12 +314,12 @@ export const VideoChatPlayer = memo(function VideoChatPlayer({
           {videoReady && !isPlaying && !hasPlayed && (
             <button
               onClick={handleManualPlay}
-              className="absolute inset-0 flex items-center justify-center bg-black/40 transition-all hover:bg-black/30"
+              className="absolute inset-0 flex items-center justify-center bg-black/40 transition-all hover:bg-black/30 active:bg-black/20"
               aria-label="Play video"
             >
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#00ff41]/90 shadow-lg shadow-[#00ff41]/30 transition-transform hover:scale-110 sm:h-20 sm:w-20">
+              <div className="flex h-18 w-18 items-center justify-center rounded-full bg-[#00ff41]/90 shadow-lg shadow-[#00ff41]/30 transition-transform hover:scale-110 active:scale-95 sm:h-20 sm:w-20">
                 <svg
-                  className="ml-1 h-7 w-7 text-black sm:h-8 sm:w-8"
+                  className="ml-1 h-8 w-8 text-black sm:h-8 sm:w-8"
                   viewBox="0 0 24 24"
                   fill="currentColor"
                 >
@@ -330,13 +333,13 @@ export const VideoChatPlayer = memo(function VideoChatPlayer({
           {hasPlayed && (
             <button
               onClick={handleReplay}
-              className="absolute inset-0 flex items-center justify-center bg-black/50 transition-all hover:bg-black/40"
+              className="absolute inset-0 flex items-center justify-center bg-black/50 transition-all hover:bg-black/40 active:bg-black/30"
               aria-label="Replay video"
             >
               <div className="flex flex-col items-center gap-2">
-                <div className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-white/20 bg-white/10 backdrop-blur-sm transition-transform hover:scale-110 sm:h-16 sm:w-16">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-white/20 bg-white/10 backdrop-blur-sm transition-transform hover:scale-110 active:scale-95 sm:h-16 sm:w-16">
                   <svg
-                    className="h-6 w-6 text-white/80 sm:h-7 sm:w-7"
+                    className="h-7 w-7 text-white/80 sm:h-7 sm:w-7"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -355,16 +358,16 @@ export const VideoChatPlayer = memo(function VideoChatPlayer({
 
           {/* Caption overlay */}
           {showCaption && spokenText && (
-            <div className="video-chat-caption pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-4 pt-12 pb-4 sm:px-6 sm:pb-5">
+            <div className="video-chat-caption pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-3 pt-12 pb-3 sm:px-6 sm:pb-5">
               <p className="text-center text-sm leading-relaxed text-white/90 drop-shadow-lg sm:text-base">
                 {spokenText}
               </p>
             </div>
           )}
 
-          {/* Progress bar — direct DOM updates, no React re-renders */}
+          {/* Progress bar — thicker on mobile for visibility, direct DOM updates */}
           {(isPlaying || hasPlayed) && (
-            <div className="absolute inset-x-0 bottom-0 h-1">
+            <div className="absolute inset-x-0 bottom-0 h-1.5 sm:h-1">
               <div
                 ref={progressRef}
                 className={`h-full ${hasPlayed ? 'bg-[#00ff41]/40' : 'bg-[#00ff41]'}`}
