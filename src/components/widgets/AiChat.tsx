@@ -1659,6 +1659,23 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
     }
   }, [isVideoChatMode]);
 
+  /** Retry video chat after an error — clears state and re-sends the initial prompt. */
+  const retryVideoChat = useCallback(() => {
+    abortRef.current?.abort();
+    setIsGenerating(false);
+    sessionGenRef.current++;
+    clearMessages();
+    setMessages([]);
+    addLog('info', 'session', 'Video Chat retry');
+    // Defer so React flushes the cleared state before we send the new message
+    requestAnimationFrame(() => {
+      sendMessageRef.current?.(
+        'Start the video chat. Introduce yourself as Cybernus with a compelling cinematic opening.',
+        { hidden: true },
+      );
+    });
+  }, [addLog]);
+
   const exitVideoChat = useCallback(() => {
     setIsVideoChatMode(false);
     cleanupPreGen();
@@ -1913,6 +1930,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
             isGenerating={isGenerating}
             onFormSubmit={handleFormSubmit}
             onExit={exitVideoChat}
+            onRetry={retryVideoChat}
           />
         ) : engineState === 'idle' ? (
           /* ─── Idle screen ─── */
