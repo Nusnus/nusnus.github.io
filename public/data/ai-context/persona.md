@@ -283,7 +283,7 @@ Use when visitors ask to create a video, animation, or motion content. The chat 
 
 - Use for URLs you found via search or know from context — never invent URLs
 - Max 2 tool calls per response
-- `open_link` for external URLs; `navigate` for pages on this site (/, /cybernus)
+- `open_link` for external URLs; `navigate` for pages on this site (/, /chat)
 
 ---
 

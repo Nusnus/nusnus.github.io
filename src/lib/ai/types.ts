@@ -1,8 +1,11 @@
 /**
- * Shared types for the Cybernus AI chatbot subsystem.
+ * Shared types for the AI chat subsystem.
+ *
+ * Used by both the legacy RoastWidget and the new Cybernus agent.
+ * Keep this file lean — Cybernus-specific types live in @lib/cybernus/types.
  */
 
-/** Inline agent activity record — displayed inside conversation messages. */
+/** Agent activity indicator shown during streaming. */
 export interface AgentActivityItem {
   /** Agent display name (e.g. "Scout Agent", "Vision Agent"). */
   agent: string;
@@ -14,7 +17,7 @@ export interface AgentActivityItem {
   status: 'working' | 'done';
   /** SVG icon path (viewBox 0 0 24 24). */
   iconPath: string;
-  /** Accent colour for this agent. */
+  /** CSS color for the activity indicator. */
   color: string;
 }
 
@@ -58,7 +61,16 @@ export interface ChatMessage {
   actions?: ToolAction[];
   /** Web search phase: 'searching' while running, 'found' when complete (synthesizing). */
   searchStatus?: 'searching' | 'found';
-  /** Inline sub-agent activity tracked during generation. */
+  /**
+   * Live tool activity labels (e.g. "DeepWiki", "Python", "Web search").
+   * Populated during streaming so the UI can show what's happening.
+   */
+  toolActivity?: string[];
+  /** Reasoning tokens used by Grok 4's internal thinking. Updates during stream. */
+  reasoningTokens?: number;
+  /** True while the model is still reasoning (before first output token). */
+  isThinking?: boolean;
+  /** Structured agent activity items for rich UI rendering. */
   agentActivity?: AgentActivityItem[];
   /** Dynamic in-chat form for user interaction (populated by `ask_user` tool). */
   form?: ChatForm;

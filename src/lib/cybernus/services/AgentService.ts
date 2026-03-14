@@ -360,7 +360,7 @@ export function buildToolDefinitions(tools: AgentTool[]): ToolDefinition[] {
         properties: {
           url: {
             type: 'string',
-            description: 'The site path to navigate to (e.g., "/", "/cybernus")',
+            description: 'The site path to navigate to (e.g., "/", "/chat")',
           },
           label: {
             type: 'string',
