@@ -1632,6 +1632,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
 
   /* ─── Video Chat mode handlers ─── */
   const videoChatPendingStartRef = useRef(false);
+  const [videoChatStartKey, setVideoChatStartKey] = useState(0);
 
   const startVideoChat = useCallback(() => {
     // Set up video chat mode
@@ -1649,6 +1650,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
 
   // Send the initial trigger message once React has re-rendered with isVideoChatMode=true,
   // guaranteeing the sendMessage closure includes VIDEO_CHAT_SYSTEM_PROMPT.
+  // Also re-fires on retry (videoChatStartKey changes).
   useEffect(() => {
     if (isVideoChatMode && videoChatPendingStartRef.current) {
       videoChatPendingStartRef.current = false;
@@ -1657,7 +1659,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
         { hidden: true },
       );
     }
-  }, [isVideoChatMode]);
+  }, [isVideoChatMode, videoChatStartKey]);
 
   /** Retry video chat after an error — clears state and re-sends the initial prompt. */
   const retryVideoChat = useCallback(() => {
@@ -1667,13 +1669,10 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
     clearMessages();
     setMessages([]);
     addLog('info', 'session', 'Video Chat retry');
-    // Defer so React flushes the cleared state before we send the new message
-    requestAnimationFrame(() => {
-      sendMessageRef.current?.(
-        'Start the video chat. Introduce yourself as Cybernus with a compelling cinematic opening.',
-        { hidden: true },
-      );
-    });
+    // Use the same ref+effect pattern as startVideoChat — the effect runs
+    // after React flushes state, guaranteeing sendMessageRef is up-to-date.
+    videoChatPendingStartRef.current = true;
+    setVideoChatStartKey((k) => k + 1);
   }, [addLog]);
 
   const exitVideoChat = useCallback(() => {
