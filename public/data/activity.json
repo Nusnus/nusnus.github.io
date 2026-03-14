@@ -337,18 +337,18 @@
       "createdAt": "2026-03-09T19:00:15Z"
     },
     {
-      "id": "9205964056",
-      "type": "PushEvent",
-      "repo": "Nusnus/nusnus.github.io",
-      "title": "Push",
-      "url": "https://github.com/Nusnus/nusnus.github.io",
-      "createdAt": "2026-03-09T19:00:17Z"
-    },
-    {
       "id": "9205964441",
       "type": "DeleteEvent",
       "repo": "Nusnus/nusnus.github.io",
       "title": "Delete",
+      "url": "https://github.com/Nusnus/nusnus.github.io",
+      "createdAt": "2026-03-09T19:00:17Z"
+    },
+    {
+      "id": "9205964056",
+      "type": "PushEvent",
+      "repo": "Nusnus/nusnus.github.io",
+      "title": "Push",
       "url": "https://github.com/Nusnus/nusnus.github.io",
       "createdAt": "2026-03-09T19:00:17Z"
     },
@@ -1345,7 +1345,7 @@
       "createdAt": "2026-03-02T14:47:02Z"
     },
     {
-      "id": "7006748985",
+      "id": "7006748982",
       "type": "PullRequestEvent",
       "repo": "celery/pytest-celery",
       "title": "Pull Request",
@@ -1353,7 +1353,7 @@
       "createdAt": "2026-03-02T14:39:38Z"
     },
     {
-      "id": "7006748982",
+      "id": "7006748985",
       "type": "PullRequestEvent",
       "repo": "celery/pytest-celery",
       "title": "Pull Request",
@@ -1377,52 +1377,12 @@
       "createdAt": "2026-03-02T14:39:03Z"
     },
     {
-      "id": "8952269179",
-      "type": "DeleteEvent",
-      "repo": "Nusnus/pytest-celery",
-      "title": "Delete",
-      "url": "https://github.com/Nusnus/pytest-celery",
-      "createdAt": "2026-03-02T14:38:52Z"
-    },
-    {
       "id": "7006724701",
       "type": "PullRequestEvent",
       "repo": "celery/pytest-celery",
       "title": "Pull Request",
       "url": "https://github.com/celery/pytest-celery",
       "createdAt": "2026-03-02T14:38:49Z"
-    },
-    {
-      "id": "8952268705",
-      "type": "PushEvent",
-      "repo": "celery/pytest-celery",
-      "title": "Push",
-      "url": "https://github.com/celery/pytest-celery",
-      "createdAt": "2026-03-02T14:38:51Z"
-    },
-    {
-      "id": "8952228269",
-      "type": "CreateEvent",
-      "repo": "Nusnus/pytest-celery",
-      "title": "Create",
-      "url": "https://github.com/Nusnus/pytest-celery",
-      "createdAt": "2026-03-02T14:37:42Z"
-    },
-    {
-      "id": "8951544745",
-      "type": "PushEvent",
-      "repo": "Nusnus/pytest-celery",
-      "title": "Push",
-      "url": "https://github.com/Nusnus/pytest-celery",
-      "createdAt": "2026-03-02T14:18:13Z"
-    },
-    {
-      "id": "8951285204",
-      "type": "PushEvent",
-      "repo": "Nusnus/pytest-celery",
-      "title": "Push",
-      "url": "https://github.com/Nusnus/pytest-celery",
-      "createdAt": "2026-03-02T14:10:39Z"
     },
     {
       "id": "7005532214",
@@ -1439,14 +1399,6 @@
       "title": "Pull Request",
       "url": "https://github.com/celery/pytest-celery",
       "createdAt": "2026-03-02T14:01:22Z"
-    },
-    {
-      "id": "8950940592",
-      "type": "CreateEvent",
-      "repo": "Nusnus/pytest-celery",
-      "title": "Create",
-      "url": "https://github.com/Nusnus/pytest-celery",
-      "createdAt": "2026-03-02T14:00:43Z"
     },
     {
       "id": "6964929231",
