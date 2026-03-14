@@ -160,31 +160,41 @@ The site features a GitHub-inspired dashboard design that displays Tomer's open 
 
 ---
 
-## About This AI Chatbot
+## About This AI Chatbot — Cybernus
 
-This AI chatbot is a technical showcase built entirely into the website. It offers two modes:
+This AI chatbot ("Cybernus") is Tomer's digital self — an AI-powered mirror of the entire website. It runs at `/cybernus` and is designed to be a complete alternative to browsing the static site. Everything the static site shows, Cybernus can tell you.
 
-### Cloud Mode (xAI Grok)
+### Architecture
 
-- Powered by **xAI's Grok** models via a secure **Cloudflare Worker proxy** — the API key is stored server-side and never exposed to the browser.
-- Uses **native function calling** for structured tool actions (link suggestions, navigation) — no text markers or regex parsing.
-- Supports **structured outputs** via `response_format` for use cases requiring JSON schema enforcement.
-- Has access to **all site data** — the full knowledge base, all repos, contribution stats, and recent activity are fed directly into the model's 2M token context window.
-- Supports **Grok 4.1 Fast** (strongest, 2M context) and **Grok Code Fast** (code-specialized with reasoning).
-- Instant start — no download required.
+- **Single model:** xAI's **Grok** (`grok-4-1-fast`) — the strongest available model with 2M token context.
+- **Proxy:** A secure **Cloudflare Worker** at `ai-proxy.tomer-nosrati.workers.dev` holds the API key server-side. The browser never sees the key.
+- **Streaming:** SSE (Server-Sent Events) for real-time token-by-token response delivery.
+- **Tools:** Native function calling with MCP-style tools:
+  - `web_search` — search the web for information not in context
+  - `navigate` — navigate to pages within the site
+  - `open_link` — open external URLs
+  - `show_github_stats` — render a rich GitHub statistics card
+  - `show_project_card` — render a project detail card
+  - `show_timeline` — render an interactive timeline
+- **Context:** Full system prompt with all site data (profile, repos, contributions, articles, knowledge base) injected at every request.
+- **Personality:** Grok Spectrum system with 6 levels (Balanced → Unhinged).
+- **Languages:** English, Colombian Spanish, Israeli Hebrew — full RTL support.
+- **Memory:** Session-based localStorage persistence. Smart history search across all sessions.
+- **Voice:** Voice input via Web Speech API. Voice output planned via xAI Realtime API.
+- **Security:** Context engineering attack detection — identifies and deflects prompt injection, data crossing, and social engineering attempts.
 
-### Local Mode (WebLLM)
+### Key Features
 
-- Runs **100% in the visitor's browser** using **WebLLM** and **WebGPU** — the model inference happens on the user's GPU, not on any server.
-- **No data leaves the device.** All processing is local.
-- The model is downloaded once and **cached in the browser** for instant startup on future visits.
-- Uses **Retrieval-Augmented Generation (RAG)** — searches a pre-built index of site content to find relevant context before answering.
-- Uses text-marker actions ([LINK: ...], [NAV: ...]) parsed with regex for tool functionality (local models don't support native function calling).
+- **Direct-to-chat:** No model picker. Opens straight into the conversation.
+- **Sub-agent visualization:** Complex tasks show visual task decomposition in the UI.
+- **Rich rendering:** Beyond text — mermaid diagrams, GitHub stats cards, project cards, timelines.
+- **Responsive:** Full widescreen support with collapsible sidebars, and mobile-first design.
+- **Matrix theme:** Dark theme with green accents and neural stream animations.
 
 ### Shared Features
 
 - Conversation history is **persisted in localStorage** and can be continued or started fresh.
-- The chatbot was designed and built by Tomer as a demonstration of cutting-edge AI technology — both cloud and in-browser.
+- The chatbot was designed and built by Tomer as a demonstration of cutting-edge AI technology.
 
 ---
 
