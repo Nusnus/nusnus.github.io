@@ -279,13 +279,18 @@ export class STTSession {
  * Convert text to speech using xAI TTS API via the Cloudflare Worker proxy.
  * Returns an AudioBuffer that can be played immediately.
  */
-export async function textToSpeech(text: string, signal?: AbortSignal): Promise<HTMLAudioElement> {
+export async function textToSpeech(
+  text: string,
+  signal?: AbortSignal,
+  language = 'en',
+): Promise<HTMLAudioElement> {
   const response = await fetch(`${WORKER_BASE_URL}/v1/tts`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       text: text.slice(0, 4096),
       voice_id: CYBERNUS_VOICE_ID,
+      language,
     }),
     signal: signal ?? null,
   });
