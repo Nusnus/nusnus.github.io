@@ -48,6 +48,7 @@ interface VideoChatViewProps {
     customValue?: string,
   ) => void;
   onExit: () => void;
+  onRetry: () => void;
 }
 
 /** Dedicated video chat experience — cinema-style, mobile-native. */
@@ -56,6 +57,7 @@ export const VideoChatView = memo(function VideoChatView({
   isGenerating,
   onFormSubmit,
   onExit,
+  onRetry,
 }: VideoChatViewProps) {
   const [playbackDone, setPlaybackDone] = useState(false);
   const [otherText, setOtherText] = useState('');
@@ -80,6 +82,14 @@ export const VideoChatView = memo(function VideoChatView({
 
   // Check if video generation failed (generation finished but no video URL)
   const isVideoFailed = !isGenerating && !!latestVideoMsg && !latestVideoMsg.videoChatUrl;
+
+  // Check if the API call itself failed (e.g. billing error, rate limit, network).
+  // This happens when generation finished but no assistant message has video chat fields.
+  const hasAssistantMsg = messages.some((m) => m.role === 'assistant');
+  const isApiError = !isGenerating && hasAssistantMsg && !latestVideoMsg;
+  const apiErrorContent = isApiError
+    ? [...messages].reverse().find((m) => m.role === 'assistant')?.content
+    : undefined;
 
   // Reset playback state when a new video message arrives
   // This is the React-recommended "derive state from props" pattern.
@@ -201,6 +211,42 @@ export const VideoChatView = memo(function VideoChatView({
         <div className="flex flex-1 flex-col items-center justify-center px-2 py-3 sm:px-6 sm:py-8">
           {/* Video area — full-width on mobile, constrained on larger screens */}
           <div className="w-full sm:max-w-2xl">
+            {/* API error state (e.g. billing, rate limit, network failure) */}
+            {isApiError && (
+              <div className="flex aspect-video w-full flex-col items-center justify-center gap-4 rounded-xl border border-red-500/20 bg-black/60 px-4 sm:rounded-2xl">
+                <svg
+                  className="h-10 w-10 text-red-400/60"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                <p className="max-w-xs text-center text-sm leading-relaxed text-white/60">
+                  {apiErrorContent || 'Something went wrong. Please try again.'}
+                </p>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={onRetry}
+                    className="rounded-full border border-[#00ff41]/30 bg-[#00ff41]/10 px-5 py-2 text-sm font-medium text-[#00ff41] transition-all hover:bg-[#00ff41]/20 active:scale-95"
+                  >
+                    Try Again
+                  </button>
+                  <button
+                    onClick={onExit}
+                    className="rounded-full border border-white/10 bg-white/5 px-5 py-2 text-sm font-medium text-white/60 transition-all hover:bg-white/10 active:scale-95"
+                  >
+                    Exit
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Initial loading state (no video yet) */}
             {isWaitingForVideo && !latestVideoMsg && <VideoChatLoader variant="initial" />}
 
