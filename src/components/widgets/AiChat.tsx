@@ -757,7 +757,11 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
                   } else {
                     addLog('info', 'api', 'Retrying TTS generation (attempt 2)');
                   }
-                  const audioElement = await textToSpeech(videoChatTtsText, controller.signal);
+                  const audioElement = await textToSpeech(
+                    videoChatTtsText,
+                    controller.signal,
+                    language,
+                  );
                   addLog('info', 'api', 'TTS voiceover generated for video chat');
                   return audioElement.src;
                 } catch (ttsErr) {
@@ -1380,7 +1384,11 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
                     const { textToSpeech } = await import('@lib/cybernus/services/VoiceService');
                     for (let attempt = 0; attempt < 2; attempt++) {
                       try {
-                        const audioElement = await textToSpeech(preGenTtsText, ctrl.signal);
+                        const audioElement = await textToSpeech(
+                          preGenTtsText,
+                          ctrl.signal,
+                          language,
+                        );
                         return audioElement.src;
                       } catch {
                         if (ctrl.signal.aborted) return undefined;

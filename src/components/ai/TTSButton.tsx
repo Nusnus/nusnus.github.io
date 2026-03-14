@@ -76,7 +76,7 @@ export function TTSButton({ text, language }: TTSButtonProps) {
         return;
       }
 
-      const audio = await textToSpeech(cleanText, controller.signal);
+      const audio = await textToSpeech(cleanText, controller.signal, language);
       audioRef.current = audio;
 
       audio.addEventListener(
@@ -114,7 +114,7 @@ export function TTSButton({ text, language }: TTSButtonProps) {
         setTimeout(() => setState('idle'), 2000);
       }
     }
-  }, [text, state]);
+  }, [text, state, language]);
 
   return (
     <button
