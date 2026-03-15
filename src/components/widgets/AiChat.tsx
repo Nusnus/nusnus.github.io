@@ -75,17 +75,6 @@ function isWelcomeMessage(content: string): boolean {
   return LANGUAGES.some((l) => t(l.code).welcome === content);
 }
 
-/**
- * Estimate how long a TTS voiceover will take for the given text.
- * Returns a video duration in seconds, clamped to the xAI API range (1-15).
- * Based on ~2.5 words/sec typical TTS speed, with a +1s buffer.
- */
-function estimateVideoDuration(spokenText: string): number {
-  const words = spokenText.trim().split(/\s+/).length;
-  const seconds = Math.ceil(words / 2.5) + 1;
-  return Math.max(5, Math.min(15, seconds));
-}
-
 /** Parse ask_user tool call arguments into a ChatForm (or undefined on failure). */
 function parseAskUserForm(toolCallArgs: string): ChatForm | undefined {
   try {
@@ -815,8 +804,8 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
             activityType: 'video_generation',
             generate: async (prompt) => {
               const { generateVideo } = await import('@lib/ai/cloud');
-              // In video chat mode, match video duration to spoken text length
-              const duration = isVideoChatMode ? estimateVideoDuration(videoChatTtsText) : 10;
+              // Video chat mode: fixed 5s duration; regular chat: 10s default.
+              const duration = isVideoChatMode ? 5 : 10;
               const url = await generateVideo(prompt, controller.signal, duration);
               // In video chat mode, capture URL for the VideoChatPlayer
               if (isVideoChatMode) {
@@ -1364,7 +1353,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
             }
 
             // Generate video + TTS in parallel
-            const videoDuration = estimateVideoDuration(preGenTtsText || 'short response');
+            const videoDuration = 5;
             const videoCall = result.toolCalls.find((tc) => tc.name === 'generate_video');
             const videoPromise = videoCall
               ? (async () => {
