@@ -159,6 +159,8 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
 
   /* ─── Video Chat mode ─── */
   const [isVideoChatMode, setIsVideoChatMode] = useState(false);
+  /** True for the first (intro) video in a video chat session — forces 5s duration. */
+  const videoChatIntroRef = useRef(true);
 
   /* ─── Voice state ─── */
   const [voiceState, setVoiceState] = useState<VoiceState>('idle');
@@ -816,7 +818,14 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
             generate: async (prompt) => {
               const { generateVideo } = await import('@lib/ai/cloud');
               // In video chat mode, match video duration to spoken text length
-              const duration = isVideoChatMode ? estimateVideoDuration(videoChatTtsText) : 10;
+              // Intro video is always 5s; subsequent videos use estimated duration.
+              const isIntro = videoChatIntroRef.current;
+              if (isVideoChatMode) videoChatIntroRef.current = false;
+              const duration = isVideoChatMode
+                ? isIntro
+                  ? 5
+                  : estimateVideoDuration(videoChatTtsText)
+                : 10;
               const url = await generateVideo(prompt, controller.signal, duration);
               // In video chat mode, capture URL for the VideoChatPlayer
               if (isVideoChatMode) {
@@ -1652,6 +1661,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
     setMessages([]);
     setActiveSession(null);
     videoChatPendingStartRef.current = true;
+    videoChatIntroRef.current = true;
 
     addLog('info', 'session', 'Video Chat mode started');
   }, [addLog]);
@@ -1680,6 +1690,7 @@ export default function AiChat({ systemPrompt }: AiChatProps) {
     // Use the same ref+effect pattern as startVideoChat — the effect runs
     // after React flushes state, guaranteeing sendMessageRef is up-to-date.
     videoChatPendingStartRef.current = true;
+    videoChatIntroRef.current = true;
     setVideoChatStartKey((k) => k + 1);
   }, [addLog]);
 
