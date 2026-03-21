@@ -1,6 +1,22 @@
 {
   "events": [
     {
+      "id": "7597275722",
+      "type": "IssueCommentEvent",
+      "repo": "celery/celery",
+      "title": "Comment: Add CLAUDE.md with project guidance for Claude Code",
+      "url": "https://github.com/celery/celery/pull/10185#issuecomment-4098016189",
+      "createdAt": "2026-03-20T13:35:39Z"
+    },
+    {
+      "id": "7597274358",
+      "type": "PullRequestEvent",
+      "repo": "celery/celery",
+      "title": "Pull Request",
+      "url": "https://github.com/celery/celery",
+      "createdAt": "2026-03-09T04:02:22Z"
+    },
+    {
       "id": "9518407341",
       "type": "DeleteEvent",
       "repo": "Nusnus/nusnus.github.io",
@@ -433,20 +449,20 @@
       "createdAt": "2026-03-10T01:06:35Z"
     },
     {
-      "id": "9213965409",
-      "type": "DeleteEvent",
-      "repo": "Nusnus/nusnus.github.io",
-      "title": "Delete",
-      "url": "https://github.com/Nusnus/nusnus.github.io",
-      "createdAt": "2026-03-09T23:53:49Z"
-    },
-    {
       "id": "9213965227",
       "type": "PushEvent",
       "repo": "Nusnus/nusnus.github.io",
       "title": "Push",
       "url": "https://github.com/Nusnus/nusnus.github.io",
       "createdAt": "2026-03-09T23:53:48Z"
+    },
+    {
+      "id": "9213965409",
+      "type": "DeleteEvent",
+      "repo": "Nusnus/nusnus.github.io",
+      "title": "Delete",
+      "url": "https://github.com/Nusnus/nusnus.github.io",
+      "createdAt": "2026-03-09T23:53:49Z"
     },
     {
       "id": "7233186791",
@@ -953,14 +969,6 @@
       "createdAt": "2026-03-04T20:03:43Z"
     },
     {
-      "id": "9040272412",
-      "type": "PushEvent",
-      "repo": "Nusnus/nusnus.github.io",
-      "title": "Push",
-      "url": "https://github.com/Nusnus/nusnus.github.io",
-      "createdAt": "2026-03-04T19:28:34Z"
-    },
-    {
       "id": "7050687556",
       "type": "PullRequestEvent",
       "repo": "Nusnus/nusnus.github.io",
@@ -1033,7 +1041,7 @@
       "createdAt": "2026-03-02T18:59:54Z"
     },
     {
-      "id": "7012851342",
+      "id": "7012851343",
       "type": "PullRequestEvent",
       "repo": "celery/pytest-celery",
       "title": "Pull Request",
@@ -1041,7 +1049,7 @@
       "createdAt": "2026-03-02T17:48:37Z"
     },
     {
-      "id": "7012851343",
+      "id": "7012851342",
       "type": "PullRequestEvent",
       "repo": "celery/pytest-celery",
       "title": "Pull Request",
