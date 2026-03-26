@@ -17,7 +17,7 @@
     "fullName": "celery/django-celery-beat",
     "description": "Celery Periodic Tasks backed by the Django ORM",
     "htmlUrl": "https://github.com/celery/django-celery-beat",
-    "stars": 1921,
+    "stars": 1922,
     "forks": 483,
     "openIssues": 142,
     "lastPush": "2026-03-23T17:00:22Z",
@@ -32,11 +32,11 @@
     "htmlUrl": "https://github.com/celery/django-celery-results",
     "stars": 779,
     "forks": 222,
-    "openIssues": 60,
-    "lastPush": "2026-03-07T13:13:11Z",
+    "openIssues": 59,
+    "lastPush": "2026-03-25T15:35:37Z",
     "language": "Python",
     "role": "owner",
-    "contributorRank": 30
+    "contributorRank": 31
   },
   {
     "name": "py-amqp",
@@ -108,10 +108,10 @@
     "fullName": "mher/flower",
     "description": "Real-time monitor and web admin for Celery distributed task queue",
     "htmlUrl": "https://github.com/mher/flower",
-    "stars": 7134,
-    "forks": 1146,
-    "openIssues": 192,
-    "lastPush": "2026-03-19T21:27:07Z",
+    "stars": 7135,
+    "forks": 1145,
+    "openIssues": 189,
+    "lastPush": "2026-03-26T01:59:41Z",
     "language": "Python",
     "role": "contributor",
     "contributorRank": 25

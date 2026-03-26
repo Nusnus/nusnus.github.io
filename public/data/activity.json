@@ -745,38 +745,6 @@
       "createdAt": "2026-03-06T02:22:14Z"
     },
     {
-      "id": "9092691407",
-      "type": "PushEvent",
-      "repo": "Nusnus/nusnus.github.io",
-      "title": "Push",
-      "url": "https://github.com/Nusnus/nusnus.github.io",
-      "createdAt": "2026-03-06T02:20:13Z"
-    },
-    {
-      "id": "9092626953",
-      "type": "PushEvent",
-      "repo": "Nusnus/nusnus.github.io",
-      "title": "Push",
-      "url": "https://github.com/Nusnus/nusnus.github.io",
-      "createdAt": "2026-03-06T02:17:03Z"
-    },
-    {
-      "id": "9092438446",
-      "type": "PushEvent",
-      "repo": "Nusnus/nusnus.github.io",
-      "title": "Push",
-      "url": "https://github.com/Nusnus/nusnus.github.io",
-      "createdAt": "2026-03-06T02:07:49Z"
-    },
-    {
-      "id": "9092363028",
-      "type": "PushEvent",
-      "repo": "Nusnus/nusnus.github.io",
-      "title": "Push",
-      "url": "https://github.com/Nusnus/nusnus.github.io",
-      "createdAt": "2026-03-06T02:04:21Z"
-    },
-    {
       "id": "7134182824",
       "type": "PullRequestEvent",
       "repo": "Nusnus/nusnus.github.io",
@@ -1199,22 +1167,6 @@
       "title": "Pull Request",
       "url": "https://github.com/celery/billiard",
       "createdAt": "2026-02-24T06:05:22Z"
-    },
-    {
-      "id": "6810272377",
-      "type": "IssueCommentEvent",
-      "repo": "celery/celery",
-      "title": "Comment: Crash in setproctitle on macOS Tahoe (26.0) #9893",
-      "url": "https://github.com/celery/celery/issues/9894#issuecomment-3947059265",
-      "createdAt": "2026-02-23T20:12:53Z"
-    },
-    {
-      "id": "6809817405",
-      "type": "PullRequestEvent",
-      "repo": "celery/billiard",
-      "title": "Pull Request",
-      "url": "https://github.com/celery/billiard",
-      "createdAt": "2026-02-23T19:54:55Z"
     }
   ],
   "todaySummary": {
