@@ -6,7 +6,6 @@
  */
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { DEFAULT_CLOUD_MODEL_ID } from '@lib/ai/config';
-import { buildToolDefinitions, loadTools } from '@lib/cybernus/services/AgentService';
 
 type WidgetState = 'closed' | 'loading' | 'streaming' | 'done' | 'error';
 
@@ -74,8 +73,8 @@ You are currently running as the **🔥 Roast by Cybernus** floating widget on t
 
 ${
   levelClamp === 0
-    ? "Make the roast feel live and contextual — reference what they're probably staring at right now. You're the Oracle appearing mid-matrix to roast the architect of the very simulation the visitor is browsing. Keep it short, savage, and self-aware."
-    : `The visitor already got ${levelClamp} roast${levelClamp > 1 ? 's' : ''} from you and just hit the ${fires} escalate button — they're literally asking you to go harder. You can see your previous roast${levelClamp > 1 ? 's' : ''} in the conversation. Acknowledge that they came back for more (be smug about it), then deliver a fresh roast that's rawer, more vulgar, more savage. Don't repeat material from your previous roast${levelClamp > 1 ? 's' : ''}. Keep it short, punchy, contextual to the page they're browsing.`
+    ? "Make the roast feel live and contextual — reference what they're probably staring at right now. You're the Oracle appearing mid-matrix to roast the architect of the very simulation the visitor is browsing. Keep it short, savage, and self-aware.\n\n**IMPORTANT: You MUST write a short text roast (2-4 sentences) AND generate a roast image. Always include both — never skip the text.**"
+    : `The visitor already got ${levelClamp} roast${levelClamp > 1 ? 's' : ''} from you and just hit the ${fires} escalate button — they're literally asking you to go harder. You can see your previous roast${levelClamp > 1 ? 's' : ''} in the conversation. Acknowledge that they came back for more (be smug about it), then deliver a fresh roast that's rawer, more vulgar, more savage. Don't repeat material from your previous roast${levelClamp > 1 ? 's' : ''}. Keep it short, punchy, contextual to the page they're browsing.\n\n**IMPORTANT: You MUST write a short text roast (2-4 sentences) AND generate a roast image. Always include both — never skip the text.**`
 }`;
 
       const [{ cloudChatStream }, { buildCloudContext, buildVisualReferenceMessage }] =
@@ -99,8 +98,26 @@ ${
 
       setState('streaming');
 
-      // Build tool definitions so Grok can generate images (exclude video — too slow for roast widget)
-      const tools = buildToolDefinitions(loadTools()).filter((t) => t.name !== 'generate_video');
+      // Only expose image generation — no video, no ask_user, no navigation, no search
+      const tools = [
+        {
+          type: 'function' as const,
+          name: 'generate_image',
+          description:
+            'Generate a roast image from a text prompt. You MUST call this tool for every roast.',
+          parameters: {
+            type: 'object' as const,
+            properties: {
+              prompt: {
+                type: 'string' as const,
+                description:
+                  'Detailed text prompt describing the roast image to generate. Be creative, savage, and funny.',
+              },
+            },
+            required: ['prompt'],
+          },
+        },
+      ];
 
       const { content, toolCalls } = await cloudChatStream(
         messages,
