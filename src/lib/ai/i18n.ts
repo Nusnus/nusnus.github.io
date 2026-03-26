@@ -89,6 +89,7 @@ interface UIStrings {
   search: string;
   searchPlaceholder: string;
   noResults: string;
+  searchResults: string;
   agents: string;
   agentsDescription: string;
   toolActive: string;
@@ -142,6 +143,7 @@ const TRANSLATIONS: Record<Language, UIStrings> = {
     search: 'Search',
     searchPlaceholder: 'Search chat history...',
     noResults: 'No results found.',
+    searchResults: 'results',
     agents: 'Agents',
     agentsDescription: 'MCP tools and capabilities',
     toolActive: 'Active',
@@ -193,6 +195,7 @@ const TRANSLATIONS: Record<Language, UIStrings> = {
     search: 'Buscar',
     searchPlaceholder: 'Buscar en el historial...',
     noResults: 'Sin resultados.',
+    searchResults: 'resultados',
     agents: 'Agentes',
     agentsDescription: 'Herramientas MCP y capacidades',
     toolActive: 'Activo',
@@ -244,6 +247,7 @@ const TRANSLATIONS: Record<Language, UIStrings> = {
     search: 'חיפוש',
     searchPlaceholder: '...חיפוש בהיסטוריית הצ׳אט',
     noResults: '.לא נמצאו תוצאות',
+    searchResults: 'תוצאות',
     agents: 'סוכנים',
     agentsDescription: 'כלי MCP ויכולות',
     toolActive: 'פעיל',

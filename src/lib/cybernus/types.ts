@@ -2,6 +2,8 @@
  * Shared types for the Cybernus AI system.
  */
 
+import type { AgentActivityItem } from '@lib/ai/types';
+
 /** A single message in the chat conversation. */
 export interface ChatMessage {
   id: string;
@@ -15,13 +17,19 @@ export interface ChatMessage {
   toolCalls?: AgentToolCall[];
   /** Timestamp of when the message was created. */
   timestamp?: number;
+  /** Inline sub-agent activity tracked during generation. */
+  agentActivity?: AgentActivityItem[];
 }
 
 /** A client-side action the assistant can suggest. */
 export interface ToolAction {
-  type: 'navigate' | 'open_link';
+  type: 'navigate' | 'open_link' | 'render_component';
   label: string;
   url: string;
+  /** Component type for render_component actions. */
+  componentType?: string;
+  /** Props for the rendered component. */
+  props?: Record<string, string>;
 }
 
 /** An MCP agent tool call record. */
