@@ -51,8 +51,9 @@ export const LINKEDIN_ARTICLES: readonly Article[] = [
 export const COLLABORATIONS: readonly Collaboration[] = [
   {
     name: 'Cognition AI',
-    title: 'SWE-1.6 Extra Credit Recognition',
-    description: 'Recognized for contributions to Celery data and tooling for SWE-1.6 evaluation.',
+    title: 'SWE-1.6 Extra Credit',
+    description:
+      'Highlighted for outsized contributions to data & tooling as a member of the contractor team.',
     url: 'https://cognition.ai/blog/swe-1-6-preview',
   },
   {
