@@ -66,7 +66,7 @@ export default function ContributionLineChart({ weeks: initialWeeks }: Props) {
 
   const weeks = liveWeeks ?? initialWeeks;
 
-  const days = useMemo(() => extractDays(weeks, 35), [weeks]);
+  const days = useMemo(() => extractDays(weeks, 30), [weeks]);
   const maxCount = useMemo(() => Math.max(...days.map((d) => d.count), 1), [days]);
   const yTicks = useMemo(() => getYTicks(maxCount), [maxCount]);
   const yMax = yTicks[yTicks.length - 1] || 1;
@@ -237,7 +237,7 @@ export default function ContributionLineChart({ weeks: initialWeeks }: Props) {
                 className={isHov ? 'fill-text-primary' : 'fill-text-muted'}
                 fontSize={7.5}
                 fontFamily="var(--font-sans)"
-                opacity={n <= 35 || i % 2 === 0 ? 1 : 0}
+                opacity={n <= 30 || i % 2 === 0 ? 1 : 0}
               >
                 {day.dayLabel}
               </text>
