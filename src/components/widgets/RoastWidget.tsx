@@ -74,7 +74,7 @@ You are currently running as the **🔥 Roast by Cybernus** floating widget on t
 
 ${
   levelClamp === 0
-    ? "Make the roast feel live and contextual — reference what they're probably staring at right now. You're the Oracle appearing mid-matrix to roast the architect of the very simulation the visitor is browsing. Keep it short, savage, and self-aware. This is a teaser — the full chat is one click away."
+    ? "Make the roast feel live and contextual — reference what they're probably staring at right now. You're the Oracle appearing mid-matrix to roast the architect of the very simulation the visitor is browsing. Keep it short, savage, and self-aware."
     : `The visitor already got ${levelClamp} roast${levelClamp > 1 ? 's' : ''} from you and just hit the ${fires} escalate button — they're literally asking you to go harder. You can see your previous roast${levelClamp > 1 ? 's' : ''} in the conversation. Acknowledge that they came back for more (be smug about it), then deliver a fresh roast that's rawer, more vulgar, more savage. Don't repeat material from your previous roast${levelClamp > 1 ? 's' : ''}. Keep it short, punchy, contextual to the page they're browsing.`
 }`;
 
@@ -140,7 +140,8 @@ ${
         }
       }
 
-      const finalContent = content + imageMarkdown;
+      // Place image first, then show the text roast below it
+      const finalContent = imageMarkdown ? imageMarkdown + '\n\n' + content : content;
 
       // If user closed the widget during image generation, don't reopen
       if (controller.signal.aborted) return;
@@ -196,25 +197,6 @@ ${
     setRoastLevel(nextLevel);
     startRoast(nextLevel, true);
   }, [roastLevel, startRoast]);
-
-  /** Prefetch the chat page so navigation is near-instant. */
-  useEffect(() => {
-    const link = document.createElement('link');
-    link.rel = 'prefetch';
-    link.href = '/cybernus';
-    document.head.appendChild(link);
-    return () => link.remove();
-  }, []);
-
-  /** Continue the roast in the full chat page, passing the conversation via sessionStorage. */
-  const handleContinueInChat = useCallback(() => {
-    if (!response) return;
-    const handoff = {
-      messages: [{ id: crypto.randomUUID(), role: 'assistant', content: response }],
-    };
-    sessionStorage.setItem('grok-roast-handoff', JSON.stringify(handoff));
-    window.location.href = '/cybernus';
-  }, [response]);
 
   const isOpen = state !== 'closed';
 
@@ -305,18 +287,6 @@ ${
                 <p className="text-sm text-red-400">{errorMsg || 'Failed to generate roast.'}</p>
               )}
             </div>
-
-            {/* Footer — Continue in Chat */}
-            {state === 'done' && response && (
-              <div className="border-t border-orange-500/10 px-4 py-2">
-                <button
-                  onClick={handleContinueInChat}
-                  className="text-accent hover:text-accent/80 flex w-full items-center justify-end gap-1 text-xs font-medium transition-colors"
-                >
-                  Continue in Chat →
-                </button>
-              </div>
-            )}
           </div>
         </div>
       )}
