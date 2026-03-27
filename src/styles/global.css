@@ -394,6 +394,143 @@
   animation-delay: var(--float-delay, 0s);
 }
 
+/* ─── Video Chat Animations ─── */
+
+@keyframes video-chat-options-appear {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.video-chat-options-appear {
+  animation: video-chat-options-appear 400ms ease-out both;
+}
+
+@keyframes video-chat-caption {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.video-chat-caption {
+  animation: video-chat-caption 500ms ease-out both;
+}
+
+/* Loader: pulsing rings */
+@keyframes video-chat-loader-ring {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.08);
+  }
+}
+
+.video-chat-loader-ring {
+  animation: video-chat-loader-ring 2.5s ease-in-out infinite;
+}
+
+/* Loader: ambient glow pulse */
+@keyframes video-chat-loader-glow {
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: translate(-50%, -50%) scale(1.15);
+  }
+}
+
+.video-chat-loader-glow {
+  animation: video-chat-loader-glow 4s ease-in-out infinite;
+}
+
+/* Loader: film strip frame float */
+@keyframes video-chat-film-frame {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  20% {
+    opacity: 0.6;
+    transform: translateY(0);
+  }
+  80% {
+    opacity: 0.6;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+.video-chat-film-frame {
+  animation: video-chat-film-frame 4s ease-in-out infinite;
+}
+
+/* Loader: shimmer bar */
+@keyframes video-chat-loader-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(400%);
+  }
+}
+
+.video-chat-loader-shimmer {
+  animation: video-chat-loader-shimmer 2s ease-in-out infinite;
+}
+
+/* ─── Video Chat Mobile-Native Enhancements ─── */
+
+/* Smooth spring-like press feedback for option cards on touch devices */
+@media (pointer: coarse) {
+  .video-chat-options-appear button {
+    transition: transform 150ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+}
+
+/* Prevent rubber-banding / overscroll in video chat */
+.video-chat-player {
+  -webkit-user-select: none;
+  user-select: none;
+  /* GPU-composited layer for smoother rendering on Android */
+  will-change: transform;
+  /* Prevent long-press context menu on Android */
+  -webkit-touch-callout: none;
+}
+
+/* Ensure video element doesn't show native Android controls overlay */
+.video-chat-player video::-webkit-media-controls {
+  display: none !important;
+}
+
+.video-chat-player video::-webkit-media-controls-enclosure {
+  display: none !important;
+}
+
+/* GPU-accelerated option card transitions for Android */
+.video-chat-options-appear {
+  will-change: opacity, transform;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .matrix-rain-char,
   .cybernus-scan-line::after,
@@ -407,7 +544,13 @@
   .cybernus-fade-in-up,
   .cybernus-fade-in,
   .ide-step-appear,
-  .chat-form-appear {
+  .chat-form-appear,
+  .video-chat-options-appear,
+  .video-chat-caption,
+  .video-chat-loader-ring,
+  .video-chat-loader-glow,
+  .video-chat-film-frame,
+  .video-chat-loader-shimmer {
     animation: none;
     opacity: 1;
   }

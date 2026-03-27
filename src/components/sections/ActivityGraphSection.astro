@@ -16,7 +16,7 @@ const weeks = graph?.weeks ?? [];
       <div class="flex flex-col gap-5">
         <div class="bg-bg-surface/50 ring-border/50 overflow-x-auto rounded-xl p-4 ring-1">
           <p class="text-text-muted mb-3 text-xs font-medium tracking-wider uppercase">
-            Daily contributions (last 35 days)
+            Daily contributions (last 30 days)
           </p>
           <ContributionLineChart client:visible weeks={weeks} />
         </div>

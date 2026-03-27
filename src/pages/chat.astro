@@ -1,11 +1,23 @@
 ---
 /**
- * /chat → /cybernus redirect.
- * Cybernus has replaced the chat page.
+ * /chat → Under Construction.
+ * Previously redirected to /cybernus, which is now under construction.
  */
+import BaseLayout from '@layouts/BaseLayout.astro';
 ---
 
-<meta http-equiv="refresh" content="0;url=/cybernus" />
-<script>
-  window.location.replace('/cybernus');
-</script>
+<BaseLayout title="Chat — Under Construction">
+  <main class="flex min-h-dvh items-center justify-center px-4">
+    <div class="mx-auto max-w-md text-center">
+      <span class="text-6xl">🚧</span>
+      <h1 class="text-text-primary mt-6 text-3xl font-bold">Under Construction</h1>
+      <p class="text-text-muted mt-3 text-lg">Cybernus is being built. Check back soon.</p>
+      <a
+        href="/"
+        class="text-accent hover:text-accent/80 mt-6 inline-block text-sm font-medium transition-colors"
+      >
+        &larr; Back to Home
+      </a>
+    </div>
+  </main>
+</BaseLayout>

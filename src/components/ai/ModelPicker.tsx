@@ -9,11 +9,18 @@ interface ModelPickerProps {
   hasSavedChat: boolean;
   onContinue: () => void;
   onNewChat: () => void;
+  onStartVideoChat?: () => void;
   language: Language;
 }
 
 /** Cybernus launch screen — single model, Matrix-themed entry point. */
-export function ModelPicker({ hasSavedChat, onContinue, onNewChat, language }: ModelPickerProps) {
+export function ModelPicker({
+  hasSavedChat,
+  onContinue,
+  onNewChat,
+  onStartVideoChat,
+  language,
+}: ModelPickerProps) {
   const strings = t(language);
 
   return (
@@ -48,7 +55,7 @@ export function ModelPicker({ hasSavedChat, onContinue, onNewChat, language }: M
             <span className="text-text-primary text-sm font-semibold">Neural Core Online</span>
           </div>
           <p className="text-text-muted text-xs leading-relaxed">
-            Voice · Vision · Web · Code · Agents · Image Gen
+            Voice · Vision · Web · Code · Agents · Image Gen · Video Chat
           </p>
         </div>
 
@@ -80,6 +87,33 @@ export function ModelPicker({ hasSavedChat, onContinue, onNewChat, language }: M
           >
             {strings.startNewChat}
           </button>
+
+          {/* Video Chat button */}
+          {onStartVideoChat && (
+            <button
+              onClick={onStartVideoChat}
+              className={cn(
+                'group relative w-full overflow-hidden rounded-xl px-8 py-3.5 text-sm font-semibold transition-all',
+                'border border-[#00ff41]/20 text-[#00ff41] hover:border-[#00ff41]/40 hover:bg-[#00ff41]/5',
+              )}
+            >
+              <span className="relative z-10 flex items-center justify-center gap-2">
+                <svg
+                  className="h-4 w-4"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <polygon points="23 7 16 12 23 17 23 7" />
+                  <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+                </svg>
+                {strings.videoChat}
+              </span>
+            </button>
+          )}
         </div>
 
         <p className="text-text-muted mt-8 text-center text-[10px]">{strings.poweredBy}</p>

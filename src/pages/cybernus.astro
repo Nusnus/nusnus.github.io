@@ -1,34 +1,26 @@
 ---
 /**
- * Cybernus — Tomer Nosrati's Digital Self
+ * Cybernus — Under Construction
  *
- * An AI-powered interface to Tomer's professional universe.
- * Single model (Grok 4), Matrix theme, MCP agents, voice capabilities,
- * and full trilingual support.
+ * The full AI chat interface is not yet available.
+ * Visitors see an "under construction" page.
+ * The roast widget on the homepage remains functional.
  */
 import BaseLayout from '@layouts/BaseLayout.astro';
-import AiChat from '@components/widgets/AiChat';
-import {
-  loadProfile,
-  loadRepos,
-  loadCeleryOrgRepos,
-  loadContributionGraph,
-} from '@lib/data/loader';
-import { buildSystemPrompt } from '@lib/ai/prompt';
-
-const repos = (await loadRepos()) ?? [];
-const orgRepos = (await loadCeleryOrgRepos()) ?? [];
-
-const systemPrompt = buildSystemPrompt({
-  profile: await loadProfile(),
-  repos,
-  orgRepos,
-  graph: await loadContributionGraph(),
-});
 ---
 
-<BaseLayout title="Cybernus — AI Interface">
-  <main class="h-dvh overflow-hidden">
-    <AiChat client:load systemPrompt={systemPrompt} />
+<BaseLayout title="Cybernus — Under Construction">
+  <main class="flex min-h-dvh items-center justify-center px-4">
+    <div class="mx-auto max-w-md text-center">
+      <span class="text-6xl">🚧</span>
+      <h1 class="text-text-primary mt-6 text-3xl font-bold">Under Construction</h1>
+      <p class="text-text-muted mt-3 text-lg">Cybernus is being built. Check back soon.</p>
+      <a
+        href="/"
+        class="text-accent hover:text-accent/80 mt-6 inline-block text-sm font-medium transition-colors"
+      >
+        &larr; Back to Home
+      </a>
+    </div>
   </main>
 </BaseLayout>
