@@ -1,7 +1,7 @@
 ---
 import '@styles/global.css';
 import { SITE_URL } from '@config';
-import RoastWidget from '@components/widgets/RoastWidget';
+// import RoastWidget from '@components/widgets/RoastWidget';
 
 interface Props {
   title?: string;
@@ -70,8 +70,8 @@ const ogImageUrl = new URL(ogImage, SITE_URL).href;
 
     <slot />
 
-    <!-- Roast Widget — floating 🔥 FAB with inline streaming chat bubble -->
-    {Astro.url.pathname !== '/chat' && <RoastWidget client:idle />}
+    <!-- Roast Widget — floating 🔥 FAB with inline streaming chat bubble (hidden) -->
+    {/* {Astro.url.pathname !== '/chat' && <RoastWidget client:idle />} */}
 
     <style>
       /* ── Roast FAB ── */
