@@ -945,22 +945,6 @@
       "createdAt": "2026-03-10T01:06:35Z"
     },
     {
-      "id": "9213965409",
-      "type": "DeleteEvent",
-      "repo": "Nusnus/nusnus.github.io",
-      "title": "Delete",
-      "url": "https://github.com/Nusnus/nusnus.github.io",
-      "createdAt": "2026-03-09T23:53:49Z"
-    },
-    {
-      "id": "9213965227",
-      "type": "PushEvent",
-      "repo": "Nusnus/nusnus.github.io",
-      "title": "Push",
-      "url": "https://github.com/Nusnus/nusnus.github.io",
-      "createdAt": "2026-03-09T23:53:48Z"
-    },
-    {
       "id": "7233186791",
       "type": "PullRequestEvent",
       "repo": "Nusnus/nusnus.github.io",
@@ -1474,8 +1458,8 @@
     }
   ],
   "todaySummary": {
-    "commits": 1,
-    "prsOpened": 1,
+    "commits": 0,
+    "prsOpened": 0,
     "prsReviewed": 0,
     "issueComments": 0
   }
