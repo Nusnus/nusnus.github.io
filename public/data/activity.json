@@ -585,18 +585,18 @@
       "createdAt": "2026-03-15T01:03:14Z"
     },
     {
-      "id": "9403852301",
-      "type": "DeleteEvent",
-      "repo": "Nusnus/nusnus.github.io",
-      "title": "Delete",
-      "url": "https://github.com/Nusnus/nusnus.github.io",
-      "createdAt": "2026-03-14T20:21:51Z"
-    },
-    {
       "id": "9403852190",
       "type": "PushEvent",
       "repo": "Nusnus/nusnus.github.io",
       "title": "Push",
+      "url": "https://github.com/Nusnus/nusnus.github.io",
+      "createdAt": "2026-03-14T20:21:51Z"
+    },
+    {
+      "id": "9403852301",
+      "type": "DeleteEvent",
+      "repo": "Nusnus/nusnus.github.io",
+      "title": "Delete",
       "url": "https://github.com/Nusnus/nusnus.github.io",
       "createdAt": "2026-03-14T20:21:51Z"
     },
@@ -889,22 +889,6 @@
       "createdAt": "2026-03-10T19:17:45Z"
     },
     {
-      "id": "9248472091",
-      "type": "DeleteEvent",
-      "repo": "Nusnus/nusnus.github.io",
-      "title": "Delete",
-      "url": "https://github.com/Nusnus/nusnus.github.io",
-      "createdAt": "2026-03-10T19:05:33Z"
-    },
-    {
-      "id": "9248471543",
-      "type": "PushEvent",
-      "repo": "Nusnus/nusnus.github.io",
-      "title": "Push",
-      "url": "https://github.com/Nusnus/nusnus.github.io",
-      "createdAt": "2026-03-10T19:05:32Z"
-    },
-    {
       "id": "7265376316",
       "type": "PullRequestEvent",
       "repo": "Nusnus/nusnus.github.io",
@@ -927,22 +911,6 @@
       "title": "Pull Request",
       "url": "https://github.com/Nusnus/nusnus.github.io",
       "createdAt": "2026-03-10T10:21:03Z"
-    },
-    {
-      "id": "9215469634",
-      "type": "DeleteEvent",
-      "repo": "Nusnus/nusnus.github.io",
-      "title": "Delete",
-      "url": "https://github.com/Nusnus/nusnus.github.io",
-      "createdAt": "2026-03-10T01:06:37Z"
-    },
-    {
-      "id": "9215469118",
-      "type": "PushEvent",
-      "repo": "Nusnus/nusnus.github.io",
-      "title": "Push",
-      "url": "https://github.com/Nusnus/nusnus.github.io",
-      "createdAt": "2026-03-10T01:06:35Z"
     },
     {
       "id": "7233186791",
@@ -1375,86 +1343,6 @@
       "title": "Pull Request",
       "url": "https://github.com/celery/pytest-celery",
       "createdAt": "2026-03-02T14:01:22Z"
-    },
-    {
-      "id": "6964929231",
-      "type": "PullRequestEvent",
-      "repo": "Nusnus/Nusnus",
-      "title": "Pull Request",
-      "url": "https://github.com/Nusnus/Nusnus",
-      "createdAt": "2026-02-28T00:11:24Z"
-    },
-    {
-      "id": "6964929229",
-      "type": "PullRequestEvent",
-      "repo": "Nusnus/Nusnus",
-      "title": "Pull Request",
-      "url": "https://github.com/Nusnus/Nusnus",
-      "createdAt": "2026-02-28T00:00:37Z"
-    },
-    {
-      "id": "6964929222",
-      "type": "PullRequestEvent",
-      "repo": "Nusnus/Nusnus",
-      "title": "Pull Request",
-      "url": "https://github.com/Nusnus/Nusnus",
-      "createdAt": "2026-02-28T00:02:12Z"
-    },
-    {
-      "id": "6964929101",
-      "type": "PullRequestEvent",
-      "repo": "Nusnus/Nusnus",
-      "title": "Pull Request",
-      "url": "https://github.com/Nusnus/Nusnus",
-      "createdAt": "2026-02-27T23:59:13Z"
-    },
-    {
-      "id": "6964929099",
-      "type": "PullRequestEvent",
-      "repo": "Nusnus/Nusnus",
-      "title": "Pull Request",
-      "url": "https://github.com/Nusnus/Nusnus",
-      "createdAt": "2026-02-28T00:17:06Z"
-    },
-    {
-      "id": "6964929098",
-      "type": "PullRequestEvent",
-      "repo": "Nusnus/Nusnus",
-      "title": "Pull Request",
-      "url": "https://github.com/Nusnus/Nusnus",
-      "createdAt": "2026-02-27T23:57:15Z"
-    },
-    {
-      "id": "6964929097",
-      "type": "PullRequestEvent",
-      "repo": "Nusnus/Nusnus",
-      "title": "Pull Request",
-      "url": "https://github.com/Nusnus/Nusnus",
-      "createdAt": "2026-02-28T00:11:06Z"
-    },
-    {
-      "id": "6964929094",
-      "type": "PullRequestEvent",
-      "repo": "Nusnus/Nusnus",
-      "title": "Pull Request",
-      "url": "https://github.com/Nusnus/Nusnus",
-      "createdAt": "2026-02-27T23:58:19Z"
-    },
-    {
-      "id": "6964928774",
-      "type": "PullRequestEvent",
-      "repo": "Nusnus/Nusnus",
-      "title": "Pull Request",
-      "url": "https://github.com/Nusnus/Nusnus",
-      "createdAt": "2026-02-27T23:55:54Z"
-    },
-    {
-      "id": "6964928770",
-      "type": "PullRequestEvent",
-      "repo": "Nusnus/Nusnus",
-      "title": "Pull Request",
-      "url": "https://github.com/Nusnus/Nusnus",
-      "createdAt": "2026-02-27T23:45:56Z"
     }
   ],
   "todaySummary": {
