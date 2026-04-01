@@ -109,7 +109,7 @@
     "description": "Real-time monitor and web admin for Celery distributed task queue",
     "htmlUrl": "https://github.com/mher/flower",
     "stars": 7136,
-    "forks": 1146,
+    "forks": 1145,
     "openIssues": 189,
     "lastPush": "2026-03-26T01:59:41Z",
     "language": "Python",
