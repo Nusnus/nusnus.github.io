@@ -321,6 +321,11 @@ const ogImageUrl = new URL(ogImage, SITE_URL).href;
           roast-escalate-bounce 2s ease-in-out infinite;
         filter: drop-shadow(0 0 6px rgba(255, 107, 53, 0.7));
       }
+      .roast-escalate-btn:hover {
+        filter: drop-shadow(0 0 14px rgba(255, 107, 53, 1))
+          drop-shadow(0 0 28px rgba(255, 61, 0, 0.6)) brightness(1.2);
+        animation-play-state: paused;
+      }
       .roast-escalate-btn::before {
         content: '';
         position: absolute;
