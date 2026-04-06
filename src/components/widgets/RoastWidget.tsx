@@ -239,9 +239,8 @@ ${
                     <button
                       onClick={handleEscalate}
                       aria-label="Make it more vulgar"
-                      className="roast-header-btn flex h-7 items-center justify-center rounded-md px-2 transition-all hover:scale-125"
+                      className="roast-escalate-btn flex h-7 items-center justify-center rounded-md px-2"
                       title={ESCALATE_TITLES[Math.min(roastLevel, ESCALATE_TITLES.length - 1)]}
-                      style={{ animationDelay: '0s' }}
                     >
                       {ESCALATE_FIRES[Math.min(roastLevel, ESCALATE_FIRES.length - 1)]}
                     </button>
