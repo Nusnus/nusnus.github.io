@@ -1,6 +1,22 @@
 {
   "events": [
     {
+      "id": "8159755172",
+      "type": "PullRequestReviewEvent",
+      "repo": "celery/celery",
+      "title": "Review: PR",
+      "url": "https://github.com/celery/celery",
+      "createdAt": "2026-04-07T13:22:36Z"
+    },
+    {
+      "id": "8159536464",
+      "type": "IssueCommentEvent",
+      "repo": "celery/celery",
+      "title": "Comment: fix(worker): continue to attempt to bind other queues after a native delayed delivery binding failure has occurred",
+      "url": "https://github.com/celery/celery/pull/9959#issuecomment-4199232360",
+      "createdAt": "2026-04-07T13:16:41Z"
+    },
+    {
       "id": "8106117885",
       "type": "WatchEvent",
       "repo": "Private Project",
@@ -775,22 +791,6 @@
       "title": "Pull Request",
       "url": "https://github.com/celery/celery",
       "createdAt": "2026-03-26T11:28:16Z"
-    },
-    {
-      "id": "7787620403",
-      "type": "PullRequestEvent",
-      "repo": "celery/celery",
-      "title": "Pull Request",
-      "url": "https://github.com/celery/celery",
-      "createdAt": "2026-03-26T11:28:16Z"
-    },
-    {
-      "id": "9843604453",
-      "type": "CreateEvent",
-      "repo": "Nusnus/celery",
-      "title": "Create",
-      "url": "https://github.com/Nusnus/celery",
-      "createdAt": "2026-03-26T11:27:25Z"
     }
   ],
   "todaySummary": {

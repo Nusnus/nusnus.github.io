@@ -4,13 +4,13 @@
     "fullName": "celery/billiard",
     "description": "Multiprocessing Pool Extensions",
     "htmlUrl": "https://github.com/celery/billiard",
-    "stars": 431,
-    "forks": 256,
+    "stars": 432,
+    "forks": 257,
     "openIssues": 86,
     "lastPush": "2026-03-09T16:53:20Z",
     "language": "Python",
     "role": "owner",
-    "contributorRank": 4
+    "contributorRank": 5
   },
   {
     "name": "django-celery-beat",
@@ -23,72 +23,72 @@
     "lastPush": "2026-04-06T17:03:16Z",
     "language": "Python",
     "role": "owner",
-    "contributorRank": 18
+    "contributorRank": 19
   },
   {
     "name": "django-celery-results",
     "fullName": "celery/django-celery-results",
     "description": "Celery result back end with django",
     "htmlUrl": "https://github.com/celery/django-celery-results",
-    "stars": 779,
+    "stars": 781,
     "forks": 223,
     "openIssues": 60,
     "lastPush": "2026-03-25T15:35:37Z",
     "language": "Python",
     "role": "owner",
-    "contributorRank": 31
+    "contributorRank": 22
   },
   {
     "name": "py-amqp",
     "fullName": "celery/py-amqp",
     "description": "amqplib fork",
     "htmlUrl": "https://github.com/celery/py-amqp",
-    "stars": 314,
-    "forks": 192,
-    "openIssues": 39,
+    "stars": 315,
+    "forks": 193,
+    "openIssues": 43,
     "lastPush": "2026-03-09T12:30:49Z",
     "language": "Python",
     "role": "owner",
-    "contributorRank": 8
+    "contributorRank": 9
   },
   {
     "name": "librabbitmq",
     "fullName": "celery/librabbitmq",
     "description": "Python bindings to librabbitmq-c",
     "htmlUrl": "https://github.com/celery/librabbitmq",
-    "stars": 204,
-    "forks": 91,
+    "stars": 205,
+    "forks": 92,
     "openIssues": 29,
     "lastPush": "2026-03-09T16:53:30Z",
     "language": "C",
     "role": "owner",
-    "contributorRank": 23
+    "contributorRank": 24
   },
   {
     "name": "vine",
     "fullName": "celery/vine",
     "description": "Python promises",
     "htmlUrl": "https://github.com/celery/vine",
-    "stars": 128,
-    "forks": 46,
+    "stars": 129,
+    "forks": 47,
     "openIssues": 7,
     "lastPush": "2026-03-04T10:06:24Z",
     "language": "Python",
     "role": "owner",
-    "contributorRank": 6
+    "contributorRank": 7
   },
   {
     "name": "sphinx_celery",
     "fullName": "celery/sphinx_celery",
     "description": "Celery Sphinx Theme and Utilities",
     "htmlUrl": "https://github.com/celery/sphinx_celery",
-    "stars": 4,
+    "stars": 5,
     "forks": 16,
     "openIssues": 3,
     "lastPush": "2026-03-02T16:53:21Z",
     "language": "Python",
     "role": "owner",
-    "contributorRank": 4
+    "contributorRank": 5
   },
   {
     "name": "celeryproject",
@@ -97,7 +97,7 @@
     "htmlUrl": "https://github.com/celery/celeryproject",
     "stars": 22,
     "forks": 10,
-    "openIssues": 22,
+    "openIssues": 23,
     "lastPush": "2025-05-13T18:46:15Z",
     "language": "CSS",
     "role": "owner",
@@ -108,7 +108,7 @@
     "fullName": "mher/flower",
     "description": "Real-time monitor and web admin for Celery distributed task queue",
     "htmlUrl": "https://github.com/mher/flower",
-    "stars": 7143,
+    "stars": 7145,
     "forks": 1142,
     "openIssues": 189,
     "lastPush": "2026-03-26T01:59:41Z",
