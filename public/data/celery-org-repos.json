@@ -30,7 +30,7 @@
     "fullName": "celery/django-celery-results",
     "description": "Celery result back end with django",
     "htmlUrl": "https://github.com/celery/django-celery-results",
-    "stars": 780,
+    "stars": 781,
     "forks": 223,
     "openIssues": 60,
     "lastPush": "2026-03-25T15:35:37Z",
@@ -58,11 +58,11 @@
     "htmlUrl": "https://github.com/celery/librabbitmq",
     "stars": 205,
     "forks": 92,
-    "openIssues": 29,
-    "lastPush": "2026-03-09T16:53:30Z",
+    "openIssues": 28,
+    "lastPush": "2026-04-09T15:31:29Z",
     "language": "C",
     "role": "owner",
-    "contributorRank": 24
+    "contributorRank": 25
   },
   {
     "name": "vine",
