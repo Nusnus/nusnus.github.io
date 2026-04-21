@@ -1,5 +1,5 @@
 {
-  "totalContributions": 3190,
+  "totalContributions": 3187,
   "totalCommits": 369,
   "totalPRs": 125,
   "totalReviews": 118,
@@ -7,11 +7,6 @@
   "weeks": [
     {
       "contributionDays": [
-        {
-          "contributionCount": 3,
-          "date": "2025-04-20",
-          "weekday": 0
-        },
         {
           "contributionCount": 3,
           "date": "2025-04-21",
@@ -2044,6 +2039,11 @@
           "contributionCount": 0,
           "date": "2026-04-20",
           "weekday": 1
+        },
+        {
+          "contributionCount": 0,
+          "date": "2026-04-21",
+          "weekday": 2
         }
       ]
     }
