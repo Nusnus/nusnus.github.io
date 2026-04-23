@@ -1,6 +1,14 @@
 {
   "events": [
     {
+      "id": "10911957015",
+      "type": "PushEvent",
+      "repo": "Nusnus/celery",
+      "title": "Push",
+      "url": "https://github.com/Nusnus/celery",
+      "createdAt": "2026-04-22T16:45:12Z"
+    },
+    {
       "id": "8159755172",
       "type": "PullRequestReviewEvent",
       "repo": "celery/celery",
@@ -783,14 +791,6 @@
       "title": "Create",
       "url": "https://github.com/Nusnus/celery",
       "createdAt": "2026-03-26T11:30:29Z"
-    },
-    {
-      "id": "7787620429",
-      "type": "PullRequestEvent",
-      "repo": "celery/celery",
-      "title": "Pull Request",
-      "url": "https://github.com/celery/celery",
-      "createdAt": "2026-03-26T11:28:16Z"
     }
   ],
   "todaySummary": {
