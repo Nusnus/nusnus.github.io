@@ -264,22 +264,58 @@ function buildCachedResponse(body: string): Response {
   });
 }
 
-/** Fetch fresh data from GitHub and write it into the edge cache. */
-async function refreshCache(
+/**
+ * Per-isolate map of in-flight background refreshes, keyed by cache key URL.
+ * Cloudflare Workers reuse a single isolate across many requests on the same
+ * edge node, so this naturally coalesces concurrent stale-cache hits into a
+ * single GitHub fetch + cache write per route. Without this, every concurrent
+ * visitor that lands on a stale entry would fan out into duplicate upstream
+ * requests, defeating the purpose of stale-while-revalidate and burning the
+ * 5,000 req/hr GitHub PAT budget.
+ */
+const inflightRefresh = new Map<string, Promise<void>>();
+
+/** @internal Reset the in-flight refresh map. Test-only. */
+export function __resetInflightRefreshForTests(): void {
+  inflightRefresh.clear();
+}
+
+/**
+ * Fetch fresh data from GitHub and write it into the edge cache.
+ * Concurrent calls for the same key share a single in-flight refresh.
+ *
+ * @internal Exported for tests.
+ */
+export function refreshCache(
   cache: Cache,
   cacheKey: Request,
   fetcher: Fetcher,
   token: string,
   pathname: string,
 ): Promise<void> {
-  try {
-    const data = await fetcher(token);
-    const body = JSON.stringify(data);
-    await cache.put(cacheKey, buildCachedResponse(body));
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'GitHub fetch failed';
-    console.error(`[github] background refresh ${pathname}: ${message}`);
-  }
+  const key = cacheKey.url;
+  const existing = inflightRefresh.get(key);
+  if (existing) return existing;
+
+  const promise = (async () => {
+    try {
+      const data = await fetcher(token);
+      const body = JSON.stringify(data);
+      await cache.put(cacheKey, buildCachedResponse(body));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'GitHub fetch failed';
+      console.error(`[github] background refresh ${pathname}: ${message}`);
+    } finally {
+      // Clear after the cache write resolves so the *next* stale-cache hit
+      // (which will see the freshly-written entry as no-longer-stale) doesn't
+      // collide with this one, but a subsequent stale window can still trigger
+      // a new refresh.
+      inflightRefresh.delete(key);
+    }
+  })();
+
+  inflightRefresh.set(key, promise);
+  return promise;
 }
 
 export async function handleGitHubRoute(

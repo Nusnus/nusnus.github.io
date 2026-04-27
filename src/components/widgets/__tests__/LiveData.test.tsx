@@ -147,6 +147,65 @@ describe('LiveData', () => {
     });
   });
 
+  it('does not downgrade fresher build-time DOM values when cache is stale', async () => {
+    // DOM has fresher build-time numbers (5K commits) than cache (567 commits).
+    document.body.innerHTML = `
+      <p data-live="totalContributions">2K</p>
+      <p data-live="totalCommits">5K</p>
+      <p data-live="totalPRs">200</p>
+      <p data-live="totalReviews">50</p>
+      <p data-live="totalIssues">10</p>
+      <p data-live="streak">42</p>
+      <p data-live="celeryStars">0</p>
+      <p data-live="lastUpdated">never</p>
+    `;
+    writeCache('contributions', SAMPLE_GRAPH); // 1234, 567, 89, 12, 3
+    vi.spyOn(globalThis, 'fetch').mockImplementation(
+      () =>
+        new Promise<Response>(() => {
+          /* never resolves */
+        }),
+    );
+
+    render(<LiveData />);
+    await act(async () => {
+      /* flush effects */
+    });
+
+    // Counters should NOT be downgraded by stale cache values.
+    expect(document.querySelector('[data-live="totalContributions"]')?.textContent).toBe('2K');
+    expect(document.querySelector('[data-live="totalCommits"]')?.textContent).toBe('5K');
+    expect(document.querySelector('[data-live="totalPRs"]')?.textContent).toBe('200');
+    // Streak CAN drop to a lower value (people miss days), so the cache value wins.
+    // SAMPLE_GRAPH has 2 days of activity → streak depends on dates; just assert it changed.
+    // (We don't assert exact value since calculateStreak depends on "today".)
+    // The stash should still be published for React widgets.
+    expect(readStash('live-data:contributions')).toEqual(SAMPLE_GRAPH);
+  });
+
+  it('always applies live worker data (no monotonic guard)', async () => {
+    // DOM has fresher numbers than the live response.
+    document.body.innerHTML = `
+      <p data-live="totalContributions">9K</p>
+      <p data-live="totalCommits">9K</p>
+      <p data-live="totalPRs">9K</p>
+      <p data-live="totalReviews">9K</p>
+      <p data-live="totalIssues">9K</p>
+      <p data-live="streak">99</p>
+      <p data-live="celeryStars">0</p>
+      <p data-live="lastUpdated">never</p>
+    `;
+    mockFetch(); // Live data is SAMPLE_GRAPH (smaller numbers)
+
+    render(<LiveData />);
+    await waitFor(() => {
+      expect(readStash('live-data:contributions')).toEqual(SAMPLE_GRAPH);
+    });
+
+    // Live data (worker source of truth) wins, even if smaller.
+    expect(document.querySelector('[data-live="totalCommits"]')?.textContent).toBe('567');
+  });
+
   it('skips invalid worker responses (schema validation)', async () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
       const u = String(url);

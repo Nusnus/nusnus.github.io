@@ -55,6 +55,37 @@ function updateLive(key: string, text: string) {
   });
 }
 
+/**
+ * Update only if the new numeric value is greater-than-or-equal to the value
+ * currently in the DOM. Used during cache-paint to avoid downgrading fresher
+ * build-time values with stale localStorage values for monotonically-growing
+ * counters (total contributions, commits, PRs, reviews, issues).
+ */
+function updateLiveIfNotLower(key: string, value: number, displayText: string) {
+  document.querySelectorAll<HTMLElement>(`[data-live="${key}"]`).forEach((el) => {
+    const current = parseCompactNumber(el.textContent ?? '');
+    if (Number.isFinite(current) && value < current) return;
+    if (el.textContent !== displayText) {
+      el.textContent = displayText;
+      animateRefresh(el);
+    }
+  });
+}
+
+/** Parse a compact number string (e.g. "1.2K", "567") back to a number. */
+function parseCompactNumber(s: string): number {
+  const trimmed = s.trim();
+  if (!trimmed) return NaN;
+  const match = /^(-?[\d.,]+)([KMBT])?$/i.exec(trimmed);
+  if (!match || match[1] === undefined) return NaN;
+  const n = Number(match[1].replace(/,/g, ''));
+  if (!Number.isFinite(n)) return NaN;
+  const suffix = match[2]?.toUpperCase();
+  const mult =
+    suffix === 'K' ? 1e3 : suffix === 'M' ? 1e6 : suffix === 'B' ? 1e9 : suffix === 'T' ? 1e12 : 1;
+  return n * mult;
+}
+
 /** Update repo-specific DOM elements. */
 function updateRepoField(repoFullName: string, field: string, text: string) {
   document
@@ -67,19 +98,36 @@ function updateRepoField(repoFullName: string, field: string, text: string) {
     });
 }
 
-/** Apply contribution-graph payload to the DOM and publish for React widgets. */
-function applyContributions(graphData: ContributionGraphData) {
-  updateLive('totalContributions', formatCompactNumber(graphData.totalContributions));
-  updateLive('totalCommits', formatCompactNumber(graphData.totalCommits));
-  updateLive('totalPRs', formatCompactNumber(graphData.totalPRs));
-  updateLive('totalReviews', formatCompactNumber(graphData.totalReviews));
-  updateLive('totalIssues', formatCompactNumber(graphData.totalIssues));
+/**
+ * Apply contribution-graph payload to the DOM and publish for React widgets.
+ *
+ * @param source - 'cache' for localStorage paint (use monotonic guard so a
+ *   stale snapshot doesn't downgrade fresher build-time values), or 'live'
+ *   for worker-fetched data (always wins, source of truth).
+ */
+function applyContributions(graphData: ContributionGraphData, source: 'cache' | 'live') {
+  const setCounter = source === 'cache' ? updateLiveIfNotLower : updateLiveAlways;
+  setCounter(
+    'totalContributions',
+    graphData.totalContributions,
+    formatCompactNumber(graphData.totalContributions),
+  );
+  setCounter('totalCommits', graphData.totalCommits, formatCompactNumber(graphData.totalCommits));
+  setCounter('totalPRs', graphData.totalPRs, formatCompactNumber(graphData.totalPRs));
+  setCounter('totalReviews', graphData.totalReviews, formatCompactNumber(graphData.totalReviews));
+  setCounter('totalIssues', graphData.totalIssues, formatCompactNumber(graphData.totalIssues));
 
   const allDays = graphData.weeks.flatMap((w: ContributionWeek) => w.contributionDays);
   const streak = calculateStreak(allDays);
+  // Streak can legitimately drop to 0, so always apply.
   updateLive('streak', String(streak));
 
   publishLiveData('live-data:contributions', graphData);
+}
+
+/** Adapter: ignore `value` and just call updateLive. Used in 'live' mode. */
+function updateLiveAlways(key: string, _value: number, displayText: string) {
+  updateLive(key, displayText);
 }
 
 /** Apply repo-list payloads to the DOM. */
@@ -114,7 +162,7 @@ export default function LiveData() {
     const cachedRepos = readCache<RepoData[]>(CACHE_KEYS.repos);
     const cachedOrgRepos = readCache<RepoData[]>(CACHE_KEYS.orgRepos);
     const cachedActivity = readCache<ActivityData>(CACHE_KEYS.activity);
-    if (cachedGraph) applyContributions(cachedGraph);
+    if (cachedGraph) applyContributions(cachedGraph, 'cache');
     if (cachedRepos || cachedOrgRepos) applyRepos(cachedRepos, cachedOrgRepos);
     if (cachedActivity) applyActivity(cachedActivity);
 
@@ -130,7 +178,7 @@ export default function LiveData() {
       if (cancelled) return;
 
       if (graphData) {
-        applyContributions(graphData);
+        applyContributions(graphData, 'live');
         writeCache(CACHE_KEYS.contributions, graphData);
       }
       if (reposData) writeCache(CACHE_KEYS.repos, reposData);
