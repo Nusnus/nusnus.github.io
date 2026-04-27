@@ -17,12 +17,14 @@ import {
 const GITHUB_API = 'https://api.github.com';
 const GITHUB_GRAPHQL = 'https://api.github.com/graphql';
 
+// Edge-cache TTLs (seconds). Kept short so a page refresh shows fresh data;
+// the in-flight cache + GitHub PAT rate limit (5,000 req/hr) bound origin load.
 const TTL: Record<string, number> = {
-  profile: 3600,
-  repos: 900,
-  'org-repos': 900,
+  profile: 600,
+  repos: 600,
+  'org-repos': 600,
   activity: 300,
-  contributions: 3600,
+  contributions: 600,
   meta: 60,
 };
 

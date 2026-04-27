@@ -2,5 +2,6 @@ dist
 .astro
 node_modules
 public/fonts
+public/data
 bun.lock
 

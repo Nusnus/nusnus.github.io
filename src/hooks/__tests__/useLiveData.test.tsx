@@ -1,12 +1,18 @@
 // @vitest-environment happy-dom
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useLiveData } from '@hooks/useLiveData';
+import { publishLiveData } from '@lib/live-cache';
 
 /** Helper to dispatch a typed CustomEvent on window. */
 function dispatch<T>(eventName: string, detail: T) {
   window.dispatchEvent(new CustomEvent(eventName, { detail }));
 }
+
+beforeEach(() => {
+  // Clear the cross-test stash so prior `publishLiveData` calls don't leak.
+  (window as unknown as { __liveData?: Record<string, unknown> }).__liveData = {};
+});
 
 describe('useLiveData', () => {
   it('returns undefined before any event is received', () => {
@@ -93,6 +99,16 @@ describe('useLiveData', () => {
 
     act(() => dispatch('test:b', { value: 3 }));
     expect(result.current).toBe(3);
+  });
+
+  it('reads from window.__liveData stash on mount (late hydration)', () => {
+    // Simulate LiveData publishing BEFORE this hook is even rendered.
+    publishLiveData('test:stash', { value: 99 });
+
+    const { result } = renderHook(() =>
+      useLiveData<{ value: number }, number>('test:stash', (d) => d.value),
+    );
+    expect(result.current).toBe(99);
   });
 
   it('uses the latest selector without re-subscribing', () => {
