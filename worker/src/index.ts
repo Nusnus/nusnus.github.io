@@ -224,7 +224,7 @@ async function checkAndAlertBilling(
 // ─── Worker ──────────────────────────────────────────────────────────
 
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const origin = request.headers.get('Origin') ?? '';
     const isAllowed = ALLOWED_ORIGINS.has(origin);
 
@@ -276,7 +276,12 @@ export default {
         return jsonResponse({ error: 'GitHub token not configured' }, 500, origin);
       }
 
-      const ghResponse = await handleGitHubRoute(request, env.GITHUB_TOKEN, corsHeaders(origin));
+      const ghResponse = await handleGitHubRoute(
+        request,
+        env.GITHUB_TOKEN,
+        corsHeaders(origin),
+        ctx,
+      );
       if (ghResponse) return ghResponse;
       return jsonResponse({ error: 'Not found' }, 404, origin);
     }

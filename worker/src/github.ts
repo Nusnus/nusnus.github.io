@@ -17,14 +17,24 @@ import {
 const GITHUB_API = 'https://api.github.com';
 const GITHUB_GRAPHQL = 'https://api.github.com/graphql';
 
-const TTL: Record<string, number> = {
-  profile: 3600,
-  repos: 900,
-  'org-repos': 900,
-  activity: 300,
-  contributions: 3600,
-  meta: 60,
+/**
+ * Per-route freshness window (seconds) — the age beyond which a cached entry
+ * is considered "stale" and triggers a background refresh. The cached entry
+ * itself lives much longer (`CACHE_HARD_TTL`), so every request still gets an
+ * instant response from cache; only the upstream GitHub fetch happens in the
+ * background.
+ */
+const FRESH_WINDOW: Record<string, number> = {
+  profile: 600,
+  repos: 300,
+  'org-repos': 300,
+  activity: 60,
+  contributions: 600,
+  meta: 30,
 };
+
+/** Hard cache TTL — how long a cached entry lives at the edge as a fallback. */
+const CACHE_HARD_TTL = 86400; // 24 hours
 
 // ─── Types ───────────────────────────────────────────────────────────
 
@@ -240,45 +250,98 @@ const ROUTES: Record<string, Fetcher> = {
   '/github/meta': () => Promise.resolve({ lastUpdated: new Date().toISOString(), status: 'ok' }),
 };
 
+/** Build a cacheable response containing the fetched data. */
+function buildCachedResponse(body: string): Response {
+  return new Response(body, {
+    headers: {
+      'Content-Type': 'application/json',
+      // Long TTL on the cached entry — the freshness window controls when we
+      // refresh in the background, while this controls how long the cache
+      // entry survives as a fallback if the upstream fetch keeps failing.
+      'Cache-Control': `public, max-age=${CACHE_HARD_TTL}`,
+      'X-Cached-At': String(Date.now()),
+    },
+  });
+}
+
+/** Fetch fresh data from GitHub and write it into the edge cache. */
+async function refreshCache(
+  cache: Cache,
+  cacheKey: Request,
+  fetcher: Fetcher,
+  token: string,
+  pathname: string,
+): Promise<void> {
+  try {
+    const data = await fetcher(token);
+    const body = JSON.stringify(data);
+    await cache.put(cacheKey, buildCachedResponse(body));
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'GitHub fetch failed';
+    console.error(`[github] background refresh ${pathname}: ${message}`);
+  }
+}
+
 export async function handleGitHubRoute(
   request: Request,
   token: string,
   corsHeaders: Record<string, string>,
+  ctx?: { waitUntil: (p: Promise<unknown>) => void },
 ): Promise<Response | null> {
   const url = new URL(request.url);
   const fetcher = ROUTES[url.pathname];
   if (!fetcher) return null;
 
   const routeKey = url.pathname.replace('/github/', '');
-  const ttl = TTL[routeKey] ?? 900;
+  const freshWindow = FRESH_WINDOW[routeKey] ?? 300;
 
   // Check Cloudflare Cache API (caches.default is Cloudflare-specific)
   const cache = (caches as unknown as { default: Cache }).default;
   const cacheKey = new Request(request.url, { method: 'GET' });
   const cached = await cache.match(cacheKey);
+
+  // ── Browser cache headers ──
+  // We want the browser/CDN downstream of the worker to revalidate on every
+  // page reload so visitors always see fresh data. Caching for performance
+  // happens at the edge inside the worker (Cache API + stale-while-revalidate),
+  // not in the browser.
+  const browserCacheControl = 'public, max-age=0, must-revalidate';
+
   if (cached) {
-    const headers = new Headers(cached.headers);
+    const cachedAt = Number(cached.headers.get('X-Cached-At') ?? 0);
+    const ageSeconds = cachedAt > 0 ? (Date.now() - cachedAt) / 1000 : Infinity;
+    const isStale = ageSeconds > freshWindow;
+
+    // Stale entry → trigger a background refresh, but still serve the cached
+    // copy immediately so the visitor never waits on GitHub.
+    if (isStale && ctx) {
+      ctx.waitUntil(refreshCache(cache, cacheKey, fetcher, token, url.pathname));
+    }
+
+    const headers = new Headers();
+    headers.set('Content-Type', 'application/json');
+    headers.set('Cache-Control', browserCacheControl);
+    headers.set('X-Cache', isStale ? 'STALE' : 'HIT');
+    headers.set('X-Cache-Age', String(Math.round(ageSeconds)));
     for (const [k, v] of Object.entries(corsHeaders)) headers.set(k, v);
-    headers.set('X-Cache', 'HIT');
     return new Response(cached.body, { status: 200, headers });
   }
 
-  // Cache miss — fetch from GitHub
+  // Cache miss — fetch from GitHub synchronously
   try {
     const data = await fetcher(token);
     const body = JSON.stringify(data);
     // Store in cache (non-blocking)
-    void cache.put(
-      cacheKey,
-      new Response(body, {
-        headers: { 'Content-Type': 'application/json', 'Cache-Control': `public, max-age=${ttl}` },
-      }),
-    );
+    if (ctx) {
+      ctx.waitUntil(cache.put(cacheKey, buildCachedResponse(body)));
+    } else {
+      void cache.put(cacheKey, buildCachedResponse(body));
+    }
     return new Response(body, {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': `public, max-age=${ttl}`,
+        'Cache-Control': browserCacheControl,
         'X-Cache': 'MISS',
         ...corsHeaders,
       },
