@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import type { ActivityEvent, ActivityData } from '@lib/github/types';
-import { fetchWorkerData } from '@lib/worker-client';
 import { formatEventType, getEventColor, truncateCommitMessage } from '@lib/github/formatters';
 import { relativeTime } from '@lib/utils/date';
+import { useLiveData } from '@hooks/useLiveData';
 import {
   GitCommitHorizontal,
   GitPullRequest,
@@ -25,30 +25,20 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
 };
 
 export default function ActivityFeed({ initialEvents }: Props) {
-  const [events, setEvents] = useState<ActivityEvent[]>(initialEvents);
-  const [loading, setLoading] = useState(initialEvents.length === 0);
+  const [fallback] = useState<ActivityEvent[]>(initialEvents);
 
-  useEffect(() => {
-    let cancelled = false;
+  // The LiveData island is responsible for fetching activity and publishing
+  // `live-data:activity`. We just subscribe and re-render whenever a fresh
+  // payload arrives — including the synchronous stash on initial mount, so
+  // there is no flicker between "static" and "live" data.
+  const liveEvents = useLiveData<ActivityData, ActivityEvent[]>(
+    'live-data:activity',
+    useCallback((data) => data?.events, []),
+  );
 
-    fetchWorkerData<ActivityData>('activity', '/data/activity.json')
-      .then((data) => {
-        if (cancelled || !data?.events?.length) return;
-        setEvents(data.events);
-      })
-      .catch(() => {
-        // Fallback to initial events — already set
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
+  const events = liveEvents ?? fallback;
 
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  if (loading && events.length === 0) {
+  if (events.length === 0) {
     return (
       <div className="space-y-3">
         {Array.from({ length: 5 }).map((_, i) => (
