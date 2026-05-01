@@ -1055,14 +1055,6 @@
       "title": "Comment: fix(trace): dispatch chain/callbacks on dedup fast-path for redelivered tasks",
       "url": "https://github.com/celery/celery/pull/10159#issuecomment-4184053923",
       "createdAt": "2026-04-03T15:59:26Z"
-    },
-    {
-      "id": "7954893817",
-      "type": "PullRequestReviewEvent",
-      "repo": "celery/kombu",
-      "title": "Review: PR",
-      "url": "https://github.com/celery/kombu",
-      "createdAt": "2026-03-31T14:12:57Z"
     }
   ],
   "todaySummary": {
