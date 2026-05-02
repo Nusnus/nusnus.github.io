@@ -345,20 +345,20 @@
       "createdAt": "2026-04-26T20:25:06Z"
     },
     {
-      "id": "11071009856",
-      "type": "DeleteEvent",
-      "repo": "Nusnus/celery",
-      "title": "Delete",
-      "url": "https://github.com/Nusnus/celery",
-      "createdAt": "2026-04-26T20:24:46Z"
-    },
-    {
       "id": "11071009787",
       "type": "PushEvent",
       "repo": "celery/celery",
       "title": "Push",
       "url": "https://github.com/celery/celery",
       "createdAt": "2026-04-26T20:24:45Z"
+    },
+    {
+      "id": "11071009856",
+      "type": "DeleteEvent",
+      "repo": "Nusnus/celery",
+      "title": "Delete",
+      "url": "https://github.com/Nusnus/celery",
+      "createdAt": "2026-04-26T20:24:46Z"
     },
     {
       "id": "8805193964",
