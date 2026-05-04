@@ -631,62 +631,6 @@
       "title": "PullRequestReviewComment",
       "url": "https://github.com/celery/celery",
       "createdAt": "2026-04-04T20:20:02Z"
-    },
-    {
-      "id": "8074378587",
-      "type": "PullRequestReviewEvent",
-      "repo": "celery/celery",
-      "title": "Review: PR",
-      "url": "https://github.com/celery/celery",
-      "createdAt": "2026-04-03T18:21:19Z"
-    },
-    {
-      "id": "8074378582",
-      "type": "PullRequestReviewEvent",
-      "repo": "celery/celery",
-      "title": "Review: PR",
-      "url": "https://github.com/celery/celery",
-      "createdAt": "2026-04-03T18:21:19Z"
-    },
-    {
-      "id": "8074357624",
-      "type": "PullRequestReviewCommentEvent",
-      "repo": "celery/celery",
-      "title": "PullRequestReviewComment",
-      "url": "https://github.com/celery/celery",
-      "createdAt": "2026-04-03T18:20:14Z"
-    },
-    {
-      "id": "8074337847",
-      "type": "PullRequestReviewCommentEvent",
-      "repo": "celery/celery",
-      "title": "PullRequestReviewComment",
-      "url": "https://github.com/celery/celery",
-      "createdAt": "2026-04-03T18:19:18Z"
-    },
-    {
-      "id": "8072507129",
-      "type": "IssueCommentEvent",
-      "repo": "celery/celery",
-      "title": "Comment: fix(trace): dispatch chain/callbacks on dedup fast-path for redelivered tasks",
-      "url": "https://github.com/celery/celery/pull/10159#issuecomment-4184256045",
-      "createdAt": "2026-04-03T16:55:18Z"
-    },
-    {
-      "id": "8071939459",
-      "type": "IssueCommentEvent",
-      "repo": "celery/celery",
-      "title": "Comment: fix(trace): dispatch chain/callbacks on dedup fast-path for redelivered tasks",
-      "url": "https://github.com/celery/celery/pull/10159#issuecomment-4184160076",
-      "createdAt": "2026-04-03T16:27:40Z"
-    },
-    {
-      "id": "8071333927",
-      "type": "IssueCommentEvent",
-      "repo": "celery/celery",
-      "title": "Comment: fix(trace): dispatch chain/callbacks on dedup fast-path for redelivered tasks",
-      "url": "https://github.com/celery/celery/pull/10159#issuecomment-4184053923",
-      "createdAt": "2026-04-03T15:59:26Z"
     }
   ],
   "todaySummary": {
