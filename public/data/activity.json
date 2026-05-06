@@ -311,38 +311,6 @@
       "title": "Comment: fix(worker): continue to attempt to bind other queues after a native delayed delivery binding failure has occurred",
       "url": "https://github.com/celery/celery/pull/9959#issuecomment-4199232360",
       "createdAt": "2026-04-07T13:16:41Z"
-    },
-    {
-      "id": "8106117885",
-      "type": "WatchEvent",
-      "repo": "Private Project",
-      "title": "Watch",
-      "url": "https://github.com/xdevplatform",
-      "createdAt": "2026-04-05T23:28:09Z"
-    },
-    {
-      "id": "8103848620",
-      "type": "IssueCommentEvent",
-      "repo": "celery/celery",
-      "title": "Comment: fix: move remaining start_worker() integration tests to smoke tests",
-      "url": "https://github.com/celery/celery/pull/10239#issuecomment-4189372401",
-      "createdAt": "2026-04-05T19:08:16Z"
-    },
-    {
-      "id": "8103653929",
-      "type": "PullRequestReviewEvent",
-      "repo": "celery/celery",
-      "title": "Review: PR",
-      "url": "https://github.com/celery/celery",
-      "createdAt": "2026-04-05T18:47:16Z"
-    },
-    {
-      "id": "8102969685",
-      "type": "IssueCommentEvent",
-      "repo": "celery/celery",
-      "title": "Comment: Fix/connection stop and collect timeout",
-      "url": "https://github.com/celery/celery/pull/10234#issuecomment-4189244677",
-      "createdAt": "2026-04-05T17:35:53Z"
     }
   ],
   "todaySummary": {
