@@ -295,22 +295,6 @@
       "title": "Pull Request",
       "url": "https://github.com/celery/celery",
       "createdAt": "2026-04-26T16:04:42Z"
-    },
-    {
-      "id": "8159755172",
-      "type": "PullRequestReviewEvent",
-      "repo": "celery/celery",
-      "title": "Review: PR",
-      "url": "https://github.com/celery/celery",
-      "createdAt": "2026-04-07T13:22:36Z"
-    },
-    {
-      "id": "8159536464",
-      "type": "IssueCommentEvent",
-      "repo": "celery/celery",
-      "title": "Comment: fix(worker): continue to attempt to bind other queues after a native delayed delivery binding failure has occurred",
-      "url": "https://github.com/celery/celery/pull/9959#issuecomment-4199232360",
-      "createdAt": "2026-04-07T13:16:41Z"
     }
   ],
   "todaySummary": {
