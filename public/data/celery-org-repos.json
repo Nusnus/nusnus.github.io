@@ -19,8 +19,8 @@
     "htmlUrl": "https://github.com/celery/django-celery-beat",
     "stars": 1929,
     "forks": 484,
-    "openIssues": 146,
-    "lastPush": "2026-05-12T02:05:33Z",
+    "openIssues": 145,
+    "lastPush": "2026-05-14T04:07:03Z",
     "language": "Python",
     "role": "owner",
     "contributorRank": 19
@@ -33,10 +33,10 @@
     "stars": 784,
     "forks": 224,
     "openIssues": 60,
-    "lastPush": "2026-04-27T16:52:29Z",
+    "lastPush": "2026-05-13T07:39:34Z",
     "language": "Python",
     "role": "owner",
-    "contributorRank": 22
+    "contributorRank": 23
   },
   {
     "name": "py-amqp",
@@ -56,7 +56,7 @@
     "fullName": "celery/librabbitmq",
     "description": "Python bindings to librabbitmq-c",
     "htmlUrl": "https://github.com/celery/librabbitmq",
-    "stars": 205,
+    "stars": 204,
     "forks": 92,
     "openIssues": 28,
     "lastPush": "2026-04-09T15:31:29Z",
