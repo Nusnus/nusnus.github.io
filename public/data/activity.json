@@ -73,22 +73,6 @@
       "createdAt": "2026-04-27T23:45:24Z"
     },
     {
-      "id": "8846688142",
-      "type": "PullRequestEvent",
-      "repo": "Nusnus/nusnus.github.io",
-      "title": "Pull Request",
-      "url": "https://github.com/Nusnus/nusnus.github.io",
-      "createdAt": "2026-04-27T21:37:26Z"
-    },
-    {
-      "id": "8846631482",
-      "type": "PullRequestEvent",
-      "repo": "Nusnus/nusnus.github.io",
-      "title": "Pull Request",
-      "url": "https://github.com/Nusnus/nusnus.github.io",
-      "createdAt": "2026-04-27T21:35:13Z"
-    },
-    {
       "id": "8845792827",
       "type": "IssueCommentEvent",
       "repo": "celery/kombu",
@@ -129,22 +113,6 @@
       "createdAt": "2026-04-27T20:10:01Z"
     },
     {
-      "id": "8844077284",
-      "type": "PullRequestEvent",
-      "repo": "celery/kombu",
-      "title": "Pull Request",
-      "url": "https://github.com/celery/kombu",
-      "createdAt": "2026-04-27T20:09:25Z"
-    },
-    {
-      "id": "8837993070",
-      "type": "PullRequestEvent",
-      "repo": "celery/kombu",
-      "title": "Pull Request",
-      "url": "https://github.com/celery/kombu",
-      "createdAt": "2026-04-27T17:07:03Z"
-    },
-    {
       "id": "8830760828",
       "type": "IssueCommentEvent",
       "repo": "celery/celery",
@@ -177,14 +145,6 @@
       "createdAt": "2026-04-26T22:43:48Z"
     },
     {
-      "id": "8806435750",
-      "type": "PullRequestEvent",
-      "repo": "celery/celery",
-      "title": "Pull Request",
-      "url": "https://github.com/celery/celery",
-      "createdAt": "2026-04-26T22:14:51Z"
-    },
-    {
       "id": "8806435748",
       "type": "PullRequestEvent",
       "repo": "celery/celery",
@@ -209,14 +169,6 @@
       "createdAt": "2026-04-26T20:29:21Z"
     },
     {
-      "id": "8805237932",
-      "type": "PullRequestEvent",
-      "repo": "celery/celery",
-      "title": "Pull Request",
-      "url": "https://github.com/celery/celery",
-      "createdAt": "2026-04-26T20:28:46Z"
-    },
-    {
       "id": "8805214946",
       "type": "PullRequestEvent",
       "repo": "celery/celery",
@@ -239,22 +191,6 @@
       "title": "Comment: fix(defaults): default to exclusive queues for RabbitMQ 4.3.0 compatibility",
       "url": "https://github.com/celery/celery/pull/10287#issuecomment-4322796186",
       "createdAt": "2026-04-26T19:13:46Z"
-    },
-    {
-      "id": "8804371119",
-      "type": "PullRequestEvent",
-      "repo": "celery/celery",
-      "title": "Pull Request",
-      "url": "https://github.com/celery/celery",
-      "createdAt": "2026-04-26T19:12:12Z"
-    },
-    {
-      "id": "8804329132",
-      "type": "PullRequestEvent",
-      "repo": "celery/celery",
-      "title": "Pull Request",
-      "url": "https://github.com/celery/celery",
-      "createdAt": "2026-04-26T19:09:15Z"
     },
     {
       "id": "8804329121",
@@ -311,14 +247,6 @@
       "title": "PullRequestReviewComment",
       "url": "https://github.com/celery/celery",
       "createdAt": "2026-04-26T16:29:14Z"
-    },
-    {
-      "id": "8802127960",
-      "type": "PullRequestEvent",
-      "repo": "celery/celery",
-      "title": "Pull Request",
-      "url": "https://github.com/celery/celery",
-      "createdAt": "2026-04-26T16:04:42Z"
     },
     {
       "id": "8802127958",
