@@ -49,14 +49,6 @@
       "createdAt": "2026-04-28T20:55:47Z"
     },
     {
-      "id": "8885484130",
-      "type": "PullRequestReviewEvent",
-      "repo": "celery/kombu",
-      "title": "Review: PR",
-      "url": "https://github.com/celery/kombu",
-      "createdAt": "2026-04-28T19:08:42Z"
-    },
-    {
       "id": "8885483435",
       "type": "PullRequestReviewCommentEvent",
       "repo": "celery/kombu",
@@ -209,14 +201,6 @@
       "createdAt": "2026-04-26T19:09:15Z"
     },
     {
-      "id": "8803939663",
-      "type": "PullRequestReviewEvent",
-      "repo": "celery/celery",
-      "title": "Review: PR",
-      "url": "https://github.com/celery/celery",
-      "createdAt": "2026-04-26T18:38:42Z"
-    },
-    {
       "id": "8803939571",
       "type": "PullRequestReviewCommentEvent",
       "repo": "celery/celery",
@@ -225,28 +209,12 @@
       "createdAt": "2026-04-26T18:38:41Z"
     },
     {
-      "id": "8802454652",
-      "type": "PullRequestReviewEvent",
-      "repo": "celery/celery",
-      "title": "Review: PR",
-      "url": "https://github.com/celery/celery",
-      "createdAt": "2026-04-26T16:32:03Z"
-    },
-    {
       "id": "8802454369",
       "type": "PullRequestReviewCommentEvent",
       "repo": "celery/celery",
       "title": "PullRequestReviewComment",
       "url": "https://github.com/celery/celery",
       "createdAt": "2026-04-26T16:32:01Z"
-    },
-    {
-      "id": "8802422129",
-      "type": "PullRequestReviewEvent",
-      "repo": "celery/celery",
-      "title": "Review: PR",
-      "url": "https://github.com/celery/celery",
-      "createdAt": "2026-04-26T16:29:15Z"
     },
     {
       "id": "8802421826",
