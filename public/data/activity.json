@@ -1,30 +1,5 @@
 {
-  "events": [
-    {
-      "id": "8888974677",
-      "type": "IssuesEvent",
-      "repo": "celery/kombu",
-      "title": "Issues",
-      "url": "https://github.com/celery/kombu",
-      "createdAt": "2026-04-28T20:55:47Z"
-    },
-    {
-      "id": "8885483435",
-      "type": "PullRequestReviewCommentEvent",
-      "repo": "celery/kombu",
-      "title": "PullRequestReviewComment",
-      "url": "https://github.com/celery/kombu",
-      "createdAt": "2026-04-28T19:08:40Z"
-    },
-    {
-      "id": "8882639495",
-      "type": "IssueCommentEvent",
-      "repo": "celery/kombu",
-      "title": "Comment: Change default value for Durable flag on Queue creation for pidbox (RabbitMQ deprecated feature transient_nonexcl_queues)",
-      "url": "https://github.com/celery/kombu/issues/2237#issuecomment-4337738948",
-      "createdAt": "2026-04-28T17:38:50Z"
-    }
-  ],
+  "events": [],
   "todaySummary": {
     "commits": 0,
     "prsOpened": 0,
