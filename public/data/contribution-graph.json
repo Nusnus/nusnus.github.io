@@ -8,11 +8,6 @@
     {
       "contributionDays": [
         {
-          "contributionCount": 2,
-          "date": "2025-06-03",
-          "weekday": 2
-        },
-        {
           "contributionCount": 1,
           "date": "2025-06-04",
           "weekday": 3
@@ -2041,9 +2036,14 @@
           "weekday": 2
         },
         {
-          "contributionCount": 0,
+          "contributionCount": 1,
           "date": "2026-06-03",
           "weekday": 3
+        },
+        {
+          "contributionCount": 1,
+          "date": "2026-06-04",
+          "weekday": 4
         }
       ]
     }
