@@ -1,7 +1,32 @@
 {
-  "events": [],
+  "events": [
+    {
+      "id": "13079755213",
+      "type": "DeleteEvent",
+      "repo": "celery/celery",
+      "title": "Delete",
+      "url": "https://github.com/celery/celery",
+      "createdAt": "2026-06-10T01:29:03Z"
+    },
+    {
+      "id": "13079754498",
+      "type": "PushEvent",
+      "repo": "celery/celery",
+      "title": "Push",
+      "url": "https://github.com/celery/celery",
+      "createdAt": "2026-06-10T01:29:02Z"
+    },
+    {
+      "id": "13076181566",
+      "type": "PushEvent",
+      "repo": "Nusnus/celery",
+      "title": "Push",
+      "url": "https://github.com/Nusnus/celery",
+      "createdAt": "2026-06-09T23:25:47Z"
+    }
+  ],
   "todaySummary": {
-    "commits": 0,
+    "commits": 1,
     "prsOpened": 0,
     "prsReviewed": 0,
     "issueComments": 0

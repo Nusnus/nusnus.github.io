@@ -20,7 +20,7 @@
     "stars": 1940,
     "forks": 488,
     "openIssues": 152,
-    "lastPush": "2026-06-08T16:49:24Z",
+    "lastPush": "2026-06-09T16:15:16Z",
     "language": "Python",
     "role": "owner",
     "contributorRank": 19
@@ -108,7 +108,7 @@
     "fullName": "mher/flower",
     "description": "Real-time monitor and web admin for Celery distributed task queue",
     "htmlUrl": "https://github.com/mher/flower",
-    "stars": 7187,
+    "stars": 7190,
     "forks": 1149,
     "openIssues": 193,
     "lastPush": "2026-03-26T01:59:41Z",
