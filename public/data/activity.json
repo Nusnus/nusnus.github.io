@@ -1,6 +1,54 @@
 {
   "events": [
     {
+      "id": "10571076681",
+      "type": "IssueCommentEvent",
+      "repo": "celery/celery",
+      "title": "Comment: Revert \"fix(redis): prevent _pending_messages memory leak in ResultConsumer\"",
+      "url": "https://github.com/celery/celery/pull/10354#issuecomment-4681818636",
+      "createdAt": "2026-06-11T14:47:46Z"
+    },
+    {
+      "id": "10571068618",
+      "type": "PullRequestEvent",
+      "repo": "celery/celery",
+      "title": "Pull Request",
+      "url": "https://github.com/celery/celery",
+      "createdAt": "2026-06-11T14:47:36Z"
+    },
+    {
+      "id": "10570963816",
+      "type": "IssueCommentEvent",
+      "repo": "celery/celery",
+      "title": "Comment: Revert \"fix(redis): prevent _pending_messages memory leak in ResultConsumer\"",
+      "url": "https://github.com/celery/celery/pull/10354#issuecomment-4681796589",
+      "createdAt": "2026-06-11T14:45:27Z"
+    },
+    {
+      "id": "10570936469",
+      "type": "PullRequestReviewEvent",
+      "repo": "celery/celery",
+      "title": "Review: PR",
+      "url": "https://github.com/celery/celery",
+      "createdAt": "2026-06-11T14:44:55Z"
+    },
+    {
+      "id": "10568197173",
+      "type": "PullRequestEvent",
+      "repo": "celery/celery",
+      "title": "Pull Request",
+      "url": "https://github.com/celery/celery",
+      "createdAt": "2026-06-11T13:47:54Z"
+    },
+    {
+      "id": "13170243604",
+      "type": "CreateEvent",
+      "repo": "celery/celery",
+      "title": "Create",
+      "url": "https://github.com/celery/celery",
+      "createdAt": "2026-06-11T13:45:26Z"
+    },
+    {
       "id": "13079755213",
       "type": "DeleteEvent",
       "repo": "celery/celery",
