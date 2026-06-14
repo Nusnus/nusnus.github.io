@@ -51,6 +51,14 @@ export const LINKEDIN_ARTICLES: readonly Article[] = [
 export const COLLABORATIONS: readonly Collaboration[] = [
   {
     name: 'Cognition AI',
+    title: 'FrontierCode Benchmark',
+    description:
+      "One of 20+ world-class open-source maintainers who built FrontierCode, Cognition's code-quality benchmark — authoring eval tasks from the repos they maintain. Featured with a named quote: \u201CFrontierCode grades like a tech lead.\u201D",
+    url: 'https://cognition.ai/blog/frontier-code',
+    xUrl: 'https://x.com/cognition/status/2064061031912288715',
+  },
+  {
+    name: 'Cognition AI',
     title: 'SWE-1.6 Extra Credit',
     description:
       'Highlighted for outsized contributions to data & tooling as a member of the contractor team.',
