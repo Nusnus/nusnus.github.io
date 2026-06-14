@@ -2,7 +2,7 @@
 
 Personal portfolio & live activity dashboard for [Tomer Nosrati (@Nusnus)](https://github.com/Nusnus).
 
-Astro 5 · Tailwind CSS v4 · React islands · Bun · GitHub Pages
+Astro 5 · Tailwind CSS v4 · React islands · Bun · Cloudflare Worker · GitHub Pages
 
 ## Setup
 
@@ -47,13 +47,19 @@ To run manually without the hook: `make pre-commit`.
 ```
 GitHub API → fetch-data → public/data/*.json → Astro build → GitHub Pages
                 ↑                                     ↑
-        every 4h (CI)                          on push to main
+          daily (CI)                          on push to main
 ```
 
-Three GitHub Actions workflows keep the site alive:
+At runtime a Cloudflare Worker (`worker/`) serves the same GitHub data live with a
+stale-while-revalidate policy. The `LiveData` island hydrates the static page from
+the worker (and `localStorage`), falling back to the build-time JSON if the worker
+is unavailable — so the page is always correct, then freshens in the background.
 
-- **update-data** — cron every 4h, fetches profile/repos/activity/contribution data, commits JSON
+Four GitHub Actions workflows keep the site alive:
+
+- **update-data** — daily cron (`0 6 * * *`), fetches profile/repos/activity/contribution data, commits JSON
 - **deploy** — builds and deploys to Pages on every push to `main`
+- **deploy-worker** — deploys the Cloudflare Worker on changes under `worker/`
 - **lint** — type-check, lint, format, tests on PRs and pushes
 
 The site works offline with seed data in `public/data/` — no API token required for development.
@@ -75,6 +81,11 @@ Content here.
 
 Appears at `/blog/<filename>`.
 
-## TODO
+## Worker
 
-- [ ] Add unit tests (utilities, data loaders, formatters)
+The Cloudflare Worker in `worker/` proxies live, edge-cached GitHub data for the
+site (`GET /github/profile|repos|org-repos|activity|contributions`). Deploy with:
+
+```sh
+make deploy-worker
+```

@@ -1,8 +1,8 @@
 /**
  * Static content data — articles, collaborations.
  *
- * Single source of truth for content displayed in sections
- * and fed into AI context builders.
+ * Single source of truth for content displayed in the
+ * Writing and Collaborations sections.
  */
 
 export interface Article {

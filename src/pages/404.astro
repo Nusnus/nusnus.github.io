@@ -1,0 +1,35 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="404 — Page not found · Tomer Nosrati (Nusnus)"
+  description="The page you're looking for doesn't exist."
+>
+  <main
+    id="main-content"
+    class="flex min-h-dvh flex-col items-center justify-center px-6 py-20 text-center"
+  >
+    <p class="text-accent font-mono text-sm tracking-widest uppercase">404</p>
+    <h1 class="text-text-primary mt-4 text-4xl font-bold tracking-tight sm:text-5xl">
+      Page not found
+    </h1>
+    <p class="text-text-secondary mt-4 max-w-md text-lg">
+      The page you're looking for moved, was renamed, or never existed.
+    </p>
+    <div class="mt-8 flex flex-wrap items-center justify-center gap-3">
+      <a
+        href="/"
+        class="bg-accent text-bg-base hover:bg-accent-hover rounded-lg px-4 py-2 text-sm font-medium transition-colors"
+      >
+        Back to home
+      </a>
+      <a
+        href="/blog"
+        class="border-border text-text-secondary hover:border-accent/40 hover:text-accent rounded-lg border px-4 py-2 text-sm font-medium transition-colors"
+      >
+        Read my writing
+      </a>
+    </div>
+  </main>
+</BaseLayout>

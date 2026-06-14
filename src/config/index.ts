@@ -4,13 +4,7 @@
  * Import from `@config` instead of reaching into individual files.
  */
 
-export {
-  GITHUB_USERNAME,
-  SITE_URL,
-  OPEN_COLLECTIVE_URL,
-  WORKER_BASE_URL,
-  WORKER_AI_URL,
-} from './site';
+export { GITHUB_USERNAME, SITE_URL, OPEN_COLLECTIVE_URL, WORKER_BASE_URL } from './site';
 export { NAV_LINKS, type NavLink } from './navigation';
 export { SOCIAL_LINKS, SOCIAL_ICONS, type SocialIcon } from './social';
 export {

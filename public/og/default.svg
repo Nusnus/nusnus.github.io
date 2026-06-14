@@ -1,10 +1,39 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
-  <rect width="1200" height="630" fill="#18181f"/>
-  <rect x="0" y="0" width="4" height="630" fill="#4aba6a" opacity="0.6"/>
-  <text x="80" y="260" font-family="system-ui, sans-serif" font-size="64" font-weight="700" fill="#ece6d6">Tomer Nosrati</text>
-  <text x="80" y="320" font-family="monospace" font-size="32" fill="#4aba6a">@Nusnus</text>
-  <text x="80" y="400" font-family="system-ui, sans-serif" font-size="28" fill="#9a9aaa">CEO &amp; Tech Lead · Celery Organization</text>
-  <text x="80" y="460" font-family="system-ui, sans-serif" font-size="22" fill="#6a6a7a" font-style="italic">I see myself as an artist and my art comes in the form of code</text>
-  <text x="80" y="560" font-family="monospace" font-size="18" fill="#4a4a5a">nusnus.github.io</text>
-</svg>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0c0c11" />
+      <stop offset="1" stop-color="#16161d" />
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5fd07f" />
+      <stop offset="1" stop-color="#3a9a58" />
+    </linearGradient>
+    <radialGradient id="glow" cx="0.85" cy="0.15" r="0.6">
+      <stop offset="0" stop-color="#4aba6a" stop-opacity="0.16" />
+      <stop offset="1" stop-color="#4aba6a" stop-opacity="0" />
+    </radialGradient>
+    <pattern id="dots" width="26" height="26" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="2" fill="#4aba6a" fill-opacity="0.10" />
+    </pattern>
+  </defs>
 
+  <rect width="1200" height="630" fill="url(#bg)" />
+  <rect width="1200" height="630" fill="url(#glow)" />
+  <rect x="760" y="0" width="440" height="630" fill="url(#dots)" />
+  <rect x="0" y="0" width="8" height="630" fill="url(#accent)" />
+
+  <text x="80" y="232" font-family="sans-serif" font-size="76" font-weight="700" fill="#ece6d6">Tomer Nosrati</text>
+  <text x="80" y="288" font-family="monospace" font-size="34" fill="#5fd07f">@Nusnus</text>
+
+  <text x="80" y="372" font-family="sans-serif" font-size="30" font-weight="600" fill="#c7c7d2">CEO &amp; Tech Lead · Celery Organization</text>
+  <text x="80" y="424" font-family="sans-serif" font-size="24" fill="#8a8a98" font-style="italic">"I see myself as an artist and my art comes in the form of code."</text>
+
+  <g font-family="monospace" font-size="20" fill="#a7e3b8">
+    <rect x="80" y="470" width="332" height="48" rx="10" fill="#4aba6a" fill-opacity="0.10" stroke="#4aba6a" stroke-opacity="0.30" />
+    <text x="102" y="500">Celery · top contributor</text>
+    <rect x="428" y="470" width="332" height="48" rx="10" fill="#4aba6a" fill-opacity="0.10" stroke="#4aba6a" stroke-opacity="0.30" />
+    <text x="450" y="500">Creator of pytest-celery</text>
+  </g>
+
+  <text x="80" y="582" font-family="monospace" font-size="20" fill="#5a5a6a">nusnus.github.io</text>
+</svg>
