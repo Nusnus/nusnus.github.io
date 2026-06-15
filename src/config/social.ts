@@ -1,8 +1,8 @@
 /**
  * Social links and their SVG icon paths.
  *
- * Single source of truth for social links used in Sidebar,
- * MobileNav, and AI context builders.
+ * Single source of truth for social links used in the Sidebar,
+ * MobileNav, and structured-data (JSON-LD) builders.
  */
 
 import { OPEN_COLLECTIVE_URL } from './site';

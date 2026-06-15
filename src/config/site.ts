@@ -12,9 +12,7 @@ export const OPEN_COLLECTIVE_URL = 'https://opencollective.com/celery';
 /**
  * Cloudflare Worker base URL.
  *
- * All worker endpoints are relative to this base:
- *   - GET  /github/profile|repos|org-repos|activity|contributions
- *   - POST /v1/responses (AI proxy)
+ * Serves live, edge-cached GitHub data with a stale-while-revalidate policy:
+ *   - GET /github/profile|repos|org-repos|activity|contributions
  */
 export const WORKER_BASE_URL = 'https://ai-proxy.tomer-nosrati.workers.dev';
-export const WORKER_AI_URL = `${WORKER_BASE_URL}/v1/responses`;

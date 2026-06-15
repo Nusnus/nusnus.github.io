@@ -1,8 +1,8 @@
 /**
  * Static content data — articles, collaborations.
  *
- * Single source of truth for content displayed in sections
- * and fed into AI context builders.
+ * Single source of truth for content displayed in the
+ * Writing and Collaborations sections.
  */
 
 export interface Article {
@@ -49,6 +49,14 @@ export const LINKEDIN_ARTICLES: readonly Article[] = [
 ] as const;
 
 export const COLLABORATIONS: readonly Collaboration[] = [
+  {
+    name: 'Cognition AI',
+    title: 'FrontierCode Benchmark',
+    description:
+      "One of 20+ open-source maintainers who built FrontierCode, Cognition's benchmark for code mergeability, crafting eval tasks from the repos they maintain. \u201CWhere others grade like a CI, FrontierCode grades like a tech lead.\u201D",
+    url: 'https://cognition.ai/blog/frontier-code',
+    xUrl: 'https://x.com/cognition/status/2064061031912288715',
+  },
   {
     name: 'Cognition AI',
     title: 'SWE-1.6 Extra Credit',

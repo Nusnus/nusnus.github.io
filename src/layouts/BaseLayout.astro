@@ -1,7 +1,6 @@
 ---
 import '@styles/global.css';
-import { SITE_URL } from '@config';
-// import RoastWidget from '@components/widgets/RoastWidget';
+import { SITE_URL, SOCIAL_LINKS } from '@config';
 
 interface Props {
   title?: string;
@@ -12,11 +11,32 @@ interface Props {
 const {
   title = 'Tomer Nosrati (Nusnus) — CEO & Tech Lead, Celery Organization',
   description = 'Software engineer and open source leader. Creator of pytest-celery, top contributor to Celery. Artist who codes.',
-  ogImage = '/og/default.svg',
+  ogImage = '/og/default.png',
 } = Astro.props;
 
 const canonicalUrl = new URL(Astro.url.pathname, SITE_URL).href;
 const ogImageUrl = new URL(ogImage, SITE_URL).href;
+
+const personSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: 'Tomer Nosrati',
+  alternateName: 'Nusnus',
+  url: SITE_URL,
+  image: 'https://avatars.githubusercontent.com/u/4662342?v=4',
+  jobTitle: 'CEO & Tech Lead, Celery Organization',
+  description:
+    'Software engineer and open source leader. Creator of pytest-celery, top contributor to Celery.',
+  sameAs: [SOCIAL_LINKS.github, SOCIAL_LINKS.linkedin, SOCIAL_LINKS.twitter],
+  knowsAbout: [
+    'Distributed Systems',
+    'Open Source',
+    'Python',
+    'Celery',
+    'Software Testing',
+    'End-to-End Testing',
+  ],
+};
 ---
 
 <!doctype html>
@@ -46,6 +66,17 @@ const ogImageUrl = new URL(ogImage, SITE_URL).href;
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImageUrl} />
 
+    <!-- RSS feed -->
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title="Tomer Nosrati — Writing"
+      href="/rss.xml"
+    />
+
+    <!-- Structured data: Person -->
+    <script type="application/ld+json" set:html={JSON.stringify(personSchema)} is:inline />
+
     <!-- Fonts: preload critical -->
     <link rel="preload" href="/fonts/InterVariable.woff2" as="font" type="font/woff2" crossorigin />
 
@@ -69,257 +100,5 @@ const ogImageUrl = new URL(ogImage, SITE_URL).href;
     </a>
 
     <slot />
-
-    <!-- Roast Widget — floating 🔥 FAB with inline streaming chat bubble (hidden) -->
-    {/* {Astro.url.pathname !== '/chat' && <RoastWidget client:idle />} */}
-
-    <style>
-      /* ── Roast FAB ── */
-      .roast-fab {
-        background: radial-gradient(circle at 30% 30%, #ff6b35, #e63946);
-        box-shadow: 0 4px 15px rgba(230, 57, 70, 0.4);
-        animation: fab-idle 3s ease-in-out infinite;
-        position: relative;
-        overflow: visible;
-      }
-      .roast-fab::before {
-        content: '';
-        position: absolute;
-        inset: -4px;
-        border-radius: 50%;
-        border: 2px solid rgba(255, 107, 53, 0.5);
-        animation: fab-sonar 3s ease-out infinite;
-        pointer-events: none;
-      }
-      .roast-fab::after {
-        content: '';
-        position: absolute;
-        inset: -8px;
-        border-radius: 50%;
-        background: radial-gradient(circle, rgba(255, 107, 53, 0.3) 0%, transparent 70%);
-        animation: fab-halo 3s ease-in-out infinite;
-        pointer-events: none;
-        z-index: -1;
-      }
-      @keyframes fab-idle {
-        0%,
-        100% {
-          transform: scale(1);
-        }
-        50% {
-          transform: scale(1.05);
-        }
-      }
-      @keyframes fab-sonar {
-        0% {
-          transform: scale(1);
-          opacity: 0.6;
-        }
-        100% {
-          transform: scale(2);
-          opacity: 0;
-        }
-      }
-      @keyframes fab-halo {
-        0%,
-        100% {
-          opacity: 0.4;
-          transform: scale(1);
-        }
-        50% {
-          opacity: 0.8;
-          transform: scale(1.3);
-        }
-      }
-      .roast-fab:hover {
-        box-shadow:
-          0 6px 30px rgba(230, 57, 70, 0.6),
-          0 0 50px rgba(255, 107, 53, 0.3);
-      }
-      .roast-fab[data-roast-level='0'] {
-        animation: fab-idle 2.5s ease-in-out infinite;
-        box-shadow:
-          0 4px 20px rgba(230, 57, 70, 0.5),
-          0 0 40px rgba(255, 107, 53, 0.2);
-      }
-      .roast-fab[data-roast-level='1'] {
-        background: radial-gradient(circle at 30% 30%, #ff5722, #d32f2f);
-        animation: fab-level1 1.8s ease-in-out infinite;
-        box-shadow:
-          0 4px 25px rgba(211, 47, 47, 0.6),
-          0 0 50px rgba(255, 87, 34, 0.3);
-      }
-      .roast-fab[data-roast-level='1']::before {
-        inset: -6px;
-        border-width: 2px;
-        border-color: transparent;
-        border-top-color: #ff5722;
-        border-right-color: #ff9800;
-        animation: fab-spin 2s linear infinite;
-      }
-      .roast-fab[data-roast-level='1']::after {
-        inset: -14px;
-        background: radial-gradient(circle, rgba(255, 87, 34, 0.35) 0%, transparent 70%);
-        animation: fab-halo 1.8s ease-in-out infinite;
-      }
-      @keyframes fab-level1 {
-        0%,
-        100% {
-          transform: scale(1);
-        }
-        50% {
-          transform: scale(1.07);
-        }
-      }
-      @keyframes fab-spin {
-        to {
-          transform: rotate(360deg);
-        }
-      }
-      .roast-fab[data-roast-level='2'] {
-        background: radial-gradient(circle at 30% 30%, #ff3d00, #b71c1c);
-        animation: fab-level2 1.2s ease-in-out infinite;
-        box-shadow:
-          0 4px 30px rgba(183, 28, 28, 0.7),
-          0 0 60px rgba(255, 61, 0, 0.4),
-          inset 0 0 15px rgba(255, 193, 7, 0.15);
-      }
-      .roast-fab[data-roast-level='2']::before {
-        inset: -8px;
-        border-width: 3px;
-        border-color: transparent;
-        border-top-color: #ff3d00;
-        border-right-color: #ff9800;
-        animation: fab-spin 1.2s linear infinite;
-      }
-      .roast-fab[data-roast-level='2']::after {
-        inset: -20px;
-        background: radial-gradient(
-          circle,
-          rgba(255, 61, 0, 0.4) 0%,
-          rgba(255, 152, 0, 0.1) 50%,
-          transparent 70%
-        );
-        animation:
-          fab-flicker 0.15s ease-in-out infinite alternate,
-          fab-halo 1.2s ease-in-out infinite;
-      }
-      @keyframes fab-level2 {
-        0%,
-        100% {
-          transform: scale(1);
-        }
-        30% {
-          transform: scale(1.08);
-        }
-        60% {
-          transform: scale(1.04);
-        }
-        80% {
-          transform: scale(1.1);
-        }
-      }
-      @keyframes fab-flicker {
-        from {
-          opacity: 0.7;
-        }
-        to {
-          opacity: 1;
-        }
-      }
-      .roast-fab[data-roast-level='3'] {
-        background: radial-gradient(circle at 30% 30%, #ff1744, #880e4f);
-        animation: fab-level3 0.6s ease-in-out infinite;
-        box-shadow:
-          0 0 30px rgba(255, 23, 68, 0.8),
-          0 0 60px rgba(136, 14, 79, 0.6),
-          0 0 100px rgba(255, 87, 34, 0.3),
-          inset 0 0 20px rgba(255, 193, 7, 0.3);
-      }
-      .roast-fab[data-roast-level='3']::before {
-        inset: -10px;
-        border-width: 3px;
-        border-color: transparent;
-        border-top-color: #ff1744;
-        border-bottom-color: #ffc107;
-        animation: fab-spin 0.8s linear infinite;
-      }
-      .roast-fab[data-roast-level='3']::after {
-        inset: -30px;
-        background: radial-gradient(
-          circle,
-          rgba(255, 23, 68, 0.5) 0%,
-          rgba(255, 152, 0, 0.2) 40%,
-          transparent 70%
-        );
-        animation:
-          fab-flicker 0.1s ease-in-out infinite alternate,
-          fab-halo 0.6s ease-in-out infinite;
-      }
-      @keyframes fab-level3 {
-        0%,
-        100% {
-          transform: scale(1) rotate(0deg);
-        }
-        10% {
-          transform: scale(1.12) rotate(-3deg);
-        }
-        30% {
-          transform: scale(1.05) rotate(2deg);
-        }
-        50% {
-          transform: scale(1.15) rotate(-2deg);
-        }
-        70% {
-          transform: scale(1.08) rotate(3deg);
-        }
-        90% {
-          transform: scale(1.12) rotate(-1deg);
-        }
-      }
-      .roast-fab[data-roast-level='3'] .roast-fab-emoji {
-        animation: fab-emoji-bounce 0.4s ease-in-out infinite alternate;
-      }
-      @keyframes fab-emoji-bounce {
-        from {
-          transform: scale(1) translateY(0);
-        }
-        to {
-          transform: scale(1.15) translateY(-2px);
-        }
-      }
-      @keyframes roast-dot {
-        0%,
-        80%,
-        100% {
-          opacity: 0.3;
-          transform: scale(0.8);
-        }
-        40% {
-          opacity: 1;
-          transform: scale(1);
-        }
-      }
-      .roast-header-btn {
-        animation: roast-header-glow 2.5s ease-in-out infinite;
-      }
-      @keyframes roast-header-glow {
-        0%,
-        100% {
-          filter: drop-shadow(0 0 3px rgba(255, 107, 53, 0.4));
-        }
-        50% {
-          filter: drop-shadow(0 0 8px rgba(255, 107, 53, 0.9));
-        }
-      }
-      @media (prefers-reduced-motion: reduce) {
-        .roast-fab,
-        .roast-fab::before,
-        .roast-fab::after,
-        .roast-fab-emoji,
-        .roast-header-btn {
-        }
-      }
-    </style>
   </body>
 </html>
