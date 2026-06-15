@@ -1,6 +1,46 @@
 {
   "events": [
     {
+      "id": "13321880800",
+      "type": "DeleteEvent",
+      "repo": "Nusnus/nusnus.github.io",
+      "title": "Delete",
+      "url": "https://github.com/Nusnus/nusnus.github.io",
+      "createdAt": "2026-06-15T00:27:06Z"
+    },
+    {
+      "id": "13321880437",
+      "type": "PushEvent",
+      "repo": "Nusnus/nusnus.github.io",
+      "title": "Push",
+      "url": "https://github.com/Nusnus/nusnus.github.io",
+      "createdAt": "2026-06-15T00:27:05Z"
+    },
+    {
+      "id": "10678563381",
+      "type": "PullRequestEvent",
+      "repo": "Nusnus/nusnus.github.io",
+      "title": "Pull Request",
+      "url": "https://github.com/Nusnus/nusnus.github.io",
+      "createdAt": "2026-06-15T00:27:04Z"
+    },
+    {
+      "id": "10677884457",
+      "type": "PullRequestEvent",
+      "repo": "Nusnus/Nusnus",
+      "title": "Pull Request",
+      "url": "https://github.com/Nusnus/Nusnus",
+      "createdAt": "2026-06-14T23:43:47Z"
+    },
+    {
+      "id": "10677757962",
+      "type": "PullRequestEvent",
+      "repo": "Nusnus/nusnus.github.io",
+      "title": "Pull Request",
+      "url": "https://github.com/Nusnus/nusnus.github.io",
+      "createdAt": "2026-06-14T23:33:40Z"
+    },
+    {
       "id": "10571076681",
       "type": "IssueCommentEvent",
       "repo": "celery/celery",
@@ -74,8 +114,8 @@
     }
   ],
   "todaySummary": {
-    "commits": 0,
-    "prsOpened": 0,
+    "commits": 1,
+    "prsOpened": 1,
     "prsReviewed": 0,
     "issueComments": 0
   }
