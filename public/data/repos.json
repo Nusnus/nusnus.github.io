@@ -5,9 +5,9 @@
     "description": "Distributed Task Queue (development branch)",
     "htmlUrl": "https://github.com/celery/celery",
     "stars": 28600,
-    "forks": 5077,
-    "openIssues": 779,
-    "lastPush": "2026-06-16T11:48:20Z",
+    "forks": 5081,
+    "openIssues": 782,
+    "lastPush": "2026-06-18T22:12:40Z",
     "language": "Python",
     "role": "owner",
     "contributorRank": 4
@@ -19,8 +19,8 @@
     "htmlUrl": "https://github.com/celery/pytest-celery",
     "stars": 82,
     "forks": 18,
-    "openIssues": 12,
-    "lastPush": "2026-06-09T06:49:51Z",
+    "openIssues": 13,
+    "lastPush": "2026-06-19T06:42:30Z",
     "language": "Python",
     "role": "creator",
     "contributorRank": 1
@@ -33,7 +33,7 @@
     "stars": 3122,
     "forks": 1003,
     "openIssues": 227,
-    "lastPush": "2026-06-13T16:17:56Z",
+    "lastPush": "2026-06-19T03:42:28Z",
     "language": "Python",
     "role": "owner",
     "contributorRank": 8
