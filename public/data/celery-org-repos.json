@@ -6,8 +6,8 @@
     "htmlUrl": "https://github.com/celery/billiard",
     "stars": 432,
     "forks": 258,
-    "openIssues": 86,
-    "lastPush": "2026-04-16T10:59:05Z",
+    "openIssues": 87,
+    "lastPush": "2026-06-22T00:33:34Z",
     "language": "Python",
     "role": "owner",
     "contributorRank": 5
@@ -31,12 +31,12 @@
     "description": "Celery result back end with django",
     "htmlUrl": "https://github.com/celery/django-celery-results",
     "stars": 784,
-    "forks": 224,
-    "openIssues": 62,
-    "lastPush": "2026-05-13T07:39:34Z",
+    "forks": 225,
+    "openIssues": 61,
+    "lastPush": "2026-06-22T03:59:59Z",
     "language": "Python",
     "role": "owner",
-    "contributorRank": 23
+    "contributorRank": 33
   },
   {
     "name": "py-amqp",
