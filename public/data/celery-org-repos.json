@@ -20,7 +20,7 @@
     "stars": 1941,
     "forks": 487,
     "openIssues": 153,
-    "lastPush": "2026-06-19T14:47:36Z",
+    "lastPush": "2026-06-22T17:54:33Z",
     "language": "Python",
     "role": "owner",
     "contributorRank": 19
@@ -58,8 +58,8 @@
     "htmlUrl": "https://github.com/celery/librabbitmq",
     "stars": 204,
     "forks": 92,
-    "openIssues": 28,
-    "lastPush": "2026-04-09T15:31:29Z",
+    "openIssues": 29,
+    "lastPush": "2026-06-22T08:17:23Z",
     "language": "C",
     "role": "owner",
     "contributorRank": 25
@@ -110,8 +110,8 @@
     "htmlUrl": "https://github.com/mher/flower",
     "stars": 7201,
     "forks": 1151,
-    "openIssues": 188,
-    "lastPush": "2026-06-10T10:55:40Z",
+    "openIssues": 189,
+    "lastPush": "2026-06-22T20:13:16Z",
     "language": "Python",
     "role": "contributor",
     "contributorRank": 25
