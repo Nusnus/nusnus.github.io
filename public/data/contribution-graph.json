@@ -1,5 +1,5 @@
 {
-  "totalContributions": 3802,
+  "totalContributions": 3797,
   "totalCommits": 359,
   "totalPRs": 111,
   "totalReviews": 98,
@@ -7,11 +7,6 @@
   "weeks": [
     {
       "contributionDays": [
-        {
-          "contributionCount": 27,
-          "date": "2025-06-26",
-          "weekday": 4
-        },
         {
           "contributionCount": 6,
           "date": "2025-06-27",
@@ -1963,7 +1958,7 @@
           "weekday": 4
         },
         {
-          "contributionCount": 1,
+          "contributionCount": 2,
           "date": "2026-06-12",
           "weekday": 5
         },
@@ -2041,9 +2036,14 @@
           "weekday": 4
         },
         {
-          "contributionCount": 3,
+          "contributionCount": 22,
           "date": "2026-06-26",
           "weekday": 5
+        },
+        {
+          "contributionCount": 2,
+          "date": "2026-06-27",
+          "weekday": 6
         }
       ]
     }
