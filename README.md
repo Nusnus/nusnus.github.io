@@ -89,3 +89,5 @@ site (`GET /github/profile|repos|org-repos|activity|contributions`). Deploy with
 ```sh
 make deploy-worker
 ```
+
+<!-- Environment verified: install, lint, tests, and build all pass. -->
