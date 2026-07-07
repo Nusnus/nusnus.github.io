@@ -177,22 +177,6 @@
       "createdAt": "2026-07-03T22:52:38Z"
     },
     {
-      "id": "13321880800",
-      "type": "DeleteEvent",
-      "repo": "Nusnus/nusnus.github.io",
-      "title": "Delete",
-      "url": "https://github.com/Nusnus/nusnus.github.io",
-      "createdAt": "2026-06-15T00:27:06Z"
-    },
-    {
-      "id": "13321880437",
-      "type": "PushEvent",
-      "repo": "Nusnus/nusnus.github.io",
-      "title": "Push",
-      "url": "https://github.com/Nusnus/nusnus.github.io",
-      "createdAt": "2026-06-15T00:27:05Z"
-    },
-    {
       "id": "10678563381",
       "type": "PullRequestEvent",
       "repo": "Nusnus/nusnus.github.io",
@@ -209,14 +193,6 @@
       "createdAt": "2026-06-14T23:43:47Z"
     },
     {
-      "id": "10677757962",
-      "type": "PullRequestEvent",
-      "repo": "Nusnus/nusnus.github.io",
-      "title": "Pull Request",
-      "url": "https://github.com/Nusnus/nusnus.github.io",
-      "createdAt": "2026-06-14T23:33:40Z"
-    },
-    {
       "id": "10571068618",
       "type": "PullRequestEvent",
       "repo": "celery/celery",
@@ -231,38 +207,6 @@
       "title": "Review: PR",
       "url": "https://github.com/celery/celery",
       "createdAt": "2026-06-11T14:44:55Z"
-    },
-    {
-      "id": "13170243604",
-      "type": "CreateEvent",
-      "repo": "celery/celery",
-      "title": "Create",
-      "url": "https://github.com/celery/celery",
-      "createdAt": "2026-06-11T13:45:26Z"
-    },
-    {
-      "id": "13079755213",
-      "type": "DeleteEvent",
-      "repo": "celery/celery",
-      "title": "Delete",
-      "url": "https://github.com/celery/celery",
-      "createdAt": "2026-06-10T01:29:03Z"
-    },
-    {
-      "id": "13079754498",
-      "type": "PushEvent",
-      "repo": "celery/celery",
-      "title": "Push",
-      "url": "https://github.com/celery/celery",
-      "createdAt": "2026-06-10T01:29:02Z"
-    },
-    {
-      "id": "13076181566",
-      "type": "PushEvent",
-      "repo": "Nusnus/celery",
-      "title": "Push",
-      "url": "https://github.com/Nusnus/celery",
-      "createdAt": "2026-06-09T23:25:47Z"
     }
   ],
   "todaySummary": {
