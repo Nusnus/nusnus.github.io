@@ -41,18 +41,18 @@
       "createdAt": "2026-07-04T14:21:24Z"
     },
     {
-      "id": "14336988059",
-      "type": "DeleteEvent",
-      "repo": "celery/pytest-celery",
-      "title": "Delete",
-      "url": "https://github.com/celery/pytest-celery",
-      "createdAt": "2026-07-04T14:20:15Z"
-    },
-    {
       "id": "14336987581",
       "type": "PushEvent",
       "repo": "celery/pytest-celery",
       "title": "Push",
+      "url": "https://github.com/celery/pytest-celery",
+      "createdAt": "2026-07-04T14:20:15Z"
+    },
+    {
+      "id": "14336988059",
+      "type": "DeleteEvent",
+      "repo": "celery/pytest-celery",
+      "title": "Delete",
       "url": "https://github.com/celery/pytest-celery",
       "createdAt": "2026-07-04T14:20:15Z"
     },
@@ -183,22 +183,6 @@
       "title": "Pull Request",
       "url": "https://github.com/Nusnus/nusnus.github.io",
       "createdAt": "2026-06-15T00:27:04Z"
-    },
-    {
-      "id": "10571068618",
-      "type": "PullRequestEvent",
-      "repo": "celery/celery",
-      "title": "Pull Request",
-      "url": "https://github.com/celery/celery",
-      "createdAt": "2026-06-11T14:47:36Z"
-    },
-    {
-      "id": "10570936469",
-      "type": "PullRequestReviewEvent",
-      "repo": "celery/celery",
-      "title": "Review: PR",
-      "url": "https://github.com/celery/celery",
-      "createdAt": "2026-06-11T14:44:55Z"
     }
   ],
   "todaySummary": {
