@@ -551,20 +551,12 @@
       "title": "Pull Request",
       "url": "https://github.com/Nusnus/nusnus.github.io",
       "createdAt": "2026-07-03T22:52:38Z"
-    },
-    {
-      "id": "10678563381",
-      "type": "PullRequestEvent",
-      "repo": "Nusnus/nusnus.github.io",
-      "title": "Pull Request",
-      "url": "https://github.com/Nusnus/nusnus.github.io",
-      "createdAt": "2026-06-15T00:27:04Z"
     }
   ],
   "todaySummary": {
-    "commits": 2,
-    "prsOpened": 1,
-    "prsReviewed": 1,
-    "issueComments": 6
+    "commits": 0,
+    "prsOpened": 0,
+    "prsReviewed": 0,
+    "issueComments": 0
   }
 }
