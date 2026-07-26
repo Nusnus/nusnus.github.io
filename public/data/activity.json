@@ -673,23 +673,7 @@
       "createdAt": "2026-07-03T22:52:41Z"
     },
     {
-      "id": "11341827215",
-      "type": "PullRequestEvent",
-      "repo": "Nusnus/Nusnus",
-      "title": "Pull Request",
-      "url": "https://github.com/Nusnus/Nusnus",
-      "createdAt": "2026-07-03T22:52:41Z"
-    },
-    {
       "id": "11341826659",
-      "type": "PullRequestEvent",
-      "repo": "Nusnus/nusnus.github.io",
-      "title": "Pull Request",
-      "url": "https://github.com/Nusnus/nusnus.github.io",
-      "createdAt": "2026-07-03T22:52:38Z"
-    },
-    {
-      "id": "11341826280",
       "type": "PullRequestEvent",
       "repo": "Nusnus/nusnus.github.io",
       "title": "Pull Request",
