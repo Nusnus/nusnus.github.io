@@ -369,28 +369,12 @@
       "createdAt": "2026-07-14T16:18:29Z"
     },
     {
-      "id": "11775059483",
-      "type": "PullRequestEvent",
-      "repo": "celery/celery",
-      "title": "Pull Request",
-      "url": "https://github.com/celery/celery",
-      "createdAt": "2026-07-14T15:35:45Z"
-    },
-    {
       "id": "14971862048",
       "type": "PushEvent",
       "repo": "Nusnus/celery",
       "title": "Push",
       "url": "https://github.com/Nusnus/celery",
       "createdAt": "2026-07-14T15:36:37Z"
-    },
-    {
-      "id": "11774972454",
-      "type": "PullRequestEvent",
-      "repo": "celery/celery",
-      "title": "Pull Request",
-      "url": "https://github.com/celery/celery",
-      "createdAt": "2026-07-14T15:35:45Z"
     },
     {
       "id": "14971784079",
@@ -441,14 +425,6 @@
       "createdAt": "2026-07-14T13:33:38Z"
     },
     {
-      "id": "11768458182",
-      "type": "PullRequestEvent",
-      "repo": "celery/pytest-celery",
-      "title": "Pull Request",
-      "url": "https://github.com/celery/pytest-celery",
-      "createdAt": "2026-07-14T13:33:01Z"
-    },
-    {
       "id": "14964354236",
       "type": "CreateEvent",
       "repo": "celery/pytest-celery",
@@ -489,14 +465,6 @@
       "createdAt": "2026-07-14T12:40:45Z"
     },
     {
-      "id": "11765532716",
-      "type": "PullRequestEvent",
-      "repo": "celery/pytest-celery",
-      "title": "Pull Request",
-      "url": "https://github.com/celery/pytest-celery",
-      "createdAt": "2026-07-14T12:33:07Z"
-    },
-    {
       "id": "14960818067",
       "type": "CreateEvent",
       "repo": "celery/pytest-celery",
@@ -535,14 +503,6 @@
       "title": "Push",
       "url": "https://github.com/celery/pytest-celery",
       "createdAt": "2026-07-14T11:18:28Z"
-    },
-    {
-      "id": "11752947749",
-      "type": "PullRequestEvent",
-      "repo": "celery/pytest-celery",
-      "title": "Pull Request",
-      "url": "https://github.com/celery/pytest-celery",
-      "createdAt": "2026-07-14T07:45:13Z"
     },
     {
       "id": "14946026622",
