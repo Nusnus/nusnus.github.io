@@ -337,28 +337,12 @@
       "createdAt": "2026-07-14T18:14:21Z"
     },
     {
-      "id": "11777233717",
-      "type": "PullRequestEvent",
-      "repo": "celery/celery",
-      "title": "Pull Request",
-      "url": "https://github.com/celery/celery",
-      "createdAt": "2026-07-14T16:18:46Z"
-    },
-    {
       "id": "11777225062",
       "type": "IssueCommentEvent",
       "repo": "celery/celery",
       "title": "Comment: Guard integration tests",
       "url": "https://github.com/celery/celery/pull/10411#issuecomment-4971477221",
       "createdAt": "2026-07-14T16:21:53Z"
-    },
-    {
-      "id": "11777078273",
-      "type": "PullRequestEvent",
-      "repo": "celery/celery",
-      "title": "Pull Request",
-      "url": "https://github.com/celery/celery",
-      "createdAt": "2026-07-14T16:18:46Z"
     },
     {
       "id": "14974287698",
