@@ -591,22 +591,6 @@
       "title": "Review: PR",
       "url": "https://github.com/celery/pytest-celery",
       "createdAt": "2026-07-04T14:13:04Z"
-    },
-    {
-      "id": "11341901514",
-      "type": "PullRequestEvent",
-      "repo": "Nusnus/Nusnus",
-      "title": "Pull Request",
-      "url": "https://github.com/Nusnus/Nusnus",
-      "createdAt": "2026-07-03T22:53:41Z"
-    },
-    {
-      "id": "11341901412",
-      "type": "PullRequestEvent",
-      "repo": "Nusnus/nusnus.github.io",
-      "title": "Pull Request",
-      "url": "https://github.com/Nusnus/nusnus.github.io",
-      "createdAt": "2026-07-03T22:53:40Z"
     }
   ],
   "todaySummary": {
