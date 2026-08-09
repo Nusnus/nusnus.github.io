@@ -108,10 +108,10 @@
     "fullName": "mher/flower",
     "description": "Real-time monitor and web admin for Celery distributed task queue",
     "htmlUrl": "https://github.com/mher/flower",
-    "stars": 7223,
+    "stars": 7224,
     "forks": 1154,
-    "openIssues": 194,
-    "lastPush": "2026-07-20T20:13:05Z",
+    "openIssues": 189,
+    "lastPush": "2026-08-08T14:11:49Z",
     "language": "Python",
     "role": "contributor",
     "contributorRank": 25
