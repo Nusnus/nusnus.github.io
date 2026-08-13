@@ -439,30 +439,6 @@
       "title": "Create",
       "url": "https://github.com/celery/pytest-celery",
       "createdAt": "2026-07-14T07:44:04Z"
-    },
-    {
-      "id": "14915455545",
-      "type": "PushEvent",
-      "repo": "Nusnus/celery",
-      "title": "Push",
-      "url": "https://github.com/Nusnus/celery",
-      "createdAt": "2026-07-13T19:16:32Z"
-    },
-    {
-      "id": "14915259881",
-      "type": "PushEvent",
-      "repo": "Nusnus/celery",
-      "title": "Push",
-      "url": "https://github.com/Nusnus/celery",
-      "createdAt": "2026-07-13T19:12:57Z"
-    },
-    {
-      "id": "11720151063",
-      "type": "PullRequestEvent",
-      "repo": "Nusnus/Nusnus",
-      "title": "Pull Request",
-      "url": "https://github.com/Nusnus/Nusnus",
-      "createdAt": "2026-06-15T00:14:02Z"
     }
   ],
   "todaySummary": {
