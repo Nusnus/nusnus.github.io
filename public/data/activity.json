@@ -7,38 +7,6 @@
       "title": "Push",
       "url": "https://github.com/Nusnus/celery",
       "createdAt": "2026-08-18T02:04:40Z"
-    },
-    {
-      "id": "12083604085",
-      "type": "IssueCommentEvent",
-      "repo": "celery/pytest-celery",
-      "title": "Comment: Build(deps): Bump boto3 from 1.43.50 to 1.43.51",
-      "url": "https://github.com/celery/pytest-celery/pull/512#issuecomment-5035052488",
-      "createdAt": "2026-07-21T14:08:07Z"
-    },
-    {
-      "id": "12083588105",
-      "type": "IssueCommentEvent",
-      "repo": "celery/pytest-celery",
-      "title": "Comment: Build(deps): Bump botocore from 1.43.51 to 1.43.52",
-      "url": "https://github.com/celery/pytest-celery/pull/511#issuecomment-5035049630",
-      "createdAt": "2026-07-21T14:07:51Z"
-    },
-    {
-      "id": "15461913892",
-      "type": "DeleteEvent",
-      "repo": "celery/pytest-celery",
-      "title": "Delete",
-      "url": "https://github.com/celery/pytest-celery",
-      "createdAt": "2026-07-21T14:07:25Z"
-    },
-    {
-      "id": "15461913019",
-      "type": "PushEvent",
-      "repo": "celery/pytest-celery",
-      "title": "Push",
-      "url": "https://github.com/celery/pytest-celery",
-      "createdAt": "2026-07-21T14:07:25Z"
     }
   ],
   "todaySummary": {

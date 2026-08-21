@@ -18,9 +18,9 @@
     "description": "Celery Periodic Tasks backed by the Django ORM",
     "htmlUrl": "https://github.com/celery/django-celery-beat",
     "stars": 1949,
-    "forks": 492,
-    "openIssues": 158,
-    "lastPush": "2026-08-17T17:14:13Z",
+    "forks": 493,
+    "openIssues": 155,
+    "lastPush": "2026-08-20T16:15:05Z",
     "language": "Python",
     "role": "owner",
     "contributorRank": 19
