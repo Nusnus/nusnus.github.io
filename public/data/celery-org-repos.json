@@ -19,8 +19,8 @@
     "htmlUrl": "https://github.com/celery/django-celery-beat",
     "stars": 1950,
     "forks": 495,
-    "openIssues": 154,
-    "lastPush": "2026-08-24T17:01:49Z",
+    "openIssues": 157,
+    "lastPush": "2026-08-28T13:46:00Z",
     "language": "Python",
     "role": "owner",
     "contributorRank": 19
@@ -72,7 +72,7 @@
     "stars": 128,
     "forks": 47,
     "openIssues": 14,
-    "lastPush": "2026-08-17T18:41:34Z",
+    "lastPush": "2026-08-28T16:53:09Z",
     "language": "Python",
     "role": "owner",
     "contributorRank": 7
