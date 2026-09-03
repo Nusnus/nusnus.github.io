@@ -4,10 +4,10 @@
     "fullName": "celery/celery",
     "description": "Distributed Task Queue (development branch)",
     "htmlUrl": "https://github.com/celery/celery",
-    "stars": 28852,
+    "stars": 28854,
     "forks": 5145,
-    "openIssues": 745,
-    "lastPush": "2026-09-02T03:04:07Z",
+    "openIssues": 749,
+    "lastPush": "2026-09-03T09:56:50Z",
     "language": "Python",
     "role": "owner",
     "contributorRank": 4
@@ -33,7 +33,7 @@
     "stars": 3138,
     "forks": 1031,
     "openIssues": 216,
-    "lastPush": "2026-09-02T03:44:11Z",
+    "lastPush": "2026-09-03T10:04:43Z",
     "language": "Python",
     "role": "owner",
     "contributorRank": 8
