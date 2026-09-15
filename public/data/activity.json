@@ -1,6 +1,30 @@
 {
   "events": [
     {
+      "id": "21133071042",
+      "type": "PushEvent",
+      "repo": "Nusnus/celery",
+      "title": "Push",
+      "url": "https://github.com/Nusnus/celery",
+      "createdAt": "2026-09-14T20:48:33Z"
+    },
+    {
+      "id": "15024273407",
+      "type": "IssueCommentEvent",
+      "repo": "celery/celery",
+      "title": "Comment: Fix connection leak in the celery_worker pytest fixture",
+      "url": "https://github.com/celery/celery/pull/10512#issuecomment-5670703943",
+      "createdAt": "2026-09-14T20:57:12Z"
+    },
+    {
+      "id": "15000575211",
+      "type": "PullRequestReviewEvent",
+      "repo": "celery/sphinx_celery",
+      "title": "Review: PR",
+      "url": "https://github.com/celery/sphinx_celery",
+      "createdAt": "2026-09-14T14:30:38Z"
+    },
+    {
       "id": "14913584187",
       "type": "PullRequestReviewEvent",
       "repo": "celery/celery",
