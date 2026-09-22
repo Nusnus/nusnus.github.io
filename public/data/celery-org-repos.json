@@ -19,8 +19,8 @@
     "htmlUrl": "https://github.com/celery/django-celery-beat",
     "stars": 1950,
     "forks": 495,
-    "openIssues": 152,
-    "lastPush": "2026-09-16T17:06:19Z",
+    "openIssues": 151,
+    "lastPush": "2026-09-21T17:16:37Z",
     "language": "Python",
     "role": "owner",
     "contributorRank": 19
@@ -45,8 +45,8 @@
     "htmlUrl": "https://github.com/celery/py-amqp",
     "stars": 314,
     "forks": 197,
-    "openIssues": 38,
-    "lastPush": "2026-09-19T08:36:52Z",
+    "openIssues": 37,
+    "lastPush": "2026-09-22T05:47:38Z",
     "language": "Python",
     "role": "owner",
     "contributorRank": 9
@@ -71,8 +71,8 @@
     "htmlUrl": "https://github.com/celery/vine",
     "stars": 127,
     "forks": 48,
-    "openIssues": 8,
-    "lastPush": "2026-09-20T06:36:48Z",
+    "openIssues": 10,
+    "lastPush": "2026-09-21T17:18:25Z",
     "language": "Python",
     "role": "owner",
     "contributorRank": 7
