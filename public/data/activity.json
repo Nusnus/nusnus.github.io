@@ -119,14 +119,6 @@
       "title": "Review: PR",
       "url": "https://github.com/celery/sphinx_celery",
       "createdAt": "2026-09-14T14:30:38Z"
-    },
-    {
-      "id": "14913584187",
-      "type": "PullRequestReviewEvent",
-      "repo": "celery/celery",
-      "title": "Review: PR",
-      "url": "https://github.com/celery/celery",
-      "createdAt": "2026-09-12T14:34:55Z"
     }
   ],
   "todaySummary": {
