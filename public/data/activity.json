@@ -87,14 +87,6 @@
       "title": "PullRequestReviewComment",
       "url": "https://github.com/celery/celery",
       "createdAt": "2026-09-21T17:48:13Z"
-    },
-    {
-      "id": "21249707942",
-      "type": "PushEvent",
-      "repo": "Nusnus/celery",
-      "title": "Push",
-      "url": "https://github.com/Nusnus/celery",
-      "createdAt": "2026-09-15T21:22:44Z"
     }
   ],
   "todaySummary": {
