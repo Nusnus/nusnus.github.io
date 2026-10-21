@@ -6,8 +6,8 @@
     "htmlUrl": "https://github.com/celery/billiard",
     "stars": 434,
     "forks": 272,
-    "openIssues": 83,
-    "lastPush": "2026-10-14T14:07:08Z",
+    "openIssues": 82,
+    "lastPush": "2026-10-20T14:11:13Z",
     "language": "Python",
     "role": "owner",
     "contributorRank": 5
@@ -18,9 +18,9 @@
     "description": "Celery Periodic Tasks backed by the Django ORM",
     "htmlUrl": "https://github.com/celery/django-celery-beat",
     "stars": 1955,
-    "forks": 500,
-    "openIssues": 156,
-    "lastPush": "2026-10-20T04:12:09Z",
+    "forks": 501,
+    "openIssues": 157,
+    "lastPush": "2026-10-20T15:36:37Z",
     "language": "Python",
     "role": "owner",
     "contributorRank": 19
@@ -46,7 +46,7 @@
     "stars": 315,
     "forks": 203,
     "openIssues": 33,
-    "lastPush": "2026-10-15T06:45:06Z",
+    "lastPush": "2026-10-20T14:37:38Z",
     "language": "Python",
     "role": "owner",
     "contributorRank": 9
