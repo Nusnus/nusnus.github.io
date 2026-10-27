@@ -5,7 +5,7 @@
     "description": "Multiprocessing Pool Extensions",
     "htmlUrl": "https://github.com/celery/billiard",
     "stars": 434,
-    "forks": 273,
+    "forks": 272,
     "openIssues": 83,
     "lastPush": "2026-10-20T14:11:13Z",
     "language": "Python",
@@ -20,7 +20,7 @@
     "stars": 1956,
     "forks": 502,
     "openIssues": 157,
-    "lastPush": "2026-10-26T05:57:42Z",
+    "lastPush": "2026-10-26T17:56:49Z",
     "language": "Python",
     "role": "owner",
     "contributorRank": 19
@@ -71,8 +71,8 @@
     "htmlUrl": "https://github.com/celery/vine",
     "stars": 127,
     "forks": 48,
-    "openIssues": 9,
-    "lastPush": "2026-10-19T19:52:40Z",
+    "openIssues": 10,
+    "lastPush": "2026-10-26T16:53:45Z",
     "language": "Python",
     "role": "owner",
     "contributorRank": 7
