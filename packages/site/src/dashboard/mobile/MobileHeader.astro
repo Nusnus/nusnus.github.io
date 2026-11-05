@@ -1,0 +1,40 @@
+---
+/**
+ * @file The mobile header: the bar fixed at the top of the page below the `md`
+ * breakpoint, with Tomer's avatar and name, a theme toggle, and the menu
+ * button that opens the mobile drawer. From `md` up, the sidebar takes its
+ * place.
+ */
+
+import IconButton from "../../design-system/IconButton.astro";
+import { Menu, X } from "../../design-system/icons.ts";
+import Avatar from "../../github-data/slots/Avatar.astro";
+import ThemeToggle from "../../theme/ThemeToggle.astro";
+import Identity from "../Identity.astro";
+import { MobileDrawer } from "./mobile-drawer.ts";
+---
+
+<header
+  class="fixed top-0 right-0 left-0 z-40 flex items-center justify-between border-b border-accent/30 bg-bg-base/95 px-4 py-2.5 pt-[max(0.625rem,env(safe-area-inset-top))] backdrop-blur-sm md:hidden"
+>
+  <Identity placement="header">
+    <div class="size-8">
+      <Avatar />
+    </div>
+  </Identity>
+
+  <div class="flex items-center gap-1">
+    <ThemeToggle />
+    <IconButton
+      aria-controls={MobileDrawer.DRAWER_ID}
+      aria-expanded="false"
+      aria-label="Open navigation menu"
+      class="group hover:text-text-primary"
+      id={MobileDrawer.MENU_BUTTON_ID}
+      type="button"
+    >
+      <Menu className="h-5 w-5 group-aria-expanded:hidden" />
+      <X className="hidden h-5 w-5 group-aria-expanded:block" />
+    </IconButton>
+  </div>
+</header>

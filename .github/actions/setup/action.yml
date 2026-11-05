@@ -1,0 +1,13 @@
+# Installs the runtimes and tools mise.toml pins, at the versions mise.lock
+# records, then the project's packages. Each job that builds or runs the
+# project calls it after checking out the repository. mise-action installs
+# mise's newest release, and mise.toml's min_version refuses one too old to
+# read mise.lock.
+name: Set up
+description: Install the pinned runtimes and tools, then the project's packages.
+runs:
+  using: composite
+  steps:
+    - uses: jdx/mise-action@f5be966e4a917d54244728e6a5fdcd1d93a35e6c # v5.2.6
+    - run: bun install --frozen-lockfile
+      shell: bash

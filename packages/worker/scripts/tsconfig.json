@@ -1,0 +1,7 @@
+{
+  "$schema": "https://www.schemastore.org/tsconfig",
+  // Node runs the recorder, so it type-checks as the repository's scripts do,
+  // against Node's types, not the Workers runtime's.
+  "extends": "../../../tsconfig.node.json",
+  "include": ["."]
+}

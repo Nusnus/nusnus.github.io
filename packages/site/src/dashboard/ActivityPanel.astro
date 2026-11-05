@@ -1,0 +1,30 @@
+---
+/**
+ * @file The activity panel: the dashboard's right column from the `lg`
+ * breakpoint up, scrolling on its own, with the live indicator, when the
+ * page's GitHub data last updated, and the activity feed of Tomer's recent
+ * GitHub events.
+ */
+
+import ActivityFeed from "../github-data/slots/activity/ActivityFeed.astro";
+import LastUpdated from "../github-data/slots/live/LastUpdated.astro";
+import LiveIndicator from "../github-data/slots/live/LiveIndicator.astro";
+---
+
+<aside
+  aria-label="Live activity panel"
+  class="hidden scrollbar-thin overflow-y-auto border-l border-border bg-bg-base px-5 py-6 lg:col-start-3 lg:block"
+>
+  <div class="mb-5 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <h2
+        class="text-sm font-semibold tracking-wider text-text-secondary uppercase"
+      >
+        Live Activity
+      </h2>
+      <LiveIndicator />
+    </div>
+    <LastUpdated />
+  </div>
+  <ActivityFeed />
+</aside>

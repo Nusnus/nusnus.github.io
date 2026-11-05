@@ -1,0 +1,18 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "https://ai-proxy.tomer-nosrati.workers.dev/profile"
+  },
+  "status": 502,
+  "headers": {
+    "access-control-allow-origin": "*",
+    "access-control-expose-headers": "Retry-After",
+    "cache-control": "no-store",
+    "content-type": "application/json",
+    "retry-after": "3599",
+    "worker-version": "0e1f4789-4064-4773-80b2-67a5e0d3f1c2"
+  },
+  "body": {
+    "error": "GitHub data for /profile is unavailable, and the worker has no cached reply to serve: GitHub answered GET /users/Nusnus with 403: {\"message\":\"API rate limit exceeded for 203.0.113.7. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.)\",\"documentation_url\":\"https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting\"}\nGitHub allows requests again at 2026-11-04T08:20:04.000Z.\nThe worker asks GitHub again at 2026-11-04T08:20:04.000Z."
+  }
+}

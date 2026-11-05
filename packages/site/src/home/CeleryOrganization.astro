@@ -1,0 +1,21 @@
+---
+/**
+ * @file The Celery organization section: a card for each tracked repository
+ * that is not featured, in the order the site lists them.
+ */
+
+import TextLink from "../design-system/TextLink.astro";
+import RepositoryCards from "../github-data/slots/repositories/RepositoryCards.astro";
+import { PERSON } from "../person.ts";
+import HomeSection from "./HomeSection.astro";
+import SectionHeading from "./SectionHeading.astro";
+---
+
+<HomeSection id="celery-organization">
+  <SectionHeading density="regular" title="Celery Organization">
+    Additional repositories I contribute to across the{" "}
+    <TextLink href={PERSON.celeryOrganizationUrl}>Celery organization</TextLink>
+  </SectionHeading>
+
+  <RepositoryCards featured={false} />
+</HomeSection>

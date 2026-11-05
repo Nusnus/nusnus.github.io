@@ -1,0 +1,36 @@
+---
+/**
+ * @file The links to the home page's sections, in page order. In the mobile
+ * drawer they are taller, to suit a finger.
+ */
+
+import { tw } from "../design-system/tailwind.ts";
+import { HOME_SECTIONS } from "../home/sections.ts";
+
+interface Props {
+  placement: "drawer" | "sidebar";
+}
+
+const PADDING = {
+  drawer: tw`px-3 py-2`,
+  sidebar: tw`px-3 py-1.5`,
+} as const satisfies Record<Props["placement"], string>;
+
+const { placement } = Astro.props;
+---
+
+<nav aria-label="Page sections" class="flex flex-col gap-1">
+  {
+    HOME_SECTIONS.map(({ id, navLabel }) => (
+      <a
+        class:list={[
+          "rounded-md text-sm text-text-secondary transition-colors duration-100 hover:bg-bg-surface hover:text-accent",
+          PADDING[placement],
+        ]}
+        href={`#${id}`}
+      >
+        {navLabel}
+      </a>
+    ))
+  }
+</nav>

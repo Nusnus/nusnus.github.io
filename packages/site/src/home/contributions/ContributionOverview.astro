@@ -1,0 +1,27 @@
+---
+/**
+ * @file The contribution overview section, "Contributions": the contribution
+ * heatmap, over a faint copy of itself as background texture, the year's
+ * headline counts and the achievements.
+ */
+
+import AchievementGrid from "../../github-data/slots/achievements/AchievementGrid.astro";
+import ContributionCounts from "../../github-data/slots/contributions/ContributionCounts.astro";
+import ContributionHeatmap from "../../github-data/slots/contributions/ContributionHeatmap.astro";
+import HeatmapTexture from "../../github-data/slots/contributions/HeatmapTexture.astro";
+import HomeSection from "../HomeSection.astro";
+import SectionHeading from "../SectionHeading.astro";
+---
+
+<HomeSection class="relative" id="activity">
+  <HeatmapTexture />
+
+  <div class="relative z-10">
+    <SectionHeading density="compact" title="Contributions">
+      Contribution heatmap for the last year
+    </SectionHeading>
+    <ContributionHeatmap class="mb-6" />
+    <ContributionCounts />
+    <AchievementGrid />
+  </div>
+</HomeSection>

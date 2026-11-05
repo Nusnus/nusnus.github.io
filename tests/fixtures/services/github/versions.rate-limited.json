@@ -1,0 +1,32 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "https://api.github.com/versions"
+  },
+  "status": 403,
+  "headers": {
+    "access-control-allow-origin": "*",
+    "access-control-expose-headers": "ETag, Link, Location, Retry-After, X-GitHub-OTP, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, X-RateLimit-Used, X-RateLimit-Resource, X-OAuth-Scopes, X-Accepted-OAuth-Scopes, X-Poll-Interval, X-GitHub-Media-Type, Deprecation, Sunset",
+    "content-security-policy": "default-src 'none'; style-src 'unsafe-inline'",
+    "content-type": "application/json; charset=utf-8",
+    "date": "Wed, 04 Nov 2026 15:49:31 GMT",
+    "referrer-policy": "origin-when-cross-origin, strict-origin-when-cross-origin",
+    "server": "Varnish",
+    "strict-transport-security": "max-age=31536000; includeSubdomains; preload",
+    "x-content-type-options": "nosniff",
+    "x-frame-options": "deny",
+    "x-github-edge-region": "israelcentral",
+    "x-github-media-type": "github.v3; format=json",
+    "x-github-request-id": "E314:2D2FE2:82ADE:CCEF1:6AEB540B",
+    "x-ratelimit-limit": "60",
+    "x-ratelimit-remaining": "0",
+    "x-ratelimit-reset": "1793808009",
+    "x-ratelimit-resource": "core",
+    "x-ratelimit-used": "60",
+    "x-xss-protection": "1; mode=block"
+  },
+  "body": {
+    "message": "API rate limit exceeded for 203.0.113.7. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.)",
+    "documentation_url": "https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting"
+  }
+}

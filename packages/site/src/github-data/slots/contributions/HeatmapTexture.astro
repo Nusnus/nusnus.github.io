@@ -1,0 +1,19 @@
+---
+/**
+ * @file Data slot: a faint, still copy of the contribution heatmap, from the
+ * baked data, laid over its section as background texture and hidden from
+ * screen readers and the pointer.
+ */
+
+import { ContributionHeatmap } from "../../contributions/ContributionHeatmap.tsx";
+import { pageStore } from "../../live/page-store.ts";
+---
+
+<div
+  aria-hidden="true"
+  class="pointer-events-none absolute inset-0 overflow-hidden opacity-[0.06]"
+>
+  <ContributionHeatmap
+    graph={pageStore().readInitial().snapshot.contributionGraph.data}
+  />
+</div>

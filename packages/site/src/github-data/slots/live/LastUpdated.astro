@@ -1,0 +1,12 @@
+---
+/**
+ * @file Data slot: the activity panel's note of how fresh its data is, at the
+ * right of its header: when the oldest of the data was fetched from GitHub.
+ */
+
+import LiveText from "../../live/LiveText.astro";
+---
+
+<span class="text-xs text-text-muted">
+  Updated <LiveText name="lastUpdated" />
+</span>

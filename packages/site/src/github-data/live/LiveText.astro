@@ -1,0 +1,27 @@
+---
+/**
+ * @file A live text: a value from GitHub data, rendered from the baked data and
+ * named by its `data-live` attributes, so the live refresh can rewrite it, and
+ * flashed each time the live refresh marks it refreshed.
+ */
+
+import { tw } from "../../design-system/tailwind.ts";
+import {
+  type LiveText,
+  liveTextAttributes,
+  renderLiveText,
+} from "./live-text.ts";
+import { pageStore } from "./page-store.ts";
+
+type Props = LiveText & { class?: string };
+
+// A motion-safe animation, which `design-system.css` defines, from a blur to
+// the accent colour, while live-text.ts marks the text refreshed.
+const FLASH_CLASS = tw`motion-safe:data-refreshed:animate-data-refresh`;
+
+const { class: className, ...text } = Astro.props;
+---
+
+<span class:list={[className, FLASH_CLASS]} {...liveTextAttributes(text)}
+  >{renderLiveText(text, pageStore().readInitial())}</span
+>

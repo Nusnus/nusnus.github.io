@@ -1,0 +1,29 @@
+---
+/**
+ * @file An article's card: the whole card links to the article, as
+ * `articleHref` decides, and shows a badge, the article's title and its
+ * description, above what the slot holds, such as its date.
+ */
+
+import Badge from "../../design-system/Badge.astro";
+import Card from "../../design-system/Card.astro";
+import { type Article, articleHref } from "./article.ts";
+
+interface Props {
+  article: Article;
+  badge: string;
+}
+
+const { article, badge } = Astro.props;
+---
+
+<Card href={articleHref(article)} label={`Read ${article.data.title}`}>
+  <Badge class="mb-3">{badge}</Badge>
+  <h3 class="mb-2 text-base font-semibold text-text-primary">
+    {article.data.title}
+  </h3>
+  <p class="mb-3 text-sm text-text-secondary">
+    {article.data.description}
+  </p>
+  <slot />
+</Card>

@@ -1,0 +1,18 @@
+---
+/**
+ * @file The featured repositories section, "Active Projects": a card for each
+ * featured tracked repository, in the order the site lists them.
+ */
+
+import RepositoryCards from "../github-data/slots/repositories/RepositoryCards.astro";
+import HomeSection from "./HomeSection.astro";
+import SectionHeading from "./SectionHeading.astro";
+---
+
+<HomeSection id="projects">
+  <SectionHeading density="regular" title="Active Projects">
+    Open source projects I maintain and contribute to
+  </SectionHeading>
+
+  <RepositoryCards featured />
+</HomeSection>

@@ -1,0 +1,24 @@
+# The runtimes and tools the project's scripts, checks, docs and workflows
+# run, on every machine and CI job: `mise install` installs them. Each is
+# pinned exactly, since mise has no "this release or newer" range, and
+# Renovate proposes each newer release. mise.lock records each download's URL
+# and checksum.
+
+# The oldest mise release that reads mise.lock; raise it when a newer mise
+# writes the lock in a format older ones cannot read.
+min_version = "2026.11.0"
+
+[tools]
+actionlint = "1.7.12"
+bun = "1.4.4"
+gh = "2.103.3"
+jq = "1.8.2"
+node = "26.13.0"
+shellcheck = "0.11.0"
+zizmor = "1.32.0"
+
+[settings]
+# Each install takes the URL and checksum mise.lock records, and fails for a
+# tool the lock lacks instead of resolving it anew:
+# https://mise.jdx.dev/dev-tools/mise-lock.html
+locked = true

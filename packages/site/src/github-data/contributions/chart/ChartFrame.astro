@@ -1,0 +1,25 @@
+---
+/**
+ * @file The frame a chart sits in: a faint surface with a faint ring, under
+ * an optional caption; the chart goes in the slot.
+ */
+
+import { Caption } from "../../../design-system/Caption.tsx";
+
+interface Props {
+  caption?: string;
+  class?: string;
+}
+
+const { caption, class: className } = Astro.props;
+---
+
+<div
+  class:list={[
+    "rounded-xl bg-bg-surface/50 p-4 ring-1 ring-border/50",
+    className,
+  ]}
+>
+  {caption !== undefined && <Caption className="mb-3">{caption}</Caption>}
+  <slot />
+</div>

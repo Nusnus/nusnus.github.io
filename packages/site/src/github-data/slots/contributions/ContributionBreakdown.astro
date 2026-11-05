@@ -1,0 +1,27 @@
+---
+/**
+ * @file Data slot: the sidebar's grid of this year's commits, pull requests,
+ * reviews and issues.
+ */
+
+import type { PageTextName } from "../../live/live-text.ts";
+
+import LiveText from "../../live/LiveText.astro";
+
+const COUNTS = [
+  { label: "commits", name: "totalCommits" },
+  { label: "PRs", name: "totalPullRequests" },
+  { label: "reviews", name: "totalReviews" },
+  { label: "issues", name: "totalIssues" },
+] as const satisfies readonly { label: string; name: PageTextName }[];
+---
+
+<div class="mb-4 grid grid-cols-2 gap-x-3 gap-y-1.5">
+  {
+    COUNTS.map(({ label, name }) => (
+      <p class="font-mono text-xs text-text-secondary">
+        <LiveText class="font-medium text-text-primary" name={name} /> {label}
+      </p>
+    ))
+  }
+</div>

@@ -1,0 +1,51 @@
+---
+/**
+ * @file The Writing section: a card for each article, newest first, that opens
+ * its page here where it has one, else LinkedIn, and links to LinkedIn, where
+ * each first appeared; then a call to follow Tomer there.
+ */
+
+import { ArrowRight } from "../design-system/icons.ts";
+import { linkTarget } from "../design-system/link-target.ts";
+import TextLink from "../design-system/TextLink.astro";
+import { PERSON } from "../person.ts";
+import ArticleCard from "../writing/articles/ArticleCard.astro";
+import { loadArticles } from "../writing/articles/collection.ts";
+import PublishedDate from "../writing/articles/PublishedDate.astro";
+import { WRITING } from "../writing/writing.ts";
+import HomeSection from "./HomeSection.astro";
+import SectionHeading from "./SectionHeading.astro";
+
+const articles = await loadArticles();
+---
+
+<HomeSection id="writing">
+  <SectionHeading badge="Soon" density="regular" title="Writing">
+    {WRITING.summary}
+  </SectionHeading>
+
+  <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+    {
+      articles.map((article) => (
+        <ArticleCard article={article} badge="Published on LinkedIn">
+          <div class="flex items-center justify-between text-xs text-text-muted">
+            <PublishedDate article={article} />
+            <a
+              class="relative z-10 inline-flex items-center gap-1 text-accent hover:underline"
+              href={article.data.linkedinUrl}
+              {...linkTarget(article.data.linkedinUrl)}
+            >
+              Read on LinkedIn
+              <ArrowRight className="h-3 w-3" />
+            </a>
+          </div>
+        </ArticleCard>
+      ))
+    }
+  </div>
+
+  <p class="mt-6 text-sm text-text-muted">
+    More writing coming soon. Follow on{" "}
+    <TextLink href={PERSON.linkedinUrl}>LinkedIn</TextLink> for updates.
+  </p>
+</HomeSection>

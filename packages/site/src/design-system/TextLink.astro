@@ -1,0 +1,22 @@
+---
+/**
+ * @file A link inside a run of text, such as a sentence's link to LinkedIn: in
+ * the accent colour and underlined, since a link inside text needs more than
+ * its colour to stand out, as axe's link-in-text-block rule asks:
+ * https://dequeuniversity.com/rules/axe/4.14/link-in-text-block
+ */
+
+import { linkTarget } from "./link-target.ts";
+
+interface Props {
+  href: string;
+}
+
+const { href } = Astro.props;
+---
+
+<a
+  class="text-accent underline underline-offset-2"
+  href={href}
+  {...linkTarget(href)}><slot /></a
+>

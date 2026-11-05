@@ -1,0 +1,29 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "https://api.github.com/versions"
+  },
+  "status": 401,
+  "headers": {
+    "access-control-allow-origin": "*",
+    "access-control-expose-headers": "ETag, Link, Location, Retry-After, X-GitHub-OTP, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Used, X-RateLimit-Resource, X-RateLimit-Reset, X-OAuth-Scopes, X-Accepted-OAuth-Scopes, X-Poll-Interval, X-GitHub-Media-Type, X-GitHub-SSO, X-GitHub-Request-Id, X-GitHub-Edge-Region, Deprecation, Sunset",
+    "content-security-policy": "default-src 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "date": "Wed, 04 Nov 2026 08:29:32 GMT",
+    "referrer-policy": "origin-when-cross-origin, strict-origin-when-cross-origin",
+    "server": "github.com",
+    "strict-transport-security": "max-age=31536000; includeSubdomains; preload",
+    "vary": "Accept-Encoding, Accept, X-Requested-With",
+    "x-content-type-options": "nosniff",
+    "x-frame-options": "deny",
+    "x-github-edge-region": "israelcentral",
+    "x-github-media-type": "github.v3; format=json",
+    "x-github-request-id": "D844:312023:507E90:87CD29:6AEAECEC",
+    "x-xss-protection": "0"
+  },
+  "body": {
+    "message": "Bad credentials",
+    "documentation_url": "https://docs.github.com/rest",
+    "status": "401"
+  }
+}

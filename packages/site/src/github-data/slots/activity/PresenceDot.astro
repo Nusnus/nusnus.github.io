@@ -1,0 +1,14 @@
+---
+/**
+ * @file Data slot: the dot on the sidebar avatar that shows how recently Tomer
+ * was active on GitHub; the sidebar positions it at the avatar's corner.
+ */
+
+import PresenceDot from "../../activity/presence/PresenceDot.tsx";
+---
+
+{
+  /* Beside the avatar, the first thing the sidebar shows, so it hydrates at
+  once, unlike the slots below the fold, which wait until visible. */
+}
+<PresenceDot client:load />

@@ -1,0 +1,96 @@
+---
+/**
+ * @file The Collaborations section: a card for each recognition or partnership
+ * Tomer has had, naming its partner and linking to it and, where there is one,
+ * to its post on X.
+ */
+
+import BrandIcon from "../design-system/BrandIcon.astro";
+import Card from "../design-system/Card.astro";
+import { ExternalLink } from "../design-system/icons.ts";
+import { linkTarget } from "../design-system/link-target.ts";
+import HomeSection from "./HomeSection.astro";
+import SectionHeading from "./SectionHeading.astro";
+
+/** A recognition or partnership, with the organization it was with. */
+interface Collaboration {
+  readonly description: string;
+  readonly partner: string;
+  readonly title: string;
+  readonly url: string;
+  readonly xUrl?: string;
+}
+
+const COLLABORATIONS: readonly Collaboration[] = [
+  {
+    description:
+      "One of 20+ open-source maintainers who built FrontierCode, Cognition's benchmark for code mergeability, crafting eval tasks from the repos they maintain. “Where others grade like a CI, FrontierCode grades like a tech lead.”",
+    partner: "Cognition AI",
+    title: "FrontierCode Benchmark",
+    url: "https://cognition.ai/blog/frontier-code",
+    xUrl: "https://x.com/cognition/status/2064061031912288715",
+  },
+  {
+    description:
+      "Highlighted for outsized contributions to data & tooling as a member of the contractor team.",
+    partner: "Cognition AI",
+    title: "SWE-1.6 Extra Credit",
+    url: "https://cognition.ai/blog/swe-1-6-preview",
+  },
+  {
+    description:
+      "Celery CI/CD infrastructure powered by Blacksmith for faster, more reliable builds.",
+    partner: "Blacksmith",
+    title: "Celery: Now Powered By Blacksmith",
+    url: "https://www.blacksmith.sh/customer-stories/celery",
+  },
+  {
+    description:
+      "Comprehensive AI-generated documentation and knowledge base for the Celery ecosystem.",
+    partner: "Devin AI",
+    title: "Celery DeepWiki",
+    url: "https://deepwiki.com/celery/celery",
+    xUrl: "https://x.com/smilingnosrati/status/1920104278116696513",
+  },
+];
+---
+
+<HomeSection id="collaborations">
+  <SectionHeading density="regular" title="Collaborations">
+    Recognition and partnerships across the ecosystem
+  </SectionHeading>
+
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+    {
+      COLLABORATIONS.map(({ description, partner, title, url, xUrl }) => (
+        <Card>
+          <h3 class="mb-1 text-base font-semibold text-text-primary">
+            {partner}
+          </h3>
+          <p class="mb-3 text-sm font-medium text-accent">{title}</p>
+          <p class="mb-4 text-sm text-text-secondary">{description}</p>
+          <div class="flex items-center gap-4">
+            <a
+              class="inline-flex items-center gap-1 text-xs text-accent"
+              href={url}
+              {...linkTarget(url)}
+            >
+              Visit
+              <ExternalLink className="h-3 w-3" />
+            </a>
+            {xUrl !== undefined && (
+              <a
+                class="inline-flex items-center gap-1 text-xs text-text-muted transition-colors hover:text-text-primary"
+                href={xUrl}
+                {...linkTarget(xUrl)}
+              >
+                <BrandIcon brand="x" class="h-3 w-3" />
+                Post
+              </a>
+            )}
+          </div>
+        </Card>
+      ))
+    }
+  </div>
+</HomeSection>

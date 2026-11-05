@@ -1,0 +1,30 @@
+---
+/** @file Icon links to Tomer's accounts and email, below a divider. */
+
+import BrandIcon from "../design-system/BrandIcon.astro";
+import IconButton from "../design-system/IconButton.astro";
+import { PERSON } from "../person.ts";
+
+// The sidebar's own list, email included: its order and labels are the live
+// site's here, which differ from the hero's.
+const SOCIAL_LINKS = [
+  { brand: "github", href: PERSON.githubUrl, label: "GitHub" },
+  { brand: "linkedin", href: PERSON.linkedinUrl, label: "LinkedIn" },
+  { brand: "x", href: PERSON.xUrl, label: "X / Twitter" },
+  { brand: "email", href: PERSON.emailUrl, label: "Email" },
+] as const;
+---
+
+<div class="flex items-center gap-3 border-t border-border pt-4">
+  {
+    SOCIAL_LINKS.map(({ brand, href, label }) => (
+      <IconButton
+        aria-label={label}
+        class="duration-100 hover:text-accent"
+        href={href}
+      >
+        <BrandIcon brand={brand} class="h-5 w-5" />
+      </IconButton>
+    ))
+  }
+</div>

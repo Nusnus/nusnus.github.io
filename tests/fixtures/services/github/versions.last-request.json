@@ -1,0 +1,34 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "https://api.github.com/versions"
+  },
+  "status": 200,
+  "headers": {
+    "accept-ranges": "bytes",
+    "access-control-allow-origin": "*",
+    "access-control-expose-headers": "ETag, Link, Location, Retry-After, X-GitHub-OTP, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Used, X-RateLimit-Resource, X-RateLimit-Reset, X-OAuth-Scopes, X-Accepted-OAuth-Scopes, X-Poll-Interval, X-GitHub-Media-Type, X-GitHub-SSO, X-GitHub-Request-Id, Deprecation, Sunset, Warning",
+    "cache-control": "public, max-age=60, s-maxage=60",
+    "content-security-policy": "default-src 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "date": "Wed, 04 Nov 2026 17:06:22 GMT",
+    "etag": "W/\"d2c8ef1e6cae9e56626dc6286d79ac1ded684217561cb6eee27f48a834160dc3\"",
+    "referrer-policy": "origin-when-cross-origin, strict-origin-when-cross-origin",
+    "server": "github.com",
+    "strict-transport-security": "max-age=31536000; includeSubdomains; preload",
+    "vary": "Accept,Accept-Encoding, Accept, X-Requested-With",
+    "x-content-type-options": "nosniff",
+    "x-frame-options": "deny",
+    "x-github-api-version-selected": "2022-11-28",
+    "x-github-edge-region": "israelcentral",
+    "x-github-media-type": "github.v3; format=json",
+    "x-github-request-id": "C6B2:AACBF:16D989:24447F:6AEB6612",
+    "x-ratelimit-limit": "60",
+    "x-ratelimit-remaining": "0",
+    "x-ratelimit-reset": "1793815582",
+    "x-ratelimit-resource": "core",
+    "x-ratelimit-used": "60",
+    "x-xss-protection": "0"
+  },
+  "body": ["2026-03-10", "2022-11-28"]
+}

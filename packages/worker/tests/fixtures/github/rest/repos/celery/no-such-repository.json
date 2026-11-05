@@ -1,0 +1,38 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "https://api.github.com/repos/celery/no-such-repository"
+  },
+  "status": 404,
+  "headers": {
+    "access-control-allow-origin": "*",
+    "access-control-expose-headers": "ETag, Link, Location, Retry-After, X-GitHub-OTP, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Used, X-RateLimit-Resource, X-RateLimit-Reset, X-OAuth-Scopes, X-Accepted-OAuth-Scopes, X-Poll-Interval, X-GitHub-Media-Type, X-GitHub-SSO, X-GitHub-Request-Id, Deprecation, Sunset, Warning",
+    "content-security-policy": "default-src 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "date": "Wed, 04 Nov 2026 07:20:00 GMT",
+    "referrer-policy": "origin-when-cross-origin, strict-origin-when-cross-origin",
+    "server": "github.com",
+    "strict-transport-security": "max-age=31536000; includeSubdomains; preload",
+    "vary": "Accept-Encoding, Accept, X-Requested-With",
+    "x-accepted-oauth-scopes": "repo",
+    "x-content-type-options": "nosniff",
+    "x-frame-options": "deny",
+    "x-github-api-version-selected": "2026-03-10",
+    "x-github-edge-region": "israelcentral",
+    "x-github-media-type": "github.v3; format=json",
+    "x-github-request-id": "C47D:26EF17:41D215:7140D8:6AEADC9F",
+    "x-oauth-client-id": "178c6fc778ccc68e1d6a",
+    "x-oauth-scopes": "gist, read:org, repo",
+    "x-ratelimit-limit": "5000",
+    "x-ratelimit-remaining": "4973",
+    "x-ratelimit-reset": "1793780395",
+    "x-ratelimit-resource": "core",
+    "x-ratelimit-used": "27",
+    "x-xss-protection": "0"
+  },
+  "body": {
+    "message": "Not Found",
+    "documentation_url": "https://docs.github.com/rest/repos/repos#get-a-repository",
+    "status": "404"
+  }
+}

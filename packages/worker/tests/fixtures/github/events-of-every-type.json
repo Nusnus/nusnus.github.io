@@ -1,0 +1,1832 @@
+[
+  {
+    "id": "19009711878",
+    "type": "CommitCommentEvent",
+    "actor": {
+      "id": 35613825,
+      "login": "vercel[bot]",
+      "display_login": "vercel",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/vercel[bot]",
+      "avatar_url": "https://avatars.githubusercontent.com/u/35613825?"
+    },
+    "repo": {
+      "id": 1300021336,
+      "name": "matheusmachadoemp-bit/Portal",
+      "url": "https://api.github.com/repos/matheusmachadoemp-bit/Portal"
+    },
+    "payload": {
+      "action": "created",
+      "comment": {
+        "url": "https://api.github.com/repos/matheusmachadoemp-bit/Portal/comments/207944546",
+        "html_url": "https://github.com/matheusmachadoemp-bit/Portal/commit/339614da930b56d482fbf601a4faf43fe165c9fc#commitcomment-207944546",
+        "id": 207944546,
+        "node_id": "CC_kwDOTXzAWM4MZPti",
+        "user": {
+          "login": "vercel[bot]",
+          "id": 35613825,
+          "node_id": "MDM6Qm90MzU2MTM4MjU=",
+          "avatar_url": "https://avatars.githubusercontent.com/in/8329?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/vercel%5Bbot%5D",
+          "html_url": "https://github.com/apps/vercel",
+          "followers_url": "https://api.github.com/users/vercel%5Bbot%5D/followers",
+          "following_url": "https://api.github.com/users/vercel%5Bbot%5D/following{/other_user}",
+          "gists_url": "https://api.github.com/users/vercel%5Bbot%5D/gists{/gist_id}",
+          "starred_url": "https://api.github.com/users/vercel%5Bbot%5D/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/vercel%5Bbot%5D/subscriptions",
+          "organizations_url": "https://api.github.com/users/vercel%5Bbot%5D/orgs",
+          "repos_url": "https://api.github.com/users/vercel%5Bbot%5D/repos",
+          "events_url": "https://api.github.com/users/vercel%5Bbot%5D/events{/privacy}",
+          "received_events_url": "https://api.github.com/users/vercel%5Bbot%5D/received_events",
+          "type": "Bot",
+          "user_view_type": "public",
+          "site_admin": false
+        },
+        "position": null,
+        "line": null,
+        "path": null,
+        "commit_id": "339614da930b56d482fbf601a4faf43fe165c9fc",
+        "created_at": "2026-11-03T15:01:08Z",
+        "updated_at": "2026-11-03T15:01:08Z",
+        "body": "Successfully deployed to the following URLs:\n\n## portal \u2013 ./\n\n[www.portalnord.com.br](https://www.portalnord.com.br)  \n[portal-lovat-zeta.vercel.app](https://portal-lovat-zeta.vercel.app)  \n[portalnord.com.br](https://portalnord.com.br)  \n[portal-nordportal.vercel.app](https://portal-nordportal.vercel.app)  \n[portal-git-claude-portal-nord-pizzaria-j180q7-nordportal.vercel.app](https://portal-git-claude-portal-nord-pizzaria-j180q7-nordportal.vercel.app)",
+        "reactions": {
+          "url": "https://api.github.com/repos/matheusmachadoemp-bit/Portal/comments/207944546/reactions",
+          "total_count": 0,
+          "+1": 0,
+          "-1": 0,
+          "laugh": 0,
+          "hooray": 0,
+          "confused": 0,
+          "heart": 0,
+          "rocket": 0,
+          "eyes": 0
+        }
+      }
+    },
+    "public": true,
+    "created_at": "2026-11-03T15:01:08Z"
+  },
+  {
+    "id": "26092827554",
+    "type": "CreateEvent",
+    "actor": {
+      "id": 6212603,
+      "login": "auvipy",
+      "display_login": "auvipy",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/auvipy",
+      "avatar_url": "https://avatars.githubusercontent.com/u/6212603?"
+    },
+    "repo": {
+      "id": 5152372,
+      "name": "celery/py-amqp",
+      "url": "https://api.github.com/repos/celery/py-amqp"
+    },
+    "payload": {
+      "ref": "rel452",
+      "ref_type": "branch",
+      "full_ref": "refs/heads/rel452",
+      "master_branch": "main",
+      "description": "amqplib fork",
+      "pusher_type": "user"
+    },
+    "public": true,
+    "created_at": "2026-11-02T10:23:34Z",
+    "org": {
+      "id": 319983,
+      "login": "celery",
+      "gravatar_id": "",
+      "url": "https://api.github.com/orgs/celery",
+      "avatar_url": "https://avatars.githubusercontent.com/u/319983?"
+    }
+  },
+  {
+    "id": "26088895653",
+    "type": "DeleteEvent",
+    "actor": {
+      "id": 6212603,
+      "login": "auvipy",
+      "display_login": "auvipy",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/auvipy",
+      "avatar_url": "https://avatars.githubusercontent.com/u/6212603?"
+    },
+    "repo": {
+      "id": 735498,
+      "name": "celery/kombu",
+      "url": "https://api.github.com/repos/celery/kombu"
+    },
+    "payload": {
+      "ref": "kombup",
+      "ref_type": "branch",
+      "full_ref": "refs/heads/kombup",
+      "pusher_type": "user"
+    },
+    "public": true,
+    "created_at": "2026-11-02T14:03:03Z",
+    "org": {
+      "id": 319983,
+      "login": "celery",
+      "gravatar_id": "",
+      "url": "https://api.github.com/orgs/celery",
+      "avatar_url": "https://avatars.githubusercontent.com/u/319983?"
+    }
+  },
+  {
+    "id": "19012746022",
+    "type": "DiscussionEvent",
+    "actor": {
+      "id": 41898282,
+      "login": "github-actions[bot]",
+      "display_login": "github-actions",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/github-actions[bot]",
+      "avatar_url": "https://avatars.githubusercontent.com/u/41898282?"
+    },
+    "repo": {
+      "id": 1036865607,
+      "name": "github/gh-aw",
+      "url": "https://api.github.com/repos/github/gh-aw"
+    },
+    "payload": {
+      "action": "created",
+      "discussion": {
+        "repository_url": "https://api.github.com/repos/github/gh-aw",
+        "category": {
+          "id": 46258093,
+          "node_id": "DIC_kwDOPc1QR84Cwdet",
+          "repository_id": 1036865607,
+          "emoji": ":military_helmet:",
+          "name": "Audits",
+          "description": "",
+          "created_at": "2025-10-09T18:16:44.000-10:00",
+          "updated_at": "2025-10-10T14:48:05.000-10:00",
+          "slug": "audits",
+          "is_answerable": false
+        },
+        "answer_html_url": null,
+        "answer_chosen_at": null,
+        "answer_chosen_by": null,
+        "html_url": "https://github.com/github/gh-aw/discussions/74549",
+        "id": 11216692,
+        "node_id": "D_kwDOPc1QR84Aqyc0",
+        "number": 74549,
+        "title": "[uk ai resilience] [uk-ai-resilience] Recent-change risk & resilience report 2026-11-03",
+        "user": {
+          "login": "github-actions[bot]",
+          "id": 41898282,
+          "node_id": "MDM6Qm90NDE4OTgyODI=",
+          "avatar_url": "https://avatars.githubusercontent.com/in/15368?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/github-actions%5Bbot%5D",
+          "html_url": "https://github.com/apps/github-actions",
+          "followers_url": "https://api.github.com/users/github-actions%5Bbot%5D/followers",
+          "following_url": "https://api.github.com/users/github-actions%5Bbot%5D/following{/other_user}",
+          "gists_url": "https://api.github.com/users/github-actions%5Bbot%5D/gists{/gist_id}",
+          "starred_url": "https://api.github.com/users/github-actions%5Bbot%5D/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/github-actions%5Bbot%5D/subscriptions",
+          "organizations_url": "https://api.github.com/users/github-actions%5Bbot%5D/orgs",
+          "repos_url": "https://api.github.com/users/github-actions%5Bbot%5D/repos",
+          "events_url": "https://api.github.com/users/github-actions%5Bbot%5D/events{/privacy}",
+          "received_events_url": "https://api.github.com/users/github-actions%5Bbot%5D/received_events",
+          "type": "Bot",
+          "user_view_type": "public",
+          "site_admin": false
+        },
+        "labels": [],
+        "state": "open",
+        "state_reason": null,
+        "locked": false,
+        "comments": 0,
+        "created_at": "2026-11-03T15:31:36Z",
+        "updated_at": "2026-11-03T15:31:36Z",
+        "active_lock_reason": null,
+        "body": "### Executive summary\n\n7-day window (since 2026-10-27): 226 commits, 130 security-signal commits, 51 open security issues, 5 open code-scanning alerts, 0 secret-scanning alerts. Highest-risk areas: compiler run-step sanitizer (CWE-78), safe-output label validator (CWE-180 blocked-label bypass), log ZIP extraction (CWE-409). Two Tier C issues are filed. Sub-agents were not dispatched; scoring is direct analysis with moderate confidence.\n\n<details><summary><b>Asset graph summary</b></summary>\n\n- Compiler: `pkg/workflow/run_step_sanitizer.go`\n- Safe outputs runtime: `actions/setup/js/safe_output_validator.cjs`, `add_labels.cjs`\n- CLI: `pkg/cli/logs_download_zip.go`\n- Test scripts: `scripts/pr-sous-chef.test.mjs` (alerts 1063/1064, test-only)\n- Ownership: CODEOWNERS not reviewed this run.\n\n</details>\n\n<details><summary><b>Tier classification and risk scoring</b></summary>\n\n| Area | Alert | Tier | Exposure | Patchability | Detectability | Fragility | Ownership conf. | Priority |\n|---|---|---|---|---|---|---|---|---|\n| run_step_sanitizer.go | #1060 CWE-78 high | C | high | high | low | high | medium | critical |\n| safe_output_validator.cjs | #1061 CWE-180 medium | C | high | high | low | medium | medium | high |\n| logs_download_zip.go | #1062 CWE-409 medium | B | medium | high | medium | low | medium | medium |\n| pr-sous-chef.test.mjs | #1063/#1064 | B (test-only) | low | high | high | low | medium | low |\n\n</details>\n\n### Control verification gaps\n\n- Template-injection validator permits expressions in heredoc bodies/comments.\n- Blocked-label control validates before canonicalisation.\n- No cumulative size/entry limit on ZIP extraction.\n- Container-scan workflow operational failures; many CVE burn-down issues open.\n\n### Remediation queue\n\n| Item | SLA |\n|---|---|\n| #1060 sanitizer heredoc/comment expressions | critical |\n| #1061 re-check blocked labels after sanitisation | high |\n| #1062 total-size and entry cap on ZIP | medium |\n| #1063/#1064 test regex cleanup | low |\n\n### Exception register\n\nNone.\n\n### Operational metrics baseline\n\n- MTTR proxy: alerts 1060-1064 opened within last 24h; 51 open security issues.\n- Ownership coverage: not measured.\n- Unsupported dependency ratio: not measured.\n- Exception aging: 0.\n- Exposure without recovery capability: none identified.\n\n\n<!-- gh-aw-tracker-id: uk-ai-operational-resilience -->\n\n> Generated by [UK AI Operational Resilience](https://github.com/github/gh-aw/actions/runs/41663758264) \u00b7 copilot \u00b7 auto \u00b7 \\~20 AIC \u00b7 \u2316 \\~1 AIC \u00b7 \u229e 8.7K \u00b7 [\u25f7](https://github.com/search?q=repo%3Agithub%2Fgh-aw+%22gh-aw-workflow-call-id%3A+github%2Fgh-aw%2Fuk-ai-operational-resilience%22&type=discussions)\n> - [x] expires <!-- gh-aw-expires: 2026-11-06T15:31:35.597Z --> on Nov 6, 2026, 7:31 AM UTC-08:00\n\n\n\n<!-- gh-aw-workflow-id: uk-ai-operational-resilience -->\n<!-- gh-aw-workflow-call-id: github/gh-aw/uk-ai-operational-resilience -->\n\n<!-- gh-aw-agentic-workflow: UK AI Operational Resilience, gh-aw-tracker-id: uk-ai-operational-resilience, engine: copilot, model: auto, id: 41663758264, workflow_id: uk-ai-operational-resilience, run: https://github.com/github/gh-aw/actions/runs/41663758264 -->\n<!-- gh-aw-execution: {\"version\":1,\"repo_id\":\"1036865607\",\"repository\":\"github/gh\\u002daw\",\"aw_workflow_id\":\"uk\\u002dai\\u002doperational\\u002dresilience\",\"run_id\":\"41663758264\",\"run_attempt\":\"1\",\"run_url\":\"https://github.com/github/gh\\u002daw/actions/runs/41663758264\",\"publishing_job\":{\"key\":\"safe_outputs\",\"check_run_id\":\"126016888069\"}} -->",
+        "reactions": {
+          "url": "https://api.github.com/repos/github/gh-aw/discussions/74549/reactions",
+          "total_count": 0,
+          "+1": 0,
+          "-1": 0,
+          "laugh": 0,
+          "hooray": 0,
+          "confused": 0,
+          "heart": 0,
+          "rocket": 0,
+          "eyes": 0
+        },
+        "timeline_url": "https://api.github.com/repos/github/gh-aw/discussions/74549/timeline"
+      }
+    },
+    "public": true,
+    "created_at": "2026-11-03T15:31:36Z",
+    "org": {
+      "id": 9919,
+      "login": "github",
+      "gravatar_id": "",
+      "url": "https://api.github.com/orgs/github",
+      "avatar_url": "https://avatars.githubusercontent.com/u/9919?"
+    }
+  },
+  {
+    "id": "19026064367",
+    "type": "ForkEvent",
+    "actor": {
+      "id": 163747435,
+      "login": "its-amann",
+      "display_login": "its-amann",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/its-amann",
+      "avatar_url": "https://avatars.githubusercontent.com/u/163747435?"
+    },
+    "repo": {
+      "id": 735498,
+      "name": "celery/kombu",
+      "url": "https://api.github.com/repos/celery/kombu"
+    },
+    "payload": {
+      "action": "forked",
+      "forkee": {
+        "id": 1444636640,
+        "node_id": "R_kgDOVhtn4A",
+        "name": "kombu",
+        "full_name": "its-amann/kombu",
+        "private": false,
+        "owner": {
+          "login": "its-amann",
+          "id": 163747435,
+          "node_id": "U_kgDOCcKWaw",
+          "avatar_url": "https://avatars.githubusercontent.com/u/163747435?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/its-amann",
+          "html_url": "https://github.com/its-amann",
+          "followers_url": "https://api.github.com/users/its-amann/followers",
+          "following_url": "https://api.github.com/users/its-amann/following{/other_user}",
+          "gists_url": "https://api.github.com/users/its-amann/gists{/gist_id}",
+          "starred_url": "https://api.github.com/users/its-amann/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/its-amann/subscriptions",
+          "organizations_url": "https://api.github.com/users/its-amann/orgs",
+          "repos_url": "https://api.github.com/users/its-amann/repos",
+          "events_url": "https://api.github.com/users/its-amann/events{/privacy}",
+          "received_events_url": "https://api.github.com/users/its-amann/received_events",
+          "type": "User",
+          "user_view_type": "public",
+          "site_admin": false
+        },
+        "html_url": "https://github.com/its-amann/kombu",
+        "description": "Messaging library for Python.",
+        "fork": true,
+        "url": "https://api.github.com/repos/its-amann/kombu",
+        "forks_url": "https://api.github.com/repos/its-amann/kombu/forks",
+        "keys_url": "https://api.github.com/repos/its-amann/kombu/keys{/key_id}",
+        "collaborators_url": "https://api.github.com/repos/its-amann/kombu/collaborators{/collaborator}",
+        "teams_url": "https://api.github.com/repos/its-amann/kombu/teams",
+        "hooks_url": "https://api.github.com/repos/its-amann/kombu/hooks",
+        "issue_events_url": "https://api.github.com/repos/its-amann/kombu/issues/events{/number}",
+        "events_url": "https://api.github.com/repos/its-amann/kombu/events",
+        "assignees_url": "https://api.github.com/repos/its-amann/kombu/assignees{/user}",
+        "branches_url": "https://api.github.com/repos/its-amann/kombu/branches{/branch}",
+        "tags_url": "https://api.github.com/repos/its-amann/kombu/tags",
+        "blobs_url": "https://api.github.com/repos/its-amann/kombu/git/blobs{/sha}",
+        "git_tags_url": "https://api.github.com/repos/its-amann/kombu/git/tags{/sha}",
+        "git_refs_url": "https://api.github.com/repos/its-amann/kombu/git/refs{/sha}",
+        "trees_url": "https://api.github.com/repos/its-amann/kombu/git/trees{/sha}",
+        "statuses_url": "https://api.github.com/repos/its-amann/kombu/statuses/{sha}",
+        "languages_url": "https://api.github.com/repos/its-amann/kombu/languages",
+        "stargazers_url": "https://api.github.com/repos/its-amann/kombu/stargazers",
+        "contributors_url": "https://api.github.com/repos/its-amann/kombu/contributors",
+        "subscribers_url": "https://api.github.com/repos/its-amann/kombu/subscribers",
+        "subscription_url": "https://api.github.com/repos/its-amann/kombu/subscription",
+        "commits_url": "https://api.github.com/repos/its-amann/kombu/commits{/sha}",
+        "git_commits_url": "https://api.github.com/repos/its-amann/kombu/git/commits{/sha}",
+        "comments_url": "https://api.github.com/repos/its-amann/kombu/comments{/number}",
+        "issue_comment_url": "https://api.github.com/repos/its-amann/kombu/issues/comments{/number}",
+        "contents_url": "https://api.github.com/repos/its-amann/kombu/contents/{+path}",
+        "compare_url": "https://api.github.com/repos/its-amann/kombu/compare/{base}...{head}",
+        "merges_url": "https://api.github.com/repos/its-amann/kombu/merges",
+        "archive_url": "https://api.github.com/repos/its-amann/kombu/{archive_format}{/ref}",
+        "downloads_url": "https://api.github.com/repos/its-amann/kombu/downloads",
+        "issues_url": "https://api.github.com/repos/its-amann/kombu/issues{/number}",
+        "pulls_url": "https://api.github.com/repos/its-amann/kombu/pulls{/number}",
+        "milestones_url": "https://api.github.com/repos/its-amann/kombu/milestones{/number}",
+        "notifications_url": "https://api.github.com/repos/its-amann/kombu/notifications{?since,all,participating}",
+        "labels_url": "https://api.github.com/repos/its-amann/kombu/labels{/name}",
+        "releases_url": "https://api.github.com/repos/its-amann/kombu/releases{/id}",
+        "deployments_url": "https://api.github.com/repos/its-amann/kombu/deployments",
+        "created_at": "2026-11-03T17:46:09Z",
+        "updated_at": "2026-11-03T17:46:09Z",
+        "pushed_at": "2026-11-03T17:47:30Z",
+        "git_url": "git://github.com/its-amann/kombu.git",
+        "ssh_url": "git@github.com:its-amann/kombu.git",
+        "clone_url": "https://github.com/its-amann/kombu.git",
+        "svn_url": "https://github.com/its-amann/kombu",
+        "homepage": "http://kombu.readthedocs.org/",
+        "size": 7159,
+        "stargazers_count": 0,
+        "watchers_count": 0,
+        "language": null,
+        "has_issues": false,
+        "has_projects": true,
+        "has_downloads": false,
+        "has_wiki": true,
+        "has_pages": false,
+        "has_discussions": false,
+        "forks_count": 0,
+        "mirror_url": null,
+        "archived": false,
+        "disabled": false,
+        "open_issues_count": 0,
+        "license": {
+          "key": "bsd-3-clause",
+          "name": "BSD 3-Clause \"New\" or \"Revised\" License",
+          "spdx_id": "BSD-3-Clause",
+          "url": "https://api.github.com/licenses/bsd-3-clause",
+          "node_id": "MDc6TGljZW5zZTU="
+        },
+        "allow_forking": true,
+        "is_template": false,
+        "web_commit_signoff_required": false,
+        "has_pull_requests": true,
+        "pull_request_creation_policy": "all",
+        "topics": [],
+        "visibility": "public",
+        "forks": 0,
+        "open_issues": 0,
+        "watchers": 0,
+        "default_branch": "main"
+      }
+    },
+    "public": true,
+    "created_at": "2026-11-03T17:46:09Z",
+    "org": {
+      "id": 319983,
+      "login": "celery",
+      "gravatar_id": "",
+      "url": "https://api.github.com/orgs/celery",
+      "avatar_url": "https://avatars.githubusercontent.com/u/319983?"
+    }
+  },
+  {
+    "id": "19010757183",
+    "type": "GollumEvent",
+    "actor": {
+      "id": 220527842,
+      "login": "TheThinkingHome",
+      "display_login": "TheThinkingHome",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/TheThinkingHome",
+      "avatar_url": "https://avatars.githubusercontent.com/u/220527842?"
+    },
+    "repo": {
+      "id": 1296812365,
+      "name": "TheThinkingHome/device_sentinel",
+      "url": "https://api.github.com/repos/TheThinkingHome/device_sentinel"
+    },
+    "payload": {
+      "pages": [
+        {
+          "page_name": "Home",
+          "title": "Home",
+          "summary": null,
+          "action": "edited",
+          "sha": "d16e84cc65a02f043891c71468f1c3ccec47fc0c",
+          "html_url": "https://github.com/TheThinkingHome/device_sentinel/wiki/Home"
+        }
+      ]
+    },
+    "public": true,
+    "created_at": "2026-11-03T15:11:30Z"
+  },
+  {
+    "id": "19056861397",
+    "type": "IssueCommentEvent",
+    "actor": {
+      "id": 22429695,
+      "login": "codecov[bot]",
+      "display_login": "codecov",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/codecov[bot]",
+      "avatar_url": "https://avatars.githubusercontent.com/u/22429695?"
+    },
+    "repo": {
+      "id": 184460,
+      "name": "celery/celery",
+      "url": "https://api.github.com/repos/celery/celery"
+    },
+    "payload": {
+      "action": "created",
+      "issue": {
+        "url": "https://api.github.com/repos/celery/celery/issues/11013",
+        "repository_url": "https://api.github.com/repos/celery/celery",
+        "labels_url": "https://api.github.com/repos/celery/celery/issues/11013/labels{/name}",
+        "comments_url": "https://api.github.com/repos/celery/celery/issues/11013/comments",
+        "events_url": "https://api.github.com/repos/celery/celery/issues/11013/events",
+        "html_url": "https://github.com/celery/celery/pull/11013",
+        "id": 6192089668,
+        "node_id": "PR_kwDOAALQjM8AAAABMq85fA",
+        "number": 11013,
+        "title": "Chore(deps): Bump google-cloud-storage from 3.15.0 to 3.17.1",
+        "user": {
+          "login": "dependabot[bot]",
+          "id": 49699333,
+          "node_id": "MDM6Qm90NDk2OTkzMzM=",
+          "avatar_url": "https://avatars.githubusercontent.com/in/29110?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/dependabot%5Bbot%5D",
+          "html_url": "https://github.com/apps/dependabot",
+          "followers_url": "https://api.github.com/users/dependabot%5Bbot%5D/followers",
+          "following_url": "https://api.github.com/users/dependabot%5Bbot%5D/following{/other_user}",
+          "gists_url": "https://api.github.com/users/dependabot%5Bbot%5D/gists{/gist_id}",
+          "starred_url": "https://api.github.com/users/dependabot%5Bbot%5D/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/dependabot%5Bbot%5D/subscriptions",
+          "organizations_url": "https://api.github.com/users/dependabot%5Bbot%5D/orgs",
+          "repos_url": "https://api.github.com/users/dependabot%5Bbot%5D/repos",
+          "events_url": "https://api.github.com/users/dependabot%5Bbot%5D/events{/privacy}",
+          "received_events_url": "https://api.github.com/users/dependabot%5Bbot%5D/received_events",
+          "type": "Bot",
+          "user_view_type": "public",
+          "site_admin": false
+        },
+        "labels": [
+          {
+            "id": 5976585459,
+            "node_id": "LA_kwDOAALQjM8AAAABZDt08w",
+            "url": "https://api.github.com/repos/celery/celery/labels/dependencies",
+            "name": "dependencies",
+            "color": "0366d6",
+            "default": false,
+            "description": "Pull requests that update a dependency file",
+            "archived_at": null,
+            "archived_by": null
+          },
+          {
+            "id": 6405993760,
+            "node_id": "LA_kwDOAALQjM8AAAABfdO1IA",
+            "url": "https://api.github.com/repos/celery/celery/labels/python",
+            "name": "python",
+            "color": "2b67c6",
+            "default": false,
+            "description": "Pull requests that update Python code",
+            "archived_at": null,
+            "archived_by": null
+          }
+        ],
+        "state": "open",
+        "locked": false,
+        "assignees": [],
+        "milestone": null,
+        "comments": 1,
+        "created_at": "2026-11-03T22:13:29Z",
+        "updated_at": "2026-11-04T01:01:48Z",
+        "closed_at": null,
+        "assignee": null,
+        "issue_field_values": [],
+        "type": null,
+        "active_lock_reason": null,
+        "draft": false,
+        "pull_request": {
+          "url": "https://api.github.com/repos/celery/celery/pulls/11013",
+          "html_url": "https://github.com/celery/celery/pull/11013",
+          "diff_url": "https://github.com/celery/celery/pull/11013.diff",
+          "patch_url": "https://github.com/celery/celery/pull/11013.patch",
+          "merged_at": null
+        },
+        "body": "Bumps [google-cloud-storage](https://github.com/googleapis/google-cloud-python) from 3.15.0 to 3.17.1.\n<details>\n<summary>Release notes</summary>\n<p><em>Sourced from <a href=\"https://github.com/googleapis/google-cloud-python/releases\">google-cloud-storage's releases</a>.</em></p>\n<blockquote>\n<h2>google-cloud-storage: v3.17.1</h2>\n<h2><a href=\"https://github.com/googleapis/google-cloud-python/compare/google-cloud-storage-v3.17.0...google-cloud-storage-v3.17.1\">3.17.1</a> (2026-10-15)</h2>\n<h3>Bug Fixes</h3>\n<ul>\n<li><strong>storage:</strong> set GRPC_ALTS_MAX_CONCURRENT_HANDSHAKES=2 in benchmark runner (<a href=\"https://redirect.github.com/googleapis/google-cloud-python/issues/18703\">#18703</a>) (<a href=\"https://github.com/googleapis/google-cloud-python/commit/a9ca134cf2adf5b487e197682e064af5915c112b\">a9ca134</a>)</li>\n</ul>\n<h2>google-cloud-storage: v3.17.0</h2>\n<h2><a href=\"https://github.com/googleapis/google-cloud-python/compare/google-cloud-storage-v3.16.0...google-cloud-storage-v3.17.0\">3.17.0</a> (2026-10-08)</h2>\n<h3>Features</h3>\n<ul>\n<li><strong>storage:</strong> add OpenTelemetry metrics gating and configuration module (<a href=\"https://redirect.github.com/googleapis/google-cloud-python/issues/18407\">#18407</a>) (<a href=\"https://github.com/googleapis/google-cloud-python/commit/654e7682083e920ab28db8d65f4e896decaf8a69\">654e768</a>)</li>\n</ul>\n</blockquote>\n</details>\n<details>\n<summary>Changelog</summary>\n<p><em>Sourced from <a href=\"https://github.com/googleapis/google-cloud-python/blob/main/packages/google-cloud-documentai/CHANGELOG.md\">google-cloud-storage's changelog</a>.</em></p>\n<blockquote>\n<h1>Changelog</h1>\n<p><a href=\"https://pypi.org/project/google-cloud-documentai/#history\">PyPI History</a></p>\n<h2><a href=\"https://github.com/googleapis/google-cloud-python/compare/google-cloud-documentai-v3.16.0...google-cloud-documentai-v3.17.0\">3.17.0</a> (2026-10-29)</h2>\n<h3>Features</h3>\n<ul>\n<li>update API sources and regenerate (<a href=\"https://redirect.github.com/googleapis/google-cloud-python/issues/18889\">#18889</a>) (<a href=\"https://github.com/googleapis/google-cloud-python/commit/870524380c52ea234235e0c449f5c9aee2945283\">8705243</a>)</li>\n</ul>\n<h2><a href=\"https://github.com/googleapis/google-cloud-python/compare/google-cloud-documentai-v3.15.0...google-cloud-documentai-v3.16.0\">3.16.0</a> (2026-10-01)</h2>\n<h3>Features</h3>\n<ul>\n<li>declare Python3.15 support (<a href=\"https://github.com/googleapis/google-cloud-python/commit/8775794508e17150023c8e7152543410014458bf\">8775794</a>)</li>\n</ul>\n</blockquote>\n</details>\n<details>\n<summary>Commits</summary>\n<ul>\n<li><a href=\"https://github.com/googleapis/google-cloud-python/commit/2d29c3116d0602d13e6b6d555405f9c1ec0e9756\"><code>2d29c31</code></a> chore: release main (<a href=\"https://redirect.github.com/googleapis/google-cloud-python/issues/18608\">#18608</a>)</li>\n<li><a href=\"https://github.com/googleapis/google-cloud-python/commit/7032a895a891172b01844b805ac4fe4bd9ffa424\"><code>7032a89</code></a> fix(gapic-generator): resolve showcase-mypy incompatible redefinition and add...</li>\n<li><a href=\"https://github.com/googleapis/google-cloud-python/commit/9025061801cc8b4e8f2b7d25b3d598074388ba48\"><code>9025061</code></a> fix(bigquery): remove PendingDeprecationWarning from RowIterator.to_arrow (<a href=\"https://redirect.github.com/googleapis/google-cloud-python/issues/1\">#1</a>...</li>\n<li><a href=\"https://github.com/googleapis/google-cloud-python/commit/3743ff0c65044aa204f29ec8b758f3c60ca93737\"><code>3743ff0</code></a> perf(spanner): avoid allocating empty RequestOptions on read and query paths ...</li>\n<li><a href=\"https://github.com/googleapis/google-cloud-python/commit/a9ca134cf2adf5b487e197682e064af5915c112b\"><code>a9ca134</code></a> fix(storage): set GRPC_ALTS_MAX_CONCURRENT_HANDSHAKES=2 in benchmark runner (...</li>\n<li><a href=\"https://github.com/googleapis/google-cloud-python/commit/09a3823f55c1e484b5d49a6a46962154696bc1f7\"><code>09a3823</code></a> refactor(bigquery): move Arrow query result reading to _arrow_query (<a href=\"https://redirect.github.com/googleapis/google-cloud-python/issues/18644\">#18644</a>)</li>\n<li><a href=\"https://github.com/googleapis/google-cloud-python/commit/939bdd03bf3cce1069eb055856f3a41c3355fa4b\"><code>939bdd0</code></a> feat(bigquery-storage): add Arrow options and cancel to read_rows (<a href=\"https://redirect.github.com/googleapis/google-cloud-python/issues/18643\">#18643</a>)</li>\n<li><a href=\"https://github.com/googleapis/google-cloud-python/commit/8e640e06da613caa23bb4cc193e839e7ddbb67c7\"><code>8e640e0</code></a> chore(deps): update dependency nox to v2026 (<a href=\"https://redirect.github.com/googleapis/google-cloud-python/issues/18681\">#18681</a>)</li>\n<li><a href=\"https://github.com/googleapis/google-cloud-python/commit/706ced0aa783a3372a391c2bb926cd041c1d224b\"><code>706ced0</code></a> chore(deps): update dependency shapely to v2.2.0 (<a href=\"https://redirect.github.com/googleapis/google-cloud-python/issues/18694\">#18694</a>)</li>\n<li><a href=\"https://github.com/googleapis/google-cloud-python/commit/af32b51178bbed576187fd7b66f19aa2a7d8fc3e\"><code>af32b51</code></a> chore(deps): update dependency typing-extensions to v4.16.0 (<a href=\"https://redirect.github.com/googleapis/google-cloud-python/issues/18697\">#18697</a>)</li>\n<li>Additional commits viewable in <a href=\"https://github.com/googleapis/google-cloud-python/compare/google-cloud-storage-v3.15.0...google-cloud-storage-v3.17.1\">compare view</a></li>\n</ul>\n</details>\n<br />\n\n\n[![Dependabot compatibility score](https://dependabot-badges.githubapp.com/badges/compatibility_score?dependency-name=google-cloud-storage&package-manager=pip&previous-version=3.15.0&new-version=3.17.1)](https://docs.github.com/en/github/managing-security-vulnerabilities/about-dependabot-security-updates#about-compatibility-scores)\n\nDependabot will resolve any conflicts with this PR as long as you don't alter it yourself. You can also trigger a rebase manually by commenting `@dependabot rebase`.\n\n[//]: # (dependabot-automerge-start)\n[//]: # (dependabot-automerge-end)\n\n---\n\n<details>\n<summary>Dependabot commands and options</summary>\n<br />\n\nYou can trigger Dependabot actions by commenting on this PR:\n- `@dependabot rebase` will rebase this PR\n- `@dependabot recreate` will recreate this PR, overwriting any edits that have been made to it\n- `@dependabot show <dependency name> ignore conditions` will show all of the ignore conditions of the specified dependency\n- `@dependabot ignore this major version` will close this PR and stop Dependabot creating any more for this major version (unless you reopen the PR or upgrade to it yourself)\n- `@dependabot ignore this minor version` will close this PR and stop Dependabot creating any more for this minor version (unless you reopen the PR or upgrade to it yourself)\n- `@dependabot ignore this dependency` will close this PR and stop Dependabot creating any more for this dependency (unless you reopen the PR or upgrade to it yourself)\n\n\n</details>",
+        "reactions": {
+          "url": "https://api.github.com/repos/celery/celery/issues/11013/reactions",
+          "total_count": 0,
+          "+1": 0,
+          "-1": 0,
+          "laugh": 0,
+          "hooray": 0,
+          "confused": 0,
+          "heart": 0,
+          "rocket": 0,
+          "eyes": 0
+        },
+        "timeline_url": "https://api.github.com/repos/celery/celery/issues/11013/timeline",
+        "performed_via_github_app": null,
+        "state_reason": null
+      },
+      "comment": {
+        "url": "https://api.github.com/repos/celery/celery/issues/comments/6616873615",
+        "html_url": "https://github.com/celery/celery/pull/11013#issuecomment-6616873615",
+        "issue_url": "https://api.github.com/repos/celery/celery/issues/11013",
+        "id": 6616873615,
+        "node_id": "IC_kwDOAALQjM8AAAABimV6jw",
+        "user": {
+          "login": "codecov[bot]",
+          "id": 22429695,
+          "node_id": "MDM6Qm90MjI0Mjk2OTU=",
+          "avatar_url": "https://avatars.githubusercontent.com/in/254?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/codecov%5Bbot%5D",
+          "html_url": "https://github.com/apps/codecov",
+          "followers_url": "https://api.github.com/users/codecov%5Bbot%5D/followers",
+          "following_url": "https://api.github.com/users/codecov%5Bbot%5D/following{/other_user}",
+          "gists_url": "https://api.github.com/users/codecov%5Bbot%5D/gists{/gist_id}",
+          "starred_url": "https://api.github.com/users/codecov%5Bbot%5D/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/codecov%5Bbot%5D/subscriptions",
+          "organizations_url": "https://api.github.com/users/codecov%5Bbot%5D/orgs",
+          "repos_url": "https://api.github.com/users/codecov%5Bbot%5D/repos",
+          "events_url": "https://api.github.com/users/codecov%5Bbot%5D/events{/privacy}",
+          "received_events_url": "https://api.github.com/users/codecov%5Bbot%5D/received_events",
+          "type": "Bot",
+          "user_view_type": "public",
+          "site_admin": false
+        },
+        "created_at": "2026-11-03T22:20:56Z",
+        "updated_at": "2026-11-04T01:01:48Z",
+        "body": "## [Codecov](https://app.codecov.io/gh/celery/celery/pull/11013?dropdown=coverage&src=pr&el=h1&utm_medium=referral&utm_source=github&utm_content=comment&utm_campaign=pr+comments&utm_term=celery) Report\n:white_check_mark: All modified and coverable lines are covered by tests.\n:white_check_mark: Project coverage is 91.13%. Comparing base ([`5d83c46`](https://app.codecov.io/gh/celery/celery/commit/5d83c46ebb3f7183998f55fa2e5af0ad0038b278?dropdown=coverage&el=desc&utm_medium=referral&utm_source=github&utm_content=comment&utm_campaign=pr+comments&utm_term=celery)) to head ([`530bea2`](https://app.codecov.io/gh/celery/celery/commit/530bea2e4ab196951010304fab8b397602456c47?dropdown=coverage&el=desc&utm_medium=referral&utm_source=github&utm_content=comment&utm_campaign=pr+comments&utm_term=celery)).\n:white_check_mark: All tests successful. No failed tests found.\n\n<details><summary>Additional details and impacted files</summary>\n\n\n\n```diff\n@@           Coverage Diff           @@\n##             main   #11013   +/-   ##\n=======================================\n  Coverage   91.13%   91.13%           \n=======================================\n  Files         153      153           \n  Lines       21732    21732           \n  Branches     2696     2696           \n=======================================\n  Hits        19806    19806           \n  Misses       1619     1619           \n  Partials      307      307           \n```\n\n| [Flag](https://app.codecov.io/gh/celery/celery/pull/11013/flags?src=pr&el=flags&utm_medium=referral&utm_source=github&utm_content=comment&utm_campaign=pr+comments&utm_term=celery) | Coverage \u0394 | |\n|---|---|---|\n| [unittests](https://app.codecov.io/gh/celery/celery/pull/11013/flags?src=pr&el=flag&utm_medium=referral&utm_source=github&utm_content=comment&utm_campaign=pr+comments&utm_term=celery) | `91.11% <\u00f8> (\u00f8)` | |\n\nFlags with carried forward coverage won't be shown. [Click here](https://docs.codecov.io/docs/carryforward-flags?utm_medium=referral&utm_source=github&utm_content=comment&utm_campaign=pr+comments&utm_term=celery#carryforward-flags-in-the-pull-request-comment) to find out more.\n</details>\n\n[:umbrella: View full report in Codecov by Harness](https://app.codecov.io/gh/celery/celery/pull/11013?dropdown=coverage&src=pr&el=continue&utm_medium=referral&utm_source=github&utm_content=comment&utm_campaign=pr+comments&utm_term=celery).   \n:loudspeaker: Have feedback on the report? [Share it here](https://about.codecov.io/codecov-pr-comment-feedback/?utm_medium=referral&utm_source=github&utm_content=comment&utm_campaign=pr+comments&utm_term=celery).",
+        "reactions": {
+          "url": "https://api.github.com/repos/celery/celery/issues/comments/6616873615/reactions",
+          "total_count": 0,
+          "+1": 0,
+          "-1": 0,
+          "laugh": 0,
+          "hooray": 0,
+          "confused": 0,
+          "heart": 0,
+          "rocket": 0,
+          "eyes": 0
+        },
+        "performed_via_github_app": {
+          "id": 254,
+          "client_id": "Iv1.9d88ef6ecc903626",
+          "slug": "codecov",
+          "node_id": "MDM6QXBwMjU0",
+          "owner": {
+            "login": "codecov",
+            "id": 8226205,
+            "node_id": "MDEyOk9yZ2FuaXphdGlvbjgyMjYyMDU=",
+            "avatar_url": "https://avatars.githubusercontent.com/u/8226205?v=4",
+            "gravatar_id": "",
+            "url": "https://api.github.com/users/codecov",
+            "html_url": "https://github.com/codecov",
+            "followers_url": "https://api.github.com/users/codecov/followers",
+            "following_url": "https://api.github.com/users/codecov/following{/other_user}",
+            "gists_url": "https://api.github.com/users/codecov/gists{/gist_id}",
+            "starred_url": "https://api.github.com/users/codecov/starred{/owner}{/repo}",
+            "subscriptions_url": "https://api.github.com/users/codecov/subscriptions",
+            "organizations_url": "https://api.github.com/users/codecov/orgs",
+            "repos_url": "https://api.github.com/users/codecov/repos",
+            "events_url": "https://api.github.com/users/codecov/events{/privacy}",
+            "received_events_url": "https://api.github.com/users/codecov/received_events",
+            "type": "Organization",
+            "user_view_type": "public",
+            "site_admin": false
+          },
+          "name": "Codecov",
+          "description": "Codecov provides highly integrated tools to group, merge, archive and compare coverage reports. Whether your team is comparing changes in a pull request or reviewing a single commit, Codecov will improve the code review workflow and quality.\r\n\r\n## Code coverage done right.\u00ae\r\n\r\n1. Upload coverage reports from your CI builds.\r\n2. Codecov merges all builds and languages into one beautiful coherent report.\r\n3. Get commit statuses, pull request comments and coverage overlay via our browser extension.\r\n\r\nWhen Codecov merges your uploads it keeps track of the CI provider (inc. build details) and user specified context, e.g. `#unittest` ~ `#smoketest` or `#oldcode` ~ `#newcode`. You can track the `#unittest` coverage independently of other groups. [Learn more here](\r\nhttp://docs.codecov.io/docs/flags)\r\n\r\nThrough **Codecov's Browser Extension** reports overlay directly in GitHub UI to assist in code review in [Chrome](https://chrome.google.com/webstore/detail/codecov/gedikamndpbemklijjkncpnolildpbgo) or Firefox (https://addons.mozilla.org/en-US/firefox/addon/codecov/)\r\n\r\n*Highly detailed* **pull request comments** and *customizable* **commit statuses** will improve your team's workflow and code coverage incrementally.\r\n\r\n**File backed configuration** all through the `codecov.yml`. \r\n\r\n## FAQ\r\n- Do you **merge multiple uploads** to the same commit? **Yes**\r\n- Do you **support multiple languages** in the same project? **Yes**\r\n- Can you **group coverage reports** by project and/or test type? **Yes**\r\n- How does **pricing** work? Only paid users can view reports and post statuses/comments. ",
+          "external_url": "https://codecov.io",
+          "html_url": "https://github.com/apps/codecov",
+          "created_at": "2016-09-25T14:18:27Z",
+          "updated_at": "2025-03-20T19:12:59Z",
+          "permissions": {
+            "administration": "read",
+            "checks": "write",
+            "contents": "read",
+            "emails": "read",
+            "issues": "read",
+            "members": "read",
+            "metadata": "read",
+            "pull_requests": "write",
+            "statuses": "write"
+          },
+          "events": [
+            "delete",
+            "fork",
+            "member",
+            "membership",
+            "organization",
+            "public",
+            "pull_request",
+            "push",
+            "release",
+            "repository",
+            "status",
+            "team_add"
+          ]
+        },
+        "minimized": null
+      }
+    },
+    "public": true,
+    "created_at": "2026-11-03T22:20:56Z",
+    "org": {
+      "id": 319983,
+      "login": "celery",
+      "gravatar_id": "",
+      "url": "https://api.github.com/orgs/celery",
+      "avatar_url": "https://avatars.githubusercontent.com/u/319983?"
+    }
+  },
+  {
+    "id": "18996162649",
+    "type": "IssuesEvent",
+    "actor": {
+      "id": 4186385,
+      "login": "Yberion",
+      "display_login": "Yberion",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/Yberion",
+      "avatar_url": "https://avatars.githubusercontent.com/u/4186385?"
+    },
+    "repo": {
+      "id": 735498,
+      "name": "celery/kombu",
+      "url": "https://api.github.com/repos/celery/kombu"
+    },
+    "payload": {
+      "action": "opened",
+      "issue": {
+        "url": "https://api.github.com/repos/celery/kombu/issues/2815",
+        "repository_url": "https://api.github.com/repos/celery/kombu",
+        "labels_url": "https://api.github.com/repos/celery/kombu/issues/2815/labels{/name}",
+        "comments_url": "https://api.github.com/repos/celery/kombu/issues/2815/comments",
+        "events_url": "https://api.github.com/repos/celery/kombu/issues/2815/events",
+        "html_url": "https://github.com/celery/kombu/issues/2815",
+        "id": 6182660231,
+        "node_id": "I_kwDOAAs5Cs8AAAABcIPohw",
+        "number": 2815,
+        "title": "Redis: synchronous `drain_events()` loses messages after the health check reconnects an idle BRPOP connection (follow-up to #2630)",
+        "user": {
+          "login": "Yberion",
+          "id": 4186385,
+          "node_id": "MDQ6VXNlcjQxODYzODU=",
+          "avatar_url": "https://avatars.githubusercontent.com/u/4186385?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/Yberion",
+          "html_url": "https://github.com/Yberion",
+          "followers_url": "https://api.github.com/users/Yberion/followers",
+          "following_url": "https://api.github.com/users/Yberion/following{/other_user}",
+          "gists_url": "https://api.github.com/users/Yberion/gists{/gist_id}",
+          "starred_url": "https://api.github.com/users/Yberion/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/Yberion/subscriptions",
+          "organizations_url": "https://api.github.com/users/Yberion/orgs",
+          "repos_url": "https://api.github.com/users/Yberion/repos",
+          "events_url": "https://api.github.com/users/Yberion/events{/privacy}",
+          "received_events_url": "https://api.github.com/users/Yberion/received_events",
+          "type": "User",
+          "user_view_type": "public",
+          "site_admin": false
+        },
+        "labels": [],
+        "state": "open",
+        "locked": false,
+        "assignees": [],
+        "milestone": {
+          "url": "https://api.github.com/repos/celery/kombu/milestones/21",
+          "html_url": "https://github.com/celery/kombu/milestone/21",
+          "labels_url": "https://api.github.com/repos/celery/kombu/milestones/21/labels",
+          "id": 17917282,
+          "node_id": "MI_kwDOAAs5Cs4BEWVi",
+          "number": 21,
+          "title": "5.7.x",
+          "description": "",
+          "creator": {
+            "login": "auvipy",
+            "id": 6212603,
+            "node_id": "MDQ6VXNlcjYyMTI2MDM=",
+            "avatar_url": "https://avatars.githubusercontent.com/u/6212603?v=4",
+            "gravatar_id": "",
+            "url": "https://api.github.com/users/auvipy",
+            "html_url": "https://github.com/auvipy",
+            "followers_url": "https://api.github.com/users/auvipy/followers",
+            "following_url": "https://api.github.com/users/auvipy/following{/other_user}",
+            "gists_url": "https://api.github.com/users/auvipy/gists{/gist_id}",
+            "starred_url": "https://api.github.com/users/auvipy/starred{/owner}{/repo}",
+            "subscriptions_url": "https://api.github.com/users/auvipy/subscriptions",
+            "organizations_url": "https://api.github.com/users/auvipy/orgs",
+            "repos_url": "https://api.github.com/users/auvipy/repos",
+            "events_url": "https://api.github.com/users/auvipy/events{/privacy}",
+            "received_events_url": "https://api.github.com/users/auvipy/received_events",
+            "type": "User",
+            "user_view_type": "public",
+            "site_admin": false
+          },
+          "open_issues": 32,
+          "closed_issues": 2,
+          "state": "open",
+          "created_at": "2026-09-17T16:22:26Z",
+          "updated_at": "2026-11-03T18:46:35Z",
+          "due_on": null,
+          "closed_at": null
+        },
+        "comments": 4,
+        "created_at": "2026-11-03T12:34:07Z",
+        "updated_at": "2026-11-03T19:01:42Z",
+        "closed_at": null,
+        "assignee": null,
+        "issue_field_values": [],
+        "type": null,
+        "active_lock_reason": null,
+        "sub_issues_summary": {
+          "total": 0,
+          "completed": 0,
+          "percent_completed": 0
+        },
+        "issue_dependencies_summary": {
+          "blocked_by": 0,
+          "total_blocked_by": 0,
+          "blocking": 0,
+          "total_blocking": 0
+        },
+        "body": "## Summary\n\nOutside the event loop (`Connection.drain_events()`), once the server has closed an idle BRPOP connection and the\nredis-py health check has reopened it, the channel never polls the new socket. Every later BRPOP is sent on that\nunpolled socket: the server pops the message and writes it to a socket that nobody reads. The message is gone from\nthe queue and never delivered, and no error is raised. This needs a redis-py retry (`retry_on_timeout=True` or\n`retry`). Without one, the failed health check raises `ConnectionError` instead.\n\nIn Celery, `app.control.inspect()` and `broadcast(..., reply=True)` then get no replies at all, forever. This happens\nin any process that stayed idle longer than the server `timeout`, such as a task in a prefork child or a plain script.\n\n#2630 fixed the same stale registration for the event loop (`register_with_event_loop._on_disconnect`). The\nsynchronous path still has it. As #2630 says, its test \"does not simulate every redis-py retry path\"; this one is the\nhealth check retry inside `send_command()`.\n\n## Environment\n\n- kombu 5.7.0 (also 5.7.0rc1), redis-py 8.1.0, amqp 5.4.2, vine 5.1.0\n- Reproduction: Debian 12, Python 3.11, Redis 7.4 (`redis:7.4` container), Linux epoll\n- Seen in production with celery 5.6.3, Python 3.13 and Redis 7 behind Sentinel with TLS and `timeout 30`\n\n## Reproduction\n\nStart a Redis whose idle timeout is shorter than the pause in the script:\n\n```sh\npodman run --rm -d --name kombu-repro -p 127.0.0.1:16379:6379 docker.io/library/redis:7.4 \\\n  redis-server --timeout 5 --save \"\" --appendonly no\n```\n\n```python\nimport socket\nimport time\n\nimport kombu\nimport redis\nfrom kombu import Connection, Consumer, Exchange, Producer, Queue\n\nprint(f\"kombu {kombu.__version__}, redis-py {redis.__version__}\", flush=True)\n\nURL = \"redis://127.0.0.1:16379/0\"\nPAUSE_SECONDS = 8  # longer than the server timeout (5 s) and the health check interval (2 s)\n\nexchange = Exchange(\"repro\", type=\"direct\")\nqueue = Queue(\"repro\", exchange, routing_key=\"repro\")\n\nconsumer_conn = Connection(URL, transport_options={\"health_check_interval\": 2, \"retry_on_timeout\": True})\npublisher_conn = Connection(URL)\n\n\ndef round_trip(n):\n    received = []\n\n    with Producer(publisher_conn) as producer:\n        producer.publish({\"n\": n}, exchange=exchange, routing_key=\"repro\", declare=[queue])\n\n    def on_message(body, message):\n        received.append(body)\n        message.ack()\n\n    # The consumer is cancelled at the end of the block, so no BRPOP is pending during the pause.\n    with Consumer(consumer_conn, [queue], callbacks=[on_message]):\n        try:\n            consumer_conn.drain_events(timeout=3)\n        except socket.timeout:\n            pass\n\n    left = publisher_conn.default_channel.client.llen(\"repro\")\n    print(f\"round {n}: received={received} left_in_queue={left}\", flush=True)\n\n\nfor n in range(4):\n    round_trip(n)\n    time.sleep(PAUSE_SECONDS)\n```\n\nExpected: every round receives its message.\n\nActual:\n\n```\nkombu 5.7.0, redis-py 8.1.0\nround 0: received=[{'n': 0}] left_in_queue=0\nround 1: received=[] left_in_queue=0\nround 2: received=[] left_in_queue=0\nround 3: received=[] left_in_queue=0\n```\n\nWithout `\"retry_on_timeout\": True`, round 1 raises `redis.exceptions.ConnectionError: Connection closed by server.`\nfrom `check_health()` in `_brpop_start()`.\n\nWith Celery (broker transport option `retry_on_timeout=True`, Redis `timeout 30`):\n\n```python\napp.control.inspect(timeout=5).active_queues()  # replies from every worker\ntime.sleep(35)\napp.control.inspect(timeout=5).active_queues()  # None, and None on every later call\n```\n\nPassing a fresh connection to each call (`inspect(connection=app.connection_for_write())`) avoids it.\n\n## Cause\n\nLine numbers are from `kombu/transport/redis.py` at v5.7.0.\n\n1. Between two uses, no BRPOP is pending, so the server closes the idle connection. redis-py does not notice, and\n   `_sock` keeps the closed socket.\n2. The next `get()` calls `_register_BRPOP()`. `_client_registered()` (l. 711) returns true, because `_sock` is not\n   `None` and `(channel, client, 'BRPOP')` is still in `_chan_to_sock`. The socket is not registered again.\n3. `_brpop_start()` (l. 1459) sets `_in_poll` and calls `send_command()`. The health check PING fails,\n   `disconnect()` runs, then the redis-py retry reconnects and the BRPOP is sent on a new socket.\n4. `disconnect()` calls `Channel._on_connection_disconnect()` (l. 1257), which sets `_in_poll` back to `None`, then\n   `MultiChannelPoller._on_connection_disconnect()` (l. 644). The latter calls `poller.unregister(connection._sock)`,\n   but redis-py has already set `_sock` to `None`, so nothing is unregistered. The `_chan_to_sock` and `_fd_to_chan`\n   entries of the closed socket stay.\n5. The new socket is never registered: `_client_registered()` keeps returning true on every later `get()`. Since\n   `_in_poll` is `None`, each `get()` sends one more BRPOP on the unpolled socket, and `maybe_check_brpop_health()`\n   skips the channel.\n\n## Suggested fix\n\n- Make `MultiChannelPoller._on_connection_disconnect()` drop the `_chan_to_sock` and `_fd_to_chan` entries of the\n  disconnected connection, as the event-loop `_on_disconnect()` does since #2630. The next `get()` then registers the\n  new socket.\n- In `_brpop_start()`, a disconnect during the health check resets `_in_poll` while the BRPOP is still sent. Setting\n  `_in_poll` after `send_command()` returns would keep it consistent.\n",
+        "reactions": {
+          "url": "https://api.github.com/repos/celery/kombu/issues/2815/reactions",
+          "total_count": 0,
+          "+1": 0,
+          "-1": 0,
+          "laugh": 0,
+          "hooray": 0,
+          "confused": 0,
+          "heart": 0,
+          "rocket": 0,
+          "eyes": 0
+        },
+        "timeline_url": "https://api.github.com/repos/celery/kombu/issues/2815/timeline",
+        "performed_via_github_app": null,
+        "state_reason": null,
+        "pinned_comment": null
+      }
+    },
+    "public": true,
+    "created_at": "2026-11-03T12:35:10Z",
+    "org": {
+      "id": 319983,
+      "login": "celery",
+      "gravatar_id": "",
+      "url": "https://api.github.com/orgs/celery",
+      "avatar_url": "https://avatars.githubusercontent.com/u/319983?"
+    }
+  },
+  {
+    "id": "19009937425",
+    "type": "MemberEvent",
+    "actor": {
+      "id": 322866810,
+      "login": "jayasmitadatta",
+      "display_login": "jayasmitadatta",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/jayasmitadatta",
+      "avatar_url": "https://avatars.githubusercontent.com/u/322866810?"
+    },
+    "repo": {
+      "id": 1443706039,
+      "name": "raequan-shadow/Team-2",
+      "url": "https://api.github.com/repos/raequan-shadow/Team-2"
+    },
+    "payload": {
+      "member": {
+        "login": "jayasmitadatta",
+        "id": 322866810,
+        "node_id": "U_kgDOEz6Oeg",
+        "avatar_url": "https://avatars.githubusercontent.com/u/322866810?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/jayasmitadatta",
+        "html_url": "https://github.com/jayasmitadatta",
+        "followers_url": "https://api.github.com/users/jayasmitadatta/followers",
+        "following_url": "https://api.github.com/users/jayasmitadatta/following{/other_user}",
+        "gists_url": "https://api.github.com/users/jayasmitadatta/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/jayasmitadatta/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/jayasmitadatta/subscriptions",
+        "organizations_url": "https://api.github.com/users/jayasmitadatta/orgs",
+        "repos_url": "https://api.github.com/users/jayasmitadatta/repos",
+        "events_url": "https://api.github.com/users/jayasmitadatta/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/jayasmitadatta/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "action": "added"
+    },
+    "public": true,
+    "created_at": "2026-11-03T15:03:16Z"
+  },
+  {
+    "id": "19010281848",
+    "type": "PublicEvent",
+    "actor": {
+      "id": 98016138,
+      "login": "LightSulivy",
+      "display_login": "LightSulivy",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/LightSulivy",
+      "avatar_url": "https://avatars.githubusercontent.com/u/98016138?"
+    },
+    "repo": {
+      "id": 1444449487,
+      "name": "LightSulivy/Ontology-Generation-LLM",
+      "url": "https://api.github.com/repos/LightSulivy/Ontology-Generation-LLM"
+    },
+    "payload": {},
+    "public": true,
+    "created_at": "2026-11-03T15:06:18Z"
+  },
+  {
+    "id": "19049759593",
+    "type": "PullRequestEvent",
+    "actor": {
+      "id": 49699333,
+      "login": "dependabot[bot]",
+      "display_login": "dependabot",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/dependabot[bot]",
+      "avatar_url": "https://avatars.githubusercontent.com/u/49699333?"
+    },
+    "repo": {
+      "id": 184460,
+      "name": "celery/celery",
+      "url": "https://api.github.com/repos/celery/celery"
+    },
+    "payload": {
+      "action": "labeled",
+      "number": 11013,
+      "pull_request": {
+        "url": "https://api.github.com/repos/celery/celery/pulls/11013",
+        "id": 5145311612,
+        "number": 11013,
+        "head": {
+          "ref": "dependabot/pip/google-cloud-storage-3.17.1",
+          "sha": "530bea2e4ab196951010304fab8b397602456c47",
+          "repo": {
+            "id": 184460,
+            "url": "https://api.github.com/repos/celery/celery",
+            "name": "celery"
+          }
+        },
+        "base": {
+          "ref": "main",
+          "sha": "5d83c46ebb3f7183998f55fa2e5af0ad0038b278",
+          "repo": {
+            "id": 184460,
+            "url": "https://api.github.com/repos/celery/celery",
+            "name": "celery"
+          }
+        }
+      },
+      "label": {
+        "id": 6405993760,
+        "node_id": "LA_kwDOAALQjM8AAAABfdO1IA",
+        "url": "https://api.github.com/repos/celery/celery/labels/python",
+        "name": "python",
+        "color": "2b67c6",
+        "default": false,
+        "description": "Pull requests that update Python code",
+        "archived_at": null,
+        "archived_by": null
+      },
+      "labels": [
+        {
+          "id": 5976585459,
+          "node_id": "LA_kwDOAALQjM8AAAABZDt08w",
+          "url": "https://api.github.com/repos/celery/celery/labels/dependencies",
+          "name": "dependencies",
+          "color": "0366d6",
+          "default": false,
+          "description": "Pull requests that update a dependency file",
+          "archived_at": null,
+          "archived_by": null
+        },
+        {
+          "id": 6405993760,
+          "node_id": "LA_kwDOAALQjM8AAAABfdO1IA",
+          "url": "https://api.github.com/repos/celery/celery/labels/python",
+          "name": "python",
+          "color": "2b67c6",
+          "default": false,
+          "description": "Pull requests that update Python code",
+          "archived_at": null,
+          "archived_by": null
+        }
+      ]
+    },
+    "public": true,
+    "created_at": "2026-11-03T22:13:29Z",
+    "org": {
+      "id": 319983,
+      "login": "celery",
+      "gravatar_id": "",
+      "url": "https://api.github.com/orgs/celery",
+      "avatar_url": "https://avatars.githubusercontent.com/u/319983?"
+    }
+  },
+  {
+    "id": "19017255962",
+    "type": "PullRequestReviewEvent",
+    "actor": {
+      "id": 131944677,
+      "login": "Namraa310806",
+      "display_login": "Namraa310806",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/Namraa310806",
+      "avatar_url": "https://avatars.githubusercontent.com/u/131944677?"
+    },
+    "repo": {
+      "id": 184460,
+      "name": "celery/celery",
+      "url": "https://api.github.com/repos/celery/celery"
+    },
+    "payload": {
+      "review": {
+        "id": 5755689046,
+        "node_id": "PRR_kwDOAALQjM8AAAABVxDYVg",
+        "user": {
+          "login": "Namraa310806",
+          "id": 131944677,
+          "node_id": "U_kgDOB91Q5Q",
+          "avatar_url": "https://avatars.githubusercontent.com/u/131944677?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/Namraa310806",
+          "html_url": "https://github.com/Namraa310806",
+          "followers_url": "https://api.github.com/users/Namraa310806/followers",
+          "following_url": "https://api.github.com/users/Namraa310806/following{/other_user}",
+          "gists_url": "https://api.github.com/users/Namraa310806/gists{/gist_id}",
+          "starred_url": "https://api.github.com/users/Namraa310806/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/Namraa310806/subscriptions",
+          "organizations_url": "https://api.github.com/users/Namraa310806/orgs",
+          "repos_url": "https://api.github.com/users/Namraa310806/repos",
+          "events_url": "https://api.github.com/users/Namraa310806/events{/privacy}",
+          "received_events_url": "https://api.github.com/users/Namraa310806/received_events",
+          "type": "User",
+          "user_view_type": "public",
+          "site_admin": false
+        },
+        "body": null,
+        "commit_id": "bc0b3d31e7f3d46f463df7b3c1b29b8af9059719",
+        "state": "commented",
+        "html_url": "https://github.com/celery/celery/pull/10998#pullrequestreview-5755689046",
+        "pull_request_url": "https://api.github.com/repos/celery/celery/pulls/10998",
+        "_links": {
+          "html": {
+            "href": "https://github.com/celery/celery/pull/10998#pullrequestreview-5755689046"
+          },
+          "pull_request": {
+            "href": "https://api.github.com/repos/celery/celery/pulls/10998"
+          }
+        },
+        "submitted_at": "2026-11-03T16:16:43Z",
+        "updated_at": "2026-11-03T16:16:43Z"
+      },
+      "pull_request": {
+        "url": "https://api.github.com/repos/celery/celery/pulls/10998",
+        "id": 5106579940,
+        "number": 10998,
+        "head": {
+          "ref": "fix/redis-chord-claim-cleanup-ownership",
+          "sha": "b16e7478f41f68df1df96047f51af00ed8a190da",
+          "repo": {
+            "id": 1316839078,
+            "url": "https://api.github.com/repos/Namraa310806/celery",
+            "name": "celery"
+          }
+        },
+        "base": {
+          "ref": "main",
+          "sha": "5d83c46ebb3f7183998f55fa2e5af0ad0038b278",
+          "repo": {
+            "id": 184460,
+            "url": "https://api.github.com/repos/celery/celery",
+            "name": "celery"
+          }
+        }
+      },
+      "action": "created"
+    },
+    "public": true,
+    "created_at": "2026-11-03T16:16:46Z",
+    "org": {
+      "id": 319983,
+      "login": "celery",
+      "gravatar_id": "",
+      "url": "https://api.github.com/orgs/celery",
+      "avatar_url": "https://avatars.githubusercontent.com/u/319983?"
+    }
+  },
+  {
+    "id": "19042417216",
+    "type": "PullRequestReviewCommentEvent",
+    "actor": {
+      "id": 131944677,
+      "login": "Namraa310806",
+      "display_login": "Namraa310806",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/Namraa310806",
+      "avatar_url": "https://avatars.githubusercontent.com/u/131944677?"
+    },
+    "repo": {
+      "id": 184460,
+      "name": "celery/celery",
+      "url": "https://api.github.com/repos/celery/celery"
+    },
+    "payload": {
+      "action": "created",
+      "comment": {
+        "url": "https://api.github.com/repos/celery/celery/pulls/comments/4457381163",
+        "pull_request_review_id": 5755689046,
+        "id": 4457381163,
+        "node_id": "PRRC_kwDOAALQjM8AAAABCa49Kw",
+        "diff_hunk": "@@ -825,6 +893,42 @@ def _transport_options(self):\n     def _chord_part_return_script(self):\n         return self.client.register_script(CHORD_PART_RETURN_LUA)\n \n+    @cached_property\n+    def _chord_cleanup_script(self):\n+        return self.client.register_script(CHORD_CLEANUP_LUA)\n+\n+    @cached_property\n+    def _chord_claim_extend_script(self):\n+        return self.client.register_script(CHORD_CLAIM_EXTEND_LUA)\n+\n+    def _chord_publish_claim_expires(self, initial_expires, callback):\n+        \"\"\"Estimate the time needed for callback publish retries.\"\"\"\n+        conf = self.app.conf\n+        callback_options = callback.options\n+        default_policy = conf.task_publish_retry_policy or {}\n+        policy = dict(default_policy)\n+        policy.update(callback_options.get('retry_policy') or {})\n+        retry = callback_options.get('retry', conf.task_publish_retry)",
+        "path": "celery/backends/redis.py",
+        "commit_id": "bc0b3d31e7f3d46f463df7b3c1b29b8af9059719",
+        "original_commit_id": "bc0b3d31e7f3d46f463df7b3c1b29b8af9059719",
+        "user": {
+          "login": "Namraa310806",
+          "id": 131944677,
+          "node_id": "U_kgDOB91Q5Q",
+          "avatar_url": "https://avatars.githubusercontent.com/u/131944677?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/Namraa310806",
+          "html_url": "https://github.com/Namraa310806",
+          "followers_url": "https://api.github.com/users/Namraa310806/followers",
+          "following_url": "https://api.github.com/users/Namraa310806/following{/other_user}",
+          "gists_url": "https://api.github.com/users/Namraa310806/gists{/gist_id}",
+          "starred_url": "https://api.github.com/users/Namraa310806/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/Namraa310806/subscriptions",
+          "organizations_url": "https://api.github.com/users/Namraa310806/orgs",
+          "repos_url": "https://api.github.com/users/Namraa310806/repos",
+          "events_url": "https://api.github.com/users/Namraa310806/events{/privacy}",
+          "received_events_url": "https://api.github.com/users/Namraa310806/received_events",
+          "type": "User",
+          "user_view_type": "public",
+          "site_admin": false
+        },
+        "body": "Added and Improved.",
+        "created_at": "2026-11-03T16:16:43Z",
+        "updated_at": "2026-11-03T16:16:44Z",
+        "html_url": "https://github.com/celery/celery/pull/10998#discussion_r4457381163",
+        "pull_request_url": "https://api.github.com/repos/celery/celery/pulls/10998",
+        "_links": {
+          "self": {
+            "href": "https://api.github.com/repos/celery/celery/pulls/comments/4457381163"
+          },
+          "html": {
+            "href": "https://github.com/celery/celery/pull/10998#discussion_r4457381163"
+          },
+          "pull_request": {
+            "href": "https://api.github.com/repos/celery/celery/pulls/10998"
+          }
+        },
+        "reactions": {
+          "url": "https://api.github.com/repos/celery/celery/pulls/comments/4457381163/reactions",
+          "total_count": 0,
+          "+1": 0,
+          "-1": 0,
+          "laugh": 0,
+          "hooray": 0,
+          "confused": 0,
+          "heart": 0,
+          "rocket": 0,
+          "eyes": 0
+        },
+        "in_reply_to_id": 4456753673,
+        "original_position": 134,
+        "position": 1,
+        "subject_type": "line"
+      },
+      "pull_request": {
+        "url": "https://api.github.com/repos/celery/celery/pulls/10998",
+        "id": 5106579940,
+        "number": 10998,
+        "head": {
+          "ref": "fix/redis-chord-claim-cleanup-ownership",
+          "sha": "b16e7478f41f68df1df96047f51af00ed8a190da",
+          "repo": {
+            "id": 1316839078,
+            "url": "https://api.github.com/repos/Namraa310806/celery",
+            "name": "celery"
+          }
+        },
+        "base": {
+          "ref": "main",
+          "sha": "5d83c46ebb3f7183998f55fa2e5af0ad0038b278",
+          "repo": {
+            "id": 184460,
+            "url": "https://api.github.com/repos/celery/celery",
+            "name": "celery"
+          }
+        }
+      }
+    },
+    "public": true,
+    "created_at": "2026-11-03T16:16:43Z",
+    "org": {
+      "id": 319983,
+      "login": "celery",
+      "gravatar_id": "",
+      "url": "https://api.github.com/orgs/celery",
+      "avatar_url": "https://avatars.githubusercontent.com/u/319983?"
+    }
+  },
+  {
+    "id": "26095510922",
+    "type": "PushEvent",
+    "actor": {
+      "id": 6212603,
+      "login": "auvipy",
+      "display_login": "auvipy",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/auvipy",
+      "avatar_url": "https://avatars.githubusercontent.com/u/6212603?"
+    },
+    "repo": {
+      "id": 374820,
+      "name": "celery/billiard",
+      "url": "https://api.github.com/repos/celery/billiard"
+    },
+    "payload": {
+      "repository_id": 374820,
+      "push_id": 48660815853,
+      "ref": "refs/heads/main",
+      "head": "7d2fcd2a2d0978d2c9062b8566fac0f7f84e5399",
+      "before": "3a806fbfec4c419ea5f776fa6668e26863c4b4c0"
+    },
+    "public": true,
+    "created_at": "2026-11-02T08:24:57Z",
+    "org": {
+      "id": 319983,
+      "login": "celery",
+      "gravatar_id": "",
+      "url": "https://api.github.com/orgs/celery",
+      "avatar_url": "https://avatars.githubusercontent.com/u/319983?"
+    }
+  },
+  {
+    "id": "18966622832",
+    "type": "ReleaseEvent",
+    "actor": {
+      "id": 6212603,
+      "login": "auvipy",
+      "display_login": "auvipy",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/auvipy",
+      "avatar_url": "https://avatars.githubusercontent.com/u/6212603?"
+    },
+    "repo": {
+      "id": 735498,
+      "name": "celery/kombu",
+      "url": "https://api.github.com/repos/celery/kombu"
+    },
+    "payload": {
+      "action": "published",
+      "release": {
+        "url": "https://api.github.com/repos/celery/kombu/releases/432326480",
+        "assets_url": "https://api.github.com/repos/celery/kombu/releases/432326480/assets",
+        "upload_url": "https://uploads.github.com/repos/celery/kombu/releases/432326480/assets{?name,label}",
+        "html_url": "https://github.com/celery/kombu/releases/tag/v5.7.0",
+        "id": 432326480,
+        "author": {
+          "login": "auvipy",
+          "id": 6212603,
+          "node_id": "MDQ6VXNlcjYyMTI2MDM=",
+          "avatar_url": "https://avatars.githubusercontent.com/u/6212603?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/auvipy",
+          "html_url": "https://github.com/auvipy",
+          "followers_url": "https://api.github.com/users/auvipy/followers",
+          "following_url": "https://api.github.com/users/auvipy/following{/other_user}",
+          "gists_url": "https://api.github.com/users/auvipy/gists{/gist_id}",
+          "starred_url": "https://api.github.com/users/auvipy/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/auvipy/subscriptions",
+          "organizations_url": "https://api.github.com/users/auvipy/orgs",
+          "repos_url": "https://api.github.com/users/auvipy/repos",
+          "events_url": "https://api.github.com/users/auvipy/events{/privacy}",
+          "received_events_url": "https://api.github.com/users/auvipy/received_events",
+          "type": "User",
+          "user_view_type": "public",
+          "site_admin": false
+        },
+        "node_id": "RE_kwDOAAs5Cs4ZxMdQ",
+        "tag_name": "v5.7.0",
+        "target_commitish": "main",
+        "name": "v5.7.0",
+        "draft": false,
+        "immutable": false,
+        "prerelease": false,
+        "created_at": "2026-11-03T05:52:00Z",
+        "updated_at": "2026-11-03T05:55:20Z",
+        "published_at": "2026-11-03T05:55:20Z",
+        "assets": [],
+        "tarball_url": "https://api.github.com/repos/celery/kombu/tarball/v5.7.0",
+        "zipball_url": "https://api.github.com/repos/celery/kombu/zipball/v5.7.0",
+        "body": "## What's Changed\r\n* Add missing reprkwargs export to utils module by @oliverhaas in https://github.com/celery/kombu/pull/2436\r\n* Remove Python 3.9 from CI workflow by @auvipy in https://github.com/celery/kombu/pull/2448\r\n* Update Python and OS version in Read the Docs config by @auvipy in https://github.com/celery/kombu/pull/2450\r\n* Update redis requirement from !=4.5.5,!=5.0.2,<6.5,>=4.5.2 to >=4.5.2,!=4.5.5,!=5.0.2,<7.1 by @dependabot[bot] in https://github.com/celery/kombu/pull/2398\r\n* Update Python versions in tox.ini configuration by @auvipy in https://github.com/celery/kombu/pull/2449\r\n* Bump pymongo from 4.10.1 to 4.15.3 by @dependabot[bot] in https://github.com/celery/kombu/pull/2386\r\n* Bump pytest from 8.4.2 to 9.0.2 by @dependabot[bot] in https://github.com/celery/kombu/pull/2438\r\n* Bump protobuf from 6.32.1 to 6.33.2 by @dependabot[bot] in https://github.com/celery/kombu/pull/2428\r\n* Bump protobuf from 6.33.2 to 6.33.5 by @dependabot[bot] in https://github.com/celery/kombu/pull/2452\r\n* Bump grpcio from 1.75.1 to 1.76.0 by @dependabot[bot] in https://github.com/celery/kombu/pull/2397\r\n* Revert \"Bump grpcio from 1.75.1 to 1.76.0\" by @auvipy in https://github.com/celery/kombu/pull/2454\r\n* Update grpcio version to 1.76.0 by @auvipy in https://github.com/celery/kombu/pull/2455\r\n* Remove invalid Python version from workflow by @auvipy in https://github.com/celery/kombu/pull/2459\r\n* Update pypy to 3.11 by @auvipy in https://github.com/celery/kombu/pull/2328\r\n* Update Python versions in tox.ini by @auvipy in https://github.com/celery/kombu/pull/2460\r\n* Add support for fair queue in SQS by @MartinSiby in https://github.com/celery/kombu/pull/2342\r\n* Support redis queue expiration by @ffje in https://github.com/celery/kombu/pull/2251\r\n* Fix Logwrapped not supporting context manager protocol by @veeceey in https://github.com/celery/kombu/pull/2461\r\n* Cycle through host before calling errback by @arnaudmorin in https://github.com/celery/kombu/pull/2331\r\n* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/celery/kombu/pull/2467\r\n* Allow enable_exactly_once_delivery for gcpubsub by @tungntpham in https://github.com/celery/kombu/pull/2431\r\n* feat(gcpubsub): optimize topic existence check by @haimjether in https://github.com/celery/kombu/pull/2462\r\n* Fix active_queues to preserve queue ordering by @nairb774 in https://github.com/celery/kombu/pull/2464\r\n* Fix#2418 catch os error in eventio by @ChickenBenny in https://github.com/celery/kombu/pull/2471\r\n* Added support for SQS fanout via AWS SNS by @rlaunch in https://github.com/celery/kombu/pull/2372\r\n* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/celery/kombu/pull/2472\r\n* Use compression.zstd (PEP-784) by @Rogdham in https://github.com/celery/kombu/pull/2395\r\n* Fix/2463 add gevent concurrent error to connection error by @ChickenBenny in https://github.com/celery/kombu/pull/2473\r\n* Bump backports-zstd from 1.0.0 to 1.3.0 by @dependabot[bot] in https://github.com/celery/kombu/pull/2474\r\n* Revert \"Fix/2463 add gevent concurrent error to connection error\" by @auvipy in https://github.com/celery/kombu/pull/2475\r\n* Fix/2463 gevent concurrent error by @ChickenBenny in https://github.com/celery/kombu/pull/2478\r\n* Bump backports-zstd from 1.1.0 to 1.2.0 by @dependabot[bot] in https://github.com/celery/kombu/pull/2477\r\n* Bump backports-zstd from 1.2.0 to 1.3.0 by @dependabot[bot] in https://github.com/celery/kombu/pull/2480\r\n* Fix for SQS transport deadlock by @rlaunch in https://github.com/celery/kombu/pull/2479\r\n* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/celery/kombu/pull/2483\r\n* ChannelPromise: ensure the AttributeError does not appear in the traceback when the contract raises an exception by @woutdenolf in https://github.com/celery/kombu/pull/2486\r\n* Fix RabbitMQ 4.x crash: global QoS not supported on classic queues by @Azd325 in https://github.com/celery/kombu/pull/2481\r\n* Fix: SQS `polling_interval` transport option ignored in async event loop #2439 by @ChickenBenny in https://github.com/celery/kombu/pull/2489\r\n* Bump protobuf from 6.33.5 to 6.33.6 by @dependabot[bot] in https://github.com/celery/kombu/pull/2494\r\n* Bump pytest-cov from 7.0.0 to 7.1.0 by @dependabot[bot] in https://github.com/celery/kombu/pull/2496\r\n* Support callable passwords for credential refresh on reconnect by @flamble in https://github.com/celery/kombu/pull/2476\r\n* fix(redis): prevent timer callbacks from crashing event loop on connection error by @ChickenBenny in https://github.com/celery/kombu/pull/2498\r\n* Bump kazoo from 2.10.0 to 2.11.0 by @dependabot[bot] in https://github.com/celery/kombu/pull/2497\r\n* fix: gcpubsub transport crash when using Pub/Sub emulator by @NarendharManimohan in https://github.com/celery/kombu/pull/2493\r\n* Bump pymongo from 4.15.3 to 4.16.0 by @dependabot[bot] in https://github.com/celery/kombu/pull/2453\r\n* Run pre-commit once, not twice by @cclauss in https://github.com/celery/kombu/pull/2500\r\n* fix(redis): do not remove on_poll_start from on_tick on disconnect by @antonio-mello-ai in https://github.com/celery/kombu/pull/2492\r\n* Bump codecov/codecov-action from 5 to 6 by @dependabot[bot] in https://github.com/celery/kombu/pull/2501\r\n* Allow dots in Azure Service Bus queue names by @PieterBlomme in https://github.com/celery/kombu/pull/2221\r\n* Bump grpcio from 1.76.0 to 1.78.1 by @dependabot[bot] in https://github.com/celery/kombu/pull/2466\r\n* Include devcontainer configuration by @rlaunch in https://github.com/celery/kombu/pull/2504\r\n* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/celery/kombu/pull/2503\r\n* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/celery/kombu/pull/2506\r\n* Pass through Redis credential_provider from connection_kwargs during client creation in redis transport by @PFacheris in https://github.com/celery/kombu/pull/2507\r\n* Increase timeout for tox tests in workflow by @auvipy in https://github.com/celery/kombu/pull/2508\r\n* Bump pymongo from 4.16.0 to 4.17.0 by @dependabot[bot] in https://github.com/celery/kombu/pull/2510\r\n* Bump grpcio from 1.78.1 to 1.80.0 by @dependabot[bot] in https://github.com/celery/kombu/pull/2502\r\n* Update Redis version requirements in redis.txt by @auvipy in https://github.com/celery/kombu/pull/2511\r\n* Update tzdata requirement from >=2025.2 to >=2026.1 by @dependabot[bot] in https://github.com/celery/kombu/pull/2514\r\n* Update brotli requirement from >=1.0.9 to >=1.2.0 by @dependabot[bot] in https://github.com/celery/kombu/pull/2517\r\n* Update python-etcd requirement from >=0.4.3 to 0.4.5 by @dependabot[bot] in https://github.com/celery/kombu/pull/2515\r\n* Update azure-storage-queue requirement from >=12.6.0 to ==12.15.0 by @dependabot[bot] in https://github.com/celery/kombu/pull/2516\r\n* Update sphinx2rst requirement from >=1.0 to >=1.1.0 by @dependabot[bot] in https://github.com/celery/kombu/pull/2513\r\n* Update pytest-rerunfailures requirement from >=11.1.2 to >=16.0.1 by @dependabot[bot] in https://github.com/celery/kombu/pull/2522\r\n* Update tox requirement from >=4.4.8 to >=4.30.3 by @dependabot[bot] in https://github.com/celery/kombu/pull/2519\r\n* Update azure-identity requirement from >=1.12.0 to >=1.25.3 by @dependabot[bot] in https://github.com/celery/kombu/pull/2520\r\n* Update boto3 requirement from >=1.26.143 to >=1.42.94 by @dependabot[bot] in https://github.com/celery/kombu/pull/2523\r\n* Implement missing _delete() method of filesystem.Channel by @WojciechMigda in https://github.com/celery/kombu/pull/2470\r\n* fix delivery tag collision in pubsub transport by @jgogstad in https://github.com/celery/kombu/pull/2487\r\n* fix: RabbitMQ 4.3.0 compatibility by @Nusnus in https://github.com/celery/kombu/pull/2531\r\n* Add SQS & SNS integration tests by @rlaunch in https://github.com/celery/kombu/pull/2505\r\n* feat(gcpubsub): update existing subscriptions on config changes by @serl in https://github.com/celery/kombu/pull/2532\r\n* Update amqp requirement from <6.0.0,>=5.1.1 to >=5.3.1,<6.0.0 by @dependabot[bot] in https://github.com/celery/kombu/pull/2528\r\n* Update boto3 requirement from >=1.42.94 to >=1.42.95 by @dependabot[bot] in https://github.com/celery/kombu/pull/2527\r\n* build(deps): update azure-servicebus requirement from >=7.10.0 to ==7.14.3 by @dependabot[bot] in https://github.com/celery/kombu/pull/2535\r\n* Update pre-commit requirement from >=4.0.1 to ==4.3.0 by @dependabot[bot] in https://github.com/celery/kombu/pull/2525\r\n* build(deps): update pyyaml requirement from >=3.10 to ==6.0.3 by @dependabot[bot] in https://github.com/celery/kombu/pull/2534\r\n* Update wheel requirement from >=0.29.0 to >=0.47.0 by @dependabot[bot] in https://github.com/celery/kombu/pull/2526\r\n* fix(azureservicebus): scope queue cache and noack set to Connection by @camdl in https://github.com/celery/kombu/pull/2543\r\n* build(deps): update tzdata requirement from >=2026.1 to >=2026.2 by @dependabot[bot] in https://github.com/celery/kombu/pull/2536\r\n* Azure Service Bus: add AutoLockRenewer support via use_lock_renewal transport option by @camdl in https://github.com/celery/kombu/pull/2542\r\n* prefixed native delayed delivery by @mina58 in https://github.com/celery/kombu/pull/2540\r\n* fix(transport): add type annotation for _transport_cache dict by @DanMarcu18 in https://github.com/celery/kombu/pull/2547\r\n* fix(redis): support redis-py 7.x (raise cap to <8.0.0) by @DanMarcu18 in https://github.com/celery/kombu/pull/2548\r\n* build(deps): update google-cloud-pubsub requirement from >=2.18.4 to >=2.38.0 by @dependabot[bot] in https://github.com/celery/kombu/pull/2549\r\n* Dependencies: move dependency on 'packaging' to the extras list for Redis by @jayaddison in https://github.com/celery/kombu/pull/2524\r\n* build(deps): bump azure-storage-queue from 12.15.0 to 12.16.0 by @dependabot[bot] in https://github.com/celery/kombu/pull/2550\r\n* build(deps): bump codecov/codecov-action from 6 to 7 by @dependabot[bot] in https://github.com/celery/kombu/pull/2554\r\n* Use logger instead of print when restoring unacked messages by @soceanainn in https://github.com/celery/kombu/pull/2551\r\n* Defer `_reset_cycle` call until after updating `_active_queue` by @soceanainn in https://github.com/celery/kombu/pull/2553\r\n* Ignore errors when attempting to restore messages if the message was acked by @soceanainn in https://github.com/celery/kombu/pull/2552\r\n* Use logging instead of printing in emergency_dump_state by @soceanainn in https://github.com/celery/kombu/pull/2557\r\n* Fix azure service bus automatic lock renewal not working on gevent, move automatic lock renewal versionadded from doc string to rst file, minor cosmetic changes by @tuschla in https://github.com/celery/kombu/pull/2545\r\n* build(deps): bump actions/checkout from 6 to 7 by @dependabot[bot] in https://github.com/celery/kombu/pull/2560\r\n* ci: Drop the archived useblacksmith/setup-python GitHub Action by @cclauss in https://github.com/celery/kombu/pull/2562\r\n* Fix KeyError(<fileno>) crash in Redis transport on_readable/handle_event by @ronm-cye in https://github.com/celery/kombu/pull/2561\r\n* Honor the delivery_mode argument in Exchange.Message by @uttam12331 in https://github.com/celery/kombu/pull/2570\r\n* build(deps): bump actions/setup-python from 6 to 7 by @dependabot[bot] in https://github.com/celery/kombu/pull/2569\r\n* build(deps): bump github/codeql-action from 4 to 4.37.4 by @dependabot[bot] in https://github.com/celery/kombu/pull/2574\r\n* build(deps): bump github/codeql-action from 4.37.4 to 4.37.7 by @dependabot[bot] in https://github.com/celery/kombu/pull/2583\r\n* Redis: deliver rotating StreamingCredentialProvider tokens to long-lived BRPOP and pub/sub connections by @ThomasAitken in https://github.com/celery/kombu/pull/2563\r\n* fix(SQS): coerce visibility_timeout to a whole number of seconds by @VXNCXNX in https://github.com/celery/kombu/pull/2581\r\n* chore(redis): support redis 8.x by @bchrobot in https://github.com/celery/kombu/pull/2579\r\n* Make the Redis ack-emulation restore cadence configurable by @arkadiuszbach in https://github.com/celery/kombu/pull/2558\r\n* fix(serialization): support memoryview and bytearray in the YAML decoder by @AbhinavMir in https://github.com/celery/kombu/pull/2585\r\n* build(deps): bump github/codeql-action from 4.37.7 to 4.37.8 by @dependabot[bot] in https://github.com/celery/kombu/pull/2584\r\n* Update msgpack version to 1.2.1 by @auvipy in https://github.com/celery/kombu/pull/2589\r\n* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/celery/kombu/pull/2529\r\n* Add transport-aware batch publishing with Redis pipelines by @shivaam in https://github.com/celery/kombu/pull/2572\r\n* build(deps): bump github/codeql-action from 4.37.8 to 4.37.9 by @dependabot[bot] in https://github.com/celery/kombu/pull/2594\r\n* fix(redis): treat stale-fd KeyError as a connection error by @kokhlo in https://github.com/celery/kombu/pull/2592\r\n* Strip existing delay prefix before adding a new one on retry by @afonsojanu in https://github.com/celery/kombu/pull/2591\r\n* Redis: drop half-open pub/sub connections the subclient health check can't see by @goingforstudying-ctrl in https://github.com/celery/kombu/pull/2590\r\n* fix: add missing retry to publisher.publish in gcpubsub _put by @poolik in https://github.com/celery/kombu/pull/2465\r\n* fix: Queue.from_dict no longer drops queue options by @VXNCXNX in https://github.com/celery/kombu/pull/2580\r\n* Stop the topic '*' wildcard from matching across dots by @chuenchen309 in https://github.com/celery/kombu/pull/2568\r\n* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/celery/kombu/pull/2597\r\n* build(deps): update boto3 requirement from >=1.42.95 to >=1.42.97 by @dependabot[bot] in https://github.com/celery/kombu/pull/2539\r\n* Ensure consumer recovers from broker connection restart/issues by @GonzaloMFB in https://github.com/celery/kombu/pull/2593\r\n* build(deps): update boto3 requirement from >=1.42.97 to >=1.43.83 by @dependabot[bot] in https://github.com/celery/kombu/pull/2599\r\n* build(deps): update google-cloud-monitoring requirement from >=2.16.0 to >=2.31.0 by @dependabot[bot] in https://github.com/celery/kombu/pull/2603\r\n* Update Python versions in CI configuration by @auvipy in https://github.com/celery/kombu/pull/2604\r\n* Update pytest-rerunfailures to 16.6.1 by @pyup-bot in https://github.com/celery/kombu/pull/2618\r\n* Update pytest to 9.1.1 by @pyup-bot in https://github.com/celery/kombu/pull/2619\r\n* Update tox to 4.61.2 by @pyup-bot in https://github.com/celery/kombu/pull/2615\r\n* Update mypy to 2.3.1 by @pyup-bot in https://github.com/celery/kombu/pull/2616\r\n* Update backports.zstd to 1.7.0 by @pyup-bot in https://github.com/celery/kombu/pull/2614\r\n* Update pre-commit to 4.6.2 by @pyup-bot in https://github.com/celery/kombu/pull/2620\r\n* Update msgpack to 1.2.2 by @pyup-bot in https://github.com/celery/kombu/pull/2613\r\n* Update grpcio to 1.83.1 by @pyup-bot in https://github.com/celery/kombu/pull/2611\r\n* Update google-cloud-pubsub to 2.40.0 by @pyup-bot in https://github.com/celery/kombu/pull/2610\r\n* Update pycouchdb to 1.17.1 by @pyup-bot in https://github.com/celery/kombu/pull/2609\r\n* Update azure-storage-queue to 12.17.0 by @pyup-bot in https://github.com/celery/kombu/pull/2608\r\n* Pin packaging to latest version 26.3 by @pyup-bot in https://github.com/celery/kombu/pull/2606\r\n* Update pymongo to 4.18.0 by @pyup-bot in https://github.com/celery/kombu/pull/2607\r\n* Update typing_extensions to 4.16.0 by @pyup-bot in https://github.com/celery/kombu/pull/2617\r\n* Point SoftLayer MQ link in README to archived documentation by @GebleaAlex in https://github.com/celery/kombu/pull/2622\r\n* fix(utils): don't evict a key when overwriting an existing LRUCache entry by @MaxFreedomPollard in https://github.com/celery/kombu/pull/2621\r\n* fix(utils): never sleep longer than interval_max in retry_over_time by @abhijeet117 in https://github.com/celery/kombu/pull/2588\r\n* Raise ValueError when fileno() is given None by @gyanu2507 in https://github.com/celery/kombu/pull/2623\r\n* fix(redis): import from redis submodules by @codechrl in https://github.com/celery/kombu/pull/2625\r\n* style(http,typing): return generic BaseClient by @spawn-guy in https://github.com/celery/kombu/pull/2586\r\n* fix(redis): add sentinel_fanout_compat transport option for mixed-version Sentinel clusters by @MehrazRumman in https://github.com/celery/kombu/pull/2626\r\n* Update Python version requirements in setup.py by @auvipy in https://github.com/celery/kombu/pull/2627\r\n* build(deps): update redis requirement from <9.0.0,>=5.3.1 to >=6.1.0,<9.0.0 by @dependabot[bot] in https://github.com/celery/kombu/pull/2624\r\n* fix(redis): replace deprecated ZREVRANGEBYSCORE with ZRANGE BYSCORE REV by @MehrazRumman in https://github.com/celery/kombu/pull/2628\r\n* transport/redis: close Sentinel node connections in _disconnect_pools (fixes #1108) by @jexbow in https://github.com/celery/kombu/pull/2631\r\n* build(deps): update wheel requirement from >=0.47.0 to >=0.48.0 by @dependabot[bot] in https://github.com/celery/kombu/pull/2632\r\n* Install Rust toolchain in Python package workflow by @auvipy in https://github.com/celery/kombu/pull/2634\r\n* Add orjson dependency for CPython implementation by @auvipy in https://github.com/celery/kombu/pull/2635\r\n* Add orjson dependency for CPython implementation by @auvipy in https://github.com/celery/kombu/pull/2636\r\n* Add PGMQ transport for PostgreSQL message queues by @tavallaie in https://github.com/celery/kombu/pull/2559\r\n* Remove orjson dependency from test requirements by @auvipy in https://github.com/celery/kombu/pull/2637\r\n* Remove orjson dependency from default.txt by @auvipy in https://github.com/celery/kombu/pull/2638\r\n* Fix Redis consumer registration cleanup after disconnect by @PavelPancocha in https://github.com/celery/kombu/pull/2630\r\n* fix(redis): catch ValueError in _on_connection_disconnect by @jexbow in https://github.com/celery/kombu/pull/2640\r\n* build(deps): update setuptools requirement from >=47.0.0 to >=84.0.0 by @dependabot[bot] in https://github.com/celery/kombu/pull/2598\r\n* Install the pgmq extra only in the envs that exercise it (fixes PyPy integration CI) by @MehrazRumman in https://github.com/celery/kombu/pull/2649\r\n* fix(asynchronous): close pending HTTP client requests on hub shutdown by @ishan-1010 in https://github.com/celery/kombu/pull/2648\r\n* build(deps): bump github/codeql-action from 4.37.9 to 4.38.0 by @dependabot[bot] in https://github.com/celery/kombu/pull/2651\r\n* Update amqp version to 5.4.0 by @auvipy in https://github.com/celery/kombu/pull/2660\r\n* restore pypi long description with a bug fix by @auvipy in https://github.com/celery/kombu/pull/2661\r\n* Prevent path traversals in kombu.transport.filesystem by @ndaprela in https://github.com/celery/kombu/pull/2645\r\n* fix(utils): advance the token bucket timestamp even when the bucket is full by @MaxFreedomPollard in https://github.com/celery/kombu/pull/2652\r\n* build(deps): bump github/codeql-action from 4.38.0 to 4.38.1 by @dependabot[bot] in https://github.com/celery/kombu/pull/2663\r\n* fix(filesystem): match queue name exactly, not as a substring by @mindlaess in https://github.com/celery/kombu/pull/2647\r\n* fix(azureservicebus): keep renewal receiver out of messages by @jerbob in https://github.com/celery/kombu/pull/2655\r\n* Added checks to reject URLs containing dotted schemes by @ndaprela in https://github.com/celery/kombu/pull/2642\r\n* added changelog for v5.7.0a1 alpha release by @auvipy in https://github.com/celery/kombu/pull/2662\r\n* Bump version: 5.6.2 \u2192 5.7.0a1 by @auvipy in https://github.com/celery/kombu/pull/2664\r\n* Update confluent-kafka version to 2.15.1 by @auvipy in https://github.com/celery/kombu/pull/2666\r\n* Update kazoo version to 2.11.0 by @auvipy in https://github.com/celery/kombu/pull/2667\r\n* Update grpcio version to 1.84.0 by @auvipy in https://github.com/celery/kombu/pull/2668\r\n* Update pgmq version to 1.1.4 by @auvipy in https://github.com/celery/kombu/pull/2670\r\n* Upgrade grpcio and protobuf dependencies by @auvipy in https://github.com/celery/kombu/pull/2669\r\n* Stop channel retries at the same max_retries bound as connections by @gyanu2507 in https://github.com/celery/kombu/pull/2671\r\n* Reject bool for pool limit by @Pitchfork-and-Torch in https://github.com/celery/kombu/pull/2657\r\n* Update sqlalchemy requirement from <2.1,>=1.4.48 to >=1.4.54,<2.1 by @dependabot[bot] in https://github.com/celery/kombu/pull/2521\r\n* Avoid SQS backoff when acknowledging an invalid receipt handle by @jingi723 in https://github.com/celery/kombu/pull/2678\r\n* fix(sqs): scope queue cache, noack set and predefined clients to Connection by @kratos0718 in https://github.com/celery/kombu/pull/2676\r\n* Update Redis version requirement minimum to 6.4.0 by @auvipy in https://github.com/celery/kombu/pull/2682\r\n* Update package versions in default.txt by @auvipy in https://github.com/celery/kombu/pull/2688\r\n* Update dependency versions in funtest.txt by @auvipy in https://github.com/celery/kombu/pull/2689\r\n* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/celery/kombu/pull/2687\r\n* Update package versions in test-ci.txt with pinned versions by @auvipy in https://github.com/celery/kombu/pull/2686\r\n* chore(deps): bump github/codeql-action from 4.38.1 to 4.38.2 by @dependabot[bot] in https://github.com/celery/kombu/pull/2685\r\n* update sqlalchemy range from 1.4.54 to 2.1.1,<2.2 by @dependabot[bot] in https://github.com/celery/kombu/pull/2691\r\n* Update pymongo version to 4.18.2 by @auvipy in https://github.com/celery/kombu/pull/2696\r\n* test(redis): unacked message is requeued when the connection closes by @ishan-1010 in https://github.com/celery/kombu/pull/2695\r\n* fix(hub): wake the event loop when call_soon() is called from another thread by @oliverhaas in https://github.com/celery/kombu/pull/2694\r\n* fix: recover from broker-closed AMQP connections when publishing to Azure Service Bus by @kokhlo in https://github.com/celery/kombu/pull/2693\r\n* Honor autoretry options when opening the initial connection by @SAY-5 in https://github.com/celery/kombu/pull/2690\r\n* chore(deps): Bump google-cloud-pubsub from 2.40.0 to 2.41.0 by @dependabot[bot] in https://github.com/celery/kombu/pull/2697\r\n* Scope the zookeeper queue cache to the channel by @kratos0718 in https://github.com/celery/kombu/pull/2681\r\n* fix(azurestoragequeues): scope queue name cache to Connection by @kratos0718 in https://github.com/celery/kombu/pull/2679\r\n* Track unacked Kafka messages per QoS instance by @kratos0718 in https://github.com/celery/kombu/pull/2680\r\n* chore(deps): Update boto3 requirement from >=1.43.83 to >=1.43.103 by @dependabot[bot] in https://github.com/celery/kombu/pull/2698\r\n* Don't mask open errors in the filesystem transport by @kratos0718 in https://github.com/celery/kombu/pull/2683\r\n* fix(gcpubsub): pass Duration fields as timedelta by @00200200 in https://github.com/celery/kombu/pull/2692\r\n* SQS: accept delay_seconds and clamp per-message delays to the range SQS allows by @kokhlo in https://github.com/celery/kombu/pull/2705\r\n* docs: explain the Connection.ensure obj argument by @mvanhorn in https://github.com/celery/kombu/pull/2700\r\n* Upgrade Codecov action and modify test result upload by @auvipy in https://github.com/celery/kombu/pull/2715\r\n* fix(sqs): release the prefetch slot when DeleteMessage fails on the network by @cAtaman in https://github.com/celery/kombu/pull/2710\r\n* chore(deps): Bump tox from 4.61.2 to 4.64.4 by @dependabot[bot] in https://github.com/celery/kombu/pull/2703\r\n* docs(pyamqp): document confirm_publish transport option for detecting lost publishes by @kokhlo in https://github.com/celery/kombu/pull/2716\r\n* Update amqp version to 5.4.1 by @auvipy in https://github.com/celery/kombu/pull/2719\r\n* Update amqp version constraint in requirements by @auvipy in https://github.com/celery/kombu/pull/2720\r\n* Release preparation for v5.7.0b1 beta by @auvipy in https://github.com/celery/kombu/pull/2723\r\n* chore(deps): Bump azure-identity from 1.25.3 to 1.26.0 by @dependabot[bot] in https://github.com/celery/kombu/pull/2722\r\n* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/celery/kombu/pull/2721\r\n* chore(deps): Bump protobuf from 7.34.2 to 7.36.2 by @dependabot[bot] in https://github.com/celery/kombu/pull/2702\r\n* chore(deps): Bump azure-storage-queue from 12.17.0 to 12.18.0 by @dependabot[bot] in https://github.com/celery/kombu/pull/2726\r\n* chore(deps): Bump tox from 4.64.4 to 4.64.8 by @dependabot[bot] in https://github.com/celery/kombu/pull/2727\r\n* chore(deps): Bump google-cloud-monitoring from 2.31.0 to 2.32.0 by @dependabot[bot] in https://github.com/celery/kombu/pull/2729\r\n* fix(sqlalchemy): use BIGINT ids on MSSQL to avoid sequence overflow by @LuisFigueroaG in https://github.com/celery/kombu/pull/2728\r\n* fix: handle missing Pyro4 in driver_version and skip tests when uninstalled (#1979) by @0xrutabaga in https://github.com/celery/kombu/pull/2725\r\n* chore(deps): Bump google-cloud-pubsub from 2.41.0 to 2.42.0 by @dependabot[bot] in https://github.com/celery/kombu/pull/2730\r\n* chore(deps): Bump tox from 4.64.8 to 4.64.9 by @dependabot[bot] in https://github.com/celery/kombu/pull/2735\r\n* chore(deps): Update amqp requirement from >=5.4.0 to >=5.4.1 by @dependabot[bot] in https://github.com/celery/kombu/pull/2734\r\n* chore(deps): Bump github/codeql-action from 4.38.2 to 4.38.3 by @dependabot[bot] in https://github.com/celery/kombu/pull/2750\r\n* chore(deps): Bump azure-servicebus from 7.14.3 to 7.15.0 by @dependabot[bot] in https://github.com/celery/kombu/pull/2751\r\n* docs(pyamqp): unroll line continuation (backslash) by @jayaddison in https://github.com/celery/kombu/pull/2731\r\n* docs: fix RST markup for star-args and SQS link by @SatvikMishra08 in https://github.com/celery/kombu/pull/2749\r\n* chore(deps): Update boto3 requirement from >=1.43.103 to >=1.43.110 by @dependabot[bot] in https://github.com/celery/kombu/pull/2752\r\n* Fix binary emergency state dumps by @jakezwang in https://github.com/celery/kombu/pull/2659\r\n* fix(redis): forward disconnect() kwargs and drop the closed idle BRPOP connection by @gkswns0531 in https://github.com/celery/kombu/pull/2761\r\n* chore(deps): Bump pytest-rerunfailures from 16.6.1 to 16.7 by @dependabot[bot] in https://github.com/celery/kombu/pull/2758\r\n* fix(redis): drop BRPOP connections whose reply is overdue by @alviss7 in https://github.com/celery/kombu/pull/2757\r\n* fix(sqlalchemy): count only pending messages when purging a queue by @LuisFigueroaG in https://github.com/celery/kombu/pull/2733\r\n* Add py.typed marker for PEP 561 compliance by @akashchamp in https://github.com/celery/kombu/pull/2677\r\n* fix(redis): expire binding tables of expiring queues by @ChristianMurphy in https://github.com/celery/kombu/pull/2732\r\n* chore(deps): Update boto3 requirement from >=1.43.110 to >=1.43.112 by @dependabot[bot] in https://github.com/celery/kombu/pull/2764\r\n* Release Preparation for v5.7.0rc1 Release Candidate by @auvipy in https://github.com/celery/kombu/pull/2766\r\n* chore(deps): Bump github/codeql-action from 4.38.3 to 4.39.0 by @dependabot[bot] in https://github.com/celery/kombu/pull/2771\r\n* fix(redis): keep an unacked message when its restore hits a connection error by @ericdelorefice in https://github.com/celery/kombu/pull/2767\r\n* fix(sqs): avoid KeyError when a receive completes after basic_cancel by @YukihikoSaito in https://github.com/celery/kombu/pull/2772\r\n* chore(deps): Bump flake8 from 7.3.0 to 7.4.1 by @dependabot[bot] in https://github.com/celery/kombu/pull/2770\r\n* Revert \"fix(asynchronous): close pending HTTP client requests on hub shutdown\" by @auvipy in https://github.com/celery/kombu/pull/2778\r\n* chore(deps): Bump msgpack from 1.2.2 to 1.2.3 by @dependabot[bot] in https://github.com/celery/kombu/pull/2779\r\n* fix(redis): pause pending BRPOP polling while QoS is full by @zhaohao1004 in https://github.com/celery/kombu/pull/2776\r\n* fix(asynchronous): close the HTTP client with the hub, and not reuse it after Hub.reset() by @ishan-1010 in https://github.com/celery/kombu/pull/2782\r\n* chore(deps): Bump tox from 4.64.9 to 4.65.0 by @dependabot[bot] in https://github.com/celery/kombu/pull/2788\r\n* Update brotli version to 1.2.1 for CPython by @auvipy in https://github.com/celery/kombu/pull/2792\r\n* chore(deps): Bump github/codeql-action from 4.39.0 to 4.39.1 by @dependabot[bot] in https://github.com/celery/kombu/pull/2796\r\n* chore(deps): Update boto3 requirement from >=1.43.112 to >=1.43.118 by @dependabot[bot] in https://github.com/celery/kombu/pull/2795\r\n* chore(deps): Bump backports-zstd from 1.7.0 to 1.8.0 by @dependabot[bot] in https://github.com/celery/kombu/pull/2798\r\n* Update grpcio version to 1.84.1 by @auvipy in https://github.com/celery/kombu/pull/2800\r\n* chore(deps): Bump google-cloud-pubsub from 2.42.0 to 2.43.0 by @dependabot[bot] in https://github.com/celery/kombu/pull/2799\r\n* fix(sqs): delete a message rejected without requeue by @MehrazRumman in https://github.com/celery/kombu/pull/2784\r\n* chore(deps): Bump pymongo from 4.18.2 to 4.18.3 by @dependabot[bot] in https://github.com/celery/kombu/pull/2801\r\n* Replace brotlipy with brotlicffi for PyPy by @illia-v in https://github.com/celery/kombu/pull/2805\r\n* fix(sqlalchemy): raise when a published message cannot be stored by @ericdelorefice in https://github.com/celery/kombu/pull/2793\r\n* Update tzdata version constraint for Windows platform by @auvipy in https://github.com/celery/kombu/pull/2808\r\n* fix(common): publish(retry=True) fails after a reconnect with a named exchange by @ericdelorefice in https://github.com/celery/kombu/pull/2797\r\n* chore(deps): Bump azure-identity from 1.26.0 to 1.27.0 by @dependabot[bot] in https://github.com/celery/kombu/pull/2809\r\n* Update amqp version to 5.4.2 by @auvipy in https://github.com/celery/kombu/pull/2810\r\n* fix(sqlalchemy): raise when a purge cannot be committed by @ericdelorefice in https://github.com/celery/kombu/pull/2811\r\n* chore(deps): Bump grpcio from 1.84.1 to 1.85.1 by @dependabot[bot] in https://github.com/celery/kombu/pull/2813\r\n* Release prep for v5.7.0 stable version by @auvipy in https://github.com/celery/kombu/pull/2814\r\n\r\n## New Contributors\r\n* @MartinSiby made their first contribution in https://github.com/celery/kombu/pull/2342\r\n* @ffje made their first contribution in https://github.com/celery/kombu/pull/2251\r\n* @veeceey made their first contribution in https://github.com/celery/kombu/pull/2461\r\n* @arnaudmorin made their first contribution in https://github.com/celery/kombu/pull/2331\r\n* @nairb774 made their first contribution in https://github.com/celery/kombu/pull/2464\r\n* @ChickenBenny made their first contribution in https://github.com/celery/kombu/pull/2471\r\n* @rlaunch made their first contribution in https://github.com/celery/kombu/pull/2372\r\n* @Rogdham made their first contribution in https://github.com/celery/kombu/pull/2395\r\n* @Azd325 made their first contribution in https://github.com/celery/kombu/pull/2481\r\n* @flamble made their first contribution in https://github.com/celery/kombu/pull/2476\r\n* @NarendharManimohan made their first contribution in https://github.com/celery/kombu/pull/2493\r\n* @antonio-mello-ai made their first contribution in https://github.com/celery/kombu/pull/2492\r\n* @PieterBlomme made their first contribution in https://github.com/celery/kombu/pull/2221\r\n* @PFacheris made their first contribution in https://github.com/celery/kombu/pull/2507\r\n* @WojciechMigda made their first contribution in https://github.com/celery/kombu/pull/2470\r\n* @jgogstad made their first contribution in https://github.com/celery/kombu/pull/2487\r\n* @serl made their first contribution in https://github.com/celery/kombu/pull/2532\r\n* @camdl made their first contribution in https://github.com/celery/kombu/pull/2543\r\n* @mina58 made their first contribution in https://github.com/celery/kombu/pull/2540\r\n* @DanMarcu18 made their first contribution in https://github.com/celery/kombu/pull/2547\r\n* @soceanainn made their first contribution in https://github.com/celery/kombu/pull/2551\r\n* @tuschla made their first contribution in https://github.com/celery/kombu/pull/2545\r\n* @ronm-cye made their first contribution in https://github.com/celery/kombu/pull/2561\r\n* @uttam12331 made their first contribution in https://github.com/celery/kombu/pull/2570\r\n* @ThomasAitken made their first contribution in https://github.com/celery/kombu/pull/2563\r\n* @VXNCXNX made their first contribution in https://github.com/celery/kombu/pull/2581\r\n* @bchrobot made their first contribution in https://github.com/celery/kombu/pull/2579\r\n* @arkadiuszbach made their first contribution in https://github.com/celery/kombu/pull/2558\r\n* @AbhinavMir made their first contribution in https://github.com/celery/kombu/pull/2585\r\n* @shivaam made their first contribution in https://github.com/celery/kombu/pull/2572\r\n* @kokhlo made their first contribution in https://github.com/celery/kombu/pull/2592\r\n* @afonsojanu made their first contribution in https://github.com/celery/kombu/pull/2591\r\n* @goingforstudying-ctrl made their first contribution in https://github.com/celery/kombu/pull/2590\r\n* @poolik made their first contribution in https://github.com/celery/kombu/pull/2465\r\n* @chuenchen309 made their first contribution in https://github.com/celery/kombu/pull/2568\r\n* @GonzaloMFB made their first contribution in https://github.com/celery/kombu/pull/2593\r\n* @GebleaAlex made their first contribution in https://github.com/celery/kombu/pull/2622\r\n* @MaxFreedomPollard made their first contribution in https://github.com/celery/kombu/pull/2621\r\n* @abhijeet117 made their first contribution in https://github.com/celery/kombu/pull/2588\r\n* @gyanu2507 made their first contribution in https://github.com/celery/kombu/pull/2623\r\n* @codechrl made their first contribution in https://github.com/celery/kombu/pull/2625\r\n* @jexbow made their first contribution in https://github.com/celery/kombu/pull/2631\r\n* @tavallaie made their first contribution in https://github.com/celery/kombu/pull/2559\r\n* @PavelPancocha made their first contribution in https://github.com/celery/kombu/pull/2630\r\n* @ishan-1010 made their first contribution in https://github.com/celery/kombu/pull/2648\r\n* @ndaprela made their first contribution in https://github.com/celery/kombu/pull/2645\r\n* @mindlaess made their first contribution in https://github.com/celery/kombu/pull/2647\r\n* @jerbob made their first contribution in https://github.com/celery/kombu/pull/2655\r\n* @Pitchfork-and-Torch made their first contribution in https://github.com/celery/kombu/pull/2657\r\n* @jingi723 made their first contribution in https://github.com/celery/kombu/pull/2678\r\n* @kratos0718 made their first contribution in https://github.com/celery/kombu/pull/2676\r\n* @SAY-5 made their first contribution in https://github.com/celery/kombu/pull/2690\r\n* @00200200 made their first contribution in https://github.com/celery/kombu/pull/2692\r\n* @mvanhorn made their first contribution in https://github.com/celery/kombu/pull/2700\r\n* @cAtaman made their first contribution in https://github.com/celery/kombu/pull/2710\r\n* @LuisFigueroaG made their first contribution in https://github.com/celery/kombu/pull/2728\r\n* @0xrutabaga made their first contribution in https://github.com/celery/kombu/pull/2725\r\n* @SatvikMishra08 made their first contribution in https://github.com/celery/kombu/pull/2749\r\n* @jakezwang made their first contribution in https://github.com/celery/kombu/pull/2659\r\n* @gkswns0531 made their first contribution in https://github.com/celery/kombu/pull/2761\r\n* @alviss7 made their first contribution in https://github.com/celery/kombu/pull/2757\r\n* @akashchamp made their first contribution in https://github.com/celery/kombu/pull/2677\r\n* @ChristianMurphy made their first contribution in https://github.com/celery/kombu/pull/2732\r\n* @ericdelorefice made their first contribution in https://github.com/celery/kombu/pull/2767\r\n* @YukihikoSaito made their first contribution in https://github.com/celery/kombu/pull/2772\r\n* @zhaohao1004 made their first contribution in https://github.com/celery/kombu/pull/2776\r\n\r\n**Full Changelog**: https://github.com/celery/kombu/compare/v5.6.2...v5.7.0",
+        "reactions": {
+          "url": "https://api.github.com/repos/celery/kombu/releases/432326480/reactions",
+          "total_count": 1,
+          "+1": 0,
+          "-1": 0,
+          "laugh": 0,
+          "hooray": 0,
+          "confused": 0,
+          "heart": 1,
+          "rocket": 0,
+          "eyes": 0
+        },
+        "mentions_count": 80,
+        "mentions": [
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/128795?v=4",
+            "login": "nairb774",
+            "profile_name": "Brian Atkinson",
+            "profile_url": "https://github.com/nairb774",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/426541?v=4",
+            "login": "Azd325",
+            "profile_name": "Tim Kleinschmidt",
+            "profile_url": "https://github.com/Azd325",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/455140?v=4",
+            "login": "mvanhorn",
+            "profile_name": "Matt Van Horn",
+            "profile_url": "https://github.com/mvanhorn",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/523922?v=4",
+            "login": "jgogstad",
+            "profile_name": "Jostein Gogstad",
+            "profile_url": "https://github.com/jgogstad",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/1182850?v=4",
+            "login": "poolik",
+            "profile_name": "T\u00f5nis Pool",
+            "profile_url": "https://github.com/poolik",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/1382001?v=4",
+            "login": "arnaudmorin",
+            "profile_name": "Arnaud Morin",
+            "profile_url": "https://github.com/arnaudmorin",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/1442562?v=4",
+            "login": "spawn-guy",
+            "profile_name": "Paul Rysiavets",
+            "profile_url": "https://github.com/spawn-guy",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/1783057?v=4",
+            "login": "PFacheris",
+            "profile_name": "Patrick Facheris",
+            "profile_url": "https://github.com/PFacheris",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/2145526?v=4",
+            "login": "bchrobot",
+            "profile_name": "Benjamin Chrobot",
+            "profile_url": "https://github.com/bchrobot",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/2645794?v=4",
+            "login": "jakezwang",
+            "profile_name": "Jake Wang",
+            "profile_url": "https://github.com/jakezwang",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/2742655?v=4",
+            "login": "serl",
+            "profile_name": "Sergio Livi",
+            "profile_url": "https://github.com/serl",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/3107513?v=4",
+            "login": "ChristianMurphy",
+            "profile_name": "Christian Murphy",
+            "profile_url": "https://github.com/ChristianMurphy",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/3709715?v=4",
+            "login": "cclauss",
+            "profile_name": "Christian Clauss",
+            "profile_url": "https://github.com/cclauss",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/3889167?v=4",
+            "login": "WojciechMigda",
+            "profile_name": null,
+            "profile_url": "https://github.com/WojciechMigda",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/3994389?v=4",
+            "login": "Rogdham",
+            "profile_name": null,
+            "profile_url": "https://github.com/Rogdham",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/4050664?v=4",
+            "login": "oliverhaas",
+            "profile_name": "Oliver Haas",
+            "profile_url": "https://github.com/oliverhaas",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/4662342?v=4",
+            "login": "Nusnus",
+            "profile_name": "Tomer Nosrati",
+            "profile_url": "https://github.com/Nusnus",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/4852986?v=4",
+            "login": "camdl",
+            "profile_name": "Cameron",
+            "profile_url": "https://github.com/camdl",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/5407003?v=4",
+            "login": "tungntpham",
+            "profile_name": "Tung Pham",
+            "profile_url": "https://github.com/tungntpham",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/6212603?v=4",
+            "login": "auvipy",
+            "profile_name": "Asif Saif Uddin {\"Auvi\":\"\u0985\u09ad\u09bf\"}",
+            "profile_url": "https://github.com/auvipy",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/6463385?v=4",
+            "login": "shivaam",
+            "profile_name": "Shivam Rastogi",
+            "profile_url": "https://github.com/shivaam",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/7264703?v=4",
+            "login": "woutdenolf",
+            "profile_name": "Wout De Nolf",
+            "profile_url": "https://github.com/woutdenolf",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/8994350?v=4",
+            "login": "flamble",
+            "profile_name": "Freddie",
+            "profile_url": "https://github.com/flamble",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/10198108?v=4",
+            "login": "tavallaie",
+            "profile_name": "Ali Tavallaie",
+            "profile_url": "https://github.com/tavallaie",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/11797624?v=4",
+            "login": "jexbow",
+            "profile_name": "liangliang luo",
+            "profile_url": "https://github.com/jexbow",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/13467605?v=4",
+            "login": "alviss7",
+            "profile_name": "Charles Provent",
+            "profile_url": "https://github.com/alviss7",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/16239342?v=4",
+            "login": "pyup-bot",
+            "profile_name": "pyup.io bot",
+            "profile_url": "https://github.com/pyup-bot",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/17063453?v=4",
+            "login": "soceanainn",
+            "profile_name": "S\u00e9amus \u00d3 Ceanainn",
+            "profile_url": "https://github.com/soceanainn",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/17710133?v=4",
+            "login": "illia-v",
+            "profile_name": "Illia Volochii",
+            "profile_url": "https://github.com/illia-v",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/20276325?v=4",
+            "login": "PieterBlomme",
+            "profile_name": null,
+            "profile_url": "https://github.com/PieterBlomme",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/25092016?v=4",
+            "login": "ndaprela",
+            "profile_name": "nico",
+            "profile_url": "https://github.com/ndaprela",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/25161069?v=4",
+            "login": "jerbob",
+            "profile_name": "Jeremiah Boby",
+            "profile_url": "https://github.com/jerbob",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/27347476?v=4",
+            "login": "dependabot",
+            "profile_name": "Dependabot",
+            "profile_url": "https://github.com/dependabot",
+            "avatar_user_actor": false
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/29892340?v=4",
+            "login": "DanMarcu18",
+            "profile_name": "Dan Marcu",
+            "profile_url": "https://github.com/DanMarcu18",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/30392053?v=4",
+            "login": "PavelPancocha",
+            "profile_name": "Pavel Pan\u010docha",
+            "profile_url": "https://github.com/PavelPancocha",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/34209028?v=4",
+            "login": "veeceey",
+            "profile_name": "Varun Chawla",
+            "profile_url": "https://github.com/veeceey",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/36011576?v=4",
+            "login": "AbhinavMir",
+            "profile_name": "august",
+            "profile_url": "https://github.com/AbhinavMir",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/40765931?v=4",
+            "login": "cAtaman",
+            "profile_name": "Chima Ataman",
+            "profile_url": "https://github.com/cAtaman",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/43502612?v=4",
+            "login": "ffje",
+            "profile_name": "Danila Shiman",
+            "profile_url": "https://github.com/ffje",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/46752251?v=4",
+            "login": "gkswns0531",
+            "profile_name": "Hanjun Cho",
+            "profile_url": "https://github.com/gkswns0531",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/47187204?v=4",
+            "login": "GonzaloMFB",
+            "profile_name": null,
+            "profile_url": "https://github.com/GonzaloMFB",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/47347561?v=4",
+            "login": "rlaunch",
+            "profile_name": "Ryan",
+            "profile_url": "https://github.com/rlaunch",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/47825603?v=4",
+            "login": "kokhlo",
+            "profile_name": "Konstantin Khlopkov",
+            "profile_url": "https://github.com/kokhlo",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/48636551?v=4",
+            "login": "ThomasAitken",
+            "profile_name": "Thomas Aitken",
+            "profile_url": "https://github.com/ThomasAitken",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/48723787?v=4",
+            "login": "chuenchen309",
+            "profile_name": "Andrew Chen",
+            "profile_url": "https://github.com/chuenchen309",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/53692914?v=4",
+            "login": "tuschla",
+            "profile_name": null,
+            "profile_url": "https://github.com/tuschla",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/55152140?v=4",
+            "login": "jayaddison",
+            "profile_name": "James Addison",
+            "profile_url": "https://github.com/jayaddison",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/55976380?v=4",
+            "login": "arkadiuszbach",
+            "profile_name": "Arkadiusz Bach",
+            "profile_url": "https://github.com/arkadiuszbach",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/59512321?v=4",
+            "login": "MehrazRumman",
+            "profile_name": "Mehraz Hossain Rumman",
+            "profile_url": "https://github.com/MehrazRumman",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/60662169?v=4",
+            "login": "YukihikoSaito",
+            "profile_name": null,
+            "profile_url": "https://github.com/YukihikoSaito",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/62305361?v=4",
+            "login": "LuisFigueroaG",
+            "profile_name": "Luis Figueroa",
+            "profile_url": "https://github.com/LuisFigueroaG",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/64617429?v=4",
+            "login": "pre-commit-ci",
+            "profile_name": "pre-commit.ci",
+            "profile_url": "https://github.com/pre-commit-ci",
+            "avatar_user_actor": false
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/64732931?v=4",
+            "login": "haimjether",
+            "profile_name": "Haim Daniel",
+            "profile_url": "https://github.com/haimjether",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/70249239?v=4",
+            "login": "codechrl",
+            "profile_name": "kurniawan",
+            "profile_url": "https://github.com/codechrl",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/80175874?v=4",
+            "login": "mindlaess",
+            "profile_name": "Mindless",
+            "profile_url": "https://github.com/mindlaess",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/81113356?v=4",
+            "login": "gyanu2507",
+            "profile_name": "Gyanu Mayank",
+            "profile_url": "https://github.com/gyanu2507",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/83299832?v=4",
+            "login": "00200200",
+            "profile_name": "Micha\u0142 Furga\u0142a",
+            "profile_url": "https://github.com/00200200",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/89024979?v=4",
+            "login": "SatvikMishra08",
+            "profile_name": "Satvik Mishra",
+            "profile_url": "https://github.com/SatvikMishra08",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/93332837?v=4",
+            "login": "VXNCXNX",
+            "profile_name": "Vincent",
+            "profile_url": "https://github.com/VXNCXNX",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/93596103?v=4",
+            "login": "mina58",
+            "profile_name": "Mina Shawket",
+            "profile_url": "https://github.com/mina58",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/96047363?v=4",
+            "login": "afonsojanu",
+            "profile_name": "Afonso Janu\u00e1rio",
+            "profile_url": "https://github.com/afonsojanu",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/96862600?v=4",
+            "login": "ChickenBenny",
+            "profile_name": null,
+            "profile_url": "https://github.com/ChickenBenny",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/98383932?v=4",
+            "login": "ishan-1010",
+            "profile_name": "Ishan Katoch",
+            "profile_url": "https://github.com/ishan-1010",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/108662832?v=4",
+            "login": "MartinSiby",
+            "profile_name": "Martin",
+            "profile_url": "https://github.com/MartinSiby",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/114540347?v=4",
+            "login": "ericdelorefice",
+            "profile_name": "Eric Del Orefice",
+            "profile_url": "https://github.com/ericdelorefice",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/115032126?v=4",
+            "login": "NarendharManimohan",
+            "profile_name": null,
+            "profile_url": "https://github.com/NarendharManimohan",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/116457960?v=4",
+            "login": "akashchamp",
+            "profile_name": null,
+            "profile_url": "https://github.com/akashchamp",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/159913047?v=4",
+            "login": "uttam12331",
+            "profile_name": null,
+            "profile_url": "https://github.com/uttam12331",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/161704396?v=4",
+            "login": "GebleaAlex",
+            "profile_name": "Alex Geblea",
+            "profile_url": "https://github.com/GebleaAlex",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/165467859?v=4",
+            "login": "jingi723",
+            "profile_name": "Jingi Kim",
+            "profile_url": "https://github.com/jingi723",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/184605338?v=4",
+            "login": "0xrutabaga",
+            "profile_name": "rutabaga",
+            "profile_url": "https://github.com/0xrutabaga",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/186876424?v=4",
+            "login": "antonio-mello-ai",
+            "profile_name": "Antonio Mello",
+            "profile_url": "https://github.com/antonio-mello-ai",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/192859219?v=4",
+            "login": "abhijeet117",
+            "profile_name": "Vaishnav Abhijeet",
+            "profile_url": "https://github.com/abhijeet117",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/203391966?v=4",
+            "login": "zhaohao1004",
+            "profile_name": "Ingram Z",
+            "profile_url": "https://github.com/zhaohao1004",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/204972096?v=4",
+            "login": "kratos0718",
+            "profile_name": "Abhinav",
+            "profile_url": "https://github.com/kratos0718",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/226993820?v=4",
+            "login": "ronm-cye",
+            "profile_name": "Ron Mizrachi",
+            "profile_url": "https://github.com/ronm-cye",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/240962040?v=4",
+            "login": "SAY-5",
+            "profile_name": "Sai Asish Y",
+            "profile_url": "https://github.com/SAY-5",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/258847353?v=4",
+            "login": "goingforstudying-ctrl",
+            "profile_name": null,
+            "profile_url": "https://github.com/goingforstudying-ctrl",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/272618364?v=4",
+            "login": "MaxFreedomPollard",
+            "profile_name": "Max Freedom Pollard",
+            "profile_url": "https://github.com/MaxFreedomPollard",
+            "avatar_user_actor": true
+          },
+          {
+            "avatar_url": "https://avatars.githubusercontent.com/u/297513015?v=4",
+            "login": "Pitchfork-and-Torch",
+            "profile_name": "Jon Bailey",
+            "profile_url": "https://github.com/Pitchfork-and-Torch",
+            "avatar_user_actor": true
+          }
+        ],
+        "short_description_html": "<h2>What's Changed</h2>\n<ul>\n<li>Add missing reprkwargs export to utils module by <a class=\"user-mention notranslate\" data-hovercard-type=\"user\" data-hovercard-url=\"/users/oliverhaas/hovercard\" data-octo-click=\"hovercard-link-click\" data-octo-dimensions=\"link_type:self\" href=\"https://github.com/oliverhaas\">@oliverhaas</a> in <a class=\"issue-link js-issue-link\" data-error-text=\"Failed to load title\" data-id=\"3774953768\" data-permission-text=\"Title is private\" data-url=\"https://github.com/celery/kombu/issues/2436\" data-hovercard-type=\"pull_request\" data-hovercard-url=\"/celery/kombu/pull/2436/hovercard\" href=\"https://github.com/celery/kombu/pull/2436\">#2436</a>\n</li>\n<li>Remove Python 3.9 from CI workflow by <a class=\"user-mention notranslate\" data-hovercard-type=\"user\" data-hovercard-url=\"/users/auvipy/hovercard\" data-octo-click=\"hovercard-link-click\" data-octo-dimensions=\"link_type:self\" href=\"https://github.com/auvipy\">@auvipy</a> in <a class=\"issue-link js-issue-link\" data-error-text=\"Failed to load title\" data-id=\"3896338866\" data-permission-text=\"Title is private\" data-url=\"https://github.com/celery/kombu/issues/2448\" data-hovercard-type=\"pull_request\" data-hovercard-url=\"/celery/kombu/pull/2448/hovercard\" href=\"https://github.com/celery/kombu/pull/2448\">#2448</a>\n</li>\n<li>Update Python and OS version in Read the Docs config by <a class=\"user-mention notranslate\" data-hovercard-type=\"user\" data-hovercard-url=\"/users/auvipy/hovercard\" data-octo-click=\"hovercard-link-click\" data-octo-dimensions=\"link_type:self\" href=\"https://github.com/auvipy\">@\u2026</a>\n</li>\n</ul>",
+        "is_short_description_html_truncated": true
+      }
+    },
+    "public": true,
+    "created_at": "2026-11-03T05:55:20Z",
+    "org": {
+      "id": 319983,
+      "login": "celery",
+      "gravatar_id": "",
+      "url": "https://api.github.com/orgs/celery",
+      "avatar_url": "https://avatars.githubusercontent.com/u/319983?"
+    }
+  },
+  {
+    "id": "19052389636",
+    "type": "WatchEvent",
+    "actor": {
+      "id": 345224800,
+      "login": "ncd81yomifh",
+      "display_login": "ncd81yomifh",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/ncd81yomifh",
+      "avatar_url": "https://avatars.githubusercontent.com/u/345224800?"
+    },
+    "repo": {
+      "id": 184460,
+      "name": "celery/celery",
+      "url": "https://api.github.com/repos/celery/celery"
+    },
+    "payload": {
+      "action": "started"
+    },
+    "public": true,
+    "created_at": "2026-11-03T22:46:00Z",
+    "org": {
+      "id": 319983,
+      "login": "celery",
+      "gravatar_id": "",
+      "url": "https://api.github.com/orgs/celery",
+      "avatar_url": "https://avatars.githubusercontent.com/u/319983?"
+    }
+  }
+]

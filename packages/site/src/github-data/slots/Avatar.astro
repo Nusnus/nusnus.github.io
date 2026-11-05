@@ -1,0 +1,17 @@
+---
+/**
+ * @file Data slot: Tomer's GitHub avatar, from his profile as the build baked
+ * it, filling the round frame the dashboard gives it.
+ */
+
+import { PERSON } from "../../person.ts";
+import { pageStore } from "../live/page-store.ts";
+---
+
+<img
+  alt={PERSON.name}
+  class="size-full rounded-full"
+  height="64"
+  src={pageStore().readInitial().snapshot.profile.data.avatarUrl}
+  width="64"
+/>

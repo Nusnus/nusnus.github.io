@@ -1,0 +1,31 @@
+---
+/**
+ * @file The dashboard, the home page's layout: below `md`, the mobile header
+ * with its drawer over one column that scrolls with the page; from `md` up, a
+ * fixed-width sidebar beside the main column, each scrolling on its own; from
+ * `lg` up, a fixed-width activity panel too. The page's content goes in the
+ * main column, `<main id="main-content">`.
+ */
+
+import ActivityPanel from "./ActivityPanel.astro";
+import MobileDrawer from "./mobile/MobileDrawer.astro";
+import MobileHeader from "./mobile/MobileHeader.astro";
+import Sidebar from "./Sidebar.astro";
+---
+
+<div
+  class="grid min-h-screen grid-cols-1 md:h-screen md:grid-cols-[280px_1fr] lg:grid-cols-[280px_1fr_340px]"
+>
+  <Sidebar />
+  <MobileHeader />
+  <MobileDrawer />
+  <main
+    class="min-h-screen scrollbar-thin px-4 pt-16 pb-8 sm:px-6 md:col-start-2 md:overflow-y-auto md:pt-8 lg:px-10"
+    id="main-content"
+  >
+    <div class="mx-auto flex max-w-4xl flex-col gap-10 sm:gap-16">
+      <slot />
+    </div>
+  </main>
+  <ActivityPanel />
+</div>

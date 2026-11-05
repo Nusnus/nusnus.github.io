@@ -1,0 +1,36 @@
+---
+/**
+ * @file Who Tomer is, at a glance: his avatar, which the slot holds, beside his
+ * name and GitHub login, larger in the sidebar than in the mobile header.
+ */
+
+import { tw } from "../design-system/tailwind.ts";
+import { PERSON } from "../person.ts";
+
+interface Props {
+  class?: string;
+  placement: "header" | "sidebar";
+}
+
+const TEXT_SIZES = {
+  header: { login: tw`text-xs`, name: tw`text-sm` },
+  sidebar: { login: tw`text-sm`, name: tw`text-lg` },
+} as const satisfies Record<
+  Props["placement"],
+  { login: string; name: string }
+>;
+
+const { class: className, placement } = Astro.props;
+---
+
+<div class:list={["flex items-center gap-3", className]}>
+  <slot />
+  <div>
+    <p class:list={["leading-tight font-semibold", TEXT_SIZES[placement].name]}>
+      {PERSON.name}
+    </p>
+    <p class:list={["font-mono text-accent", TEXT_SIZES[placement].login]}>
+      @{PERSON.githubLogin}
+    </p>
+  </div>
+</div>

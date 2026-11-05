@@ -1,0 +1,12 @@
+---
+/**
+ * @file Data slot: the line "<N> contributions this year", in the sidebar and
+ * the mobile drawer.
+ */
+
+import LiveText from "../../live/LiveText.astro";
+---
+
+<p class="mb-3 font-mono text-sm font-semibold text-text-primary">
+  <LiveText name="totalContributions" /> contributions this year
+</p>

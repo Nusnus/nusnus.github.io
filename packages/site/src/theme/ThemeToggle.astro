@@ -1,0 +1,28 @@
+---
+/**
+ * @file A theme toggle: the button that switches between the dark and light
+ * themes, showing a moon in the dark theme and a sun in the light one. CSS
+ * picks its icon and label from the `dark` class on <html>, and the page
+ * document's theme script handles its click, so it is right and works from the
+ * first paint, before any island hydrates. A page may hold several.
+ */
+
+import IconButton from "../design-system/IconButton.astro";
+import { Moon, Sun } from "../design-system/icons.ts";
+import { THEME_TOGGLE_ATTRIBUTE } from "./theme.ts";
+---
+
+<IconButton
+  class="duration-150 hover:text-accent focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
+  type="button"
+  {...{ [THEME_TOGGLE_ATTRIBUTE]: true }}
+>
+  <span class="sr-only hidden dark:inline">Switch to light mode</span>
+  <span class="sr-only dark:hidden">Switch to dark mode</span>
+  <span
+    class="inline-block rotate-180 transition-transform duration-300 motion-reduce:transition-none dark:rotate-0"
+  >
+    <Moon className="hidden h-5 w-5 dark:block" />
+    <Sun className="h-5 w-5 dark:hidden" />
+  </span>
+</IconButton>

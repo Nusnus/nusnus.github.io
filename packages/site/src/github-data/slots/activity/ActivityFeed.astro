@@ -1,0 +1,14 @@
+---
+/**
+ * @file Data slot: the activity feed in the activity panel, Tomer's recent
+ * GitHub events, redacted where the contract's `redaction.ts` says.
+ */
+
+import ActivityFeed from "../../activity/ActivityFeed.tsx";
+---
+
+{
+  /* The activity panel is in view as the page loads from lg up, so this
+  hydrates once the page is idle rather than waiting until visible. */
+}
+<ActivityFeed client:idle />

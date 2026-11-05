@@ -1,0 +1,26 @@
+---
+/**
+ * @file Data slot: a grid of tracked repositories' cards, either the featured
+ * ones or the rest, in the order the site lists them.
+ */
+
+import { TRACKED_REPOSITORIES } from "@nusnus/github-data/repositories";
+
+import RepositoryCard from "./RepositoryCard.astro";
+
+interface Props {
+  featured: boolean;
+}
+
+const { featured } = Astro.props;
+---
+
+<div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+  {
+    TRACKED_REPOSITORIES.filter((tracked) => tracked.featured === featured).map(
+      ({ fullName, role }) => (
+        <RepositoryCard fullName={fullName} role={role} />
+      ),
+    )
+  }
+</div>

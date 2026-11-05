@@ -1,0 +1,35 @@
+---
+/**
+ * @file Data slot: the contribution overview's tiles of this year's headline
+ * counts, contributions, streak, commits and pull requests.
+ */
+
+import type { PageTextName } from "../../live/live-text.ts";
+
+import LiveText from "../../live/LiveText.astro";
+
+const TILES = [
+  { label: "contributions", name: "totalContributions" },
+  { emoji: "🔥", label: "day streak", name: "streak" },
+  { label: "commits", name: "totalCommits" },
+  { label: "pull requests", name: "totalPullRequests" },
+] as const satisfies readonly {
+  emoji?: string;
+  label: string;
+  name: PageTextName;
+}[];
+---
+
+<div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
+  {
+    TILES.map((tile) => (
+      <div class="rounded-lg bg-bg-surface/50 p-3 ring-1 ring-border/40">
+        <p class="font-mono text-xl font-bold text-accent">
+          {"emoji" in tile && <span aria-hidden="true">{tile.emoji} </span>}
+          <LiveText name={tile.name} />
+        </p>
+        <p class="text-xs text-text-muted">{tile.label}</p>
+      </div>
+    ))
+  }
+</div>

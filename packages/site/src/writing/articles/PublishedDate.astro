@@ -1,0 +1,19 @@
+---
+/**
+ * @file An article's publication date, as visitors read it, marked up as a
+ * time for machines to read.
+ */
+
+import { type Article, formatPublishedDate } from "./article.ts";
+
+interface Props {
+  article: Article;
+  class?: string;
+}
+
+const { article, class: className } = Astro.props;
+---
+
+<time class={className} datetime={article.data.publishedAt.toISOString()}
+  >{formatPublishedDate(article)}</time
+>

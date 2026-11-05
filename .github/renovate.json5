@@ -1,0 +1,40 @@
+// Renovate, through its Mend-hosted GitHub App, proposes each newer release of
+// every direct dependency, action, runtime and tool, refreshes bun.lock's
+// transitive dependencies each week, and merges each update once the checks
+// main's ruleset requires pass: https://docs.renovatebot.com/
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  // Every update merges, majors included: the required checks gate each one,
+  // and a major release is how an action moves off a runtime GitHub retires.
+  automerge: true,
+  extends: ["config:recommended"],
+  // A transitive dependency moves only when bun.lock is rebuilt, which no
+  // update of a direct dependency does unless it needs to.
+  lockFileMaintenance: { enabled: true },
+  // Wait a week after each release, so a compromised release is likely caught
+  // before it lands here. bunfig.toml holds Bun's own installs to the same.
+  minimumReleaseAge: "7 days",
+  packageRules: [
+    // A tilde range holds a dependency below its next minor, for the reason
+    // AGENTS.md gives. A release past the hold waits on the Dependency
+    // Dashboard until someone lifts it, instead of failing its checks in an
+    // open pull request.
+    {
+      dependencyDashboardApproval: true,
+      matchCurrentValue: "/^~/",
+      matchUpdateTypes: ["minor", "major"],
+    },
+    // Node.js's major and its types move in one pull request, which the
+    // pinned-tools check holds until @tsconfig/node<major> moves with them.
+    {
+      groupName: "Node.js major",
+      matchDepNames: ["@types/node", "node"],
+      matchUpdateTypes: ["major"],
+    },
+  ],
+  // Each update raises its floor in package.json to the release it brings, as
+  // AGENTS.md's Stack says. With a `>=` floor, Renovate's default moves only
+  // bun.lock, whose versions its bun manager does not read, so it would
+  // propose no update at all.
+  rangeStrategy: "bump",
+}

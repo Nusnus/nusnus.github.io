@@ -1,0 +1,7 @@
+{
+  "$schema": "https://www.schemastore.org/tsconfig",
+  // What Node.js runs, the repository's scripts and the worker's recorder,
+  // type-checks for the Node.js major mise.toml pins, which the pinned-tools
+  // check holds package.json's @tsconfig/node<major> to.
+  "extends": ["@tsconfig/node26/tsconfig.json", "./tsconfig.base.json"]
+}

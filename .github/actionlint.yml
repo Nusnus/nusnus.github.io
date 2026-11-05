@@ -1,0 +1,11 @@
+# actionlint refuses GitHub's self-repository `uses: $/…` syntax, which
+# GitHub recommends for actions and workflows in the same repository:
+# https://github.com/rhysd/actionlint/issues/711. These ignore only that
+# refusal. If upstream stays silent past the next GitHub syntax change that
+# breaks a run, switch to its maintained fork, kjanat/actionlint, which
+# accepts the syntax.
+paths:
+  .github/workflows/*.yml:
+    ignore:
+      - 'specifying action "\$/[^"]+" in invalid format because ref is missing'
+      - 'reusable workflow call "\$/[^"]+" at "uses" is not following the format'

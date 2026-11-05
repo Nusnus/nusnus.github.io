@@ -1,0 +1,50 @@
+---
+/**
+ * @file The home page's opening: Tomer's name as the page's one `h1`, his role,
+ * his tagline and links to his accounts.
+ */
+
+import { linkTarget } from "../design-system/link-target.ts";
+import { PERSON } from "../person.ts";
+
+// The hero's own list: its order and labels are the live site's here, which
+// differ from the sidebar's.
+const SOCIAL_LINKS = [
+  { href: PERSON.linkedinUrl, label: "LinkedIn" },
+  { href: PERSON.xUrl, label: "X" },
+  { href: PERSON.githubUrl, label: "GitHub" },
+] as const;
+---
+
+<section
+  aria-label="Hero"
+  class="flex flex-col items-center py-8 text-center sm:py-12"
+>
+  <h1 class="text-3xl font-extrabold tracking-tight sm:text-5xl md:text-6xl">
+    {PERSON.name}
+  </h1>
+  <p class="mt-3 text-base text-text-secondary sm:mt-4 sm:text-lg">
+    {PERSON.role} ·{" "}
+    <a
+      class="text-accent hover:underline"
+      href={PERSON.celeryOrganizationUrl}
+      {...linkTarget(PERSON.celeryOrganizationUrl)}>{PERSON.organization}</a
+    >
+  </p>
+  <p class="mt-1.5 text-sm text-text-muted italic sm:mt-2 sm:text-base">
+    Building the backbone of distributed Python
+  </p>
+  <div class="mt-4 flex items-center gap-4 sm:mt-6 sm:gap-6">
+    {
+      SOCIAL_LINKS.map(({ href, label }) => (
+        <a
+          class="text-xs font-semibold tracking-widest text-text-muted uppercase transition-colors hover:text-text-primary"
+          href={href}
+          {...linkTarget(href)}
+        >
+          {label}
+        </a>
+      ))
+    }
+  </div>
+</section>

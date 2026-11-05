@@ -1,0 +1,40 @@
+---
+/**
+ * @file A home section's heading and the lead below it, which the slot holds:
+ * `regular` for most sections, `compact` for those that open on a chart. A
+ * heading with a badge, such as Writing's "Soon", holds the badge beside its
+ * title, in a row set further above the lead.
+ */
+
+import Badge from "../design-system/Badge.astro";
+import { tw } from "../design-system/tailwind.ts";
+
+interface Props {
+  badge?: string;
+  density: "compact" | "regular";
+  title: string;
+}
+
+const SPACING = {
+  compact: { lead: tw`mb-5 text-sm`, title: tw`mb-1` },
+  regular: { lead: tw`mb-6`, title: tw`mb-2` },
+} as const satisfies Record<Props["density"], { lead: string; title: string }>;
+
+const TITLE = tw`text-2xl font-bold tracking-tight sm:text-3xl`;
+
+const { badge, density, title } = Astro.props;
+---
+
+{
+  badge === undefined ? (
+    <h2 class:list={[TITLE, SPACING[density].title]}>{title}</h2>
+  ) : (
+    <div class="mb-6 flex items-center gap-3">
+      <h2 class={TITLE}>{title}</h2>
+      <Badge variant="accent">{badge}</Badge>
+    </div>
+  )
+}
+<p class:list={["text-text-secondary", SPACING[density].lead]}>
+  <slot />
+</p>

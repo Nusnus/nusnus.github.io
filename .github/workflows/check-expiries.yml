@@ -1,0 +1,40 @@
+# Runs the expiry check, which fails once something the site relies on is due
+# to expire, saying how to renew it. AGENTS.md's "Running unattended" says who
+# GitHub tells of a failed scheduled run.
+name: Check expiries
+
+on:
+  schedule:
+    # Off the hour, which GitHub's docs name as when Actions is busiest and
+    # delays scheduled runs:
+    # https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule
+    - cron: "41 6 * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  # A newer run checks the same expiries.
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+  check-expiries:
+    name: Check expiries
+    permissions:
+      pull-requests: read # lists Renovate's open pull requests.
+    runs-on: ubuntu-latest
+    environment:
+      name: cloudflare
+      # The job reads the environment's secret, and deploys nothing.
+      deployment: false
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: $/.github/actions/setup
+      - run: bun run check:expiries
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+    timeout-minutes: 10

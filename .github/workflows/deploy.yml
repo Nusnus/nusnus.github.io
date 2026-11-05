@@ -1,0 +1,101 @@
+# Checks main, then deploys the worker, then builds the site from the worker's
+# GitHub data and deploys it to GitHub Pages, as one ordered run, so a change
+# to the contract the two share never reaches the site before the worker. The
+# build waits until the worker serves the version this run deployed, since
+# Cloudflare documents no time by which a new version serves every request.
+# Each job is idempotent, so rerunning the newest run from its failed job, or
+# dispatching a new run, finishes the change; an older run would wait for a
+# worker version a newer run has replaced, and deploy its older site.
+#
+# The scheduled run rebuilds the site, so the baked data stays fresh, and
+# deploys the worker too: a deploy that failed in a run that notifies no one,
+# such as one a Renovate merge started, is retried, and fails where its email
+# reaches the owner, as AGENTS.md's "Running unattended" says.
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    # Off the hour, which GitHub's docs name as when Actions is busiest and
+    # delays scheduled runs:
+    # https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule
+    - cron: "17 5 * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  # One deploy at a time: a newer run waits, since cancelling one part way
+  # would leave the worker and the site on different commits.
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: Check
+    permissions:
+      contents: read
+    uses: $/.github/workflows/check.yml
+
+  deploy-worker:
+    name: Deploy the worker
+    permissions:
+      contents: read
+    needs: check
+    runs-on: ubuntu-latest
+    environment: cloudflare
+    outputs:
+      version-id: ${{ steps.deploy.outputs.version-id }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: $/.github/actions/setup
+      # Wrangler reports the version it deployed in its output file:
+      # https://developers.cloudflare.com/workers/wrangler/system-environment-variables/
+      # jq, which mise.toml pins, reads it.
+      - id: deploy
+        run: |
+          bun run --filter ./packages/worker deploy
+          version_id=$(jq --exit-status --raw-output 'select(.type == "deploy").version_id' "$WRANGLER_OUTPUT_FILE_PATH")
+          echo "version-id=$version_id" >> "$GITHUB_OUTPUT"
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          WRANGLER_OUTPUT_FILE_PATH: ${{ runner.temp }}/wrangler-output.ndjson
+    timeout-minutes: 10
+
+  build-site:
+    name: Build the site
+    permissions:
+      contents: read
+    needs: deploy-worker
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: $/.github/actions/setup
+      - run: bun run await:worker-version
+        env:
+          WORKER_VERSION_ID: ${{ needs.deploy-worker.outputs.version-id }}
+      - run: bun run --filter ./packages/site build
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: packages/site/dist/
+    timeout-minutes: 10
+
+  deploy-site:
+    name: Deploy the site
+    permissions:
+      id-token: write # deploy-pages proves the run's identity with it.
+      pages: write # deploy-pages publishes the site with it.
+    needs: build-site
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+    timeout-minutes: 10

@@ -1,0 +1,38 @@
+---
+/**
+ * @file The page GitHub Pages serves, as `404.html`, for any URL the site does
+ * not have, pointing the visitor home or to the writing. It is served at URLs
+ * not its own, so it names no canonical URL.
+ */
+
+import ButtonLink from "../design-system/ButtonLink.astro";
+import PageDocument from "../layouts/PageDocument.astro";
+import { WRITING } from "../writing/writing.ts";
+---
+
+<PageDocument
+  canonical={false}
+  description="The page you're looking for doesn't exist."
+  pageName="Page not found"
+>
+  <main
+    class="flex min-h-dvh flex-col items-center justify-center px-6 py-20 text-center"
+    id="main-content"
+  >
+    <p class="font-mono text-sm tracking-widest text-accent uppercase">404</p>
+    <h1
+      class="mt-4 text-4xl font-bold tracking-tight text-text-primary sm:text-5xl"
+    >
+      Page not found
+    </h1>
+    <p class="mt-4 max-w-md text-lg text-text-secondary">
+      The page you're looking for moved, was renamed, or never existed.
+    </p>
+    <div class="mt-8 flex flex-wrap items-center justify-center gap-3">
+      <ButtonLink href="/">Back to home</ButtonLink>
+      <ButtonLink href={WRITING.pagePath} variant="ghost"
+        >Read my writing</ButtonLink
+      >
+    </div>
+  </main>
+</PageDocument>

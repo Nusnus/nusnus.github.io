@@ -1,0 +1,38 @@
+---
+/**
+ * @file The Sponsoring section: a call to fund Celery's development through its
+ * Open Collective.
+ */
+
+import BrandIcon from "../design-system/BrandIcon.astro";
+import ButtonLink from "../design-system/ButtonLink.astro";
+import { ArrowRight } from "../design-system/icons.ts";
+import HomeSection from "./HomeSection.astro";
+
+const OPEN_COLLECTIVE_URL = "https://opencollective.com/celery";
+---
+
+<HomeSection id="sponsoring">
+  <div class="rounded-xl border border-accent/20 bg-accent-muted p-6 md:p-8">
+    <div class="max-w-xl">
+      <div class="mb-3 flex items-center gap-2">
+        <BrandIcon brand="celery" class="h-6 w-6 text-accent" />
+        <h2 class="text-xl font-bold text-text-primary sm:text-2xl">
+          Support Celery's Development
+        </h2>
+      </div>
+
+      <p class="mb-4 text-sm leading-relaxed text-text-secondary">
+        Celery powers distributed task queues for thousands of companies
+        worldwide. Your sponsorship directly funds ongoing maintenance, CI/CD
+        infrastructure, and the development of new features for the entire
+        ecosystem.
+      </p>
+
+      <ButtonLink href={OPEN_COLLECTIVE_URL}>
+        Become a Sponsor
+        <ArrowRight className="h-4 w-4" />
+      </ButtonLink>
+    </div>
+  </div>
+</HomeSection>

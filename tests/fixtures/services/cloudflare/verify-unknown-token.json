@@ -1,0 +1,34 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "https://api.cloudflare.com/client/v4/user/tokens/verify"
+  },
+  "status": 401,
+  "headers": {
+    "api-version": "2026-10-01.epoch",
+    "cache-control": "no-store, no-cache, must-revalidate, post-check=0, pre-check=0",
+    "cf-auditlog-id": "01a1a5ad-9bf6-718b-b1a0-f5b7dbcb3bcd",
+    "cf-cache-status": "DYNAMIC",
+    "cf-ray": "a552409978f4e8f3-TLV",
+    "content-type": "application/json",
+    "date": "Wed, 04 Nov 2026 08:29:41 GMT",
+    "expires": "Sun, 25 Jan 1981 05:00:00 GMT",
+    "pragma": "no-cache",
+    "server": "cloudflare",
+    "set-cookie": "_cfuvid=O6aC7Gwpac8cXiXaOUMk.EyWONDwJT4iubbCpiBJlBs-1793780980.7186913-1.0.1.1-89sIz9YdCR4qOuWP0rcnEXIu5t52UaM6l8b27NRytT0; HttpOnly; SameSite=None; Secure; Path=/; Domain=api.cloudflare.com",
+    "strict-transport-security": "max-age=31536000",
+    "x-content-type-options": "nosniff",
+    "x-frame-options": "SAMEORIGIN"
+  },
+  "body": {
+    "success": false,
+    "errors": [
+      {
+        "code": 1000,
+        "message": "Invalid API Token"
+      }
+    ],
+    "messages": [],
+    "result": null
+  }
+}

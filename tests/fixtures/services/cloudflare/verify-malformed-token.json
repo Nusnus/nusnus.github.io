@@ -1,0 +1,41 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "https://api.cloudflare.com/client/v4/user/tokens/verify"
+  },
+  "status": 400,
+  "headers": {
+    "api-version": "2026-10-01.epoch",
+    "cache-control": "no-store, no-cache, must-revalidate, post-check=0, pre-check=0",
+    "cf-auditlog-id": "01a1a5b6-5007-78c7-9d59-82580ca1c1d2",
+    "cf-cache-status": "DYNAMIC",
+    "cf-ray": "a5524e866fc20dd4-TLV",
+    "content-type": "application/json",
+    "date": "Wed, 04 Nov 2026 08:39:11 GMT",
+    "expires": "Sun, 25 Jan 1981 05:00:00 GMT",
+    "pragma": "no-cache",
+    "server": "cloudflare",
+    "set-cookie": "_cfuvid=_IFIHFQYbuxUXXk8kvwPmnGoxoSbRBhwVhkeUCUKBo0-1793781551.1044426-1.0.1.1-ZoImOAh6tgsTtnjZaOkeALRVY5dAucYmmAH.owJK.1E; HttpOnly; SameSite=None; Secure; Path=/; Domain=api.cloudflare.com",
+    "strict-transport-security": "max-age=31536000",
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-frame-options": "SAMEORIGIN"
+  },
+  "body": {
+    "success": false,
+    "errors": [
+      {
+        "code": 6003,
+        "message": "Invalid request headers",
+        "error_chain": [
+          {
+            "code": 6111,
+            "message": "Invalid format for Authorization header"
+          }
+        ]
+      }
+    ],
+    "messages": [],
+    "result": null
+  }
+}

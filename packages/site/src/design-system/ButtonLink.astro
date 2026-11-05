@@ -1,0 +1,35 @@
+---
+/**
+ * @file A link drawn as a button, for a call to action such as sponsoring:
+ * `accent` is filled with the accent colour, `ghost` is outlined, for a second
+ * action beside a first.
+ */
+
+import { linkTarget } from "./link-target.ts";
+import { tw } from "./tailwind.ts";
+
+interface Props {
+  class?: string;
+  href: string;
+  variant?: "accent" | "ghost";
+}
+
+const VARIANT_CLASSES = {
+  accent: tw`bg-accent text-bg-base shadow-sm hover:bg-accent-hover`,
+  ghost: tw`border border-border text-text-secondary hover:border-accent/40 hover:text-accent`,
+} as const satisfies Record<NonNullable<Props["variant"]>, string>;
+
+const { class: className, href, variant = "accent" } = Astro.props;
+---
+
+<a
+  class:list={[
+    "inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg-base focus-visible:outline-none motion-reduce:transition-none",
+    VARIANT_CLASSES[variant],
+    className,
+  ]}
+  href={href}
+  {...linkTarget(href)}
+>
+  <slot />
+</a>

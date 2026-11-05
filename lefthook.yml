@@ -1,0 +1,6 @@
+# Runs the project's full check before each commit, so no commit skips a
+# standard.
+pre-commit:
+  jobs:
+    - name: check
+      run: bun run check

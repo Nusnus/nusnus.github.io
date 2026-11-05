@@ -1,0 +1,33 @@
+---
+/**
+ * @file The home page: the dashboard, with the hero and then each section in
+ * the order the navigation lists them, and the live refresh that keeps its
+ * GitHub data fresh.
+ */
+
+import Dashboard from "../dashboard/Dashboard.astro";
+import LiveRefresh from "../github-data/live/LiveRefresh.astro";
+import CeleryOrganization from "../home/CeleryOrganization.astro";
+import Collaborations from "../home/Collaborations.astro";
+import ContributionCharts from "../home/contributions/ContributionCharts.astro";
+import ContributionOverview from "../home/contributions/ContributionOverview.astro";
+import FeaturedRepositories from "../home/FeaturedRepositories.astro";
+import Hero from "../home/Hero.astro";
+import Sponsoring from "../home/Sponsoring.astro";
+import Writing from "../home/Writing.astro";
+import PageDocument from "../layouts/PageDocument.astro";
+---
+
+<PageDocument>
+  <Dashboard>
+    <Hero />
+    <ContributionOverview />
+    <Collaborations />
+    <ContributionCharts />
+    <FeaturedRepositories />
+    <CeleryOrganization />
+    <Writing />
+    <Sponsoring />
+  </Dashboard>
+  <LiveRefresh />
+</PageDocument>

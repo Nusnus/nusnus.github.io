@@ -1,0 +1,13 @@
+{
+  "$schema": "https://www.schemastore.org/tsconfig",
+  "extends": "@tsconfig/strictest/tsconfig.json",
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    // Node runs the scripts, the contract and the worker's recorder by
+    // stripping types, which only works for erasable syntax, and they import
+    // modules of every package, so every package keeps to it.
+    "erasableSyntaxOnly": true,
+    "noEmit": true,
+    "verbatimModuleSyntax": true
+  }
+}

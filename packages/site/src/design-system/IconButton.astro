@@ -1,0 +1,36 @@
+---
+/**
+ * @file A square button, or a link given `href`, that holds one icon, such as
+ * the menu button: muted until hovered, when a surface shows behind it. The
+ * caller names it for screen readers, through `aria-label` or text inside it,
+ * and adds its hover colour; any other attribute reaches the element.
+ */
+
+import type { HTMLAttributes } from "astro/types";
+
+import { linkTarget } from "./link-target.ts";
+import { tw } from "./tailwind.ts";
+
+type Props =
+  | (HTMLAttributes<"a"> & { href: string })
+  | (HTMLAttributes<"button"> & { href?: never });
+
+const { class: className, ...attributes } = Astro.props;
+
+const classes = [
+  tw`flex h-9 w-9 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-bg-surface`,
+  className,
+];
+---
+
+{
+  attributes.href === undefined ? (
+    <button class:list={classes} {...attributes}>
+      <slot />
+    </button>
+  ) : (
+    <a class:list={classes} {...linkTarget(attributes.href)} {...attributes}>
+      <slot />
+    </a>
+  )
+}

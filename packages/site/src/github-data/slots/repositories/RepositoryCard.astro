@@ -1,0 +1,115 @@
+---
+/**
+ * @file Data slot: a tracked repository's card: its name linking to it, Tomer's
+ * role as a badge, its description, its stars, forks, language and last push,
+ * his contributor rank, and a link to his commits in it. Its counts, last push
+ * and rank are live texts.
+ */
+
+import type {
+  RepositoryRole,
+  TrackedFullName,
+} from "@nusnus/github-data/repositories";
+
+import { repositoryUrl } from "@nusnus/github-data/github-links";
+
+import Badge from "../../../design-system/Badge.astro";
+import Card from "../../../design-system/Card.astro";
+import {
+  ExternalLink,
+  RepoForked,
+  StarFill,
+} from "../../../design-system/icons.ts";
+import { linkTarget } from "../../../design-system/link-target.ts";
+import LiveText from "../../live/LiveText.astro";
+import { pageStore } from "../../live/page-store.ts";
+import { languageColor } from "../../repositories/language-color.ts";
+import { commitsUrl } from "../../stats/contributor-standing.ts";
+
+interface Props {
+  fullName: TrackedFullName;
+  role: RepositoryRole;
+}
+
+/** How a card's badge shows Tomer's role: its label, in the badge's style. */
+interface RoleBadge {
+  readonly label: string;
+  // Badge's variants: typescript-eslint cannot read an Astro component's
+  // props to derive them, and `astro check` fails should the two part.
+  readonly variant?: "accent" | "filled";
+}
+
+const ROLE_BADGES = {
+  contributor: { label: "Contributor" },
+  creator: { label: "Creator", variant: "accent" },
+  lead: { label: "Lead", variant: "filled" },
+  owner: { label: "Owner", variant: "accent" },
+} as const satisfies Record<RepositoryRole, RoleBadge>;
+
+const { fullName, role } = Astro.props;
+const { description, language } =
+  pageStore().readInitial().snapshot.repositories.data[fullName];
+const url = repositoryUrl(fullName);
+const badge: RoleBadge = ROLE_BADGES[role];
+const commits = commitsUrl(fullName);
+---
+
+{/* `relative` holds the card's screen-reader text inside it. */}
+<Card class="relative">
+  <div class="mb-3 flex flex-wrap items-start justify-between gap-2">
+    <a
+      class="font-mono text-base font-semibold text-text-primary transition-colors hover:text-accent"
+      href={url}
+      {...linkTarget(url)}
+    >
+      {fullName}
+    </a>
+    <Badge variant={badge.variant}>{badge.label}</Badge>
+  </div>
+
+  <p class="mb-4 line-clamp-2 text-sm text-text-secondary">{description}</p>
+
+  <div class="flex flex-wrap items-center gap-3 text-xs text-text-muted">
+    <span class="flex items-center gap-1">
+      <StarFill className="h-3.5 w-3.5" />
+      <LiveText name="stars" repository={fullName} />
+      <span class="sr-only">stars</span>
+    </span>
+    <span class="flex items-center gap-1">
+      <RepoForked className="h-3.5 w-3.5" />
+      <LiveText name="forks" repository={fullName} />
+      <span class="sr-only">forks</span>
+    </span>
+    {
+      language !== null && (
+        <span class="flex items-center gap-1">
+          <span
+            aria-hidden="true"
+            class="h-2.5 w-2.5 rounded-full"
+            style={{ backgroundColor: languageColor(language) }}
+          />
+          {language}
+        </span>
+      )
+    }
+    <span class="ml-auto">
+      Updated <LiveText name="lastPush" repository={fullName} />
+    </span>
+  </div>
+
+  <div class="mt-3 flex items-center justify-between">
+    <LiveText
+      class="font-mono text-xs text-accent"
+      name="contributorRank"
+      repository={fullName}
+    />
+    <a
+      class="inline-flex items-center gap-1 text-xs text-accent hover:underline"
+      href={commits}
+      {...linkTarget(commits)}
+    >
+      Contributions<span class="sr-only"> to {fullName}</span>
+      <ExternalLink className="h-3 w-3" />
+    </a>
+  </div>
+</Card>

@@ -1,0 +1,37 @@
+{
+  "name": "@nusnus/site",
+  "private": true,
+  "description": "The portfolio site: static Astro pages with React islands, deployed to GitHub Pages.",
+  "homepage": "https://nusnus.github.io",
+  "type": "module",
+  "scripts": {
+    "build": "astro build",
+    "dev": "astro dev",
+    "generate": "astro sync",
+    "preview": "astro preview",
+    "test:smoke": "playwright install --only-shell chromium && playwright test --shuffle",
+    "typecheck": "astro check --minimumFailingSeverity hint"
+  },
+  "dependencies": {
+    "@astrojs/react": ">=7.1.2",
+    "@astrojs/rss": ">=4.0.19",
+    "@astrojs/sitemap": ">=3.7.4",
+    "@nusnus/github-data": "workspace:*",
+    "@tailwindcss/typography": ">=0.5.20",
+    "@tailwindcss/vite": ">=4.3.4",
+    "astro": ">=7.4.5",
+    "lucide-react": ">=1.67.0",
+    "react": ">=19.3.1",
+    "react-dom": ">=19.3.1",
+    "tailwindcss": ">=4.3.4"
+  },
+  "devDependencies": {
+    "@astrojs/check": ">=0.9.12",
+    "@axe-core/playwright": ">=4.14.0",
+    "@playwright/test": ">=1.64.1",
+    "@testing-library/dom": ">=10.4.2",
+    "@testing-library/react": ">=16.3.3",
+    "@types/react": ">=19.3.0",
+    "@types/react-dom": ">=19.3.0"
+  }
+}

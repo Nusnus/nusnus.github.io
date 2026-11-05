@@ -1,0 +1,831 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "https://api.github.com/users/Nusnus/events/public"
+  },
+  "status": 200,
+  "headers": {
+    "access-control-allow-origin": "*",
+    "access-control-expose-headers": "ETag, Link, Location, Retry-After, X-GitHub-OTP, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Used, X-RateLimit-Resource, X-RateLimit-Reset, X-OAuth-Scopes, X-Accepted-OAuth-Scopes, X-Poll-Interval, X-GitHub-Media-Type, X-GitHub-SSO, X-GitHub-Request-Id, Deprecation, Sunset, Warning",
+    "cache-control": "private, max-age=300, s-maxage=300",
+    "content-security-policy": "default-src 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "date": "Wed, 04 Nov 2026 07:19:55 GMT",
+    "etag": "W/\"7cc3e53e764f3d43a561f7bf23d92122af41659da4341e000bc9181c4f266354\"",
+    "last-modified": "Wed, 04 Nov 2026 02:21:56 GMT",
+    "referrer-policy": "origin-when-cross-origin, strict-origin-when-cross-origin",
+    "server": "github.com",
+    "strict-transport-security": "max-age=31536000; includeSubdomains; preload",
+    "vary": "Accept, Authorization, Cookie, X-GitHub-OTP,Accept-Encoding, Accept, X-Requested-With",
+    "x-accepted-oauth-scopes": "",
+    "x-content-type-options": "nosniff",
+    "x-frame-options": "deny",
+    "x-github-api-version-selected": "2026-03-10",
+    "x-github-edge-region": "israelcentral",
+    "x-github-media-type": "github.v3; format=json",
+    "x-github-request-id": "C446:25D491:4033DE:6F42B3:6AEADC9B",
+    "x-oauth-client-id": "178c6fc778ccc68e1d6a",
+    "x-oauth-scopes": "gist, read:org, repo",
+    "x-poll-interval": "60",
+    "x-ratelimit-limit": "5000",
+    "x-ratelimit-remaining": "4998",
+    "x-ratelimit-reset": "1793780395",
+    "x-ratelimit-resource": "core",
+    "x-ratelimit-used": "2",
+    "x-xss-protection": "0"
+  },
+  "body": [
+    {
+      "id": "26100857757",
+      "type": "PushEvent",
+      "actor": {
+        "id": 4662342,
+        "login": "Nusnus",
+        "display_login": "Nusnus",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/Nusnus",
+        "avatar_url": "https://avatars.githubusercontent.com/u/4662342?"
+      },
+      "repo": {
+        "id": 1444917447,
+        "name": "Nusnus/nustack",
+        "url": "https://api.github.com/repos/Nusnus/nustack"
+      },
+      "payload": {
+        "repository_id": 1444917447,
+        "push_id": 48911356197,
+        "ref": "refs/heads/main",
+        "head": "4a4971bbf03f31c673ebe5c23bd8e32918e6cc61",
+        "before": "03c80c233a1651010b0a5c9021bf700fe97068d4"
+      },
+      "public": true,
+      "created_at": "2026-11-04T02:21:56Z"
+    },
+    {
+      "id": "26096844714",
+      "type": "DeleteEvent",
+      "actor": {
+        "id": 4662342,
+        "login": "Nusnus",
+        "display_login": "Nusnus",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/Nusnus",
+        "avatar_url": "https://avatars.githubusercontent.com/u/4662342?"
+      },
+      "repo": {
+        "id": 1171707117,
+        "name": "Nusnus/nusnus.github.io",
+        "url": "https://api.github.com/repos/Nusnus/nusnus.github.io"
+      },
+      "payload": {
+        "ref": "devin/1773150355-cybernus-refactor",
+        "ref_type": "branch",
+        "full_ref": "refs/heads/devin/1773150355-cybernus-refactor",
+        "pusher_type": "user"
+      },
+      "public": true,
+      "created_at": "2026-11-04T01:36:21Z"
+    },
+    {
+      "id": "26096844952",
+      "type": "DeleteEvent",
+      "actor": {
+        "id": 4662342,
+        "login": "Nusnus",
+        "display_login": "Nusnus",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/Nusnus",
+        "avatar_url": "https://avatars.githubusercontent.com/u/4662342?"
+      },
+      "repo": {
+        "id": 1171707117,
+        "name": "Nusnus/nusnus.github.io",
+        "url": "https://api.github.com/repos/Nusnus/nusnus.github.io"
+      },
+      "payload": {
+        "ref": "devin/1774546191-roast-escalate-calling-animation",
+        "ref_type": "branch",
+        "full_ref": "refs/heads/devin/1774546191-roast-escalate-calling-animation",
+        "pusher_type": "user"
+      },
+      "public": true,
+      "created_at": "2026-11-04T01:36:21Z"
+    },
+    {
+      "id": "26096845310",
+      "type": "DeleteEvent",
+      "actor": {
+        "id": 4662342,
+        "login": "Nusnus",
+        "display_login": "Nusnus",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/Nusnus",
+        "avatar_url": "https://avatars.githubusercontent.com/u/4662342?"
+      },
+      "repo": {
+        "id": 1171707117,
+        "name": "Nusnus/nusnus.github.io",
+        "url": "https://api.github.com/repos/Nusnus/nusnus.github.io"
+      },
+      "payload": {
+        "ref": "devin/1783119117-env-verify",
+        "ref_type": "branch",
+        "full_ref": "refs/heads/devin/1783119117-env-verify",
+        "pusher_type": "user"
+      },
+      "public": true,
+      "created_at": "2026-11-04T01:36:21Z"
+    },
+    {
+      "id": "19064549154",
+      "type": "PullRequestEvent",
+      "actor": {
+        "id": 4662342,
+        "login": "Nusnus",
+        "display_login": "Nusnus",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/Nusnus",
+        "avatar_url": "https://avatars.githubusercontent.com/u/4662342?"
+      },
+      "repo": {
+        "id": 1171707117,
+        "name": "Nusnus/nusnus.github.io",
+        "url": "https://api.github.com/repos/Nusnus/nusnus.github.io"
+      },
+      "payload": {
+        "action": "closed",
+        "number": 36,
+        "pull_request": {
+          "url": "https://api.github.com/repos/Nusnus/nusnus.github.io/pulls/36",
+          "id": 3452792458,
+          "number": 36,
+          "head": {
+            "ref": "devin/1774546191-roast-escalate-calling-animation",
+            "sha": "e959976f483ffc54a9d55e06c12faf6116ed25ee",
+            "repo": {
+              "id": 1171707117,
+              "url": "https://api.github.com/repos/Nusnus/nusnus.github.io",
+              "name": "nusnus.github.io"
+            }
+          },
+          "base": {
+            "ref": "main",
+            "sha": "dc280dd9a82c68483b4390bdb2a13cd609148e5c",
+            "repo": {
+              "id": 1171707117,
+              "url": "https://api.github.com/repos/Nusnus/nusnus.github.io",
+              "name": "nusnus.github.io"
+            }
+          }
+        }
+      },
+      "public": true,
+      "created_at": "2026-11-04T01:36:16Z"
+    },
+    {
+      "id": "19064549155",
+      "type": "PullRequestEvent",
+      "actor": {
+        "id": 4662342,
+        "login": "Nusnus",
+        "display_login": "Nusnus",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/Nusnus",
+        "avatar_url": "https://avatars.githubusercontent.com/u/4662342?"
+      },
+      "repo": {
+        "id": 1171707117,
+        "name": "Nusnus/nusnus.github.io",
+        "url": "https://api.github.com/repos/Nusnus/nusnus.github.io"
+      },
+      "payload": {
+        "action": "closed",
+        "number": 35,
+        "pull_request": {
+          "url": "https://api.github.com/repos/Nusnus/nusnus.github.io/pulls/35",
+          "id": 3452674230,
+          "number": 35,
+          "head": {
+            "ref": "devin/1774544780-roast-escalate-calling-animation",
+            "sha": "9258221090d8000dfda9364dd225d218c2470186",
+            "repo": {
+              "id": 1171707117,
+              "url": "https://api.github.com/repos/Nusnus/nusnus.github.io",
+              "name": "nusnus.github.io"
+            }
+          },
+          "base": {
+            "ref": "main",
+            "sha": "dc280dd9a82c68483b4390bdb2a13cd609148e5c",
+            "repo": {
+              "id": 1171707117,
+              "url": "https://api.github.com/repos/Nusnus/nusnus.github.io",
+              "name": "nusnus.github.io"
+            }
+          }
+        }
+      },
+      "public": true,
+      "created_at": "2026-11-04T01:36:16Z"
+    },
+    {
+      "id": "19064547200",
+      "type": "PullRequestEvent",
+      "actor": {
+        "id": 4662342,
+        "login": "Nusnus",
+        "display_login": "Nusnus",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/Nusnus",
+        "avatar_url": "https://avatars.githubusercontent.com/u/4662342?"
+      },
+      "repo": {
+        "id": 1171707117,
+        "name": "Nusnus/nusnus.github.io",
+        "url": "https://api.github.com/repos/Nusnus/nusnus.github.io"
+      },
+      "payload": {
+        "action": "closed",
+        "number": 20,
+        "pull_request": {
+          "url": "https://api.github.com/repos/Nusnus/nusnus.github.io/pulls/20",
+          "id": 3378917330,
+          "number": 20,
+          "head": {
+            "ref": "devin/1773150355-cybernus-refactor",
+            "sha": "1d17d07ac6f4240afc14ffd8405619d1356463dc",
+            "repo": {
+              "id": 1171707117,
+              "url": "https://api.github.com/repos/Nusnus/nusnus.github.io",
+              "name": "nusnus.github.io"
+            }
+          },
+          "base": {
+            "ref": "main",
+            "sha": "dc280dd9a82c68483b4390bdb2a13cd609148e5c",
+            "repo": {
+              "id": 1171707117,
+              "url": "https://api.github.com/repos/Nusnus/nusnus.github.io",
+              "name": "nusnus.github.io"
+            }
+          }
+        }
+      },
+      "public": true,
+      "created_at": "2026-11-04T01:36:16Z"
+    },
+    {
+      "id": "19064547168",
+      "type": "PullRequestEvent",
+      "actor": {
+        "id": 4662342,
+        "login": "Nusnus",
+        "display_login": "Nusnus",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/Nusnus",
+        "avatar_url": "https://avatars.githubusercontent.com/u/4662342?"
+      },
+      "repo": {
+        "id": 1171707117,
+        "name": "Nusnus/nusnus.github.io",
+        "url": "https://api.github.com/repos/Nusnus/nusnus.github.io"
+      },
+      "payload": {
+        "action": "closed",
+        "number": 12,
+        "pull_request": {
+          "url": "https://api.github.com/repos/Nusnus/nusnus.github.io/pulls/12",
+          "id": 3365241448,
+          "number": 12,
+          "head": {
+            "ref": "devin/1772825037-cybernus-refactor",
+            "sha": "c5f69f87210d9760d77d32ee68b705857a3f9be3",
+            "repo": {
+              "id": 1171707117,
+              "url": "https://api.github.com/repos/Nusnus/nusnus.github.io",
+              "name": "nusnus.github.io"
+            }
+          },
+          "base": {
+            "ref": "main",
+            "sha": "dc280dd9a82c68483b4390bdb2a13cd609148e5c",
+            "repo": {
+              "id": 1171707117,
+              "url": "https://api.github.com/repos/Nusnus/nusnus.github.io",
+              "name": "nusnus.github.io"
+            }
+          }
+        }
+      },
+      "public": true,
+      "created_at": "2026-11-04T01:36:16Z"
+    },
+    {
+      "id": "19064545085",
+      "type": "PullRequestEvent",
+      "actor": {
+        "id": 4662342,
+        "login": "Nusnus",
+        "display_login": "Nusnus",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/Nusnus",
+        "avatar_url": "https://avatars.githubusercontent.com/u/4662342?"
+      },
+      "repo": {
+        "id": 1171707117,
+        "name": "Nusnus/nusnus.github.io",
+        "url": "https://api.github.com/repos/Nusnus/nusnus.github.io"
+      },
+      "payload": {
+        "action": "closed",
+        "number": 11,
+        "pull_request": {
+          "url": "https://api.github.com/repos/Nusnus/nusnus.github.io/pulls/11",
+          "id": 3365159271,
+          "number": 11,
+          "head": {
+            "ref": "devin/1772823658-cybernus-chat-refactor",
+            "sha": "8ed743ef11bc4903fc74d3b20149b2508392b62f",
+            "repo": {
+              "id": 1171707117,
+              "url": "https://api.github.com/repos/Nusnus/nusnus.github.io",
+              "name": "nusnus.github.io"
+            }
+          },
+          "base": {
+            "ref": "main",
+            "sha": "dc280dd9a82c68483b4390bdb2a13cd609148e5c",
+            "repo": {
+              "id": 1171707117,
+              "url": "https://api.github.com/repos/Nusnus/nusnus.github.io",
+              "name": "nusnus.github.io"
+            }
+          }
+        }
+      },
+      "public": true,
+      "created_at": "2026-11-04T01:36:16Z"
+    },
+    {
+      "id": "19064545073",
+      "type": "PullRequestEvent",
+      "actor": {
+        "id": 4662342,
+        "login": "Nusnus",
+        "display_login": "Nusnus",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/Nusnus",
+        "avatar_url": "https://avatars.githubusercontent.com/u/4662342?"
+      },
+      "repo": {
+        "id": 1171707117,
+        "name": "Nusnus/nusnus.github.io",
+        "url": "https://api.github.com/repos/Nusnus/nusnus.github.io"
+      },
+      "payload": {
+        "action": "closed",
+        "number": 9,
+        "pull_request": {
+          "url": "https://api.github.com/repos/Nusnus/nusnus.github.io/pulls/9",
+          "id": 3361199664,
+          "number": 9,
+          "head": {
+            "ref": "devin/1772747160-cybernus",
+            "sha": "2a4e163e27f0ec65ddd1b5f22150e2b7adce7532",
+            "repo": {
+              "id": 1171707117,
+              "url": "https://api.github.com/repos/Nusnus/nusnus.github.io",
+              "name": "nusnus.github.io"
+            }
+          },
+          "base": {
+            "ref": "main",
+            "sha": "dc280dd9a82c68483b4390bdb2a13cd609148e5c",
+            "repo": {
+              "id": 1171707117,
+              "url": "https://api.github.com/repos/Nusnus/nusnus.github.io",
+              "name": "nusnus.github.io"
+            }
+          }
+        }
+      },
+      "public": true,
+      "created_at": "2026-11-04T01:36:16Z"
+    },
+    {
+      "id": "19064543059",
+      "type": "PullRequestEvent",
+      "actor": {
+        "id": 4662342,
+        "login": "Nusnus",
+        "display_login": "Nusnus",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/Nusnus",
+        "avatar_url": "https://avatars.githubusercontent.com/u/4662342?"
+      },
+      "repo": {
+        "id": 1171707117,
+        "name": "Nusnus/nusnus.github.io",
+        "url": "https://api.github.com/repos/Nusnus/nusnus.github.io"
+      },
+      "payload": {
+        "action": "closed",
+        "number": 7,
+        "pull_request": {
+          "url": "https://api.github.com/repos/Nusnus/nusnus.github.io/pulls/7",
+          "id": 3356466812,
+          "number": 7,
+          "head": {
+            "ref": "devin/1772681168-cybernus-chat",
+            "sha": "83e567e17fb9136d3f564f3b1dca8371fa97b212",
+            "repo": {
+              "id": 1171707117,
+              "url": "https://api.github.com/repos/Nusnus/nusnus.github.io",
+              "name": "nusnus.github.io"
+            }
+          },
+          "base": {
+            "ref": "main",
+            "sha": "dc280dd9a82c68483b4390bdb2a13cd609148e5c",
+            "repo": {
+              "id": 1171707117,
+              "url": "https://api.github.com/repos/Nusnus/nusnus.github.io",
+              "name": "nusnus.github.io"
+            }
+          }
+        }
+      },
+      "public": true,
+      "created_at": "2026-11-04T01:36:17Z"
+    },
+    {
+      "id": "19064543036",
+      "type": "PullRequestEvent",
+      "actor": {
+        "id": 4662342,
+        "login": "Nusnus",
+        "display_login": "Nusnus",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/Nusnus",
+        "avatar_url": "https://avatars.githubusercontent.com/u/4662342?"
+      },
+      "repo": {
+        "id": 1171707117,
+        "name": "Nusnus/nusnus.github.io",
+        "url": "https://api.github.com/repos/Nusnus/nusnus.github.io"
+      },
+      "payload": {
+        "action": "closed",
+        "number": 8,
+        "pull_request": {
+          "url": "https://api.github.com/repos/Nusnus/nusnus.github.io/pulls/8",
+          "id": 3356522102,
+          "number": 8,
+          "head": {
+            "ref": "devin/1772681344-cybernus-refactor",
+            "sha": "e5e11cc57a57fbeb35f3874262724daaecf68844",
+            "repo": {
+              "id": 1171707117,
+              "url": "https://api.github.com/repos/Nusnus/nusnus.github.io",
+              "name": "nusnus.github.io"
+            }
+          },
+          "base": {
+            "ref": "main",
+            "sha": "dc280dd9a82c68483b4390bdb2a13cd609148e5c",
+            "repo": {
+              "id": 1171707117,
+              "url": "https://api.github.com/repos/Nusnus/nusnus.github.io",
+              "name": "nusnus.github.io"
+            }
+          }
+        }
+      },
+      "public": true,
+      "created_at": "2026-11-04T01:36:16Z"
+    },
+    {
+      "id": "19064540596",
+      "type": "PullRequestEvent",
+      "actor": {
+        "id": 4662342,
+        "login": "Nusnus",
+        "display_login": "Nusnus",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/Nusnus",
+        "avatar_url": "https://avatars.githubusercontent.com/u/4662342?"
+      },
+      "repo": {
+        "id": 1171707117,
+        "name": "Nusnus/nusnus.github.io",
+        "url": "https://api.github.com/repos/Nusnus/nusnus.github.io"
+      },
+      "payload": {
+        "action": "closed",
+        "number": 6,
+        "pull_request": {
+          "url": "https://api.github.com/repos/Nusnus/nusnus.github.io/pulls/6",
+          "id": 3356459789,
+          "number": 6,
+          "head": {
+            "ref": "devin/1772678556-cybernus-chat",
+            "sha": "041f3817610c13db545bff332d51b78f0559039b",
+            "repo": {
+              "id": 1171707117,
+              "url": "https://api.github.com/repos/Nusnus/nusnus.github.io",
+              "name": "nusnus.github.io"
+            }
+          },
+          "base": {
+            "ref": "main",
+            "sha": "dc280dd9a82c68483b4390bdb2a13cd609148e5c",
+            "repo": {
+              "id": 1171707117,
+              "url": "https://api.github.com/repos/Nusnus/nusnus.github.io",
+              "name": "nusnus.github.io"
+            }
+          }
+        }
+      },
+      "public": true,
+      "created_at": "2026-11-04T01:36:16Z"
+    },
+    {
+      "id": "19064540561",
+      "type": "PullRequestEvent",
+      "actor": {
+        "id": 4662342,
+        "login": "Nusnus",
+        "display_login": "Nusnus",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/Nusnus",
+        "avatar_url": "https://avatars.githubusercontent.com/u/4662342?"
+      },
+      "repo": {
+        "id": 1171707117,
+        "name": "Nusnus/nusnus.github.io",
+        "url": "https://api.github.com/repos/Nusnus/nusnus.github.io"
+      },
+      "payload": {
+        "action": "closed",
+        "number": 5,
+        "pull_request": {
+          "url": "https://api.github.com/repos/Nusnus/nusnus.github.io/pulls/5",
+          "id": 3355621527,
+          "number": 5,
+          "head": {
+            "ref": "devin/1772664199-design-elevation",
+            "sha": "04ee78378972e72f41a74054d711cbfef96cc262",
+            "repo": {
+              "id": 1171707117,
+              "url": "https://api.github.com/repos/Nusnus/nusnus.github.io",
+              "name": "nusnus.github.io"
+            }
+          },
+          "base": {
+            "ref": "main",
+            "sha": "dc280dd9a82c68483b4390bdb2a13cd609148e5c",
+            "repo": {
+              "id": 1171707117,
+              "url": "https://api.github.com/repos/Nusnus/nusnus.github.io",
+              "name": "nusnus.github.io"
+            }
+          }
+        }
+      },
+      "public": true,
+      "created_at": "2026-11-04T01:36:16Z"
+    },
+    {
+      "id": "19064540543",
+      "type": "PullRequestEvent",
+      "actor": {
+        "id": 4662342,
+        "login": "Nusnus",
+        "display_login": "Nusnus",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/Nusnus",
+        "avatar_url": "https://avatars.githubusercontent.com/u/4662342?"
+      },
+      "repo": {
+        "id": 1171707117,
+        "name": "Nusnus/nusnus.github.io",
+        "url": "https://api.github.com/repos/Nusnus/nusnus.github.io"
+      },
+      "payload": {
+        "action": "closed",
+        "number": 4,
+        "pull_request": {
+          "url": "https://api.github.com/repos/Nusnus/nusnus.github.io/pulls/4",
+          "id": 3355606985,
+          "number": 4,
+          "head": {
+            "ref": "devin/1772663957-elevated-design",
+            "sha": "fa0524ff0616476ef2eb1cd25d8b1f62b9a3c086",
+            "repo": {
+              "id": 1171707117,
+              "url": "https://api.github.com/repos/Nusnus/nusnus.github.io",
+              "name": "nusnus.github.io"
+            }
+          },
+          "base": {
+            "ref": "main",
+            "sha": "dc280dd9a82c68483b4390bdb2a13cd609148e5c",
+            "repo": {
+              "id": 1171707117,
+              "url": "https://api.github.com/repos/Nusnus/nusnus.github.io",
+              "name": "nusnus.github.io"
+            }
+          }
+        }
+      },
+      "public": true,
+      "created_at": "2026-11-04T01:36:16Z"
+    },
+    {
+      "id": "19061489956",
+      "type": "IssueCommentEvent",
+      "actor": {
+        "id": 4662342,
+        "login": "Nusnus",
+        "display_login": "Nusnus",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/Nusnus",
+        "avatar_url": "https://avatars.githubusercontent.com/u/4662342?"
+      },
+      "repo": {
+        "id": 1444917447,
+        "name": "Nusnus/nustack",
+        "url": "https://api.github.com/repos/Nusnus/nustack"
+      },
+      "payload": {
+        "action": "created",
+        "issue": {
+          "url": "https://api.github.com/repos/Nusnus/nustack/issues/1",
+          "repository_url": "https://api.github.com/repos/Nusnus/nustack",
+          "labels_url": "https://api.github.com/repos/Nusnus/nustack/issues/1/labels{/name}",
+          "comments_url": "https://api.github.com/repos/Nusnus/nustack/issues/1/comments",
+          "events_url": "https://api.github.com/repos/Nusnus/nustack/issues/1/events",
+          "html_url": "https://github.com/Nusnus/nustack/pull/1",
+          "id": 6192656254,
+          "node_id": "PR_kwDOVh-wx88AAAABMraLlA",
+          "number": 1,
+          "title": "build(deps-dev): bump @anthropic-ai/claude-code from 2.1.280 to 2.1.312 in /tests/fixtures/smoke in the hosts group",
+          "user": {
+            "login": "dependabot[bot]",
+            "id": 49699333,
+            "node_id": "MDM6Qm90NDk2OTkzMzM=",
+            "avatar_url": "https://avatars.githubusercontent.com/in/29110?v=4",
+            "gravatar_id": "",
+            "url": "https://api.github.com/users/dependabot%5Bbot%5D",
+            "html_url": "https://github.com/apps/dependabot",
+            "followers_url": "https://api.github.com/users/dependabot%5Bbot%5D/followers",
+            "following_url": "https://api.github.com/users/dependabot%5Bbot%5D/following{/other_user}",
+            "gists_url": "https://api.github.com/users/dependabot%5Bbot%5D/gists{/gist_id}",
+            "starred_url": "https://api.github.com/users/dependabot%5Bbot%5D/starred{/owner}{/repo}",
+            "subscriptions_url": "https://api.github.com/users/dependabot%5Bbot%5D/subscriptions",
+            "organizations_url": "https://api.github.com/users/dependabot%5Bbot%5D/orgs",
+            "repos_url": "https://api.github.com/users/dependabot%5Bbot%5D/repos",
+            "events_url": "https://api.github.com/users/dependabot%5Bbot%5D/events{/privacy}",
+            "received_events_url": "https://api.github.com/users/dependabot%5Bbot%5D/received_events",
+            "type": "Bot",
+            "user_view_type": "public",
+            "site_admin": false
+          },
+          "labels": [
+            {
+              "id": 12948936256,
+              "node_id": "LA_kwDOVh-wx88AAAADA9EWQA",
+              "url": "https://api.github.com/repos/Nusnus/nustack/labels/dependencies",
+              "name": "dependencies",
+              "color": "0366d6",
+              "default": false,
+              "description": "Pull requests that update a dependency file",
+              "archived_at": null,
+              "archived_by": null
+            },
+            {
+              "id": 12948936285,
+              "node_id": "LA_kwDOVh-wx88AAAADA9EWXQ",
+              "url": "https://api.github.com/repos/Nusnus/nustack/labels/javascript",
+              "name": "javascript",
+              "color": "168700",
+              "default": false,
+              "description": "Pull requests that update javascript code",
+              "archived_at": null,
+              "archived_by": null
+            }
+          ],
+          "state": "open",
+          "locked": false,
+          "assignees": [],
+          "milestone": null,
+          "comments": 1,
+          "created_at": "2026-11-03T22:56:08Z",
+          "updated_at": "2026-11-04T00:51:08Z",
+          "closed_at": null,
+          "assignee": null,
+          "active_lock_reason": null,
+          "draft": false,
+          "pull_request": {
+            "url": "https://api.github.com/repos/Nusnus/nustack/pulls/1",
+            "html_url": "https://github.com/Nusnus/nustack/pull/1",
+            "diff_url": "https://github.com/Nusnus/nustack/pull/1.diff",
+            "patch_url": "https://github.com/Nusnus/nustack/pull/1.patch",
+            "merged_at": null
+          },
+          "body": "Bumps the hosts group in /tests/fixtures/smoke with 1 update: [@anthropic-ai/claude-code](https://github.com/anthropics/claude-code).\n\nUpdates `@anthropic-ai/claude-code` from 2.1.280 to 2.1.312\n<details>\n<summary>Release notes</summary>\n<p><em>Sourced from <a href=\"https://github.com/anthropics/claude-code/releases\">@​anthropic-ai/claude-code's releases</a>.</em></p>\n<blockquote>\n<h2>v2.1.312</h2>\n<h2>What's changed</h2>\n<ul>\n<li>Added <code>oidc.user_id_claim</code> to the Claude apps gateway, to identify people by an id_token claim other than <code>sub</code>, such as Microsoft Entra ID's <code>oid</code></li>\n<li>Added click to send: in fullscreen, clicking the &quot;to send now&quot; hint under a queued message sends it right away, as its key does</li>\n<li>Fixed managed settings and organization policy not being fetched for the rest of the session after signing in from the VS Code extension</li>\n<li>Fixed Claude overwriting a very large CLAUDE.md, rules file or @-included file in a subdirectory after seeing only its start; Write now asks Claude to read it all or edit in place</li>\n<li>Fixed per-directory and <code>paths:</code> skills not being found after a Bash <code>cd</code> deeper into a git repository</li>\n<li>Fixed a rare case where the first reply after resuming a session in the terminal could be missing the next time the session was resumed</li>\n<li>Fixed a command with an invalid name stopping all commands from loading, which could leave <code>claude -p</code> with no output</li>\n<li>Fixed the Read tool sometimes failing on PDF pages with &quot;pdftoppm failed: Could not write image&quot; when the clean-up of old session files ran at the same time</li>\n<li>Fixed the spinner, OpenTelemetry <code>effort</code> values and transcripts naming a newly picked effort level during a task before the model applied it; they now show the level in force</li>\n<li>Fixed the <code>/model</code> and <code>/effort</code> cache warning saying the re-read waits for your next message; a change made while Claude is working can trigger it sooner</li>\n<li>Fixed some sessions showing as waiting on you when the last message only mentioned items waiting on you mid-sentence</li>\n<li>Fixed agent view restoring input text on the next launch after it was cleared with Ctrl+C just before exiting</li>\n<li>Fixed agent view reopening in shell mode after exiting with Ctrl+D from an empty <code>!</code> input</li>\n<li>Fixed vim mode <code>d</code>, <code>c</code> and <code>y</code> with a <code>gj</code> or <code>gk</code> count larger than the lines left deleting or copying text; like Vim, they now only move the cursor</li>\n<li>Fixed <code>/verify</code> showing a long description meant for Claude in <code>/help</code> and the <code>/</code> command menu instead of a short one</li>\n<li>Improved the prompt's effort indicator: a change made mid-task now says it may wait for your next message, and the note clears when it no longer applies</li>\n<li>Improved WebFetch errors in cloud sessions: a host that does not resolve is now explained as possibly outside the allowed network domains, so Claude names the host to allow</li>\n<li>Changed Bedrock, Vertex, Foundry and Mantle to use the shorter system prompt for model names Claude Code doesn't recognize, such as custom deployment names and inference profile ARNs, even when they front Sonnet or Haiku; set <code>CLAUDE_CODE_SIMPLE_SYSTEM_PROMPT=0</code> to keep the full prompt</li>\n<li>Changed automatic model switches after a flagged message to also cover model names Claude Code doesn't recognize, such as custom deployment names; set <code>CLAUDE_CODE_DISABLE_REFUSAL_FALLBACK=1</code> to turn them off</li>\n<li>Changed usage limit messages to call the 5-hour window the &quot;5-hour limit&quot; instead of the &quot;session limit&quot;</li>\n<li>Changed cloud sessions started from the CLI to get their names and branch names from the server</li>\n<li>Changed prompt and agent hooks to run at most 24 at a time per session, sub-agents included, plus at most 12 that have waited longer than their event's timeout; a <code>timeout</code> under 1 second now counts as 1 second</li>\n<li>Changed a subagent's <code>autoCompactWindow</code> to lower the window set by <code>CLAUDE_CODE_AUTO_COMPACT_WINDOW</code>, where it had no effect before; it still never raises that window</li>\n<li>Changed OpenTelemetry <code>mcp_server.name</code> to report the real name of fixed-URL remote MCP servers declared by plugins from the official Anthropic marketplace, instead of <code>custom</code></li>\n<li>Changed Claude Code to stop sending the <code>claude_code.safety_event</code> OpenTelemetry event</li>\n<li>[VSCode] Fixed sessions ending on a bare exit code when your organization's settings couldn't be loaded or were refused at startup; the tab now says why and offers Retry or Sign in again</li>\n<li>[VSCode] Changed usage limit resets to show a clock time (&quot;Resets at 3:10 PM&quot;) and to say &quot;5-hour limit&quot;</li>\n<li>[Cloud sessions] Added an effort level to the model picker when you create or edit a routine that runs in the cloud</li>\n<li>[Cloud sessions] Added a Bash editor with colors, line numbers and a Copy button to the setup script box in cloud environment settings</li>\n<li>[Cloud sessions] Improved the step shown when Claude adds a repository to a cloud session: opening it now shows a short table of what happened instead of raw JSON</li>\n<li>[Cloud sessions] Fixed resending an unchanged message after a failed send in a cloud session sometimes running it twice</li>\n<li>[Cloud sessions] Fixed a failed cloud environment creation showing its error only as a toast outside the open dialog; it now appears inside the dialog</li>\n<li>[Cloud sessions] Fixed Edit in a routine's menu on the Routines page going to the routine's page without opening its edit dialog</li>\n<li>[Remote Control] Fixed an unarchived Remote Control session showing as working until a computer reconnected; it now shows as idle</li>\n<li>[Claude Tag] Improved Claude Tag's retry notice in Slack to name the model in use, or say rate limits were hit, instead of a generic API error</li>\n<li>[Claude Tag] Fixed a Claude Tag channel's on/off switch and agent settings falling back to workspace defaults when an older private Slack channel goes public and gets a new ID</li>\n<li>[Claude Tag] Fixed Claude in Slack not replying in channels whose environment has network access set to None</li>\n<li>[Claude Tag] Fixed Claude in Slack sometimes posting a file in the wrong thread when it was answering in another thread of the same channel</li>\n<li>[Code Review] Fixed Code Review reviewing an outdated commit, or none at all, when GitHub delivered a push event late; it now reviews the pull request's current commit</li>\n</ul>\n<h2>v2.1.311</h2>\n<h2>What's changed</h2>\n<ul>\n<li>Added <code>--hold-idle-file</code> and <code>--max-hold-min</code> to <code>self-hosted-runner</code>, to keep an idle session while your host reports processes it left running</li>\n<li>Added a tip for the Explanatory output style, shown when you ask Claude for explanations</li>\n<li>Fixed long freezes at startup and after reading or editing files when a CLAUDE.md file holds a very long list item</li>\n<li>Fixed interrupting Claude not taking effect until a timeout while an MCP server had not answered a resource read or a skill was still downloading</li>\n</ul>\n<!-- raw HTML omitted -->\n</blockquote>\n<p>... (truncated)</p>\n</details>\n<details>\n<summary>Commits</summary>\n<ul>\n<li><a href=\"https://github.com/anthropics/claude-code/commit/0e1f4789406477380b267a01f3ddd50b0211e5b3\"><code>0e1f478</code></a> chore: Update CHANGELOG.md and feed.xml</li>\n<li><a href=\"https://github.com/anthropics/claude-code/commit/f03f77861c256b5a7eb709b88c99e424d188bd76\"><code>f03f778</code></a> Merge pull request <a href=\"https://redirect.github.com/anthropics/claude-code/issues/105303\">#105303</a> from anthropics/redirect-plugins-to-official</li>\n<li><a href=\"https://github.com/anthropics/claude-code/commit/aef1f311bfd303b3945414a103a28a40c868d453\"><code>aef1f31</code></a> Install code-review from claude-plugins-official too</li>\n<li><a href=\"https://github.com/anthropics/claude-code/commit/10a5141d2d12b5a089a5fbb5f24af3fd345a34d2\"><code>10a5141</code></a> Install marketplace plugins from claude-plugins-official</li>\n<li><a href=\"https://github.com/anthropics/claude-code/commit/08c6a4f5121ae140d3c1b5c96e3e5ae53587b54b\"><code>08c6a4f</code></a> chore: Update CHANGELOG.md and feed.xml</li>\n<li><a href=\"https://github.com/anthropics/claude-code/commit/398b6d71cb850ddaa0a92e7005146d0f676a5db1\"><code>398b6d7</code></a> security-guidance: remove the copy here; install it from claude-plugins-offic...</li>\n<li><a href=\"https://github.com/anthropics/claude-code/commit/a5b0f2e03aba37ea34e527fe30b2f6aaa4895b9f\"><code>a5b0f2e</code></a> chore: Update mods/</li>\n<li><a href=\"https://github.com/anthropics/claude-code/commit/2eff7a8d21c80be48904f62ebdea36d945d7b504\"><code>2eff7a8</code></a> chore: Update mods/</li>\n<li><a href=\"https://github.com/anthropics/claude-code/commit/318b7e6ac4e726e88a4ad326214866a93c373b1b\"><code>318b7e6</code></a> chore: Update mods/</li>\n<li><a href=\"https://github.com/anthropics/claude-code/commit/761551ef86c6ce2801a961db81c764db5e3f45fd\"><code>761551e</code></a> chore: Update mods/</li>\n<li>Additional commits viewable in <a href=\"https://github.com/anthropics/claude-code/compare/v2.1.280...v2.1.312\">compare view</a></li>\n</ul>\n</details>\n<details>\n<summary>Maintainer changes</summary>\n<p>This version was pushed to npm by <a href=\"https://www.npmjs.com/~GitHub%20Actions\">GitHub Actions</a>, a new releaser for <code>@​anthropic-ai/claude-code</code> since your current version.</p>\n</details>\n<br />\n\n\n[![Dependabot compatibility score](https://dependabot-badges.githubapp.com/badges/compatibility_score?dependency-name=@anthropic-ai/claude-code&package-manager=bun&previous-version=2.1.280&new-version=2.1.312)](https://docs.github.com/en/github/managing-security-vulnerabilities/about-dependabot-security-updates#about-compatibility-scores)\n\nDependabot will resolve any conflicts with this PR as long as you don't alter it yourself. You can also trigger a rebase manually by commenting `@dependabot rebase`.\n\n[//]: # (dependabot-automerge-start)\n[//]: # (dependabot-automerge-end)\n\n---\n\n<details>\n<summary>Dependabot commands and options</summary>\n<br />\n\nYou can trigger Dependabot actions by commenting on this PR:\n- `@dependabot rebase` will rebase this PR\n- `@dependabot recreate` will recreate this PR, overwriting any edits that have been made to it\n- `@dependabot show <dependency name> ignore conditions` will show all of the ignore conditions of the specified dependency\n- `@dependabot ignore <dependency name> major version` will close this group update PR and stop Dependabot creating any more for the specific dependency's major version (unless you unignore this specific dependency's major version or upgrade to it yourself)\n- `@dependabot ignore <dependency name> minor version` will close this group update PR and stop Dependabot creating any more for the specific dependency's minor version (unless you unignore this specific dependency's minor version or upgrade to it yourself)\n- `@dependabot ignore <dependency name>` will close this group update PR and stop Dependabot creating any more for the specific dependency (unless you unignore this specific dependency or upgrade to it yourself)\n- `@dependabot unignore <dependency name>` will remove all of the ignore conditions of the specified dependency\n- `@dependabot unignore <dependency name> <ignore condition>` will remove the ignore condition of the specified dependency and ignore conditions\n\n\n</details>\n<!-- devin-review-badge-staging-begin -->\n\n---\n\n#### Devin Review\n| Status | Commit |\n|---|---|\n| ⚪ Not started | — |\n\n> [Run Devin Review](https://staging.itsdev.in/review/nusnus/nustack/pull/1?analyze=true)\n\n> [Enable auto-review](https://staging.itsdev.in/settings/review?enable=github.com%2Fnusnus%2Fnustack) to review your pull requests automatically.\n\n<a href=\"https://staging.itsdev.in/review/nusnus/nustack/pull/1\" target=\"_blank\"><picture><source media=\"(prefers-color-scheme: dark)\" srcset=\"https://static.devin.ai/assets/gh-devin-review-staging-dark.svg?v=4\"><img src=\"https://static.devin.ai/assets/gh-devin-review-staging-light.svg?v=4\" alt=\"Devin Review (Staging)\"></picture></a>\n<!-- devin-review-badge-staging-end -->",
+          "reactions": {
+            "url": "https://api.github.com/repos/Nusnus/nustack/issues/1/reactions",
+            "total_count": 0,
+            "+1": 0,
+            "-1": 0,
+            "laugh": 0,
+            "hooray": 0,
+            "confused": 0,
+            "heart": 0,
+            "rocket": 0,
+            "eyes": 0
+          },
+          "timeline_url": "https://api.github.com/repos/Nusnus/nustack/issues/1/timeline",
+          "performed_via_github_app": null,
+          "state_reason": null
+        },
+        "comment": {
+          "url": "https://api.github.com/repos/Nusnus/nustack/issues/comments/6619460871",
+          "html_url": "https://github.com/Nusnus/nustack/pull/1#issuecomment-6619460871",
+          "issue_url": "https://api.github.com/repos/Nusnus/nustack/issues/1",
+          "id": 6619460871,
+          "node_id": "IC_kwDOVh-wx88AAAABioz1Bw",
+          "user": {
+            "login": "Nusnus",
+            "id": 4662342,
+            "node_id": "MDQ6VXNlcjQ2NjIzNDI=",
+            "avatar_url": "https://avatars.githubusercontent.com/u/4662342?v=4",
+            "gravatar_id": "",
+            "url": "https://api.github.com/users/Nusnus",
+            "html_url": "https://github.com/Nusnus",
+            "followers_url": "https://api.github.com/users/Nusnus/followers",
+            "following_url": "https://api.github.com/users/Nusnus/following{/other_user}",
+            "gists_url": "https://api.github.com/users/Nusnus/gists{/gist_id}",
+            "starred_url": "https://api.github.com/users/Nusnus/starred{/owner}{/repo}",
+            "subscriptions_url": "https://api.github.com/users/Nusnus/subscriptions",
+            "organizations_url": "https://api.github.com/users/Nusnus/orgs",
+            "repos_url": "https://api.github.com/users/Nusnus/repos",
+            "events_url": "https://api.github.com/users/Nusnus/events{/privacy}",
+            "received_events_url": "https://api.github.com/users/Nusnus/received_events",
+            "type": "User",
+            "user_view_type": "public",
+            "site_admin": false
+          },
+          "created_at": "2026-11-04T00:51:08Z",
+          "updated_at": "2026-11-04T00:51:08Z",
+          "body": "@dependabot recreate",
+          "reactions": {
+            "url": "https://api.github.com/repos/Nusnus/nustack/issues/comments/6619460871/reactions",
+            "total_count": 0,
+            "+1": 0,
+            "-1": 0,
+            "laugh": 0,
+            "hooray": 0,
+            "confused": 0,
+            "heart": 0,
+            "rocket": 0,
+            "eyes": 0
+          },
+          "performed_via_github_app": null,
+          "minimized": null
+        }
+      },
+      "public": true,
+      "created_at": "2026-11-04T00:51:08Z"
+    },
+    {
+      "id": "26082950181",
+      "type": "CreateEvent",
+      "actor": {
+        "id": 4662342,
+        "login": "Nusnus",
+        "display_login": "Nusnus",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/Nusnus",
+        "avatar_url": "https://avatars.githubusercontent.com/u/4662342?"
+      },
+      "repo": {
+        "id": 1444917447,
+        "name": "Nusnus/nustack",
+        "url": "https://api.github.com/repos/Nusnus/nustack"
+      },
+      "payload": {
+        "ref": "main",
+        "ref_type": "branch",
+        "full_ref": "refs/heads/main",
+        "master_branch": "main",
+        "description": "Carries Tomer Nosrati's way of building software into Devin, Claude Code, Cursor and OpenCode as one mode, nus-mode.",
+        "pusher_type": "user"
+      },
+      "public": true,
+      "created_at": "2026-11-03T22:54:57Z"
+    }
+  ]
+}

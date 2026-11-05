@@ -1,0 +1,101 @@
+{
+  "data": {
+    "celery/celery": {
+      "contributorRank": 4,
+      "description": "Distributed Task Queue (development branch)",
+      "forks": 5253,
+      "language": "Python",
+      "lastPush": "2026-11-03T22:13:28.000Z",
+      "stars": 29133
+    },
+    "celery/pytest-celery": {
+      "contributorRank": 1,
+      "description": "Official pytest plugin for Celery.",
+      "forks": 18,
+      "language": "Python",
+      "lastPush": "2026-11-02T17:09:41.000Z",
+      "stars": 83
+    },
+    "celery/kombu": {
+      "contributorRank": 8,
+      "description": "Messaging library for Python.",
+      "forks": 1091,
+      "language": "Python",
+      "lastPush": "2026-11-04T03:42:49.000Z",
+      "stars": 3152
+    },
+    "celery/billiard": {
+      "contributorRank": 5,
+      "description": "Multiprocessing Pool Extensions",
+      "forks": 273,
+      "language": "Python",
+      "lastPush": "2026-11-02T09:09:50.000Z",
+      "stars": 434
+    },
+    "celery/django-celery-beat": {
+      "contributorRank": 19,
+      "description": "Celery Periodic Tasks backed by the Django ORM",
+      "forks": 502,
+      "language": "Python",
+      "lastPush": "2026-11-02T17:17:53.000Z",
+      "stars": 1957
+    },
+    "celery/django-celery-results": {
+      "contributorRank": 33,
+      "description": "Celery result back end with django",
+      "forks": 228,
+      "language": "Python",
+      "lastPush": "2026-11-02T17:08:43.000Z",
+      "stars": 785
+    },
+    "celery/py-amqp": {
+      "contributorRank": 9,
+      "description": "amqplib fork",
+      "forks": 206,
+      "language": "Python",
+      "lastPush": "2026-11-02T10:31:46.000Z",
+      "stars": 315
+    },
+    "celery/librabbitmq": {
+      "contributorRank": 25,
+      "description": "Python bindings to librabbitmq-c",
+      "forks": 92,
+      "language": "C",
+      "lastPush": "2026-09-16T07:37:42.000Z",
+      "stars": 203
+    },
+    "celery/vine": {
+      "contributorRank": 7,
+      "description": "Python promises",
+      "forks": 48,
+      "language": "Python",
+      "lastPush": "2026-11-02T17:07:39.000Z",
+      "stars": 127
+    },
+    "celery/sphinx_celery": {
+      "contributorRank": 5,
+      "description": "Celery Sphinx Theme and Utilities",
+      "forks": 16,
+      "language": "Python",
+      "lastPush": "2026-11-02T17:07:36.000Z",
+      "stars": 4
+    },
+    "celery/celeryproject": {
+      "contributorRank": 4,
+      "description": "The official Celery Project website ",
+      "forks": 10,
+      "language": "CSS",
+      "lastPush": "2025-05-13T18:46:15.000Z",
+      "stars": 22
+    },
+    "mher/flower": {
+      "contributorRank": 25,
+      "description": "Real-time monitor and web admin for Celery distributed task queue",
+      "forks": 1151,
+      "language": "Python",
+      "lastPush": "2026-11-01T15:50:06.000Z",
+      "stars": 7239
+    }
+  },
+  "fetchedAt": "2026-11-04T07:20:00.000Z"
+}

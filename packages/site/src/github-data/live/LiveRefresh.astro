@@ -1,0 +1,13 @@
+---
+/**
+ * @file Starts the live refresh, which keeps the page's GitHub data fresh from
+ * the worker. It renders nothing; place it once on each page that shows GitHub
+ * data.
+ */
+---
+
+<script>
+  import { LiveRefresh } from "./live-refresh.ts";
+
+  LiveRefresh.attach(window);
+</script>

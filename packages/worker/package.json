@@ -1,0 +1,21 @@
+{
+  "name": "@nusnus/worker",
+  "private": true,
+  "description": "The Cloudflare worker that fetches GitHub data with a token and serves it as public read-only JSON.",
+  "type": "module",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev",
+    "generate": "wrangler types",
+    "record": "node scripts/record-exchanges.ts",
+    "typecheck": "tsc && tsc --project tests && tsc --project scripts"
+  },
+  "dependencies": {
+    "@nusnus/github-data": "workspace:*"
+  },
+  "devDependencies": {
+    "@msw/cloudflare": ">=0.2.0",
+    "msw": ">=3.0.3",
+    "wrangler": ">=4.157.0"
+  }
+}

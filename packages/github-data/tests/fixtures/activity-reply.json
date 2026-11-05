@@ -1,0 +1,95 @@
+{
+  "data": [
+    {
+      "createdAt": "2026-11-04T02:21:56.000Z",
+      "id": "26100857757",
+      "type": "PushEvent",
+      "repository": "Nusnus/nustack",
+      "title": "chore(release): 0.0.2 (#35)",
+      "url": "https://github.com/Nusnus/nustack/commit/4a4971bbf03f31c673ebe5c23bd8e32918e6cc61",
+      "redacted": false
+    },
+    {
+      "createdAt": "2026-11-04T01:36:21.000Z",
+      "id": "26096844714",
+      "type": "DeleteEvent",
+      "repository": "Nusnus/nusnus.github.io",
+      "title": "devin/1773150355-cybernus-refactor",
+      "url": "https://github.com/Nusnus/nusnus.github.io",
+      "redacted": false
+    },
+    {
+      "createdAt": "2026-11-04T01:36:21.000Z",
+      "id": "26096844952",
+      "type": "DeleteEvent",
+      "repository": "Nusnus/nusnus.github.io",
+      "title": "devin/1774546191-roast-escalate-calling-animation",
+      "url": "https://github.com/Nusnus/nusnus.github.io",
+      "redacted": false
+    },
+    {
+      "createdAt": "2026-11-04T01:36:21.000Z",
+      "id": "26096845310",
+      "type": "DeleteEvent",
+      "repository": "Nusnus/nusnus.github.io",
+      "title": "devin/1783119117-env-verify",
+      "url": "https://github.com/Nusnus/nusnus.github.io",
+      "redacted": false
+    },
+    {
+      "createdAt": "2026-11-04T01:36:17.000Z",
+      "id": "19064543059",
+      "type": "PullRequestEvent",
+      "repository": "Nusnus/nusnus.github.io",
+      "title": "feat(chat): rebuild /chat as Cybernus — Tomer's digital self",
+      "url": "https://github.com/Nusnus/nusnus.github.io/pull/7",
+      "redacted": false
+    },
+    {
+      "createdAt": "2026-11-04T01:36:16.000Z",
+      "id": "19064549154",
+      "type": "PullRequestEvent",
+      "repository": "Nusnus/nusnus.github.io",
+      "title": "Add calling animation to roast widget fire escalation button",
+      "url": "https://github.com/Nusnus/nusnus.github.io/pull/36",
+      "redacted": false
+    },
+    {
+      "createdAt": "2026-11-04T01:36:16.000Z",
+      "id": "19064549155",
+      "type": "PullRequestEvent",
+      "repository": "Nusnus/nusnus.github.io",
+      "title": "feat: add calling animation to roast escalate fire button",
+      "url": "https://github.com/Nusnus/nusnus.github.io/pull/35",
+      "redacted": false
+    },
+    {
+      "createdAt": "2026-11-04T01:36:16.000Z",
+      "id": "19064547200",
+      "type": "PullRequestEvent",
+      "repository": "Nusnus/nusnus.github.io",
+      "title": "feat: Cybernus refactor — single model, direct-to-chat, sub-agents, rich cards",
+      "url": "https://github.com/Nusnus/nusnus.github.io/pull/20",
+      "redacted": false
+    },
+    {
+      "createdAt": "2026-11-04T01:36:16.000Z",
+      "id": "19064547168",
+      "type": "PullRequestEvent",
+      "repository": "Nusnus/nusnus.github.io",
+      "title": "feat: Cybernus — Professional Matrix-inspired AI Chat with Sidebar GUI",
+      "url": "https://github.com/Nusnus/nusnus.github.io/pull/12",
+      "redacted": false
+    },
+    {
+      "createdAt": "2026-11-04T01:36:16.000Z",
+      "id": "19064545085",
+      "type": "PullRequestEvent",
+      "repository": "Nusnus/nusnus.github.io",
+      "title": "feat: Cybernus — replace /chat with Matrix-themed AI digital self",
+      "url": "https://github.com/Nusnus/nusnus.github.io/pull/11",
+      "redacted": false
+    }
+  ],
+  "fetchedAt": "2026-11-04T11:17:31.000Z"
+}

@@ -1,0 +1,80 @@
+---
+/**
+ * @file The sidebar: the dashboard's left column from the `md` breakpoint up,
+ * with who Tomer is, his avatar with his presence on GitHub, his quote, role
+ * and languages; the section links; his contributions this year and his rank
+ * in each tracked repository; his social links; and a theme toggle. It scrolls
+ * on its own when taller than the viewport.
+ */
+
+import Badge from "../design-system/Badge.astro";
+import PresenceDot from "../github-data/slots/activity/PresenceDot.astro";
+import Avatar from "../github-data/slots/Avatar.astro";
+import ContributionBreakdown from "../github-data/slots/contributions/ContributionBreakdown.astro";
+import ContributionTotal from "../github-data/slots/contributions/ContributionTotal.astro";
+import ContributorRankings from "../github-data/slots/repositories/ContributorRankings.astro";
+import ThemeToggle from "../theme/ThemeToggle.astro";
+import Identity from "./Identity.astro";
+import NavLinks from "./NavLinks.astro";
+import RoleSummary from "./RoleSummary.astro";
+import SocialLinks from "./SocialLinks.astro";
+---
+
+<aside
+  class="hidden min-h-0 flex-col border-r border-accent/30 bg-bg-base md:col-start-1 md:flex"
+>
+  {
+    /* Chrome draws a scroll area in a layer of its own; an opaque one draws
+    text and translucent colours exactly as the rest of the page does. The
+    column positions what it holds, such as the theme toggle's screen-reader
+    text, so nothing in it reaches past its scroll area. */
+  }
+  <div
+    class="relative flex min-h-0 flex-1 scrollbar-thin flex-col overflow-y-auto bg-bg-base px-5 py-6"
+  >
+    <Identity class="mb-4" placement="sidebar">
+      <div class="group relative">
+        <div
+          class="size-16 rounded-full ring-2 ring-transparent transition-shadow duration-200 group-hover:ring-accent/50"
+        >
+          <Avatar />
+        </div>
+        <div class="absolute -right-0.5 -bottom-0.5">
+          <PresenceDot />
+        </div>
+      </div>
+    </Identity>
+
+    <blockquote
+      class="mb-5 border-l-2 border-accent/30 pl-3 text-sm text-text-secondary italic"
+    >
+      I see myself as an artist and my art comes in the form of code
+    </blockquote>
+
+    <RoleSummary class="mb-5" />
+
+    <div class="mb-5 flex gap-2">
+      <Badge>🇮🇱 Hebrew</Badge>
+      <Badge>🇺🇸 English</Badge>
+      <Badge>🇨🇴 Spanish</Badge>
+    </div>
+
+    <div class="mb-5">
+      <NavLinks placement="sidebar" />
+    </div>
+
+    <div class="mb-5 border-t border-border pt-4">
+      <ContributionTotal />
+      <ContributionBreakdown />
+      <ContributorRankings />
+    </div>
+
+    <div class="flex-1"></div>
+
+    <SocialLinks />
+
+    <div class="mt-3">
+      <ThemeToggle />
+    </div>
+  </div>
+</aside>

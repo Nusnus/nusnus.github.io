@@ -1,0 +1,15 @@
+---
+/** @file A link back to the home page, its arrow nudging left on hover. */
+
+import { ArrowLeft } from "../design-system/icons.ts";
+---
+
+<a
+  class="group inline-flex items-center gap-1.5 text-sm text-text-muted transition-colors hover:text-accent"
+  href="/"
+>
+  <ArrowLeft
+    className="h-4 w-4 transition-transform group-hover:-translate-x-0.5"
+  />
+  Back to home
+</a>

@@ -1,0 +1,23 @@
+---
+/**
+ * @file The contribution charts section, "Activity Graph": the daily
+ * contributions of the last days as a line chart, and the year's as monthly
+ * bars.
+ */
+
+import ContributionLineChart from "../../github-data/slots/contributions/ContributionLineChart.astro";
+import MonthlyBreakdown from "../../github-data/slots/contributions/MonthlyBreakdown.astro";
+import HomeSection from "../HomeSection.astro";
+import SectionHeading from "../SectionHeading.astro";
+---
+
+<HomeSection id="activity-graph">
+  <SectionHeading density="compact" title="Activity Graph">
+    Contribution trends and breakdown
+  </SectionHeading>
+
+  <div class="flex flex-col gap-5">
+    <ContributionLineChart />
+    <MonthlyBreakdown />
+  </div>
+</HomeSection>

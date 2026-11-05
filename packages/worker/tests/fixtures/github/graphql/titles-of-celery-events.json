@@ -1,0 +1,69 @@
+{
+  "request": {
+    "method": "POST",
+    "url": "https://api.github.com/graphql",
+    "body": {
+      "query": "query ($url0: URI!, $url1: URI!, $url2: URI!, $url3: URI!, $url4: URI!, $url5: URI!, $url6: URI!) {\n  resource0: resource(url: $url0) { ... on PullRequest { title } ... on Commit { message } }\n  resource1: resource(url: $url1) { ... on PullRequest { title } ... on Commit { message } }\n  resource2: resource(url: $url2) { ... on PullRequest { title } ... on Commit { message } }\n  resource3: resource(url: $url3) { ... on PullRequest { title } ... on Commit { message } }\n  resource4: resource(url: $url4) { ... on PullRequest { title } ... on Commit { message } }\n  resource5: resource(url: $url5) { ... on PullRequest { title } ... on Commit { message } }\n  resource6: resource(url: $url6) { ... on PullRequest { title } ... on Commit { message } }\n}",
+      "variables": {
+        "url0": "https://github.com/celery/sphinx_celery/commit/833e23a3592cd842ad4af21e9c19a0a6ea311e26",
+        "url1": "https://github.com/celery/celery/commit/683271f43f92e4f730b640913c4e96eb30f9944c",
+        "url2": "https://github.com/celery/celery/commit/420fd8f9f476674b9362fbad8dcf9a52b580cbe4",
+        "url3": "https://github.com/celery/kombu/commit/4480119fcb6cec09d7d1e8e523182f61eb1d7fe6",
+        "url4": "https://github.com/celery/kombu/pull/2817",
+        "url5": "https://github.com/celery/py-amqp/commit/9d4a51a104021ef2f1920744087add8638cc2cc6",
+        "url6": "https://github.com/celery/billiard/commit/7d2fcd2a2d0978d2c9062b8566fac0f7f84e5399"
+      }
+    }
+  },
+  "status": 200,
+  "headers": {
+    "access-control-allow-origin": "*",
+    "access-control-expose-headers": "ETag, Link, Location, Retry-After, X-GitHub-OTP, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Used, X-RateLimit-Resource, X-RateLimit-Reset, X-OAuth-Scopes, X-Accepted-OAuth-Scopes, X-Poll-Interval, X-GitHub-Media-Type, X-GitHub-SSO, X-GitHub-Request-Id, Deprecation, Sunset, Warning",
+    "content-security-policy": "default-src 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "date": "Wed, 04 Nov 2026 07:20:03 GMT",
+    "referrer-policy": "origin-when-cross-origin, strict-origin-when-cross-origin",
+    "server": "github.com",
+    "strict-transport-security": "max-age=31536000; includeSubdomains; preload",
+    "vary": "Accept-Encoding, Accept, X-Requested-With",
+    "x-accepted-oauth-scopes": "repo",
+    "x-content-type-options": "nosniff",
+    "x-frame-options": "deny",
+    "x-github-edge-region": "israelcentral",
+    "x-github-media-type": "github.v4; format=json",
+    "x-github-request-id": "C47D:26EF17:41D439:714450:6AEADCA3",
+    "x-oauth-client-id": "178c6fc778ccc68e1d6a",
+    "x-oauth-scopes": "gist, read:org, repo",
+    "x-ratelimit-limit": "5000",
+    "x-ratelimit-remaining": "4807",
+    "x-ratelimit-reset": "1793779261",
+    "x-ratelimit-resource": "graphql",
+    "x-ratelimit-used": "193",
+    "x-xss-protection": "0"
+  },
+  "body": {
+    "data": {
+      "resource0": {
+        "message": "[pre-commit.ci] pre-commit autoupdate\n\nupdates:\n- [github.com/asottile/pyupgrade: v3.21.2 → v3.22.0](https://github.com/asottile/pyupgrade/compare/v3.21.2...v3.22.0)\n- [github.com/PyCQA/flake8: 7.3.0 → 7.5.0](https://github.com/PyCQA/flake8/compare/7.3.0...7.5.0)\n- [github.com/pycqa/isort: 9.0.1 → 10.0.0b2](https://github.com/pycqa/isort/compare/9.0.1...10.0.0b2)"
+      },
+      "resource1": {
+        "message": "[pre-commit.ci] pre-commit autoupdate\n\nupdates:\n- [github.com/asottile/pyupgrade: v3.21.2 → v3.22.0](https://github.com/asottile/pyupgrade/compare/v3.21.2...v3.22.0)\n- [github.com/PyCQA/flake8: 7.4.1 → 7.5.0](https://github.com/PyCQA/flake8/compare/7.4.1...7.5.0)\n- [github.com/pycqa/isort: 9.0.2 → 10.0.0b2](https://github.com/pycqa/isort/compare/9.0.2...10.0.0b2)\n- [github.com/pre-commit/mirrors-mypy: v2.4.0 → v2.4.1](https://github.com/pre-commit/mirrors-mypy/compare/v2.4.0...v2.4.1)"
+      },
+      "resource2": {
+        "message": "Update billiard and click-repl versions in requirements (#11002)"
+      },
+      "resource3": {
+        "message": "Merge branch 'main' into py315"
+      },
+      "resource4": {
+        "title": "chore(deps): Bump pytest from 9.1.1 to 9.2.0"
+      },
+      "resource5": {
+        "message": "Bump version: 5.4.1 → 5.4.2"
+      },
+      "resource6": {
+        "message": "Reject nonpositive chunksizes in pool imap methods\n\nSigned-off-by: JackyHsu-X <xv1070733106@gmail.com>"
+      }
+    }
+  }
+}

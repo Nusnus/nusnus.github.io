@@ -1,0 +1,120 @@
+---
+/**
+ * @file The HTML document every page renders into: the head's metadata, the
+ * theme script that runs before the first paint, and a skip link to the page's
+ * `<main id="main-content">`, which each page must render. A page names itself
+ * with `pageName`, and one served at URLs not its own sets `canonical={false}`.
+ */
+
+import "../design-system/design-system.css";
+import interFontUrl from "../design-system/fonts/InterVariable.woff2?url";
+import { SITE_LOCALE } from "../locale.ts";
+import { PERSON } from "../person.ts";
+import { SITE_DESCRIPTION, SITEMAP_PATH } from "../site.ts";
+import {
+  followTheme,
+  handleThemeToggles,
+  THEME_STORAGE_KEY,
+  THEME_TOGGLE_ATTRIBUTE,
+} from "../theme/theme.ts";
+import { WRITING } from "../writing/writing.ts";
+import {
+  type PageFacts,
+  pageMetadata,
+  type PageNaming,
+} from "./page-metadata.ts";
+
+type Props = PageNaming &
+  Partial<Pick<PageFacts, "description">> & { canonical?: false };
+
+const themeScript = [
+  `(${followTheme.toString()})(${JSON.stringify(THEME_STORAGE_KEY)});`,
+  `(${handleThemeToggles.toString()})(${JSON.stringify(THEME_STORAGE_KEY)}, ${JSON.stringify(THEME_TOGGLE_ATTRIBUTE)});`,
+].join("");
+
+const { canonical, description = SITE_DESCRIPTION, ...naming } = Astro.props;
+
+const { article } = naming;
+const { canonicalUrl, imageUrl, openGraphType, structuredDataJson, title } =
+  pageMetadata({
+    ...naming,
+    canonicalPath: canonical === false ? undefined : Astro.url.pathname,
+    description,
+  });
+---
+
+<!doctype html>
+<html lang={SITE_LOCALE}>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+      name="viewport"
+    />
+    <link href="/favicon.svg" rel="icon" type="image/svg+xml" />
+    {canonicalUrl && <link href={canonicalUrl} rel="canonical" />}
+    <title>{title}</title>
+    <meta content={description} name="description" />
+
+    <meta content={openGraphType} property="og:type" />
+    {canonicalUrl && <meta content={canonicalUrl} property="og:url" />}
+    <meta content={title} property="og:title" />
+    <meta content={description} property="og:description" />
+    <meta content={imageUrl} property="og:image" />
+    {
+      /* Link previews show the site's name beside the page's title, which
+      already holds SITE_NAME, so the site's name is the login alone. */
+    }
+    <meta content={PERSON.githubLogin} property="og:site_name" />
+    {
+      article && (
+        <>
+          <meta
+            content={article.publishedAt.toISOString()}
+            property="article:published_time"
+          />
+          {article.tags.map((tag) => (
+            <meta content={tag} property="article:tag" />
+          ))}
+        </>
+      )
+    }
+
+    <meta content="summary_large_image" name="twitter:card" />
+    <meta content={PERSON.xHandle} name="twitter:site" />
+    <meta content={title} name="twitter:title" />
+    <meta content={description} name="twitter:description" />
+    <meta content={imageUrl} name="twitter:image" />
+
+    <link
+      href={WRITING.feedPath}
+      rel="alternate"
+      title={WRITING.feedTitle}
+      type="application/rss+xml"
+    />
+    <link href={SITEMAP_PATH} rel="sitemap" />
+    <script
+      is:inline
+      set:html={structuredDataJson}
+      type="application/ld+json"
+    />
+
+    <link
+      as="font"
+      crossorigin
+      href={interFontUrl}
+      rel="preload"
+      type="font/woff2"
+    />
+    <script is:inline set:html={themeScript} />
+  </head>
+  <body>
+    <a
+      class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-lg focus:bg-accent focus:px-4 focus:py-2 focus:text-bg-base focus:outline-none"
+      href="#main-content"
+    >
+      Skip to main content
+    </a>
+    <slot />
+  </body>
+</html>

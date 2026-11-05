@@ -1,0 +1,19 @@
+---
+/**
+ * @file One of the home page's sections, as the anchor its navigation link
+ * jumps to, named for screen readers; its content goes in the slot.
+ */
+
+import { type HomeSectionId, homeSectionName } from "./sections.ts";
+
+interface Props {
+  class?: string;
+  id: HomeSectionId;
+}
+
+const { class: className, id } = Astro.props;
+---
+
+<section aria-label={homeSectionName(id)} class={className} id={id}>
+  <slot />
+</section>

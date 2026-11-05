@@ -1,0 +1,20 @@
+---
+/**
+ * @file Data slot: the contribution heatmap in its frame. The heatmap scales to
+ * fit, so its frame need not scroll, and the tooltip may reach past the frame's
+ * edge.
+ */
+
+import ChartFrame from "../../contributions/chart/ChartFrame.astro";
+import ContributionHeatmap from "../../contributions/ContributionHeatmap.tsx";
+
+interface Props {
+  class: string;
+}
+
+const { class: className } = Astro.props;
+---
+
+<ChartFrame class={className}>
+  <ContributionHeatmap client:visible />
+</ChartFrame>

@@ -1,0 +1,14 @@
+---
+/**
+ * @file Data slot: the live indicator beside the activity panel's "Live
+ * Activity" heading, which shows whether the page's data is live.
+ */
+
+import LiveIndicator from "../../live/LiveIndicator.tsx";
+---
+
+{
+  /* The activity panel is in view as the page loads from lg up, so this
+  hydrates once the page is idle rather than waiting until visible. */
+}
+<LiveIndicator client:idle />

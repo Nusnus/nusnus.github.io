@@ -1,0 +1,100 @@
+# Runs every check and mutation testing. Vitest writes its report to the run's
+# summary, and the smoke tests' and mutation testing's reports, and Vitest's
+# record of a failed run, are the run's artifacts. The deploy workflow calls
+# it, so every push to main is checked before it deploys.
+name: Check
+
+on:
+  pull_request:
+  workflow_call:
+
+permissions: {}
+
+concurrency:
+  # A newer push to a pull request supersedes the check of the older one. A
+  # deploy's check runs to its end, in a group named for the deploy workflow,
+  # since github.workflow names the caller.
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  check:
+    name: Check
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: $/.github/actions/setup
+      - name: Install the browser's system libraries for the smoke tests
+        run: bun run install:browser-libraries
+      - run: bun run check
+        env:
+          # zizmor's online audits ask GitHub about each action, so CI, which
+          # has a token, turns them on; audit:workflows runs offline
+          # elsewhere.
+          GH_TOKEN: ${{ github.token }}
+          ZIZMOR_OFFLINE: "false"
+      - if: ${{ !cancelled() }}
+        name: Upload the smoke tests' report
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: smoke-test-report
+          path: packages/site/playwright-report/
+      - if: ${{ !cancelled() }}
+        name: Upload Vitest's record of a failed run
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          # A passing run leaves no record.
+          if-no-files-found: ignore
+          name: failed-vitest-run
+          path: reports/vitest/
+    timeout-minutes: 15
+
+  mutation:
+    name: Mutation testing
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: $/.github/actions/setup
+      # Stryker reuses the last run's result for each mutant whose code and
+      # tests are unchanged, from the report this cache keeps between runs.
+      # Each run saves its results; a pull request's run reads its own last
+      # results, else main's, since GitHub scopes a pull request's caches to
+      # it: https://docs.github.com/en/actions/reference/workflows-and-actions/dependency-caching#restrictions-for-accessing-a-cache
+      - name: Restore the last mutation run's results
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          key: stryker-incremental-${{ github.run_id }}
+          path: reports/stryker-incremental.json
+          restore-keys: stryker-incremental-
+      # A run with no results to reuse, such as the first, mutates every
+      # measured file: on 2026-11-04 that was 3,224 mutants in 111 minutes, on
+      # 4 test runners of a 10-core Apple M1 Max shared with other runs, at a
+      # load average near 180. This limit gives such a run about three times
+      # that on a hosted runner's 4 vCPUs, and leaves the last half hour of the
+      # job's 360 minutes to the steps around it. A run it stops keeps the
+      # results it has, which the next run picks up.
+      - run: bun run test:mutation
+        timeout-minutes: 330
+      - if: ${{ !cancelled() }}
+        name: Keep this run's results for the next
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          key: stryker-incremental-${{ github.run_id }}
+          path: reports/stryker-incremental.json
+      - if: ${{ !cancelled() }}
+        name: Upload the mutation report
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: mutation-report
+          path: reports/mutation/
+    # The most GitHub lets a hosted runner's job run:
+    # https://docs.github.com/en/actions/reference/limits
+    timeout-minutes: 360

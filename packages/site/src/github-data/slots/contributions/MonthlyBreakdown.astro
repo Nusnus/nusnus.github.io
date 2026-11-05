@@ -1,0 +1,10 @@
+---
+/** @file Data slot: the monthly breakdown chart in its captioned frame. */
+
+import ChartFrame from "../../contributions/chart/ChartFrame.astro";
+import MonthlyBreakdown from "../../contributions/MonthlyBreakdown.tsx";
+---
+
+<ChartFrame caption="Monthly breakdown" class="overflow-x-auto">
+  <MonthlyBreakdown client:visible />
+</ChartFrame>

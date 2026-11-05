@@ -1,0 +1,41 @@
+---
+/**
+ * @file A small label, such as a role or a language: `ghost` is outlined,
+ * `accent` is tinted with the accent colour, and `filled` sits on a raised
+ * surface.
+ */
+
+import { tw } from "./tailwind.ts";
+
+interface Props {
+  class?: string;
+  size?: "md" | "sm";
+  // Undefined too, so a caller can pass on a variant it may not have, as a
+  // repository card does for a role with no variant of its own.
+  variant?: "accent" | "filled" | "ghost" | undefined;
+}
+
+const VARIANT_CLASSES = {
+  accent: tw`bg-accent-muted text-accent`,
+  filled: tw`bg-bg-elevated text-text-primary`,
+  ghost: tw`border border-border text-text-secondary`,
+} as const satisfies Record<NonNullable<Props["variant"]>, string>;
+
+const SIZE_CLASSES = {
+  md: tw`px-2.5 py-1 text-sm`,
+  sm: tw`px-2 py-0.5 text-xs`,
+} as const satisfies Record<NonNullable<Props["size"]>, string>;
+
+const { class: className, size = "sm", variant = "ghost" } = Astro.props;
+---
+
+<span
+  class:list={[
+    "inline-flex items-center gap-1 rounded-md font-medium",
+    VARIANT_CLASSES[variant],
+    SIZE_CLASSES[size],
+    className,
+  ]}
+>
+  <slot />
+</span>

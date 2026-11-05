@@ -1,0 +1,10 @@
+{
+  "$schema": "https://www.schemastore.org/tsconfig",
+  // The tests run in workerd through the Vitest plugin, whose types declare
+  // its `cloudflare:test` module, which the worker's own code never imports.
+  "extends": "../tsconfig.json",
+  "include": ["../worker-configuration.d.ts", "../src", "."],
+  "compilerOptions": {
+    "types": ["@cloudflare/vitest-plugin/types"]
+  }
+}

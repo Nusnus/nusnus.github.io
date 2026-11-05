@@ -1,0 +1,39 @@
+---
+/**
+ * @file A bordered surface that groups one item's content.
+ *
+ * Given `href`, the whole card is a link named `label`, and lifts on hover to
+ * show it can be clicked; a link inside it stays clickable once given
+ * `relative z-10`, which lifts it above the card's own link. Without `href`,
+ * the card stays still.
+ */
+
+import { linkTarget } from "./link-target.ts";
+
+type Props = { class?: string } & (
+  { href: string; label: string } | { href?: never; label?: never }
+);
+
+const { class: className, href, label } = Astro.props;
+---
+
+<div
+  class:list={[
+    "rounded-xl border border-border bg-bg-surface p-5",
+    href !== undefined &&
+      "relative transition-all duration-150 hover:-translate-y-0.5 hover:border-accent/40 motion-reduce:transition-none motion-reduce:hover:translate-y-0",
+    className,
+  ]}
+>
+  {
+    href !== undefined && (
+      <a
+        aria-label={label}
+        class="absolute inset-0 rounded-xl"
+        href={href}
+        {...linkTarget(href)}
+      />
+    )
+  }
+  <slot />
+</div>

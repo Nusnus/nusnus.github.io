@@ -1,0 +1,16 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "https://ai-proxy.tomer-nosrati.workers.dev/no-such-route"
+  },
+  "status": 404,
+  "headers": {
+    "access-control-allow-origin": "*",
+    "cache-control": "no-store",
+    "content-type": "application/json",
+    "worker-version": "0e1f4789-4064-4773-80b2-67a5e0d3f1c2"
+  },
+  "body": {
+    "error": "The worker has no route at /no-such-route; it serves /activity, /contribution-graph, /profile, /repositories."
+  }
+}

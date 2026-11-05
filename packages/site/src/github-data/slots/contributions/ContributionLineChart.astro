@@ -1,0 +1,17 @@
+---
+/**
+ * @file Data slot: the daily contributions line chart in its captioned frame.
+ */
+
+import ChartFrame from "../../contributions/chart/ChartFrame.astro";
+import ContributionLineChart, {
+  DAYS_SHOWN,
+} from "../../contributions/ContributionLineChart.tsx";
+---
+
+<ChartFrame
+  caption={`Daily contributions (last ${String(DAYS_SHOWN)} days)`}
+  class="overflow-x-auto"
+>
+  <ContributionLineChart client:visible />
+</ChartFrame>

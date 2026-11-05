@@ -1,0 +1,20 @@
+---
+/** @file Tomer's role at Celery, beside the Celery repository's star count. */
+
+import Badge from "../design-system/Badge.astro";
+import CeleryStars from "../github-data/slots/repositories/CeleryStars.astro";
+import { PERSON } from "../person.ts";
+
+interface Props {
+  class?: string;
+}
+
+const { class: className } = Astro.props;
+---
+
+<div class:list={["flex items-center gap-2", className]}>
+  <Badge size="md" variant="accent">{PERSON.role}</Badge>
+  <span class="text-sm text-text-secondary">
+    Celery · ★ <CeleryStars />
+  </span>
+</div>

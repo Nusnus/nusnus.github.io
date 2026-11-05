@@ -1,0 +1,16 @@
+{
+  "name": "@nusnus/github-data",
+  "private": true,
+  "description": "The worker-site contract for GitHub data: domain types, schemas, the worker's routes, tracked repositories, the redaction allowlist, and when the worker's clients retry.",
+  "type": "module",
+  "exports": {
+    "./*": "./src/*.ts",
+    "./fixtures/*": "./tests/fixtures/*.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "zod": ">=4.6.7"
+  }
+}

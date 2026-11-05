@@ -1,0 +1,8 @@
+# Bun's install settings: https://bun.com/docs/runtime/bunfig
+
+[install]
+# Each install takes no release younger than Renovate's minimumReleaseAge, in
+# seconds, so a compromised release is likely caught before it lands here,
+# whether a person adds a package or Renovate rebuilds bun.lock. A test holds
+# the two equal.
+minimumReleaseAge = 604800

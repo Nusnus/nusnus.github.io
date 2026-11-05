@@ -1,0 +1,24 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "https://ai-proxy.tomer-nosrati.workers.dev/profile"
+  },
+  "status": 200,
+  "headers": {
+    "access-control-allow-origin": "*",
+    "cache-control": "no-cache",
+    "cache-status": "worker; fwd=uri-miss; stored",
+    "content-type": "application/json",
+    "etag": "\"2026-11-04T07:19:55.000Z\"",
+    "github-authentication-token-expiration": "2023-04-26 23:23:18 +0200",
+    "worker-version": "0e1f4789-4064-4773-80b2-67a5e0d3f1c2",
+    "x-github-api-version": "2026-03-10"
+  },
+  "body": {
+    "data": {
+      "avatarUrl": "https://avatars.githubusercontent.com/u/4662342?v=4",
+      "followers": 120
+    },
+    "fetchedAt": "2026-11-04T07:19:55.000Z"
+  }
+}
