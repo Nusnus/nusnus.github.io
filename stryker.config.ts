@@ -2,8 +2,9 @@
  * @file StrykerJS: mutates the measured files, the setup files included, which
  * Vitest leaves out of its own coverage, runs each mutant against every Vitest
  * test that reaches it, whichever package holds the test, reusing the last
- * run's result for each mutant nothing changed, and fails unless every mutant
- * is killed.
+ * run's result for each mutant nothing changed and waiting past the test
+ * timeout before it counts a mutant as timed out, and fails unless every
+ * mutant is killed.
  *
  * Stryker finds a config file by name only in JSON or JavaScript, so
  * `test:mutation` names this one, which Node runs by stripping its types.
@@ -15,6 +16,7 @@
 import type { PartialStrykerOptions } from "@stryker-mutator/api/core";
 
 import { MEASURED_FILES } from "./tests/suite/files.ts";
+import { TEST_TIMEOUT_MS } from "./tests/suite/test-timeout.ts";
 
 export default {
   // Each run reuses the result of each mutant whose code and tests are
@@ -37,6 +39,12 @@ export default {
   reporters: ["clear-text", "progress", "html", "json"],
   testRunner: "vitest",
   thresholds: { break: 100 },
+  // Stryker counts a mutant that times out as killed, so it waits past the
+  // test timeout: a mutant that only slows a test then fails it, or survives,
+  // and only one that blocks the test runner times out. With Stryker's
+  // default of 5 s, the first run in CI timed out 129 mutants; rerun with this
+  // margin, 113 failed their tests, 15 blocked the runner, and one survived.
+  timeoutMS: TEST_TIMEOUT_MS,
   // Vitest finds a mutated file's related tests by their imports
   // (https://vitest.dev/guide/cli.html#vitest-related), and the settings tests
   // reach the suite's files through Vitest's config loader instead.

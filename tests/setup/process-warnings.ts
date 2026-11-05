@@ -45,5 +45,5 @@ beforeAll(() => {
 // Only a Vitest run of its own, which the setup file's integration test
 // starts, shows this hook failing a test, and mutation testing does not see
 // into that run.
-// Stryker disable next-line ArrowFunction
+// Stryker disable next-line ArrowFunction,CallExpression
 afterEach(() => raisedWarnings.failOnAny());

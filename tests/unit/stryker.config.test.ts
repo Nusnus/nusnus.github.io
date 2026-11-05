@@ -2,7 +2,8 @@
  * @file Mutation testing's settings: Stryker mutates the measured files, the
  * same ones coverage measures, and the setup files, runs each mutant with the
  * Vitest runner against every test, reuses the last run's result for each
- * mutant nothing changed, and fails unless every mutant is killed, writing its
+ * mutant nothing changed, waits past the test timeout before it counts a
+ * mutant as timed out, and fails unless every mutant is killed, writing its
  * JSON report beside its default reports. The mutation script names this
  * config, which Stryker finds by name only in JSON or JavaScript.
  */
@@ -14,7 +15,7 @@ import { describe, expect, it } from "vitest";
 import settings from "../../stryker.config.ts";
 
 describe("stryker.config", () => {
-  it("mutates the measured and setup files, runs every test against each mutant with Vitest, reusing unchanged results, fails unless every mutant is killed, and adds the JSON report", () => {
+  it("mutates the measured and setup files, runs every test against each mutant with Vitest, reusing unchanged results, waits past the test timeout, fails unless every mutant is killed, and adds the JSON report", () => {
     expect(settings).toStrictEqual({
       incremental: true,
       mutate: [
@@ -33,6 +34,7 @@ describe("stryker.config", () => {
       reporters: ["clear-text", "progress", "html", "json"],
       testRunner: "vitest",
       thresholds: { break: 100 },
+      timeoutMS: 60_000,
       vitest: { related: false },
     });
   });
