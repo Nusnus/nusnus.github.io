@@ -42,7 +42,7 @@
     "@stryker-mutator/core": ">=10.1.1",
     "@stryker-mutator/vitest-runner": ">=10.1.1",
     "@tsconfig/node26": ">=26.0.2",
-    "@tsconfig/strictest": ">=2.0.8",
+    "@tsconfig/strictest": ">=2.0.9",
     "@types/node": ">=26.6.6",
     "@vitest/coverage-istanbul": ">=5.1.0",
     "eslint": ">=10.14.0",
