@@ -13,13 +13,13 @@
     "typecheck": "astro check --minimumFailingSeverity hint"
   },
   "dependencies": {
-    "@astrojs/react": ">=7.1.4",
+    "@astrojs/react": ">=7.1.9",
     "@astrojs/rss": ">=4.0.19",
-    "@astrojs/sitemap": ">=3.7.4",
+    "@astrojs/sitemap": ">=3.7.5",
     "@nusnus/github-data": "workspace:*",
     "@tailwindcss/typography": ">=0.5.20",
     "@tailwindcss/vite": ">=4.3.4",
-    "astro": ">=7.4.7",
+    "astro": ">=7.4.12",
     "lucide-react": ">=1.67.0",
     "react": ">=19.3.1",
     "react-dom": ">=19.3.1",
