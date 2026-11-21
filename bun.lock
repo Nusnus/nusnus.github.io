@@ -15,7 +15,7 @@
         "@stryker-mutator/api": ">=10.1.1",
         "@stryker-mutator/core": ">=10.1.1",
         "@stryker-mutator/vitest-runner": ">=10.1.1",
-        "@tsconfig/node26": ">=26.0.1",
+        "@tsconfig/node26": ">=26.0.2",
         "@tsconfig/strictest": ">=2.0.8",
         "@types/node": ">=26.6.6",
         "@vitest/coverage-istanbul": ">=5.1.0",
@@ -978,7 +978,7 @@
 
     "@tombit/binding-win32-x64-msvc": ["@tombit/binding-win32-x64-msvc@0.1.7", "", { "os": "win32", "cpu": "x64" }, "sha512-qWtuJEDiZCn01ha9WBaVp0hx6xjveWs4eQzITXQbXtSNrm0c4UtdQApMmgOS9TzwRhoxyZyKgLKBLnJTBHBy4w=="],
 
-    "@tsconfig/node26": ["@tsconfig/node26@26.0.1", "", {}, "sha512-NQT8JUFDKeAIWpR1dakeF534msQAsoSLr1WpKdRDt3sCvk2fsFK3EVKUBG5xKYVamiRO6yTfniiyvCaqOGgn/g=="],
+    "@tsconfig/node26": ["@tsconfig/node26@26.0.2", "", {}, "sha512-RIBSoNGQxUQ8r4hSrEzS6TrUneoKaCuX6BjL4zF3wqttGq2w06zCea4d8P1gRvM/HZyDT1FQJ8trZSyy/63oMg=="],
 
     "@tsconfig/strictest": ["@tsconfig/strictest@2.0.8", "", {}, "sha512-XnQ7vNz5HRN0r88GYf1J9JJjqtZPiHt2woGJOo2dYqyHGGcd6OLGqSlBB6p1j9mpzja6Oe5BoPqWmeDx6X9rLw=="],
 
